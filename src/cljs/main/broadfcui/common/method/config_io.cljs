@@ -68,17 +68,17 @@
                                   :sortable-columns? (not editing?)}
                        :columns
                        (concat [{:header "Task" :initial-width 200
-                                 :as-text :task
-                                 :render (fn [{:keys [task optional]}]
-                                           [:div {:style (clip (if optional
-                                                                 table-style/table-cell-plank-left-optional
-                                                                 table-style/table-cell-plank-left))}
-                                            task])}
+                                 :column-data :task
+                                 :render (fn [task]
+                                           [:div {:style (clip table-style/table-cell-plank-left)} task])}
                                 {:header "Variable" :initial-width 200
-                                 :as-text :variable
+                                 :as-text (fn [{:keys [variable optional]}]
+                                            (str variable (when optional " (optional)")))
+                                 :sort-by :text
                                  :render (fn [{:keys [variable optional]}]
                                            [:div {:style (clip (if optional
-                                                                 table-style/table-cell-plank-middle-optional
+                                                                 (merge table-style/table-cell-plank-middle
+                                                                        table-style/table-cell-optional)
                                                                  table-style/table-cell-plank-middle))} variable])}
                                 {:header "Type" :initial-width 100
                                  :column-data (fn [{:keys [inputType outputType optional]}]
@@ -90,8 +90,8 @@
                                  :render
                                  (fn [{:keys [type optional?]}]
                                    [:div {:style (clip (if optional?
-                                                         (assoc table-style/table-cell-plank-right-optional
-                                                           :fontStyle "italic")
+                                                         (merge table-style/table-cell-plank-right
+                                                                table-style/table-cell-optional)
                                                          table-style/table-cell-plank-right))}
                                     type])}]
                                (when values
@@ -118,7 +118,7 @@
                                                          (swap! locals update io-key assoc (keyword name)
                                                                 (if (empty? value) "" value)))}]
                                           (if-not (string/blank? value)
-                                            value
+                                            [:span {:style (when optional table-style/table-cell-optional)} value]
                                             (when optional
                                               [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
                                (when invalid-values
