@@ -186,6 +186,9 @@
   {:get-fields
    (fn [{:keys [refs]}]
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
+   :get-initial-state
+   (fn [{:keys [props]}]
+     (when (:redacted? props) {:original-redacted? (get-in props [:entity :snapshotId])}))
    :render
    (fn [{:keys [props state this]}]
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
@@ -208,8 +211,9 @@
                 [CodeMirror {:text (get-in entity [:method :payload])}]]
                [CodeMirror {:text (:payload entity)}])))])])
    :render-details
-   (fn [{:keys [props refs]} entity]
+   (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
+           original-redacted? (:original-redacted? @state)
            make-field
            (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
@@ -217,13 +221,14 @@
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
-                 (style/create-identity-select {:ref key
-                                                :data-test-id (config/when-debug "edit-method-config-snapshot-id-select")
-                                                :style {:width 100}
-                                                :defaultValue (key entity)
-                                                :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                            #(f (int (common/get-text refs "snapshotId"))))}
-                                               (:snapshots props))
+                 (style/create-identity-select-name {:ref key
+                                                     :data-test-id (config/when-debug "edit-method-config-snapshot-id-select")
+                                                     :style {:width 120}
+                                                     :defaultValue (if original-redacted? -1 (key entity))
+                                                     :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                                 #(f (int (common/get-text refs "snapshotId"))))}
+                                                    (:snapshots props)
+                                                    (when original-redacted? original-redacted?))
                  (let [rendered ((or render identity) (key entity))]
                    [:span {:title rendered} rendered]))]])]
        [:div {}

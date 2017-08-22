@@ -34,7 +34,6 @@
     (.add engine (clj->js datums))))
 
 (defn- fake-inputs-outputs [data]
-  (utils/log data)
   (let [method-config (:methodConfiguration data)]
     {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
      :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
@@ -44,13 +43,17 @@
   {:get-fields
    (fn [{:keys [refs]}]
      ((@refs "methodDetails") :get-fields))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     {:redacted? (:redacted? props)})
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [loaded-method error]} @state]
+     (let [{:keys [loaded-method error redacted?]} @state]
        (cond loaded-method [comps/EntityDetails
                             (merge {:ref "methodDetails"
-                                    :entity loaded-method}
-                                   (select-keys props [:editing? :snapshots :wdl-parse-error :onSnapshotIdChange :redacted?]))]
+                                    :entity loaded-method
+                                    :redacted? redacted?}
+                                   (select-keys props [:editing? :snapshots :wdl-parse-error :onSnapshotIdChange]))]
              error (style/create-server-error-message error)
              :else [comps/Spinner {:text "Loading details..."}])))
    :component-did-mount
@@ -65,8 +68,8 @@
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response))
-                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId "-"}))))})))})
+                      (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
+                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
 
 
 (react/defc- Sidebar
@@ -252,7 +255,7 @@
                               :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
                               :backgroundColor (:background-light style/colors)
                               :border style/standard-line :borderRadius 2}}
-                (str name ": (" (when optional "optional ") type ")")]
+                (str name (when type (str ": (" (when optional "optional ") type ")")))]
                (when (and error (not editing?) (not optional))
                  (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
                                       :color (:exception-state style/colors)}}
@@ -293,8 +296,7 @@
                         (swap! state assoc :entity-types entity-types))
                       ;; FIXME: :data-attribute-load-error is unused
                       (swap! state assoc :data-attribute-load-error status-text)))}))
-     (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
-       (when redacted? (this :-load-new-method-template (last snapshots)))
+     (let [{:keys [loaded-config inputs-outputs]} @state]
        (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
    :-cancel-editing
    (fn [{:keys [state refs]}]
