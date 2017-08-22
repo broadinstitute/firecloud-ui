@@ -111,9 +111,9 @@
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
-(defn render-blocker [text & absolute?]
+(defn render-blocker [text & [fixed?]]
   [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                 :position (if absolute? "absolute" "fixed") :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
+                 :position (if fixed? "fixed" "absolute") :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
                  :display "flex" :justifyContent "center" :alignItems "center"}}
    [:div {:style {:backgroundColor "#fff" :padding "2em"}}
     [Spinner {:text text}]]])
@@ -140,7 +140,7 @@
    :render
    (fn [{:keys [props state]}]
      (when (:showing? @state)
-       (render-blocker (:banner props) true)))})
+       (render-blocker (:banner props))))})
 
 
 (react/defc StatusLabel
