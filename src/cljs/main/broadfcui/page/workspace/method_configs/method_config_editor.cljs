@@ -141,10 +141,10 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this props]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
-      {:endpoint endpoints/list-methods
+      {:endpoint (endpoints/list-method-snapshots (get-in props [:config-id :namespace]))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (let [response (get-parsed-response)]
                     (if success?
