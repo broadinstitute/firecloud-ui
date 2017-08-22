@@ -117,7 +117,10 @@
                                             :on-change (fn [value]
                                                          (swap! locals update io-key assoc (keyword name)
                                                                 (if (empty? value) "" value)))}]
-                                          value)]))}])
+                                          (if-not (string/blank? value)
+                                            value
+                                            (when optional
+                                              [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
                                (when invalid-values
                                  [{:header "Message" :initial-width 400
                                    :column-data (fn [{:keys [name]}]
