@@ -44,18 +44,18 @@
        (.addEventListener (@refs "content-container") "onresize" check-size)))
    :-render-view-component
    (fn [{:keys [props]}]
-     (let [{:keys [page-number rows-per-page filtered-count total-count]} props
-           right-num (min filtered-count (* page-number rows-per-page))
+     (let [{:keys [page-number rows-per-page tab-count total-count]} props
+           right-num (min tab-count (* page-number rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec page-number) rows-per-page)))]
        [:div {:style {:display "inline-flex"}}
         [:strong {:style {:marginRight "0.3rem"}} (str left-num " - " right-num)]
-        (str " of " (inflections/pluralize filtered-count " result")
-             (when-not (= filtered-count total-count)
+        (str " of " (inflections/pluralize tab-count " result")
+             (when-not (= tab-count total-count)
                (str " (filtered from " total-count " total)")))]))
    :-render-page-component
    (fn [{:keys [props]}]
-     (let [{:keys [filtered-count rows-per-page page-number page-selected]} props
-           num-pages (js/Math.ceil (/ filtered-count rows-per-page))
+     (let [{:keys [tab-count rows-per-page page-number page-selected]} props
+           num-pages (js/Math.ceil (/ tab-count rows-per-page))
            allow-prev (> page-number 1)
            allow-next (< page-number num-pages)]
        (style/create-unselectable
