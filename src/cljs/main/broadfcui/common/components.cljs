@@ -696,7 +696,7 @@
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
-     (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear?]} props
+     (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear? maximum-selection-length language]} props
            component (js/$ (@refs "input-element"))
            data-source (if data
                          {:data data}
@@ -718,8 +718,10 @@
                                         (when x
                                           (or (aget x "tag") (aget x "text"))))
                    :tags allow-new?
+                   :maximumSelectionLength (or maximum-selection-length 0)
                    :minimumInputLength minimum-input-length
-                   :language {:inputTooShort #(str "Enter at least " minimum-input-length " characters to search")}})))
+                   :language (merge {:inputTooShort #(str "Enter at least " minimum-input-length " characters to search")}
+                                    language)})))
        (.on component "change" #(this :-on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]

@@ -46,10 +46,16 @@
            id (gensym "io-table-")]
        [:div {:id id}
         (when editing?
-          [:style {} (str "#" id " .select2-container .select2-selection--single .select2-selection__rendered"
-                          "{padding-right: 8px}"
-                          "#" id " .select2-container--default .select2-selection--single .select2-selection__arrow"
-                          "{display: none}")])
+          [:style {} (str ".select2-results__option"
+                          "{font-size: 80%}"
+                          "#" id " .select2-container--default .select2-selection--multiple .select2-selection__choice__remove"
+                          "{display: none}"
+                          "#" id " .select2-container .selection li.select2-selection__choice"
+                          "{background: none; color: black; margin-right: 0; padding: 0}"
+                          "#" id " .select2-selection__rendered"
+                          "{padding-top: 0.1rem}"
+                          "#" id " .select2-selection__rendered > li+li"
+                          "{width: 10px}")])
         [Table {:data (->> (io-key inputs-outputs)
                            (map (fn [{:keys [name inputType outputType optional] :as item}]
                                   (let [[task variable] (take-last 2 (string/split name "."))
@@ -99,26 +105,27 @@
                                    :sort-by :text
                                    :render
                                    (fn [{:keys [name value optional?]}]
+                                     (let [value (when-not (string/blank? value) value)]
                                        [:div {:style (clip table-style/default-cell-left)}
                                         (if editing?
                                           ;; (ab)using TagAutocomplete instead of Typeahead because it
                                           ;; plays nicer with tables
                                           [comps/TagAutocomplete
-                                           {:multiple false :show-counts? false :allow-clear? true
+                                           {:multiple true :show-counts? false :allow-clear? true
                                             :minimum-input-length 0
-                                            :tags value
-                                            ;; "" allows for initial empty selection
+                                            :tags [value] :maximum-selection-length 1
+                                            :language {:maximumSelected (fn [] "")}
                                             ;; `value` ensures that custom selections are initially selected when going to edit
                                             ;; `distinct` because having multiple copies of the same screws things up
-                                            :data (distinct (concat ["" value] data))
+                                            :data (distinct (if value (concat [value] data) data))
                                             :placeholder (if optional? "Optional" "Select or enter")
                                             :on-change (fn [value]
                                                          (swap! locals update io-key assoc (keyword name)
                                                                 (if (empty? value) "" value)))}]
-                                          (if-not (string/blank? value)
+                                          (if value
                                             [:span {:style (when optional? table-style/table-cell-optional)} value]
                                             (when optional?
-                                              [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))])}])
+                                              [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
                                (when invalid-values
                                  [{:header "Message" :initial-width 400
                                    :as-text :error-message
