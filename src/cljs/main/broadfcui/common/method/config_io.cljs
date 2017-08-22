@@ -34,13 +34,11 @@
    :render
    (fn [{:keys [this]}]
      [:div {}
-      [Collapse
-       {:title "Inputs"
-        :contents (this :-render-table :inputs)}]
-      [Collapse
-       {:style {:marginTop "1rem"}
-        :title "Outputs"
-        :contents (this :-render-table :outputs)}]])
+      [Collapse {:title "Inputs"
+                 :contents (this :-render-table :inputs)}]
+      [Collapse {:style {:marginTop "1rem"}
+                 :title "Outputs"
+                 :contents (this :-render-table :outputs)}]])
    :-render-table
    (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
