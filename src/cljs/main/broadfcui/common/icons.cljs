@@ -32,6 +32,8 @@
    :information "fa-info-circle"
    :library "fa-book"
    :lock "fa-lock"
+   :move-left "fa-angle-double-left"
+   :move-right "fa-angle-double-right"
    :new-window "fa-external-link"
    :publish "fa-upload"
    :remove "fa-minus-circle"

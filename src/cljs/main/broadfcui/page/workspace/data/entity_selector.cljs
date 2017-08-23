@@ -73,15 +73,18 @@
                                     :style table-style/table-heavy
                                     :columns (columns source?)}
                              :toolbar
-                             {:style {:minWidth 600}
+                             {:style {:flexWrap "wrap"}
                               :get-items
                               (constantly
-                               [flex/spring
-                                [comps/Button {:onClick #(swap! state assoc :selected
-                                                                (if source?
-                                                                  (-> (:entities props) count range set)
-                                                                  #{}))
-                                               :text (if source? (str "Add all " (:type props) "s") "Clear")}]])}}]])]
+                               [(links/create-internal
+                                  {:style {:margin "0.3rem 0 0 auto"}
+                                   :onClick #(swap! state assoc :selected
+                                                    (if source?
+                                                      (-> (:entities props) count range set)
+                                                      #{}))}
+                                  (when-not source? (icons/icon {:style {:marginRight "0.5rem"}} :move-left))
+                                  (str (if source? "Add all " "Remove all ") (:type props) "s")
+                                  (when source? (icons/icon {:style {:marginLeft "0.5rem"}} :move-right)))])}}]])]
        [:div {}
         [:div {:style {:width box-width :paddingBottom "0.5rem" :display "inline-block"
                        :fontWeight 500}}
