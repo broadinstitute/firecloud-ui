@@ -28,7 +28,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   // Unless otherwise declared, this auth token will be used for API calls.
   implicit val authToken: AuthToken = AuthTokens.fred
 
-
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
@@ -41,9 +40,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
 
             workspaceSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
-
-            workspaceListPage.open.filter(workspaceName)
-            workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
           }
         }
       }
@@ -81,7 +77,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 val workspaceListPage = signIn(Config.Users.ron)
                 workspaceListPage.filter(workspaceName)
-                workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                 workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
                 // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
@@ -120,7 +115,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 val listPage = signIn(Config.Users.george)
                 listPage.filter(workspaceName)
-                listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                 val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
                 summaryPage.ui.readAuthDomainGroups should include(authDomainName)
@@ -154,7 +148,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val listPage = signIn(Config.Users.harry)
                   listPage.filter(workspaceName)
-                  listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
                   summaryPage.ui.readAuthDomainGroups should include(groupOneName)
@@ -182,9 +175,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
               workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-
-              workspaceListPage.open.filter(workspaceName)
-              workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
             }
           }
         }
@@ -251,6 +241,36 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
+      "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
+        withGroup("AuthDomainSpec") { groupOneName =>
+          withGroup("AuthDomainSpec") { groupTwoName =>
+            withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
+              withCleanUp {
+                val workspaceListPage = signIn(Config.Users.fred)
+
+                workspaceListPage.open.filter(workspaceName)
+                workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
+              }
+            }
+          }
+        }
+      }
+      "contains the list of auth domain groups in the workspace summary page" in withWebDriver { implicit driver =>
+        withGroup("AuthDomainSpec") { groupOneName =>
+          withGroup("AuthDomainSpec") { groupTwoName =>
+            withCleanUp {
+              val workspaceListPage = signIn(Config.Users.fred)
+
+              val workspaceName = "AuthDomainSpec_create_" + randomUuid
+              register cleanUp api.workspaces.delete(projectName, workspaceName)
+              val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
+
+              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
+              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+            }
+          }
+        }
+      }
 
       "when the user is in none of the groups" - {
         "when shared with them" - {
@@ -260,7 +280,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
                   // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
@@ -303,7 +322,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
                   // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
@@ -320,7 +338,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.hermione)
                   workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
                   // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
@@ -357,7 +374,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.hermione)
                   workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
                   // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
@@ -378,7 +394,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val listPage = signIn(Config.Users.harry)
                   listPage.filter(workspaceName)
-                  listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
                   summaryPage.ui.readAuthDomainGroups should include(groupOneName)
@@ -393,7 +408,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName)) { workspaceName =>
                   val listPage = signIn(Config.Users.hermione)
                   listPage.filter(workspaceName)
-                  listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
                   val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
                   summaryPage.ui.readAuthDomainGroups should include(authDomainName)
