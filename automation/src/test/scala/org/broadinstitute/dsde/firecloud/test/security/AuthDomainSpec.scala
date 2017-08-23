@@ -433,6 +433,22 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             }
           }
         }
+        "when shared with one of the groups in the auth domain" - {
+          "can be seen and is accessible by the group member" in withWebDriver { implicit driver =>
+            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  val listPage = signIn(Config.Users.harry)
+                  listPage.filter(workspaceName)
+
+                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                }
+              }
+            }
+          }
+        }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
