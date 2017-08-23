@@ -94,22 +94,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
-          "when the user is a billing project owner" - {
-            "can be seen but is not accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec") { authDomainName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.hermione)
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                  Thread sleep 500
-                  workspaceListPage.validateLocation()
-                }
-              }
-            }
-          }
         }
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
@@ -146,22 +130,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
-          "when the user is a billing project owner" - {
-            "can be seen but is not accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec") { groupOneName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.hermione)
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                  Thread sleep 500
-                  workspaceListPage.validateLocation()
-                }
-              }
-            }
-          }
         }
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
@@ -177,20 +145,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 workspaceSummaryPage.ui.readError() should include(projectName)
                 workspaceSummaryPage.ui.readError() should include(workspaceName)
                 workspaceSummaryPage.ui.readError() should include("does not exist")
-              }
-            }
-          }
-          "when the user is a billing project owner" - {
-            "can be seen and is accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { authDomainName =>
-                withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName)) { workspaceName =>
-                  val listPage = signIn(Config.Users.hermione)
-                  listPage.filter(workspaceName)
-                  listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                  summaryPage.ui.readAuthDomainGroups should include(authDomainName)
-                }
               }
             }
           }
@@ -373,6 +327,22 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
+          "when the user is a billing project owner" - {
+            "can be seen but is not accessible" in withWebDriver { implicit driver =>
+              withGroup("AuthDomainSpec") { authDomainName =>
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
+                  val workspaceListPage = signIn(Config.Users.hermione)
+                  workspaceListPage.filter(workspaceName)
+                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
+
+                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
+                  Thread sleep 500
+                  workspaceListPage.validateLocation()
+                }
+              }
+            }
+          }
         }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
@@ -396,18 +366,16 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "when the user is a billing project owner" - {
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec") { groupOneName =>
-                withGroup("AuthDomainSpec") { groupTwoName =>
-                  withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
-                    val workspaceListPage = signIn(Config.Users.hermione)
-                    workspaceListPage.filter(workspaceName)
-                    workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
+              withGroup("AuthDomainSpec") { authDomainName =>
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
+                  val workspaceListPage = signIn(Config.Users.hermione)
+                  workspaceListPage.filter(workspaceName)
+                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
-                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                    // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                    Thread sleep 500
-                    workspaceListPage.validateLocation()
-                  }
+                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
+                  Thread sleep 500
+                  workspaceListPage.validateLocation()
                 }
               }
             }
@@ -433,23 +401,15 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             }
           }
           "when the user is a billing project owner" - {
-            "should be visible and accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-                withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
-                  withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                    api.billing.addUserToBillingProject(projectName, Config.Users.harry.email, BillingProjectRole.Owner)(AuthTokens.hermione)
-                    register cleanUp {
-                      api.billing.removeUserFromBillingProject(projectName, Config.Users.harry.email, BillingProjectRole.Owner)(AuthTokens.hermione)
-                    }
+            "can be seen and is accessible" in withWebDriver { implicit driver =>
+              withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { authDomainName =>
+                withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName)) { workspaceName =>
+                  val listPage = signIn(Config.Users.hermione)
+                  listPage.filter(workspaceName)
+                  listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
-                    val listPage = signIn(Config.Users.harry)
-                    listPage.filter(workspaceName)
-                    listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  }
+                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                  summaryPage.ui.readAuthDomainGroups should include(authDomainName)
                 }
               }
             }
@@ -470,23 +430,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceSummaryPage.ui.readError() should include(projectName)
                   workspaceSummaryPage.ui.readError() should include(workspaceName)
                   workspaceSummaryPage.ui.readError() should include("does not exist")
-                }
-              }
-            }
-          }
-          "when the user is a billing project owner" - {
-            "can be seen and is accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { groupOneName =>
-                withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { groupTwoName =>
-                  withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
-                    val listPage = signIn(Config.Users.hermione)
-                    listPage.filter(workspaceName)
-                    listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  }
                 }
               }
             }

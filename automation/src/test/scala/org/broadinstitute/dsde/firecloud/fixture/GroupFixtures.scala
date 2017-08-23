@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.fixture
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration.groups.GroupRole
-import org.broadinstitute.dsde.firecloud.config.AuthToken
+import org.broadinstitute.dsde.firecloud.config._
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util
 import org.scalatest.Suite
@@ -12,7 +12,7 @@ import org.scalatest.Suite
   */
 trait GroupFixtures extends CleanUp with LazyLogging { self: WebBrowserSpec with Suite =>
 
-  def groupNameToEmail(groupName: String): String = s"GROUP_$groupName@quality.firecloud.org" //probably want to pull the apps domain from config if it's there
+  def groupNameToEmail(groupName: String): String = s"GROUP_$groupName@${Config.GCS.appsDomain}"
 
   def withGroup(namePrefix: String, memberEmails: List[String] = List())
                (testCode: (String) => Any)
