@@ -38,7 +38,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @param authDomain the authorization domain for the new workspace
     * @return a WorkspaceSummaryPage for the created workspace
     */
-  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): WorkspaceSummaryPage = {
+  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
     val cloneModal = ui.clickCloneButton()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
     cloneModal.cloneWorkspaceWait()
@@ -156,7 +156,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     * @param workspaceName the name for the new workspace
     * @param billingProjectName the billing project for the workspace
     */
-  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): Unit = {
+  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
     ui.selectBillingProject(billingProjectName)
     ui.fillWorkspaceName(workspaceName)
     authDomain foreach { ui.selectAuthDomain(_) }

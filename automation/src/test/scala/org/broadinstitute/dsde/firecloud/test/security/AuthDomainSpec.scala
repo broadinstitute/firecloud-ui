@@ -38,9 +38,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             val workspaceName = "AuthDomainSpec_create_" + randomUuid
             register cleanUp api.workspaces.delete(projectName, workspaceName)
-            val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
+            val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
 
-            workspaceDetailPage.ui.readAuthDomainGroups should include(authDomainName)
+            workspaceSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
 
             workspaceListPage.open.filter(workspaceName)
             workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
@@ -81,9 +81,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomainSpec") { authDomainName =>
-              withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
-                api.workspaces.updateAcl(projectName, workspaceName, Config.Users.ron.email, WorkspaceAccessLevel.Reader)
-
+              withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 val workspaceListPage = signIn(Config.Users.ron)
                 workspaceListPage.filter(workspaceName)
                 workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
@@ -229,10 +227,10 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               val workspaceName = "AuthDomainSpec_create_" + randomUuid
               register cleanUp api.workspaces.delete(projectName, workspaceName)
-              val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
+              val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
 
-              workspaceDetailPage.ui.readAuthDomainGroups should include(groupOneName)
-              workspaceDetailPage.ui.readAuthDomainGroups should include(groupTwoName)
+              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
+              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
 
               workspaceListPage.open.filter(workspaceName)
               workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
