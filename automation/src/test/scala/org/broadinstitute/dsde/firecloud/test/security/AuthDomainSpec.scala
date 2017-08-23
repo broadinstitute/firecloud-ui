@@ -324,8 +324,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.filter(workspaceName)
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                  Thread sleep 500
+                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
                   workspaceListPage.validateLocation()
                   // TODO: add assertions for the new "request access" modal
                 }
@@ -340,8 +339,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.filter(workspaceName)
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                  Thread sleep 500
+                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
                   workspaceListPage.validateLocation()
                 }
               }
@@ -376,8 +374,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.filter(workspaceName)
 
                   workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  // micro-sleep just long enough to let the app navigate elsewhere if it's going to, which it shouldn't in this case
-                  Thread sleep 500
+                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
                   workspaceListPage.validateLocation()
                 }
               }
@@ -434,7 +431,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when shared with one of the groups in the auth domain" - {
-          "can be seen and is accessible by the group member" in withWebDriver { implicit driver =>
+          "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
             withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
               withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -444,6 +441,24 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
                   summaryPage.ui.readAuthDomainGroups should include(groupOneName)
                   summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                }
+              }
+            }
+          }
+          "can be seen but is not accessible by group member who is a member of only one auth domain group" in withWebDriver { implicit driver =>
+            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomainSpec") { groupTwoName =>
+                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  val workspaceListPage = signIn(Config.Users.harry)
+                  workspaceListPage.filter(workspaceName)
+                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual true
+
+                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                  go to workspaceSummaryPage
+                  workspaceSummaryPage.awaitLoaded()
+                  workspaceSummaryPage.ui.readError() should include(projectName)
+                  workspaceSummaryPage.ui.readError() should include(workspaceName)
+                  workspaceSummaryPage.ui.readError() should include("does not exist")
                 }
               }
             }

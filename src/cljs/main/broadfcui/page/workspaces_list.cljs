@@ -189,8 +189,9 @@
      (let [{:keys [filters-expanded? request-access-modal-props]} @state]
        [:div {}
         (when request-access-modal-props
-          [RequestAuthDomainAccessDialog
-           (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))])
+          [:div {:data-test-id (config/when-debug "request-access-modal")}
+            [RequestAuthDomainAccessDialog
+             (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
          {:persistence-key "workspace-table" :v 2
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
