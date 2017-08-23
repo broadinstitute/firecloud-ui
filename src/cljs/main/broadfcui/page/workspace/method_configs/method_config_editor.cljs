@@ -43,6 +43,9 @@
   {:get-fields
    (fn [{:keys [refs]}]
      ((@refs "methodDetails") :get-fields))
+   :clear-original-redacted
+   (fn [{:keys [refs]}]
+     ((@refs "methodDetails") :clear-original-redacted))
    :get-initial-state
    (fn [{:keys [props]}]
      {:redacted? (:redacted? props)})
@@ -95,6 +98,7 @@
              (list
               [comps/SidebarButton {:color :success-state
                                     :text "Save" :icon :done
+                                    :disabled? (when redacted? "Choose an available snapshot")
                                     :data-test-id (config/when-debug "save-editted-method-config-button")
                                     :onClick #(parent :-commit)}]
               [comps/SidebarButton {:color :exception-state :margin :top
@@ -278,7 +282,7 @@
                   error]])]))
          all-values))))
    :-begin-editing
-   (fn [{:keys [props state locals this]} snapshots]
+   (fn [{:keys [props state locals]}]
      (when-not (:entities-loaded? @locals)
        (swap! locals assoc :entities-loaded? true)
        (endpoints/call-ajax-orch
@@ -296,14 +300,13 @@
                         (swap! state assoc :entity-types entity-types))
                       ;; FIXME: :data-attribute-load-error is unused
                       (swap! state assoc :data-attribute-load-error status-text)))}))
-     (let [{:keys [loaded-config inputs-outputs]} @state]
-       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
+     (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
+       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?)))
    :-cancel-editing
    (fn [{:keys [state refs]}]
-     (let [original-loaded-config (:original-config @state)
-           original-inputs-outputs (:original-inputs-outputs @state)
-           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+     (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
+           method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
+       (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
        ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
                                                           :name (:methodName method-ref)
                                                           :snapshotId (:methodVersion method-ref)})))
@@ -334,6 +337,7 @@
                     (if success?
                       (do (swap! state dissoc :redacted?)
                           ((:on-rename props) name)
+                          ((@refs "methodDetailsViewer") :clear-original-redacted)
                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                       (comps/push-error-response (get-parsed-response false))))})))
    :-load-validated-method-config
@@ -388,8 +392,9 @@
                                                                  :validInputs {}
                                                                  :invalidOutputs {}
                                                                  :validOutputs {})
-                                                :inputs-outputs (get-parsed-response))
+                                                :inputs-outputs (get-parsed-response)
+                                                :redacted? false)
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
-                          (swap! state assoc :blocker nil :wdl-parse-error (:message response))
+                          (swap! state assoc :redacted? true :blocker nil :wdl-parse-error (:message response))
                           (comps/push-error (style/create-server-error-message (:message response)))))))})))})

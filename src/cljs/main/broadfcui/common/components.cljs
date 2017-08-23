@@ -186,6 +186,9 @@
   {:get-fields
    (fn [{:keys [refs]}]
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
+   :clear-original-redacted
+   (fn [{:keys [state]}]
+     (swap! state dissoc :original-redacted?))
    :get-initial-state
    (fn [{:keys [props]}]
      (when (:redacted? props) {:original-redacted? (get-in props [:entity :snapshotId])}))
@@ -202,14 +205,14 @@
            [:div {:style {:paddingTop "0.5rem"}}
             [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
             (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-                                   (if (:payload-expanded @state) "Collapse" "Expand"))]
-           (when (:payload-expanded @state)
-             (if config?
-               [:div {:style {:margin "0.5rem 0 0 1rem"}}
-                (this :render-details (:method entity))
-                [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
-                [CodeMirror {:text (get-in entity [:method :payload])}]]
-               [CodeMirror {:text (:payload entity)}])))])])
+                                   (if (:payload-expanded @state) "Collapse" "Expand"))])
+         (when (and (not redacted?) (:payload-expanded @state))
+           (if config?
+             [:div {:style {:margin "0.5rem 0 0 1rem"}}
+              (this :render-details (:method entity))
+              [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
+              [CodeMirror {:text (get-in entity [:method :payload])}]]
+             [CodeMirror {:text (:payload entity)}]))])])
    :render-details
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
