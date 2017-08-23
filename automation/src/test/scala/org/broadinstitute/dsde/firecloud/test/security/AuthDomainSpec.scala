@@ -50,11 +50,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
-          withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName)) { workspaceName =>
+          withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
             withCleanUp {
-              api.workspaces.updateAcl(projectName, workspaceName,
-                Config.Users.george.email, WorkspaceAccessLevel.Reader)
-
               val listPage = signIn(Config.Users.george)
               val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
@@ -195,11 +192,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupOneName =>
           withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupTwoName =>
-            withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
+            withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
-                api.workspaces.updateAcl(projectName, workspaceName,
-                  Config.Users.george.email, WorkspaceAccessLevel.Reader)
-
                 val listPage = signIn(Config.Users.george)
                 val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
@@ -228,11 +222,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupOneName =>
           withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupTwoName =>
             withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupThreeName =>
-              withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
+              withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withCleanUp {
-                  api.workspaces.updateAcl(projectName, workspaceName,
-                    Config.Users.george.email, WorkspaceAccessLevel.Reader)
-
                   val listPage = signIn(Config.Users.george)
                   val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
@@ -266,9 +257,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomainSpec") { groupOneName =>
               withGroup("AuthDomainSpec") { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
-                  api.workspaces.updateAcl(projectName, workspaceName, Config.Users.ron.email, WorkspaceAccessLevel.Reader)
-
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
                   workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
@@ -311,9 +300,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomainSpec") { groupOneName =>
               withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
-                  api.workspaces.updateAcl(projectName, workspaceName, Config.Users.ron.email, WorkspaceAccessLevel.Reader)
-
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
                   workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
