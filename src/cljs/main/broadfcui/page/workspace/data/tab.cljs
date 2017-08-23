@@ -67,16 +67,13 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
-        (when (:loading-attributes @state)
-          [comps/Blocker {:banner "Loading..."}])
         (cond workspace-error (style/create-server-error-message workspace-error)
               workspace (this :-render-data))
         (when (:selected-entity @state)
-          (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
+          (let [{:keys [selected-entity-type selected-entity]} @state]
             [EntityViewer {:workspace-id workspace-id
                            :entity-type (name selected-entity-type)
                            :entity-name selected-entity
-                           :attr-list selected-attr-list
                            :update-parent-state (partial this :update-state)}]))]))
    :-handle-import-data-click
    (fn [{:keys [props state refs]}]
@@ -104,7 +101,7 @@
                             :style {:marginLeft "auto"}
                             :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                             :onClick #(this :-handle-import-data-click)}]])
-          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil)
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
@@ -136,19 +133,10 @@
                  :type "submit"
                  :value (str "Download '" selected-entity-type "' metadata")}]]))
    :-render-entity
-   (fn [{:keys [props state this]} e]
-     (let [entity-name (or (:name e) (:entityName e))
-           entity-type (:entityType e)
-           {:keys [workspace-id]} props
-           update-parent-state (partial this :update-state)]
+   (fn [{:keys [state]} e]
+     (let [entity-name (or (:name e) (:entityName e))]
        (links/create-internal
-        {:onClick (fn [_]
-                    (swap! state assoc
-                           :selected-attr-list nil
-                           :loading-attributes true
-                           :selected-entity entity-name)
-                    (data-utils/get-entity-attrs
-                     (utils/restructure entity-name entity-type workspace-id update-parent-state)))}
+        {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
         entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
