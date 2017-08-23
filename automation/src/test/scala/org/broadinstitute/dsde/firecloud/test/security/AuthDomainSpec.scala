@@ -402,6 +402,23 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
+          "and given writer access" - {
+            "the user has correct permissions" in withWebDriver { implicit driver =>
+              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
+                withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+                  withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
+                    withCleanUp {
+                      val workspaceListPage = signIn(Config.Users.harry)
+                      workspaceListPage.filter(workspaceName)
+
+                      val summaryPage = workspaceListPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                      summaryPage.ui.readAccessLevel() should be(WorkspaceAccessLevel.Writer)
+                    }
+                  }
+                }
+              }
+            }
+          }
           "when the user is a billing project owner" - {
             "can be seen and is accessible" in withWebDriver { implicit driver =>
               withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { authDomainName =>

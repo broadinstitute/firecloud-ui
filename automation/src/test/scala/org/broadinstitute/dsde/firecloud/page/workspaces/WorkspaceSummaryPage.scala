@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
+import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
+import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
 import org.openqa.selenium.WebDriver
@@ -93,6 +95,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val unpublishButtonQuery = testId("unpublish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
     private val workspaceError = testId("workspace-details-error")
+    private val accessLevel = testId("workspace-access-level")
 
     def clickCloneButton(): CloneWorkspaceModal = {
       click on (await enabled cloneButton)
@@ -142,6 +145,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def readWorkspaceName: String = {
       readText(nameHeader)
+    }
+
+    def readAccessLevel(): WorkspaceAccessLevel = {
+      WorkspaceAccessLevel.withName(readText(accessLevel).toUpperCase)
     }
   }
   object ui extends UI

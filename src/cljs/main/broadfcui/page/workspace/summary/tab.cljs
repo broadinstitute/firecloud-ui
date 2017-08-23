@@ -227,7 +227,8 @@
           "Workspace Access"
 
           "Access Level"
-          (style/prettify-access-level user-access-level)
+          [:span {:data-test-id (config/when-debug "workspace-access-level")}
+           (style/prettify-access-level user-access-level)]
 
           (str "Workspace Owner" (when (> (count owners) 1) "s"))
           (string/join ", " owners)
