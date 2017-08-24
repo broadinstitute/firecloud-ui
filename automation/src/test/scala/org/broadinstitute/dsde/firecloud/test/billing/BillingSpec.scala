@@ -5,7 +5,7 @@ import java.util.UUID
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Rawls
 import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.fixture.TestData
+import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspaceMethodConfigPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -96,10 +96,10 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
           signIn(Config.Users.hermione)
           val methodConfigName: String = "test_method" + UUID.randomUUID().toString
           val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProjectName, workspaceName).open
-          val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
-            TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName)
-          methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
-          val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
+          val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethodConfig.configNamespace,
+            MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, methodConfigName)
+          methodConfigDetailsPage.editMethodConfig(inputs = Some(MethodData.SimpleMethodConfig.inputs))
+          val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
           submissionDetailsPage.waitUntilSubmissionCompletes()
           assert(submissionDetailsPage.verifyWorkflowSucceeded())

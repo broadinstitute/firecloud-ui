@@ -32,31 +32,4 @@ object TestData {
   }
 
 
-  /* METHODS */
-  object SimpleMethod {
-    val name = "test_method"
-    val namespace = "qamethods"
-    val snapshotId = 1
-    val rootEntityType = "participant"
-    val inputs = Map("test.hello.name" -> "\"a\"",
-      "test.hello.response" -> "workspace.result")
-  }
-  object SimpleMethodConfig {
-    val name = "test1_config"
-    val namespace = "qamethods"
-    val snapshotId = 1
-    val rootEntityType = "participant"
-    val inputs = Map("test.hello.name" -> "\"a\"", // shouldn't be needed for config
-      "test.hello.response" -> "workspace.result")
-  }
-
-  object InputRequiredMethodConfig {
-    val name = "test_method_input_required"
-    val namespace = "qamethods"
-    val snapshotId = 1
-    val rootEntityType = "participant"
-    val inputs = Map("test.hello.name" -> "\"a\"",
-      "test.hello.response" -> "workspace.result")
-  }
-
 }
