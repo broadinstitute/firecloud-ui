@@ -4,11 +4,12 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.management-utils :as management-utils]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -52,8 +53,7 @@
                 (fn [{:keys [groupName role]}]
                   (if
                    (= role "Admin")
-                    (style/create-link {:text groupName
-                                        :href (nav/get-link :group groupName)})
+                    (links/create-internal {:href (nav/get-link :group groupName)} groupName)
                     groupName))}
                {:header "Role" :initial-width 100
                 :sort-by :text
@@ -74,10 +74,10 @@
                 :render
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
-                    (style/create-link
-                     {:text (icons/icon {} :delete)
-                      :style {:float "right" :color (:exception-state style/colors)}
-                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
+                    (links/create-internal
+                     {:style {:float "right" :color (:exception-state style/colors)}
+                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
+                     (icons/icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly

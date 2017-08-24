@@ -5,11 +5,13 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.filter :as filter]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
-   [broadfcui.components.modals :as modals]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -82,7 +84,8 @@
                                      (if instruction
                                        [:div {}
                                         "Learn how to apply for this Group "
-                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."]
+                                        (links/create-external {:href instruction} "here")
+                                        "."]
 
                                        [:div {}
                                         [comps/Button {:style {:width "125px"}
@@ -169,6 +172,26 @@
        (keep #(some-> % :workspace :attributes :tag:tags :items set))
        (apply clojure.set/union)))
 
+(defn- attach-table-data [{:keys [accessLevel workspace status] :as ws}]
+  (let [workspace-id (select-keys workspace [:namespace :name])
+        no-access? (= accessLevel "NO ACCESS")
+        auth-domain (:authorizationDomain workspace)
+        domain-groups (map :membersGroupName auth-domain)]
+    (assoc ws
+      :workspace-id workspace-id
+      :workspace-column-sort-value (mapv string/lower-case (replace workspace-id [:namespace :name]))
+      :access-level-index (get access-levels-sortorder accessLevel)
+      :status status
+      :auth-domain-groups domain-groups
+      :no-access? no-access?
+      :access-level accessLevel
+      :hover-text (when no-access?
+                    (if (contains? domain-groups config/tcga-authorization-domain)
+                      tcga-disabled-text
+                      non-dbGap-disabled-text))
+      :restricted? (seq auth-domain))))
+
+
 (react/defc- WorkspaceTable
   {:get-initial-state
    (fn []
@@ -193,61 +216,58 @@
             [RequestAuthDomainAccessDialog
              (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
-         {:persistence-key "workspace-table" :v 2
+         {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
+          :tabs {:style {:backgroundColor (:background-light style/colors)
+                         :margin "-0.6rem -1rem 0.3rem" :paddingLeft "1rem"}
+                 :items
+                 [{:label "My Workspaces"
+                   :predicate (fn [{:keys [public accessLevel]}]
+                                (or (not public)
+                                    (common/access-greater-than-equal-to? accessLevel "WRITER")))}
+                  {:label "Public Workspaces"
+                   :predicate :public}]}
+          :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
-           (let [column-data (fn [ws]
-                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
-                                     tcga? (and no-access? (contains? (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
-                                                                      config/tcga-authorization-domain))]
-                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
-                                  :status (:status ws)
-                                  :auth-domain-groups (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
-                                  :no-access? no-access?
-                                  :access-level (:accessLevel ws)
-                                  :hover-text (when no-access?
-                                                (if tcga?
-                                                  tcga-disabled-text
-                                                  non-dbGap-disabled-text))
-                                  :restricted? (not (empty? (get-in ws [:workspace :authorizationDomain])))}))]
-             ;; All of this margining is terrible, but since this table
-             ;; will be redesigned soon I'm leaving it as-is.
-             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
-               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
-               :column-data column-data :as-text :status
-               :render #(this :-render-status-cell %)}
-              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-               :initial-width 300
-               :column-data column-data :as-text get-workspace-name-string
-               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
-               :render #(this :-render-workspace-cell %)}
-              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-               :initial-width 350
-               :column-data get-workspace-description
-               :render (fn [description]
-                         [:div {:style {:paddingLeft 14}}
-                          (if description
-                            (-> description string/split-lines first)
-                            [:span {:style {:fontStyle "italic"}}
-                             "No description provided"])])}
-              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
-               :initial-width 200
-               :column-data (comp :lastModified :workspace)
-               :render (fn [date]
-                         [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
-               :as-text common/format-date}
-              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
-               :initial-width 132 :resizable? false
-               :column-data column-data
-               :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
-               :sort-initial :asc
-               :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
-                         [:div {:style {:paddingLeft 14}}
-                          (if (= access-level "NO ACCESS")
-                            (style/create-link {:text (style/prettify-access-level access-level)
-                                                :onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)})
-                            (style/prettify-access-level access-level))])}])
+           ;; All of this margining is terrible, but since this table
+           ;; will be redesigned soon I'm leaving it as-is.
+           [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
+             :sortable? false :resizable? false :filterable? false :initial-width row-height-px
+             :as-text :status
+             :render #(this :-render-status-cell %)}
+            {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+             :initial-width 300
+             :as-text get-workspace-name-string
+             :sort-by :workspace-column-sort-value
+             :render #(this :-render-workspace-cell %)}
+            {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
+             :initial-width 350
+             :column-data get-workspace-description
+             :render (fn [description]
+                       [:div {:style {:paddingLeft 14}}
+                        (if description
+                          (-> description string/split-lines first)
+                          [:span {:style {:fontStyle "italic"}}
+                           "No description provided"])])}
+            {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+             :filterable? false
+             :initial-width 200
+             :column-data (comp :lastModified :workspace)
+             :render (fn [date]
+                       [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
+             :as-text common/format-date}
+            {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
+             :initial-width 132 :resizable? false :filterable? false
+             :sort-by :access-level-index
+             :sort-initial :asc
+             :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
+                       [:div {:style {:paddingLeft 14}}
+                        (if (= access-level "NO ACCESS")
+                          (links/create-internal
+                            {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                            (style/prettify-access-level access-level))
+                          (style/prettify-access-level access-level))])}]
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                    :header-cell {:padding "0.4rem 0"}
@@ -258,19 +278,17 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:style {:display "initial"}
-                    :filter-bar {:style {:float "left"}
-                                 :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
-                    :get-items (constantly
-                            [[:div {:style {:float "right"}}
-                              [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                             [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                              (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                  :onClick #(swap! state update :filters-expanded? not)})]
-                             [:div {:style {:clear "both"}}]
-                             (when filters-expanded?
-                               (this :-render-side-filters))])}
-          :paginator {:style {:clear "both"}}}]]))
+          :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+                    :style {:padding "1rem" :margin 0
+                            :backgroundColor (:background-light style/colors)}
+                    :get-items
+                    (constantly
+                     [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                             (if filters-expanded? "Collapse filters" "Expand filters"))
+                      flex/spring
+                      [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
+          :sidebar (when filters-expanded?
+                     (this :-render-side-filters))}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
@@ -326,7 +344,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:float "left" :margin "0 1rem 1rem 0" :width 175}}
+        {:style {:flex "0 0 175px" :marginTop -12}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
@@ -368,7 +386,9 @@
                         (fn [ws]
                           (let [ws-tags (set (get-in ws [:workspace :attributes :tag:tags :items]))]
                             (every? (partial contains? ws-tags) selected-tags))))]
-       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
+       (->> workspaces
+            (filter (apply every-pred tag-filter checkbox-filters))
+            (map attach-table-data))))})
 
 
 (react/defc- WorkspaceList
@@ -385,12 +405,11 @@
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
-          [:div {:style {:padding "0 1rem"}}
-           [WorkspaceTable
-            (assoc props
-              :workspaces workspaces
-              :billing-projects billing-projects
-              :disabled-reason disabled-reason)]])
+          [WorkspaceTable
+           (assoc props
+             :workspaces workspaces
+             :billing-projects billing-projects
+             :disabled-reason disabled-reason)])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -408,17 +427,12 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
-(react/defc- Page
-  {:render
-   (fn []
-     [:div {:style {:marginTop "1.5rem"}}
-      [WorkspaceList]])})
 
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
    :workspaces
-   {:component Page
+   {:component WorkspaceList
     :regex #""
     :make-props (fn [] {})
     :make-path (fn [] "")}))

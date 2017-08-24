@@ -1,13 +1,14 @@
 (ns broadfcui.page.method-repo.create-method
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -37,10 +38,11 @@
    (fn [{:keys [props locals]}]
      (swap! locals assoc :info (build-info props)))
    :render
-   (fn [{:keys [state refs locals this]}]
+   (fn [{:keys [props state refs locals this]}]
      (let [{:keys [info]} @locals]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header (:header info)
+         :dismiss (:dismiss props)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
@@ -94,33 +96,31 @@
                   [undo? redo?] (map pos? [undo redo])
                   link (fn [label enabled?]
                          (if enabled?
-                           (style/create-link {:text (clojure.string/capitalize label)
-                                               :onClick #((@refs "wdl-editor") :call-method label)
-                                               :style {:color (:text-light style/colors)
-                                                       :backgroundColor "white"
-                                                       :padding "0 6px"
-                                                       :border style/standard-line}})
+                           (links/create-internal {:onClick #((@refs "wdl-editor") :call-method label)
+                                                   :style {:color (:text-light style/colors)
+                                                           :backgroundColor "white"
+                                                           :padding "0 6px"
+                                                           :border style/standard-line}}
+                                                  (string/capitalize label))
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
-                            (clojure.string/capitalize label)]))]
+                            (string/capitalize label)]))]
               [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
-               (style/create-link {:text "Load from file..."
-                                   :onClick #(.click (@refs "wdl-uploader"))})
+               (links/create-internal {:onClick #(.click (@refs "wdl-uploader"))} "Load from file...")
                (when file-name
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
-                  (style/create-link {:text "Reset to file"
-                                      :onClick #(this :-set-wdl-text (:file-contents @state))})])
+                  (links/create-internal {:onClick #(this :-set-wdl-text (:file-contents @state))} "Reset to file")])
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
-           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
-           [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
-            "WDL must use Docker image digests to allow call caching "
-            [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
-             "Learn about call caching" icons/external-link-icon]]
+           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false
+                        :initialize (fn [self]
+                                      (self :add-listener "change"
+                                       #(swap! state assoc :undo-history
+                                               (js->clj (self :call-method "historySize")))))}]
 
            (when (:edit-mode? info)
              [:div {:style {:margin "1rem 0 -1rem"}}
@@ -133,11 +133,6 @@
                      [comps/Button {:ref "ok-button"
                                     :text (:ok-text info)
                                     :onClick #(this :-create-method)}])}]))
-   :component-did-mount
-   (fn [{:keys [state refs]}]
-     ((@refs "wdl-editor") :add-listener "change"
-      #(swap! state assoc :undo-history
-              (js->clj ((@refs "wdl-editor") :call-method "historySize")))))
    :-set-wdl-text
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))
@@ -146,7 +141,7 @@
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
            wdl ((@refs "wdl-editor") :call-method "getValue")
-           fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
+           fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
          (swap! state assoc :banner "Uploading...")
@@ -176,7 +171,7 @@
                  (swap! state assoc :banner nil :upload-error (get-parsed-response false))))})))))
    :-complete
    (fn [{:keys [props]} new-entity-id & [error-message]]
-     (modal/pop-modal)
+     ((:dismiss props))
      ((:on-created props) :method new-entity-id)
      (when error-message
        (comps/push-error error-message)))})

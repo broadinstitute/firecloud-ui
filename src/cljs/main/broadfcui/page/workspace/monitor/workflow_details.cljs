@@ -7,9 +7,10 @@
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -59,8 +60,8 @@
        (:label props)
        (if (empty? (:data props))
          "None"
-         (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                             :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
+         (links/create-internal {:onClick #(swap! state update :expanded not)}
+                                (if (:expanded @state) "Hide" "Show"))))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (let [columns [{:header "Label"
@@ -89,8 +90,8 @@
        (:label props)
        (if (empty? (:data props))
          "Not Available"
-         (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                             :onClick #(swap! state update :expanded not)})))
+         (links/create-internal {:onClick #(swap! state update :expanded not)}
+                                (if (:expanded @state) "Hide" "Show"))))
       [:div {:ref "chart-container" :style {:padding "0.25em 0 0 0"}}]])
    :component-did-mount #((:this %) :-update-element)
    :component-did-update #((:this %) :-update-element)
@@ -126,8 +127,8 @@
      [:div {}
       (create-field
        "Failures"
-       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))}))
+       (links/create-internal {:onClick #(swap! state update :expanded not)}
+                              (if (:expanded @state) "Hide" "Show")))
       (when (:expanded @state)
         [comps/Tree {:start-collapsed? false
                      :highlight-ends false
@@ -186,13 +187,11 @@
       [:div {:style {:display "inline-block" :marginRight "1em"}}
        (let [workflow-name (workflow-name (:label props))
              call-name (call-name (:label props))]
-         (style/create-link {:text (:label props)
-                             :target "_blank"
-                             :style {:color "-webkit-link" :textDecoration "underline"}
-                             :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
-                                        "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}))]
-      (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                          :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
+         (links/create-external {:href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
+                                            "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}
+                                (:label props)))]
+      (links/create-internal {:onClick #(swap! state update :expanded not)}
+                             (if (:expanded @state) "Hide" "Show"))
       (when (:expanded @state)
         (map-indexed
          (fn [index data]
@@ -225,12 +224,10 @@
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
       (create-field "Workflow ID"
-                    (style/create-link {:text (workflow "id")
-                                        :target "_blank"
-                                        :style {:color "-webkit-link" :textDecoration "underline"}
-                                        :href (str moncommon/google-cloud-context
-                                                   bucketName "/" submission-id "/"
-                                                   workflow-name "/" (workflow "id") "/")})))
+                    (links/create-external {:href (str moncommon/google-cloud-context
+                                                       bucketName "/" submission-id "/"
+                                                       workflow-name "/" (workflow "id") "/")}
+                                           (workflow "id"))))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status)))
     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]

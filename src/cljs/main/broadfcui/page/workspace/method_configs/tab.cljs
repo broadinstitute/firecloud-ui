@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -18,8 +19,9 @@
 
 (react/defc- MethodConfigurationsList
   {:reload
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this props]}]
      (swap! state dissoc :server-response)
+     ((:request-refresh props))
      (react/call :load this))
    :render
    (fn [{:keys [props state]}]
@@ -32,11 +34,12 @@
          (ws-common/method-config-selector
           {:configs configs
            :render-name (fn [config]
-                          (style/create-link {:text (:name config)
-                                              :data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
-                                              :href (nav/get-link :workspace-method-config
-                                                                  (:workspace-id props)
-                                                                  (ws-common/config->id config))}))
+                          (links/create-internal
+                           {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
+                            :href (nav/get-link :workspace-method-config
+                                                (:workspace-id props)
+                                                (ws-common/config->id config))}
+                           (:name config)))
            :toolbar-items
            [flex/spring
             [comps/Button
@@ -61,7 +64,6 @@
      (react/call :load this))
    :load
    (fn [{:keys [props state]}]
-     ((:request-refresh props))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]

@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
@@ -27,19 +28,21 @@
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])
              data-empty (or (= data-size "0") (string/blank? data-size))
-             bam? (re-find #"\.ba[mi]$" (:object props))]
+             bam? (re-find #"\.ba[mi]$" (:object props))
+             img? (re-find #"\.(?:(jpe?g|png|gif|bmp))$" (:object props))
+             hide-preview? (or bam? img?)]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} (if bam?
+           [:div {} (if hide-preview?
                       "Preview is not supported for this filetype."
                       "Previews may not be supported for some filetypes.")]
-           (when (and (not bam?) (> data-size preview-byte-count))
+           (when (and (not hide-preview?) (> data-size preview-byte-count))
              (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
-           (when-not (or data-empty bam?)
+           (when-not (or data-empty hide-preview?)
              (react/create-element
               [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                             :fontSize "90%" :overflowY "auto" :maxHeight 206
@@ -55,11 +58,10 @@
                         (react/create-element [:span {:style {:marginLeft "2em" :fontWeight "bold"}} "File Empty"])
                         (react/create-element
                          [:span {:style {:marginLeft "1em"}}
-                          [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                               :onClick utils/refresh-access-token
-                               :onContextMenu utils/refresh-access-token
-                               :target "_blank"}
-                           "Open" icons/external-link-icon]
+                          (links/create-external {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
+                                                  :onClick utils/refresh-access-token
+                                                  :onContextMenu utils/refresh-access-token}
+                                                 "Open")
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                            " (right-click to download)"]]))
                       (when (> data-size 100000000)
@@ -69,7 +71,7 @@
                          (style/create-code-sample
                           (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))
                          [:div {:style {:marginTop "1em"}} "For more information on the gsutil tool click "
-                          [:a {:href "https://cloud.google.com/storage/docs/gsutil" :target "_blank"} "here" icons/external-link-icon]]]))
+                          (links/create-external {:href "https://cloud.google.com/storage/docs/gsutil"} "here")]]))
              (when-not data-empty
                (labeled "Estimated download fee"
                         (if (nil? cost) "Unknown" (common/format-price cost))
@@ -81,10 +83,8 @@
                 (labeled "Created" (common/format-date (:timeCreated data)))
                 (labeled "Updated" (common/format-date (:updated data)))
                 (labeled "MD5" (:md5Hash data))
-                (style/create-link {:text "Collapse"
-                                    :onClick #(swap! state dissoc :show-details?)})]
-               (style/create-link {:text "More info"
-                                   :onClick #(swap! state assoc :show-details? true)}))])
+                (links/create-internal {:onClick #(swap! state dissoc :show-details?)} "Collapse")]
+               (links/create-internal {:onClick #(swap! state assoc :show-details? true)} "More info"))])
           (when error
             [:div {:style {:marginTop "1em"}}
              [:span {:style {:color (:exception-state style/colors)}} "Error! "]
@@ -95,11 +95,9 @@
              (if (:show-error-details? @state)
                [:div {}
                 [:pre {} error]
-                (style/create-link {:text "Hide detail"
-                                    :onClick #(swap! state dissoc :show-error-details?)})]
+                (links/create-internal {:onClick #(swap! state dissoc :show-error-details?)} "Hide detail")]
                [:div {}
-                (style/create-link {:text "Show full error response"
-                                    :onClick #(swap! state assoc :show-error-details? true)})])])])
+                (links/create-internal {:onClick #(swap! state assoc :show-error-details? true)} "Show full error response")])])])
        :show-cancel? false
        :ok-button {:text "Done" :onClick modal/pop-modal}}])
    :component-did-mount

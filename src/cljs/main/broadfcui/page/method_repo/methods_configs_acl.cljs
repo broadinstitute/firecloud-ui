@@ -1,11 +1,12 @@
 (ns broadfcui.page.method-repo.methods-configs-acl
   (:require
    [dmohs.react :as react]
+   [clojure.set :as set]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -25,8 +26,9 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header (str "Permissions for " (:title props))
+       :dismiss (:dismiss props)
        :content
        (react/create-element
         (net/render-with-ajax
@@ -40,7 +42,7 @@
              (get-in % [:parsed-response :message]))}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :-persist-acl)})}])
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (endpoints/call-ajax-orch
       {:endpoint (:load-endpoint props)
        :on-done (net/handle-ajax-response
@@ -50,11 +52,13 @@
                      (let [acl-vec (filterv #(not= "public" (:user %)) parsed-response)
                            public-user (first (filter #(= "public" (:user %)) parsed-response))
                            public-status (or (:role public-user) no-access-level)]
+                       (when (= "Configuration" (:entityType props))
+                         (swap! locals assoc :initial-users (set (map :user acl-vec))))
                        (swap! state assoc :acl-vec acl-vec
                               :public-status (= public-status reader-level)
                               :count-orig (count acl-vec))))))}))
    :-render-acl-form
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state this]}]
      (let [{:keys [acl-vec public-status count-orig]} @state]
        [:div {:style {:width 800}}
         (when (:saving? @state)
@@ -90,9 +94,9 @@
                                         (conj (this :-capture-ui-state)
                                               {:user "" :role reader-level}))}]
         [:label {:style {:cursor "pointer"}}
-         [:input {:type "checkbox" :ref "publicbox"
+         [:input {:type "checkbox"
                   :style {:marginLeft "2em" :verticalAlign "middle"}
-                  :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
+                  :onChange #(swap! state assoc :public-status (.. % -target -checked))
                   :checked public-status}]
          [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
         (style/create-server-error-message (:persist-error @state))]))
@@ -115,14 +119,19 @@
              :on-done (net/handle-ajax-response
                        (fn [{:keys [success? parsed-response]}]
                          (if success?
-                           (modal/pop-modal)
-                           (do
-                             (swap! state assoc :persist-error (:message parsed-response))
-                             (swap! state dissoc :saving?)))))})))))
+                           (this :-post-update (set (map :user non-empty-acls)))
+                           (swap! state assoc :persist-error (:message parsed-response) :saving? nil))))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
       (fn [i]
         {:user (input/get-text refs (str "acl-key" i))
          :role (.-value (@refs (str "acl-value" i)))})
-      (range (count (:acl-vec @state)))))})
+      (range (count (:acl-vec @state)))))
+   :-post-update
+   (fn [{:keys [props locals]} new-users]
+     (when (= "Configuration" (:entityType props))
+       (let [diff (set/difference new-users (:initial-users @locals))]
+         (when (seq diff)
+           ((:on-users-added props) diff))))
+     ((:dismiss props)))})

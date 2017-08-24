@@ -5,9 +5,10 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table-utils :refer [default-render]]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
    [broadfcui.utils :as utils]
    ))
@@ -32,9 +33,8 @@
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
                         (style/left-ellipses {:style {:marginRight "0.5em"}}
-                                             (style/create-link {:text data
-                                                                 :onClick #((:on-select props) data)}))
-                        (default-render data)))}]])})
+                                             (links/create-internal {:onClick #((:on-select props) data)} data))
+                        (table-utils/default-render data)))}]])})
 
 
 (react/defc- Right

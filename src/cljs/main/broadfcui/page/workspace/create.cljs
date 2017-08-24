@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
@@ -30,7 +31,7 @@
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
                      :data-test-id (config/when-debug "create-workspace-button")
-                     :onClick #(this :-create-workspace)}
+                     :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")
          :content
@@ -59,13 +60,13 @@
             (style/create-form-label "Authorization Domain (optional)")
             (common/render-info-box
              {:text [:div {} [:strong {} "Note:"]
-                     [:div {} "An Authorization Domain can only be set when creating a Workspace.
-                   Once set, it cannot be changed."]
-                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                                         :target "_blank"
-                                         :text [:span {:style {:white-space "pre"}}
-                                                "Read more about Authorization Domains"
-                                                icons/external-link-icon]})]})]
+                     [:div {}
+                      "An Authorization Domain can only be set when creating a Workspace.
+                       Once set, it cannot be changed."]
+                     [:span {:style {:white-space "pre"}}
+                      (links/create-external
+                       {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                       "Read more about Authorization Domains")]]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
@@ -102,6 +103,32 @@
                       (if success?
                         (do (modal/pop-modal)
                             (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                        (swap! state assoc :server-error (get-parsed-response false))))}))))
+   :-do-clone
+   (fn [{:keys [props refs state]}]
+     (swap! state dissoc :server-error :validation-errors)
+     (if-let [fails (input/validate refs "wsName")]
+       (swap! state assoc :validation-errors fails)
+       (let [name (input/get-text refs "wsName")
+             project (nth (:billing-projects props) (int (:selected-project @state)))
+             desc (common/get-text refs "wsDescription")
+             attributes (if (or (:description props) (not (clojure.string/blank? desc)))
+                          {:description desc}
+                          {})
+             auth-domain {:authorizationDomain (map
+                                                (fn [group-name]
+                                                  {:membersGroupName group-name})
+                                                (:selected-groups @state))}]
+         (swap! state assoc :creating-ws true)
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/clone-workspace (:workspace-id props))
+           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :creating-ws)
+                      (if success?
+                        (do (modal/pop-modal)
+                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]
@@ -141,7 +168,8 @@
                :data-test-id (config/when-debug "workspace-auth-domain-select")
                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
               (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])))})
+              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+          (common/clear-both)])))})
 
 
 (react/defc Button

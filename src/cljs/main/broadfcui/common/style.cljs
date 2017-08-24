@@ -152,12 +152,6 @@
                                    :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
    children])
 
-(defn create-link [{:keys [text] :as attributes}]
-  [:a (utils/deep-merge {:href "javascript:;"
-                         :style {:textDecoration "none" :color (:button-primary colors)}}
-                        (dissoc attributes :text))
-   text])
-
 ;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
 (defn prettify-access-level [s]
   (as-> s $
@@ -176,18 +170,11 @@
   (render-name-id (str namespace "/" name) snapshot-id))
 
 (defn render-count [count]
-  [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-   [:span {:style {:display "inline-block"
-                   :minWidth "10px"
-                   :padding "3px 7px"
-                   :color "#fff"
-                   :fontWeight "bold"
-                   :textAlign "center"
-                   :whiteSpace "nowrap"
-                   :verticalAlign "middle"
-                   :backgroundColor "#aaa"
-                   :borderRadius "3px"}}
-    count]])
+  [:span {:style {:minWidth "10px" :padding "3px 7px" :borderRadius "3px"
+                  :fontSize "80%" :fontWeight "bold"
+                  :color "white" :backgroundColor "#aaa"
+                  :textAlign "center" :whiteSpace "nowrap" :verticalAlign "middle"}}
+   count])
 
 (defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])

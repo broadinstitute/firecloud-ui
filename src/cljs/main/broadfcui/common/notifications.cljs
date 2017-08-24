@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
@@ -29,8 +30,9 @@
        [:span {:style {:color text-color :fontSize "90%" :margin-left "1rem"}}
         message
         (when link
-          [:a {:style {:color text-color :margin-left "1rem"} :href link :target "_blank"}
-           "Read more..." icons/external-link-icon])]]])))
+          (links/create-external {:href link
+                                  :style {:color text-color :margin-left "1rem"}}
+                                 "Read more..."))]]])))
 
 (defn- status-alert-interval [attempt]
   (cond

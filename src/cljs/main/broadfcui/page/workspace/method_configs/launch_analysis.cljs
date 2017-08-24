@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.duration :as duration]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.entity-table :refer [EntityTable]]
@@ -44,7 +45,8 @@
    (style/create-form-label "Select Entity")
    [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}
-    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}}
+    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}
+           :data-test-id (config/when-debug "selected-entity")}
      (str "Selected: "
           (if-let [e (:selected-entity @state)]
             (str (:name e) " (" (:type e) ")")
@@ -82,8 +84,7 @@
     [comps/Checkbox
      {:ref "callCache-check"
       :label [:span {:data-test-id (config/when-debug "call-cache-text") :style {:marginBottom "0.8em"}} "Use Call Caching "
-              [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
-               "Learn about call caching" icons/external-link-icon]]
+              (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]
       :data-test-id (config/when-debug "call-cache-checkbox")
       :initial-checked? true
       :disabled-text (case (:protected-option @state)
@@ -100,10 +101,9 @@
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}
-    (style/create-link {:text (str "Cromwell Version: " (:cromwell-version @state))
-                        :target "_blank"
-                        :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
-                                   (:cromwell-version @state))})]
+    (links/create-external {:href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
+                                       (:cromwell-version @state))}
+                           (str "Cromwell Version: " (:cromwell-version @state)))]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 

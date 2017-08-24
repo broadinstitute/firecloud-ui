@@ -5,16 +5,15 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
-   [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
-   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
 
@@ -41,7 +40,7 @@
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide." icons/external-link-icon]]}))]
+                      (links/create-external {:href (config/user-guide-url)} "user guide.")]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
@@ -68,22 +67,14 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
-        (when (:loading-attributes @state)
-          [comps/Blocker {:banner "Loading..."}])
         (cond workspace-error (style/create-server-error-message workspace-error)
-              workspace (this :-render-data)
-              :else [:div {:style {:textAlign "center"}}
-                     [comps/Spinner {:text "Checking workspace..."}]])
+              workspace (this :-render-data))
         (when (:selected-entity @state)
-          (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
+          (let [{:keys [selected-entity-type selected-entity]} @state]
             [EntityViewer {:workspace-id workspace-id
-                           :entity-type selected-entity-type
+                           :entity-type (name selected-entity-type)
                            :entity-name selected-entity
-                           :attr-list selected-attr-list
                            :update-parent-state (partial this :update-state)}]))]))
-   :component-did-mount
-   (fn [{:keys [props]}]
-     ((:request-refresh props)))
    :-handle-import-data-click
    (fn [{:keys [props state refs]}]
      (modal/push-modal
@@ -110,7 +101,7 @@
                             :style {:marginLeft "auto"}
                             :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                             :onClick #(this :-handle-import-data-click)}]])
-          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil)
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
@@ -120,7 +111,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state refs]} table-props]
+   (fn [{:keys [props state]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -138,25 +129,18 @@
                              (map :id)
                              (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
-                         :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
-                         :padding 0 :marginLeft "1em"}
+                         :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
                  :type "submit"
                  :value (str "Download '" selected-entity-type "' metadata")}]]))
    :-render-entity
-   (fn [{:keys [props state this]} e]
-     (let [entity-name (or (:name e) (:entityName e))
-           entity-type (:entityType e)
-           {:keys [workspace-id]} props
-           update-parent-state (partial this :update-state)]
-       (style/create-link
-        {:text entity-name
-         :onClick #(do (swap! state assoc
-                              :selected-entity-type entity-type
-                              :selected-attr-list nil
-                              :loading-attributes true
-                              :selected-entity entity-name)
-                       (data-utils/get-entity-attrs
-                        (utils/restructure entity-name entity-type workspace-id update-parent-state)))})))
+   (fn [{:keys [state]} e]
+     (let [entity-name (or (:name e) (:entityName e))]
+       (links/create-internal
+        {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
+        entity-name)))
+   :refresh
+   (fn [{:keys [refs state]}]
+     ((@refs "entity-table") :refresh (:selected-entity-type @state) true))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})

@@ -5,11 +5,13 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.filter :as filter]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -17,19 +19,17 @@
    [broadfcui.utils :as utils]
    ))
 
-(defn- tcga-access-instructions []
+(def ^:private tcga-access-instructions
   [:span {}
    [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-    [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
-         :target "_blank"}
-     "here" icons/external-link-icon] "]."]])
+    (links/create-external {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"} "here")
+    "]."]])
 
-(defn- target-access-instructions []
+(def ^:private target-access-instructions
   [:span {}
    [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
-    [:a {:href "https://ocg.cancer.gov/programs/target/using-target-data"
-         :target "_blank"}
-     "here" icons/external-link-icon] "]."]])
+    (links/create-external {:href "https://ocg.cancer.gov/programs/target/using-target-data"} "here")
+    "]."]])
 
 (defn- standard-access-instructions [data]
   [:span {}
@@ -50,6 +50,7 @@
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
          :fetch-data (this :pagination)
+         :style {:content {:marginLeft "2rem"}}
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
@@ -63,7 +64,7 @@
                       :render (fn [data]
                                 (when (= (:workspaceAccess data) "NO ACCESS")
                                   (icons/icon (merge
-                                               {:style {:alignSelf "center" :cursor "pointer"}}
+                                               {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
                                                (this :-get-link-props data))
                                               :shield)))}
                      {:id "library:datasetName"
@@ -71,9 +72,10 @@
                       :sort-initial :asc :sort-by :library:datasetName
                       :as-text :library:datasetDescription
                       :render (fn [data]
-                                (style/create-link (merge {:text (:library:datasetName data)
-                                                           :data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
-                                                          (this :-get-link-props data))))}
+                                (links/create-internal
+                                 (merge {:data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
+                                        (this :-get-link-props data))
+                                 (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -101,18 +103,21 @@
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
          {:get-items (constantly
-                  [[:div {:style {:fontSize "112%"}}
-                    ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
-                    [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-                     "Matching Cohorts"]
-                    [:span {:style {:fontSize "80%"}}
-                     (let [total (or (:total @state) 0)]
-                       (str total
-                            " Dataset"
-                            (when-not (= 1 total) "s")
-                            " found"))]]
-                   flex/spring])
-          :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
+                      [[:div {:style {:fontSize "112%"}}
+                        ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                        [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                         "Matching Cohorts"]
+                        [:span {:style {:fontSize "80%"}}
+                         (let [total (or (:total @state) 0)]
+                           (str total
+                                " Dataset"
+                                (when-not (= 1 total) "s")
+                                " found"))]]
+                       flex/spring])
+          :style {:alignItems "baseline" :marginBottom "0.5rem" :padding "1rem"
+                  ;; The following to line up "Matching Cohorts" to the first (real) column
+                  :paddingLeft "calc(3rem + 12px)"
+                  :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
    :execute-search
@@ -138,8 +143,8 @@
                   (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
                         target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
                     [:div {}
-                     (when tcga? (tcga-access-instructions))
-                     (when target? (target-access-instructions))
+                     (when tcga? tcga-access-instructions)
+                     (when target? target-access-instructions)
                      (when (or tcga? target?)
                        [:p {} "After dbGaP approves your application please link your eRA
                        Commons ID in your FireCloud profile page."])])])]}))}
@@ -147,7 +152,12 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+      ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
+      (fn [results field]
+        (assoc results field (if (or (contains? (:expanded-aggregates props) field)
+                                     (= field :tag:tags))
+                               0
+                               5)))
       {}
       (:aggregate-fields props)))
    :pagination
@@ -175,7 +185,6 @@
                    (let [{:keys [total results aggregations]} (get-parsed-response)]
                      (swap! state assoc :total total)
                      (on-done {:total-count total
-                               :filtered-count total
                                :results results})
                      (when update-aggregates?
                        ((:update-aggregates props) aggregations)))
@@ -196,7 +205,7 @@
      (utils/map-keys name (:facet-filters props)))
    :render
    (fn [{:keys [props this]}]
-     [:div {:style {:padding "16px 12px 0 12px"}}
+     [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
       [comps/AutocompleteFilter
        {:ref "text-filter"
         :on-filter (:on-filter props)
@@ -240,32 +249,22 @@
            all-buckets (mapv :key (:buckets props))
            hidden-items (set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
-       [:div {:style {:paddingBottom "1em"}}
-        [:hr {}]
-        [:span {:style {:fontWeight "bold"}} title]
-        [:div {:style {:fontSize "80%" :float "right"}}
-         (style/create-link {:text "Clear" :onClick #(this :clear-all)})]
-        [:div {:style {:paddingTop "1em"}}
-         (map
-          (fn [{:keys [key doc_count]}]
-            [:div {:style {:paddingTop 5}}
-             [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
-                              :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-                      :title key}
-              [:input {:type "checkbox"
-                       :checked (contains? (:selected-items props) key)
-                       :onChange #(this :update-selected key (.. % -target -checked))}]
-              [:span {:style {:marginLeft "0.3em"}} key]]
-             (some-> doc_count style/render-count)])
-          (concat (:buckets props) hidden-items-formatted))
-         [:div {:style {:paddingTop 5}}
-          (if (:expanded? props)
-            (when (> (count (:buckets props)) 5)
-              (style/create-link {:text " less..."
-                                  :onClick #(this :update-expanded false)}))
-            (when (> size 0)
-              (style/create-link {:text " more..."
-                                  :onClick #(this :update-expanded true)})))]]]))
+       (filter/section
+        {:title title
+         :on-clear #(this :clear-all)
+         :content
+         [:div {}
+          (filter/checkboxes {:items (map (fn [{:keys [key doc_count]}]
+                                            {:item key :hit-count doc_count})
+                                          (concat (:buckets props) hidden-items-formatted))
+                              :checked-items (:selected-items props)
+                              :on-change (fn [item checked?] (this :update-selected item checked?))})
+          [:div {:style {:paddingTop 5}}
+           (if (:expanded? props)
+             (when (> (count (:buckets props)) 5)
+               (links/create-internal {:onClick #(this :update-expanded false)} " less..."))
+             (when (> size 0)
+               (links/create-internal {:onClick #(this :update-expanded true)} " more...")))]]})))
    :clear-all
    (fn [{:keys [props]}]
      ((:update-filter props) (:field props) #{}))
@@ -284,35 +283,47 @@
 
 (react/defc- Facet
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
-       (cond
-         (= render-hint "checkbox") [FacetCheckboxes
-                                     (merge
-                                      {:title title :field aggregate-field}
-                                      (select-keys aggregations [:numOtherDocs :buckets])
-                                      (select-keys props [:expanded? :selected-items :update-filter
-                                                          :expanded-callback-function]))])))})
+       (case render-hint
+         "checkbox"
+         [FacetCheckboxes
+          (merge
+           {:title title :field aggregate-field}
+           (select-keys aggregations [:numOtherDocs :buckets])
+           (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
+         "typeahead-multiselect"
+         (let [tags (mapv :key (:buckets aggregations))
+               ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
+               selected-tags (set/intersection (:selected-items props) (set tags))]
+           (filter/section
+            {:title title
+             :content (react/create-element
+                       [comps/TagAutocomplete
+                        {:ref "tag-autocomplete"
+                         :tags selected-tags
+                         :data (set tags)
+                         :show-counts? false
+                         :allow-new? false
+                         :on-change #((:update-filter props) aggregate-field %)}])
+             :on-clear #((@refs "tag-autocomplete") :set-tags #{})})))))})
 
-(react/defc- FacetSection
-  {:render
-   (fn [{:keys [props]}]
-     (if (empty? (:aggregates props))
-       [:div {:style {:fontSize "80%"}} "loading..."]
-       [:div {:style {:fontSize "85%" :padding "16px 12px"}}
-        (map
-         (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
-                                       :aggregate-properties (get (:aggregate-properties props) aggregate-field)
-                                       :aggregates (:aggregates props)
-                                       :expanded? (contains? (:expanded-aggregates props) aggregate-field)
-                                       :selected-items (set (get-in props [:facet-filters aggregate-field]))
-                                       :update-filter (:update-filter props)
-                                       :expanded-callback-function (:expanded-callback-function props)}])
-         (:aggregate-fields props))]))})
+
+(defn- facet-section [{:keys [aggregates aggregate-properties expanded-aggregates
+                              facet-filters aggregate-fields] :as props}]
+  (if (empty? aggregates)
+    [[comps/Spinner {:text "Loading..."}]]
+    (map (fn [aggregate-field]
+           [Facet (merge (utils/restructure aggregate-field aggregates)
+                         (select-keys props [:update-filter :expanded-callback-function])
+                         {:aggregate-properties (get aggregate-properties aggregate-field)
+                          :expanded? (contains? expanded-aggregates aggregate-field)
+                          :selected-items (set (get facet-filters aggregate-field))})])
+                          (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
@@ -344,25 +355,22 @@
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]
-      ;; TODO: Refactor this to use filter.cljs
-      [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
-       [:div {:style {:width 260 :marginRight "2em"
-                      :background (:background-light style/colors)
-                      :border style/standard-line}}
+      [:div {:style {:display "flex"}}
+       (apply
+        filter/area {:style {:width 260 :boxSizing "border-box"}}
         [SearchSection {:search-text (:search-text @state)
                         :facet-filters (:facet-filters @state)
                         :on-filter (fn [text]
                                      (swap! state assoc :search-text text)
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
-        [FacetSection (merge
-                       {:ref "facets"
-                        :aggregates (:aggregates @state)
-                        :aggregate-properties (:library-attributes @state)
-                        :update-filter (fn [facet-name facet-list]
-                                         (this :update-filter facet-name facet-list))
-                        :expanded-callback-function (fn [facet-name expanded?]
-                                                      (this :set-expanded-aggregate facet-name expanded?))}
-                       (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
+        (facet-section (merge
+                        {:aggregates (:aggregates @state)
+                         :aggregate-properties (:library-attributes @state)
+                         :update-filter (fn [facet-name facet-list]
+                                          (this :update-filter facet-name facet-list))
+                         :expanded-callback-function (fn [facet-name expanded?]
+                                                       (this :set-expanded-aggregate facet-name expanded?))}
+                        (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))))
        [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
         (when (and (:library-attributes @state) (:search-result-columns @state))
           [DatasetsTable (merge

@@ -23,12 +23,14 @@
           "Enter a unique name:"]
          [input/TextField {:ref "name-field" :autoFocus true
                            :style {:width "100%" :marginTop "1em" :marginBottom 0}
-                           :predicates [{:test #(re-matches #"\S*" %) :message "Enter a name with no spaces."}]}]
+                           :predicates [(input/nonempty "Group name")
+                                        (input/alphanumeric_- "Group name")
+                                        (input/max-string-length "Group name" 50)]}]
          (style/create-validation-error-message (:validation-errors @state))
          [:div {:style {:marginBottom "1.5em"
                         :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
                         :fontSize "0.8em"}}
-          "Group names may not contain spaces."]
+          input/hint-alphanumeric_-]
 
          [comps/ErrorViewer {:error (:server-error @state)}]])
        :ok-button #(this :create-group)}])

@@ -22,11 +22,6 @@
   (contains (string/lower-case s) (string/lower-case what)))
 
 
-(defn matches-filter-text [filter-text source]
-  (let [lc-source (string/lower-case source)]
-    (every? (fn [word] (contains lc-source word)) (string/split (string/lower-case filter-text) #"\s+"))))
-
-
 (defn ->json-string [x]
   (js/JSON.stringify (clj->js x)))
 
@@ -257,6 +252,9 @@
   "Sort a collection to match the ordering of a given 'target' collection"
   [pattern coll]
   (sort-by #(index-of pattern %) coll))
+
+(defn changes [keys coll1 coll2]
+  (map (fn [key] (not= (key coll1) (key coll2))) keys))
 
 
 (defn rand-subset [items]

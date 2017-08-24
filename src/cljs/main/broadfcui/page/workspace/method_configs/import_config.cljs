@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -107,11 +108,11 @@
                {:configs configs
                 :render-name
                 (fn [config]
-                  (style/create-link
-                   {:text (:name config)
-                    :onClick #(push-page {:breadcrumb-text (id->str config)
+                  (links/create-internal
+                   {:onClick #(push-page {:breadcrumb-text (id->str config)
                                           :component [ConfirmWorkspaceConfig
-                                                      (assoc props :config config)]})}))})
+                                                      (assoc props :config config)]})}
+                   (:name config)))})
               :else [comps/Spinner {:text "Loading configurations..."}]))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -164,11 +165,11 @@
                 :name name
                 :snapshot-id snapshotId}
             type (if (= entityType "Configuration") :method-config :method)]
-        (style/create-link
-         {:text (style/render-name-id name snapshotId)
-          :data-test-id (config/when-debug (str name "_" snapshotId))
+        (links/create-internal
+         {:data-test-id (config/when-debug (str name "_" snapshotId))
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
-                                :component (confirm-entity (assoc props :type type :id id))})})))}])
+                                :component (confirm-entity (assoc props :type type :id id))})}
+         (style/render-name-id name snapshotId))))}])
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
