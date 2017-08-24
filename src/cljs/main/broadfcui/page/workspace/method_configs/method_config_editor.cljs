@@ -43,9 +43,9 @@
   {:get-fields
    (fn [{:keys [refs]}]
      ((@refs "methodDetails") :get-fields))
-   :clear-original-redacted
+   :clear-redacted-snapshot
    (fn [{:keys [refs]}]
-     ((@refs "methodDetails") :clear-original-redacted))
+     ((@refs "methodDetails") :clear-redacted-snapshot))
    :get-initial-state
    (fn [{:keys [props]}]
      {:redacted? (:redacted? props)})
@@ -145,19 +145,26 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [state this props]}]
-     (this :-load-validated-method-config)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/list-method-snapshots (get-in props [:config-id :namespace]))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (let [response (get-parsed-response)]
-                    (if success?
-                      (swap! state assoc :methods-response response :methods (->> response
-                                                                                  (map #(select-keys % [:namespace :name :snapshotId]))
-                                                                                  (group-by (juxt :namespace :name))
-                                                                                  (utils/map-values (partial map :snapshotId))))
-                      ;; FIXME: :error-message is unused
-                      (swap! state assoc :error-message status-text))))}))
+   (fn [{:keys [this]}]
+     (this :-load-validated-method-config))
+   :component-did-update
+   (fn [{:keys [state]}]
+     (when (and (not (:methods @state)) (:loaded-config @state))
+       (let [loaded-config (:loaded-config @state)
+             methodConfiguration (:methodConfiguration loaded-config)
+             methodRepoMethod (:methodRepoMethod methodConfiguration)
+             methodName (:methodName methodRepoMethod)
+             methodNamespace (:methodNamespace methodRepoMethod)]
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                      (let [response (get-parsed-response)]
+                        (if success?
+                          (swap! state assoc :methods-response response :methods (->> response
+                                                                                      (group-by (juxt :namespace :name))
+                                                                                      (utils/map-values (partial map :snapshotId))))
+                          ;; FIXME: :error-message is unused
+                          (swap! state assoc :error-message status-text))))}))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -337,7 +344,7 @@
                     (if success?
                       (do (swap! state dissoc :redacted?)
                           ((:on-rename props) name)
-                          ((@refs "methodDetailsViewer") :clear-original-redacted)
+                          ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                       (comps/push-error-response (get-parsed-response false))))})))
    :-load-validated-method-config

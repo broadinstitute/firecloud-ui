@@ -186,12 +186,12 @@
   {:get-fields
    (fn [{:keys [refs]}]
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
-   :clear-original-redacted
+   :clear-redacted-snapshot
    (fn [{:keys [state]}]
-     (swap! state dissoc :original-redacted?))
+     (swap! state dissoc :redacted-snapshot))
    :get-initial-state
    (fn [{:keys [props]}]
-     (when (:redacted? props) {:original-redacted? (get-in props [:entity :snapshotId])}))
+     (when (:redacted? props) {:redacted-snapshot (get-in props [:entity :snapshotId])}))
    :render
    (fn [{:keys [props state this]}]
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
@@ -216,7 +216,7 @@
    :render-details
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
-           original-redacted? (:original-redacted? @state)
+           redacted-snapshot (:redacted-snapshot @state)
            make-field
            (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
@@ -227,11 +227,11 @@
                  (style/create-identity-select-name {:ref key
                                                      :data-test-id (config/when-debug "edit-method-config-snapshot-id-select")
                                                      :style {:width 120}
-                                                     :defaultValue (if original-redacted? -1 (key entity))
+                                                     :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
                                                                  #(f (int (common/get-text refs "snapshotId"))))}
                                                     (:snapshots props)
-                                                    (when original-redacted? original-redacted?))
+                                                    redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
                    [:span {:title rendered} rendered]))]])]
        [:div {}
