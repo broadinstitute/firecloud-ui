@@ -20,6 +20,7 @@ require('foundation-sites/js/foundation.magellan');
 require('foundation-sites/js/foundation.sticky');
 require('foundation-sites/js/foundation.tooltip');
 require('select2');
+require('./js/select2MonkeyPatch');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
