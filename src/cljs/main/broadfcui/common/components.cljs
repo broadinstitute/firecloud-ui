@@ -726,12 +726,25 @@
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
-   :should-component-update ; prevent React from trying to re-render non-React components (the typeahead) that were added since the initial render
+   ;; React can't re-render since select2 clobbers the DOM...
+   :should-component-update
    (constantly false)
+   ;; ...but we do need to patch in new client-side options
    :component-will-receive-props
-   (fn [{:keys [refs props next-props]}]
-     (when (not= (:data props) (:data next-props))
-       (.refreshDataSelect2 (js/$ (@refs "input-element")) (clj->js (map (fn [item] {:id item :text item}) (:data next-props))))))
+   (fn [{:keys [refs props next-props this]}]
+     (let [new-data (:data next-props)]
+       (when (not= (:data props) new-data)
+         (let [selected (this :get-tags)
+               selected-list (if (sequential? selected) selected [selected])
+               new-data (distinct (concat selected-list new-data))
+               new-options (map (fn [item] (str "<option value=\""
+                                                (string/replace-all item #"\"" "&quot;")
+                                                "\">" item "</option>"))
+                                new-data)]
+           (.. (js/$ (@refs "input-element"))
+               (html (string/join new-options))
+               (val (clj->js selected))
+               (change))))))
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]
