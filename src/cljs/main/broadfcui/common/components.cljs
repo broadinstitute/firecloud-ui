@@ -728,6 +728,10 @@
      (.select2 (js/$ (@refs "input-element")) "destroy"))
    :should-component-update ; prevent React from trying to re-render non-React components (the typeahead) that were added since the initial render
    (constantly false)
+   :component-will-receive-props
+   (fn [{:keys [refs props next-props]}]
+     (when (not= (:data props) (:data next-props))
+       (.refreshDataSelect2 (js/$ (@refs "input-element")) (clj->js (map (fn [item] {:id item :text item}) (:data next-props))))))
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]

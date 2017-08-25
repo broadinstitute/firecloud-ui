@@ -121,7 +121,7 @@
                                             :placeholder (if optional? "Optional" "Select or enter")
                                             :on-change (fn [value]
                                                          (swap! locals update io-key assoc (keyword name)
-                                                                (if (empty? value) "" value)))}]
+                                                                (if (empty? value) "" (first value))))}]
                                           (if value
                                             [:span {:style (when optional? table-style/table-cell-optional)} value]
                                             (when optional?
