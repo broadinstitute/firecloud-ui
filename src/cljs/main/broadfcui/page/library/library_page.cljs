@@ -191,14 +191,11 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
-(defn- encode [text]
-  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
-  (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
 (defn- highlight-suggestion [suggestion highlight]
   (if (not (string/blank? highlight))
-    (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
-    (encode suggestion)))
+    (string/replace (utils/encode suggestion) (utils/encode highlight) (str "<strong>" (utils/encode highlight) "</strong>"))
+    (utils/encode suggestion)))
 
 (react/defc- SearchSection
   {:get-filters
