@@ -12,6 +12,7 @@ object Config {
   object GCS {
     val pathToQAPem = gcsConfig.getString("qaPemFile")
     val qaEmail = gcsConfig.getString("qaEmail")
+    val appsDomain = gcsConfig.getString("appsDomain")
   }
 
   object Projects {

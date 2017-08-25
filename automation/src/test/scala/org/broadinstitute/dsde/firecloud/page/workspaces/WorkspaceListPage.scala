@@ -21,7 +21,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
-                      authDomain: Option[String] = None): WorkspaceSummaryPage = {
+                      authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
     ui.clickCreateWorkspaceButton()
           .createWorkspace(billingProjectName, workspaceName, authDomain)
     new WorkspaceSummaryPage(billingProjectName, workspaceName)
@@ -70,6 +70,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     private val createWorkspaceButton = testId("open-create-workspace-modal-button")
     private val filterButton = testId("workspace-list-filter-button")
     private val filterInput = testId("workspace-list-filter-input")
+    private val requestAccessModal = testId("request-access-modal")
     private def restrictedWorkspaceTestId(ns: String, n: String) = { s"restricted-$ns-$n" }
 
     def clickCreateWorkspaceButton(): CreateWorkspaceModal = {
@@ -101,6 +102,10 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     def looksRestricted(namespace: String, name: String): Boolean = {
       find(testId(restrictedWorkspaceTestId(namespace, name))).isDefined
     }
+
+    def showsRequestAccessModal(): Boolean = {
+      find(requestAccessModal).isDefined
+    }
   }
   object ui extends UI
 }
@@ -117,7 +122,7 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView 
     * @param workspaceName the name for the new workspace
     * @param billingProjectName the billing project for the workspace
     */
-  def createWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): Unit = {
+  def createWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
     ui.selectBillingProject(billingProjectName)
     ui.fillWorkspaceName(workspaceName)
     authDomain foreach { ui.selectAuthDomain(_) }
