@@ -26,6 +26,11 @@
   (js/JSON.stringify (clj->js x)))
 
 
+(defn encode [text]
+  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
+  (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
+
+
 (defn parse-json-string
   ([x] (parse-json-string x false))
   ([x keywordize-keys?] (parse-json-string x keywordize-keys? true))

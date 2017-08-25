@@ -729,9 +729,9 @@
          (let [selected (this :get-tags)
                selected-list (if (sequential? selected) selected [selected])
                new-data (distinct (concat selected-list new-data))
-               new-options (map (fn [item] (str "<option value=\""
-                                                (string/replace-all item #"\"" "&quot;")
-                                                "\">" item "</option>"))
+               new-options (map (fn [item]
+                                  (let [encoded (utils/encode item)]
+                                    (str "<option value=\"" encoded "\">" encoded "</option>")))
                                 new-data)]
            (.. (js/$ (@refs "input-element"))
                (html (string/join new-options))
