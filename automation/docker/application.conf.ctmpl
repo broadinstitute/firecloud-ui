@@ -16,6 +16,7 @@ gcs {
   qaPemFile = "{{$dir}}/src/test/resources/firecloud-account.pem"
   billingAccount = "{{$users.Data.billing_acct}}"
   billingAccountId = "billingAccounts/0028B7-4F7D57-2D0E40"
+  appsDomain = {{if eq $environment "qa"}}"quality.firecloud.org"{{else}}"{{$environment}}.test.firecloud.org"{{end}}
 }
 
 users {

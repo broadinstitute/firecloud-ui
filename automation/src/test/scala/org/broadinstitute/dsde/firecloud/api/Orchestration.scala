@@ -32,6 +32,11 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       putRequest(apiUrl(s"api/billing/$projectName/${role.toString}/$email"))
     }
 
+    def removeUserFromBillingProject(projectName: String, email: String, role: BillingProjectRole)(implicit token: AuthToken): Unit = {
+      logger.info(s"Removing user from billing project: $projectName $email ${role.toString}")
+      deleteRequest(apiUrl(s"api/billing/$projectName/${role.toString}/$email"))
+    }
+
     def createBillingProject(projectName: String, billingAccount: String)(implicit token: AuthToken): Unit = {
       logger.info(s"Creating billing project: $projectName $billingAccount")
       postRequest(apiUrl("api/billing"), Map("projectName" -> projectName, "billingAccount" -> billingAccount))
@@ -80,17 +85,15 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
   object workspaces {
 
-    def create(namespace: String, name: String, authDomain: Option[String] = None)
+    def create(namespace: String, name: String, authDomain: Set[String] = Set.empty)
               (implicit token: AuthToken): Unit = {
       logger.info(s"Creating workspace: $namespace/$name authDomain: $authDomain")
 
-      val authDomainList = authDomain match {
-        case Some(a) => List(Map("membersGroupName" -> a))
-        case None => List()
-      }
+      val authDomainGroups = authDomain.map(a => Map("membersGroupName" -> a))
 
       val request = Map("namespace" -> namespace, "name" -> name,
-        "attributes" -> Map.empty, "authorizationDomain" -> authDomainList)
+        "attributes" -> Map.empty, "authorizationDomain" -> authDomainGroups)
+
       postRequest(apiUrl(s"api/workspaces"), request)
     }
 
