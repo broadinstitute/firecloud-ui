@@ -7,7 +7,7 @@
    ))
 
 (def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
-(def ^:private md (utils/log (MarkdownIt-js. #js{:linkify true})))
+(def ^:private md (MarkdownIt-js. #js{:linkify true}))
 
 (react/defc MarkdownView
   {:render
