@@ -22,8 +22,7 @@
      (this :refresh (:text next-props)))
    :refresh
    (fn [{:keys [state]} text]
-     (when text ; markdown-it doesn't like trying to render null text
-       (swap! state assoc :rendered-text (.render markdown-it text))))})
+     (swap! state assoc :rendered-text (.render markdown-it (or text ""))))})
 
 (react/defc MarkdownEditor
   {:get-text
