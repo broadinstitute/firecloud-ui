@@ -7,7 +7,7 @@
    ))
 
 (def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
-(def ^:private md (MarkdownIt-js. #js{:linkify true}))
+(def ^:private markdown-it (MarkdownIt-js. #js{:linkify true}))
 
 (react/defc MarkdownView
   {:render
@@ -21,9 +21,9 @@
      (this :refresh (:text next-props)))
    :refresh
    (fn [{:keys [refs]} text]
-     (when text ; marked doesn't like trying to render null text
+     (when text ; markdown-it doesn't like trying to render null text
        (set! (.-innerHTML (@refs "ref"))
-             (.render md text))))})
+             (.render markdown-it text))))})
 
 (react/defc MarkdownEditor
   {:get-text
