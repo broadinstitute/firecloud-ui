@@ -295,15 +295,14 @@
            (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
          "typeahead-multiselect"
          (let [tags (mapv :key (:buckets aggregations))
-               ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
-               selected-tags (set/intersection (:selected-items props) (set tags))]
+               selected-tags (:selected-items props)]
            (filter/section
             {:title title
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
                          :tags selected-tags
-                         :data (set tags)
+                         :data (distinct (concat selected-tags (set tags)))
                          :show-counts? false
                          :allow-new? false
                          :on-change #((:update-filter props) aggregate-field %)}])
