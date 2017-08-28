@@ -13,16 +13,13 @@
   {:render
    (fn [{:keys [state]}]
      [:div {:className "markdown-body firecloud-markdown"
-            :dangerouslySetInnerHTML #js{"__html" (:rendered-text @state)}}])
+            :dangerouslySetInnerHTML #js{"__html" (.render markdown-it (or (:text @state) ""))}}])
    :component-did-mount
-   (fn [{:keys [props this]}]
-     (this :refresh (:text props)))
+   (fn [{:keys [props state]}]
+     (swap! state assoc :text (:text props)))
    :component-will-receive-props
-   (fn [{:keys [next-props this]}]
-     (this :refresh (:text next-props)))
-   :refresh
-   (fn [{:keys [state]} text]
-     (swap! state assoc :rendered-text (.render markdown-it (or text ""))))})
+   (fn [{:keys [next-props state]}]
+     (swap! state assoc :text (:text next-props)))})
 
 (react/defc MarkdownEditor
   {:get-text
