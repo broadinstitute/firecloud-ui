@@ -11,8 +11,9 @@
 
 (react/defc MarkdownView
   {:render
-   (fn []
-     [:div {:ref "ref" :className "markdown-body firecloud-markdown"}])
+   (fn [{:keys [state]}]
+     [:div {:className "markdown-body firecloud-markdown"
+            :dangerouslySetInnerHTML #js{"__html" (:rendered-text @state)}}])
    :component-did-mount
    (fn [{:keys [props this]}]
      (this :refresh (:text props)))
@@ -20,10 +21,9 @@
    (fn [{:keys [next-props this]}]
      (this :refresh (:text next-props)))
    :refresh
-   (fn [{:keys [refs]} text]
+   (fn [{:keys [state]} text]
      (when text ; markdown-it doesn't like trying to render null text
-       (set! (.-innerHTML (@refs "ref"))
-             (.render markdown-it text))))})
+       (swap! state assoc :rendered-text (.render markdown-it text))))})
 
 (react/defc MarkdownEditor
   {:get-text
@@ -55,7 +55,7 @@
          (tab :side-by-side "Side-by-side")]
         (case mode
           :edit text-area
-          :preview markdown-view
+          :preview [:div {:style {:paddingTop "0.5rem"}} markdown-view]
           :side-by-side [comps/SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
