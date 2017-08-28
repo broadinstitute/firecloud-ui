@@ -36,7 +36,7 @@
      (let [id (gensym "io-table-")]
        [:div {:id id :style (:style props)}
         (when (:editing? @state)
-          [:style {} (str ".select2-results__option"
+          [:style {} (str ".select2-results__option" ;; TODO - just make this global?
                           "{font-size: 80%}"
                           "#" id " .select2-container--default .select2-selection--multiple .select2-selection__choice__remove"
                           "{display: none}"
@@ -110,7 +110,7 @@
                                          ;; (ab)using TagAutocomplete instead of Typeahead because it
                                          ;; plays nicer with tables
                                          [comps/TagAutocomplete
-                                          {:multiple true :show-counts? false :allow-clear? true
+                                          {:show-counts? false :allow-clear? true
                                            :minimum-input-length 0
                                            :tags [value] :maximum-selection-length 1
                                            :language {:maximumSelected (fn [] "")}

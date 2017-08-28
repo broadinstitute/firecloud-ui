@@ -686,13 +686,12 @@
      {:show-counts? true
       :allow-new? true
       :allow-clear? false
-      :multiple true
       :minimum-input-length 3})
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
                                     :defaultValue (:tags props)
-                                    :multiple (:multiple props)}
+                                    :multiple true}
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
