@@ -6,25 +6,8 @@
    [broadfcui.utils :as utils]
    ))
 
-;; Documentation:
-;; https://github.com/chjj/marked
-
-(def marked (aget js/window "webpack-deps" "marked"))
-
-(def ^:private renderer-js (aget marked "Renderer"))
-(defonce ^:private renderer (renderer-js.))
-
-(set! (.-link renderer)
-      (fn [href title text]
-        ;; whitelist http/https to guard agaisnt XSS
-        (if-not (re-matches #"^https?://.*" href)
-          text
-          (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
-               text
-               "</a>"))))
-
-(js-invoke marked "setOptions"
-           #js{:sanitize true :renderer renderer})
+(def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
+(def ^:private md (utils/log (MarkdownIt-js. #js{:linkify true})))
 
 (react/defc MarkdownView
   {:render
@@ -32,15 +15,15 @@
      [:div {:ref "ref" :className "markdown-body firecloud-markdown"}])
    :component-did-mount
    (fn [{:keys [props this]}]
-     (react/call :refresh this (:text props)))
+     (this :refresh (:text props)))
    :component-will-receive-props
    (fn [{:keys [next-props this]}]
-     (react/call :refresh this (:text next-props)))
+     (this :refresh (:text next-props)))
    :refresh
    (fn [{:keys [refs]} text]
      (when text ; marked doesn't like trying to render null text
        (set! (.-innerHTML (@refs "ref"))
-             (marked text))))})
+             (.render md text))))})
 
 (react/defc MarkdownEditor
   {:get-text
