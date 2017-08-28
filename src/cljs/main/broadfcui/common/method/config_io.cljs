@@ -32,8 +32,8 @@
      (swap! state dissoc :editing?)
      @locals)
    :render
-   (fn [{:keys [this]}]
-     [:div {}
+   (fn [{:keys [this props]}]
+     [:div {:style (:style props)}
       [Collapse {:title "Inputs"
                  :contents (this :-render-table :inputs)}]
       [Collapse {:style {:marginTop "1rem"}
@@ -88,7 +88,7 @@
                                                                  (merge table-style/table-cell-plank-middle
                                                                         table-style/table-cell-optional)
                                                                  table-style/table-cell-plank-middle))} variable])}
-                                {:header "Type" :initial-width 100
+                                {:header "Type" :initial-width 120
                                  :sort-by :type
                                  :as-text (fn [{:keys [type optional?]}]
                                             (str type (when optional? " (optional)")))

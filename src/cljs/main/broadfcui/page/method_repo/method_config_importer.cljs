@@ -80,6 +80,27 @@
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
 
 
+(react/defc IOView
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [error inputs-outputs]} @state]
+       (cond error [comps/ErrorViewer (:error error)]
+             inputs-outputs [config-io/IOTables {:style {:marginTop "1rem"}
+                                                 :inputs-outputs inputs-outputs
+                                                 :values (utils/log (:values props))}]
+             :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-inputs-outputs
+       :payload (:method-ref props)
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :inputs-outputs (get-parsed-response))
+                    (swap! state assoc :error (get-parsed-response false))))}))})
+
+
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id on-delete]} props
         workflow? (= "Workflow" (:entityType entity))
@@ -93,6 +114,13 @@
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
+      (when config?
+        (let [{:keys [method payload]} entity
+              parsed-payload (utils/parse-json-string payload true)]
+          [IOView {:method-ref {:methodNamespace (:namespace method)
+                                :methodName (:name method)
+                                :methodVersion (:snapshotId method)}
+                   :values (select-keys parsed-payload [:inputs :outputs])}]))
       [:div {:style {:border style/standard-line
                      :backgroundColor (:background-light style/colors)
                      :borderRadius 8 :padding "1em" :marginTop "1em"}}
