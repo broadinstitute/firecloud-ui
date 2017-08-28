@@ -190,14 +190,11 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
-(defn- encode [text]
-  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
-  (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
 (defn- highlight-suggestion [suggestion highlight]
   (if (not (string/blank? highlight))
-    (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
-    (encode suggestion)))
+    (string/replace (utils/encode suggestion) (utils/encode highlight) (str "<strong>" (utils/encode highlight) "</strong>"))
+    (utils/encode suggestion)))
 
 (react/defc- SearchSection
   {:get-filters
@@ -298,15 +295,14 @@
            (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
          "typeahead-multiselect"
          (let [tags (mapv :key (:buckets aggregations))
-               ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
-               selected-tags (set/intersection (:selected-items props) (set tags))]
+               selected-tags (:selected-items props)]
            (filter/section
             {:title title
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
                          :tags selected-tags
-                         :data (set tags)
+                         :data (distinct (concat selected-tags (set tags)))
                          :show-counts? false
                          :allow-new? false
                          :on-change #((:update-filter props) aggregate-field %)}])
