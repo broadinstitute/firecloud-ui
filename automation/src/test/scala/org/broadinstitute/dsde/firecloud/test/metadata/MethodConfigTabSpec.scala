@@ -3,13 +3,14 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.page.ErrorModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceMethodConfigPage
 import org.broadinstitute.dsde.firecloud.page.methods.MethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures {
+class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with MethodFixtures {
 
   val billingProject: String = Config.Projects.default
   val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
@@ -189,13 +190,10 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       val res = api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1,
         MethodData.SimpleMethod.methodNamespace, MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId,
-        MethodData.SimpleMethodConfig.configNamespace, methodName, MethodData.SimpleMethodConfig.inputs.head._1, MethodData.SimpleMethodConfig.inputs.head._2,
-        MethodData.SimpleMethodConfig.inputs.last._1, MethodData.SimpleMethodConfig.inputs.last._2, MethodData.SimpleMethod.rootEntityType)
+        MethodData.SimpleMethodConfig.configNamespace, methodName,  MethodData.SimpleMethodConfig.inputs,
+        MethodData.SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
-      print(res)
-      Thread.sleep(10*1000)
       signIn(uiUser)
-
       val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodName).open
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -238,8 +236,24 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
 
   "For a method config that references a redacted method" - {
     "should be able to choose new method snapshot" in withWebDriver { implicit driver =>
+      withWorkspace(billingProject, "MethodConfigTabSpec_redacted_choose_new_snapshot") { workspaceName =>
+        withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_choose_new_snapshot", billingProject, workspaceName, true) { configName =>
+          signIn(uiUser)
+          val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, configName).open
+          assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
 
+          methodConfigDetailsPage.ui.openEditMode()
+          methodConfigDetailsPage.ui.saveEdits("disabled")
+          val errorModal = ErrorModal()
+          assert(errorModal.validateLocation)
+          errorModal.clickOk()
+
+          methodConfigDetailsPage.ui.changeSnapshotId(2)
+          methodConfigDetailsPage.ui.saveEdits()
+        }
+      }
     }
+//    "launch analysis button should be diabled and show error if clicked" in
   }
 
 

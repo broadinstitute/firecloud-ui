@@ -33,11 +33,6 @@
     (.clear engine)
     (.add engine (clj->js datums))))
 
-(defn- fake-inputs-outputs [data]
-  (let [method-config (:methodConfiguration data)]
-    {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-     :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
-
 
 (react/defc- MethodDetailsViewer
   {:get-fields
@@ -149,22 +144,21 @@
      (this :-load-validated-method-config))
    :component-did-update
    (fn [{:keys [state]}]
-     (when (and (not (:methods @state)) (:loaded-config @state))
-       (let [loaded-config (:loaded-config @state)
-             methodConfiguration (:methodConfiguration loaded-config)
-             methodRepoMethod (:methodRepoMethod methodConfiguration)
-             methodName (:methodName methodRepoMethod)
-             methodNamespace (:methodNamespace methodRepoMethod)]
-         (endpoints/call-ajax-orch
-          {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
-           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                      (let [response (get-parsed-response)]
-                        (if success?
-                          (swap! state assoc :methods-response response :methods (->> response
-                                                                                      (group-by (juxt :namespace :name))
-                                                                                      (utils/map-values (partial map :snapshotId))))
-                          ;; FIXME: :error-message is unused
-                          (swap! state assoc :error-message status-text))))}))))
+     (let [{:keys [methods loaded-config]} @state]
+       (when (and (not methods) loaded-config)
+         (let [;methodConfiguration (:methodConfiguration loaded-config)
+               ;methodRepoMethod (:methodRepoMethod methodConfiguration)
+               {:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
+           (endpoints/call-ajax-orch
+            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                        (let [response (get-parsed-response)]
+                          (if success?
+                            (swap! state assoc :methods-response response :methods (->> response
+                                                                                        (group-by (juxt :namespace :name))
+                                                                                        (utils/map-values (partial map :snapshotId))))
+                            ;; FIXME: :error-message is unused
+                            (swap! state assoc :error-message status-text))))})))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -184,7 +178,7 @@
    (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
-           {:keys [methodRepoMethod]} config
+           {:keys [methodRepoMethod rootEntityType]} config
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id engine]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
@@ -193,7 +187,7 @@
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
-                                  :root-entity-type (:rootEntityType config)
+                                  :root-entity-type rootEntityType
                                   :disabled? (cond locked?
                                                    "This workspace is locked."
                                                    (not (:bucket-access? props))
@@ -213,7 +207,7 @@
         (create-section-header "Referenced Method")
         (let [matching-methods (filter #(and (= methodNamespace (:namespace %)) (= methodName (:name %))) methods-response)
               method (if (empty? matching-methods)
-                       {:name methodName :namespace methodNamespace}
+                       {:name methodName :namespace methodNamespace :entityType "Workflow"}
                        (first matching-methods))]
           (create-section [MethodDetailsViewer
                            (merge {:ref "methodDetailsViewer"
@@ -229,14 +223,14 @@
          (if editing?
            (style/create-identity-select {:ref "rootentitytype"
                                           :data-test-id (config/when-debug "edit-method-config-root-entity-type-select")
-                                          :defaultValue (:rootEntityType config)
+                                          :defaultValue rootEntityType
                                           :style {:width 500}
                                           :onChange #(refresh-autocomplete {:engine engine
                                                                             :workspace-attributes workspace-attributes
                                                                             :entity-types entity-types
                                                                             :selected-entity-type (.. % -target -value)})}
                                          common/root-entity-types)
-           [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
+           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
         (create-section-header "Inputs")
         (this :-render-input-output-list
               {:values (:inputs config)
@@ -353,7 +347,11 @@
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (get-parsed-response)]
+                    (let [response (get-parsed-response)
+                          fake-inputs-outputs (fn [data]
+                                                (let [method-config (:methodConfiguration data)]
+                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
                       (endpoints/call-ajax-orch
                        {:endpoint endpoints/get-inputs-outputs
                         :payload (get-in response [:methodConfiguration :methodRepoMethod])

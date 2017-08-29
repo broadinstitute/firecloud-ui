@@ -177,6 +177,7 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :data-test-id (:data-test-id props)
+              :data-test-state (config/when-debug (if disabled? "disabled" "enabled"))
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
@@ -205,22 +206,22 @@
            [:div {:style {:paddingTop "0.5rem"}}
             [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
             (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-                                   (if (:payload-expanded @state) "Collapse" "Expand"))])
-         (when (and (not redacted?) (:payload-expanded @state))
-           (if config?
-             [:div {:style {:margin "0.5rem 0 0 1rem"}}
-              (this :render-details (:method entity))
-              [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
-              [CodeMirror {:text (get-in entity [:method :payload])}]]
-             [CodeMirror {:text (:payload entity)}]))])])
+                                   (if (:payload-expanded @state) "Collapse" "Expand"))
+            (when (:payload-expanded @state)
+              (if config?
+                [:div {:style {:margin "0.5rem 0 0 1rem"}}
+                 (this :render-details (:method entity))
+                 [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
+                 [CodeMirror {:text (get-in entity [:method :payload])}]]
+                [CodeMirror {:text (:payload entity)}]))])])])
    :render-details
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
-           redacted-snapshot (:redacted-snapshot @state)
+           {:keys [redacted-snapshot]} @state
            make-field
            (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:flex "0 0 100px" :fontWeight 500}} (str label ":")]
+              [:div {:style {:flex "0 0 100px" :fontWeight 500} } (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
@@ -233,12 +234,12 @@
                                                     (:snapshots props)
                                                     redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
-                   [:span {:title rendered} rendered]))]])]
+                   [:span {:title rendered :data-test-id (config/when-debug (str "method-label-" label))} rendered]))]])]
        [:div {}
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
           (when redacted?
-            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"}}
+            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id (config/when-debug "snapshot-redacted-title")}
              (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")
@@ -251,10 +252,10 @@
             (make-field :synopsis "Synopsis")])]
         (when-not redacted?
           [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
-           "Documentation:"]
-          (if (string/blank? (:documentation entity))
-            [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-            [:div {:style {:fontSize "90%"}} (:documentation entity)]))]))})
+           "Documentation:"
+           (if (string/blank? (:documentation entity))
+             [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
+             [:div {:style {:fontSize "90%"}} (:documentation entity)])])]))})
 
 
 (react/defc StackTraceViewer

@@ -57,6 +57,8 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     private val editMethodConfigRootEntityTypeInputQuery: Query = testId("edit-method-config-root-entity-type-select")
     private val deleteMethodConfigButtonQuery: Query = testId("delete-method-config-button")
     private val modalConfirmDeleteButtonQuery: Query = testId("modal-confirm-delete-button")
+    private val snapshotRedactedTitleQuery: Query = testId("snapshot-redacted-title")
+    private val snapshotIdLabelQuery: Query = testId("method-lable-Snapshot ID")
 
     def openLaunchAnalysisModal(): LaunchAnalysisModal = {
       await enabled methodConfigNameTextQuery
@@ -91,8 +93,10 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
       }
     }
 
-    def saveEdits() = {
-      click on (await enabled saveEdittedMethodConfigButtonQuery)
+    def saveEdits(state: String = "enabled") = {
+      val button = await enabled saveEdittedMethodConfigButtonQuery
+      await forState(button, state)
+      click on button
     }
 
     def cancelEdits() = {
@@ -110,6 +114,10 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
       val methodConfigNameElement = find(methodConfigNameTextQuery)
       methodConfigNameElement.get.text == methodConfigName
 
+    }
+
+    def isSnapshotRedacted() = {
+      find(snapshotRedactedTitleQuery).size == 1
     }
 
     def deleteMethodConfig() = {
