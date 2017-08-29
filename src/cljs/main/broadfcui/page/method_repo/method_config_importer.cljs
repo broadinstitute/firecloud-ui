@@ -87,7 +87,7 @@
        (cond error [comps/ErrorViewer (:error error)]
              inputs-outputs [config-io/IOTables {:style {:marginTop "1rem"}
                                                  :inputs-outputs inputs-outputs
-                                                 :values (utils/log (:values props))}]
+                                                 :values (:values props)}]
              :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
    :component-did-mount
    (fn [{:keys [props state]}]
