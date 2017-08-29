@@ -135,9 +135,10 @@
    (fn [{:keys [this]}]
      (this :refresh))
    :component-will-receive-props
-   (fn [{:keys [state this]}]
-     (this :refresh)
-     (swap! state dissoc :updating-attrs? :editing?))
+   (fn [{:keys [props next-props state this]}]
+     (when-not (= (:workspace-id props) (:workspace-id next-props))
+       (this :refresh)
+       (swap! state dissoc :updating-attrs? :editing?)))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
