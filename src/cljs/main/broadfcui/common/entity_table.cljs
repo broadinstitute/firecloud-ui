@@ -34,6 +34,7 @@
        (after-update #((@refs "table") :reinitialize))))
    :refresh
    (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
+     (swap! state dissoc :entity-metadata)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -61,8 +62,6 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [server-error entity-metadata entity-types selected-entity-type]} @state]
        [:div {}
-        (when (:loading-entities? @state)
-          [comps/Blocker {:banner "Loading entities..."}])
         (cond
           server-error (style/create-server-error-message server-error)
           (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
@@ -76,6 +75,7 @@
                                  (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2
               :fetch-data (this :-pagination)
+              :blocker-delay-time-ms 0
               :tabs {:items (->> entity-types
                                  (map (fn [entity-type]
                                         {:label entity-type
@@ -144,7 +144,7 @@
      (let [{:keys [entity-types]} @state]
        (fn [{:keys [query-params tab on-done]}]
          (if (empty? entity-types)
-           (on-done {:total-count 0 :filtered-count 0 :results []})
+           (on-done {:total-count 0 :tab-count 0 :results []})
            (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
                  entity-type (:entity-type tab)]
              (endpoints/call-ajax-orch
@@ -161,6 +161,6 @@
                             (let [{:keys [results]
                                    {:keys [unfilteredCount filteredCount]} :resultMetadata} (get-parsed-response)]
                               (on-done {:total-count unfilteredCount
-                                        :filtered-count filteredCount
+                                        :tab-count filteredCount
                                         :results results}))
                             (on-done {:error (str status-text " (" status-code ")")})))}))))))})

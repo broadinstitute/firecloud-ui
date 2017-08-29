@@ -154,7 +154,7 @@
 (defn update-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (id-path workspace-id)
               "/method_configs/" (id-path config-id))
-   :method :put})
+   :method :post})
 
 (defn delete-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (id-path workspace-id)
