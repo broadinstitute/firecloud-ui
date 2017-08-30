@@ -171,7 +171,7 @@
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
                          (select-keys @state [:editing? :loaded-config :redacted?])
                          (select-keys @locals [:body-id])
-                         {:parent this :locked? locked? :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])})]
+                         {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
          (this :-render-main locked?)
          (common/clear-both)]]))
    :-render-main
