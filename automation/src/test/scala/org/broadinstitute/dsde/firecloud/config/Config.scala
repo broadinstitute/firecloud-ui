@@ -10,6 +10,7 @@ object Config {
   private val gcsConfig = config.getConfig("gcs")
 
   object GCS {
+    val appsDomain = gcsConfig.getString("appsDomain")
     val pathToQAPem = gcsConfig.getString("qaPemFile")
     val qaEmail = gcsConfig.getString("qaEmail")
     val appsDomain = gcsConfig.getString("appsDomain")
@@ -45,6 +46,7 @@ object Config {
     val bill = Credentials(users.getString("bill"), notSoSecretPassword)
 
     val lunaTemp = Credentials(users.getString("luna"), notSoSecretPassword)
+    val lunaTempSubjectId = users.getString("lunaSubjectId")
     val nevilleTemp = Credentials(users.getString("neville"), notSoSecretPassword)
     val testUser = harry
     val dominique = harry

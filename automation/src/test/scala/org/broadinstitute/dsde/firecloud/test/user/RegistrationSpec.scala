@@ -12,9 +12,9 @@ import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
   */
 class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec with CleanUp {
 
-  val email = Config.Users.lunaTemp.email
-  val password = Config.Users.lunaTemp.password
-  val subjectId = "117891551413045861932"
+  val email: String = Config.Users.lunaTemp.email
+  val password: String = Config.Users.lunaTemp.password
+  val subjectId: String = Config.Users.lunaTempSubjectId
 
   implicit val authToken: AuthToken = AuthTokens.admin
 
