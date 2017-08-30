@@ -47,8 +47,7 @@
                               :column-data :synopsis
                               :sort-by string/lower-case}
                              {:header "Owners" :initial-width 175
-                              ;; TODO: fix duplicate owners bug and remove 'distinct'
-                              :column-data (comp distinct :managers)
+                              :column-data :managers
                               :as-text (partial string/join ", ")}
                              {:header "Snapshots" :initial-width 94 :filterable? false
                               :column-data :numSnapshots}
