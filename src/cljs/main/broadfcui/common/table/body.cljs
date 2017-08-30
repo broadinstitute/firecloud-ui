@@ -100,7 +100,11 @@
                                           :table-behavior (:behavior props)})
             start-column-drag
             (fn [{:keys [e width index]}]
-              (swap! locals assoc :start-mouse-x (.-clientX e) :start-width width)
+              (swap! locals assoc
+                     :add-to-right? (and (.-shiftKey e) (< index (dec (count columns))))
+                     :start-width-right (get-in column-display [(inc index) :width])
+                     :start-mouse-x (.-clientX e)
+                     :start-width width)
               (swap! state assoc
                      :dragging? true :drag-column index
                      :saved-user-select-state (common/disable-text-selection)))
@@ -117,10 +121,16 @@
       (when (:dragging? @state)
         (let [{:keys [update-column-display column-display]} props
               {:keys [drag-column]} @state
-              {:keys [start-mouse-x start-width]} @locals
+              {:keys [add-to-right? start-width-right start-mouse-x start-width]} @locals
               delta-x (- (.-clientX e) start-mouse-x)
-              new-width (max (+ start-width delta-x) 10)]
-          (update-column-display (assoc-in column-display [drag-column :width] new-width)))))}
+              new-width (max (+ start-width delta-x) 10)
+              width-right (when (and add-to-right? (not= start-width new-width))
+                            (+ start-width-right (- start-width new-width)))]
+          (if width-right
+            (update-column-display (-> column-display
+                                       (assoc-in [drag-column :width] new-width)
+                                       (assoc-in [(inc drag-column) :width] width-right)))
+            (update-column-display (assoc-in column-display [drag-column :width] new-width))))))}
    (utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]
