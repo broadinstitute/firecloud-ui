@@ -20,7 +20,7 @@
              :else
              [Table {:data methods
                      :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
-                     :tabs {:style {:margin "0 -1rem" :padding "0 1rem"
+                     :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
                                     :backgroundColor (:background-light style/colors)}
                             :items [{:label "Public Methods"
                                      :predicate :public}
@@ -30,8 +30,7 @@
                                                       (contains? (set (:managers method)) (utils/get-user-email))))}]}
                      :body {:behavior {:reorderable-columns? false}
                             :style (utils/deep-merge table-style/table-light
-                                                     {:table {:marginTop "0.5rem"}
-                                                      :body {:fontWeight "initial" :fontSize "120%"}
+                                                     {:body {:fontWeight "initial" :fontSize "120%"}
                                                       :body-row (constantly {:borderTop style/standard-line
                                                                              :alignItems "center"})})
                             :columns
@@ -57,7 +56,7 @@
                               :column-data :numConfigurations}]}
                      :toolbar {:filter-bar {:inner {:width 300}}
                                :style {:alignItems "flex-start"
-                                       :padding "1rem" :paddingBottom 0 :margin 0
+                                       :padding "1rem" :margin 0
                                        :backgroundColor (:background-light style/colors)}
                                :get-items
                                (constantly
