@@ -24,6 +24,7 @@
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.method-repo-NEW.method-repo-page :as method-repo2]
    [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
@@ -40,6 +41,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
+  (method-repo2/add-nav-paths)
   (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
@@ -69,7 +71,11 @@
                       :nav-key :method-repo
                       :data-test-id (config/when-debug "method-repo-nav-link")
                       :is-selected? #(or (= path "methods")
-                                         (string/starts-with? path "methods/"))}]}])
+                                         (string/starts-with? path "methods/"))}
+                     {:label "New Method Repository"
+                      :nav-key :method-repo2
+                      :is-selected? #(or (= path "methods2")
+                                         (string/starts-with? path "methods2/"))}]}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
