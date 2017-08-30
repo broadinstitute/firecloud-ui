@@ -1,16 +1,15 @@
-package org.broadinstitute.dsde.firecloud.test.metadata
+package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.ErrorModal
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceMethodConfigPage
-import org.broadinstitute.dsde.firecloud.page.methods.MethodConfigDetailsPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with MethodFixtures {
+class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with MethodFixtures {
 
   val billingProject: String = Config.Projects.default
   val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
@@ -29,7 +28,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
 
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -45,7 +44,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
 
       methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
       val launchModal = methodConfigDetailsPage.openlaunchModal()
@@ -65,7 +64,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
       val launchModal = methodConfigDetailsPage.openlaunchModal()
@@ -83,7 +82,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
       val launchModal = methodConfigDetailsPage.openlaunchModal()
@@ -106,7 +105,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
       val launchModal = methodConfigDetailsPage.openlaunchModal()
@@ -123,7 +122,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
       signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, workspaceName)
+      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName)
       workspaceMethodConfigPage.open
       val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.InputRequiredMethod.methodNamespace,
         MethodData.InputRequiredMethod.methodName, MethodData.InputRequiredMethod.snapshotId, methodConfigName, Some(MethodData.InputRequiredMethod.rootEntityType))
@@ -147,7 +146,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
       signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, workspaceName).open
+      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
       val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethodConfig.configNamespace,
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, methodConfigName)
       //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
@@ -161,7 +160,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
       signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, workspaceName).open
+      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
       val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethod.methodNamespace,
         MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId, methodName, Some(MethodData.SimpleMethod.rootEntityType))
       methodConfigDetailsPage.editMethodConfig(inputs = Some(MethodData.SimpleMethodConfig.inputs))
@@ -177,7 +176,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
       submissionDetailsPage.waitUntilSubmissionCompletes()
@@ -194,7 +193,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodName).open
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
       submissionDetailsPage.waitUntilSubmissionCompletes()
@@ -210,7 +209,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
       //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
       submissionDetailsPage.abortSubmission()
@@ -226,7 +225,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
       signIn(uiUser)
-      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
       val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
 
       workspaceMethodConfigPage.filter(methodConfigName)
@@ -239,7 +238,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_choose_new_snapshot") { workspaceName =>
         withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_choose_new_snapshot", billingProject, workspaceName, true) { configName =>
           signIn(uiUser)
-          val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, configName).open
+          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, configName).open
           assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
 
           methodConfigDetailsPage.ui.openEditMode()
@@ -250,10 +249,42 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
 
           methodConfigDetailsPage.ui.changeSnapshotId(2)
           methodConfigDetailsPage.ui.saveEdits()
+          assert(!methodConfigDetailsPage.ui.isSnapshotRedacted())
         }
       }
     }
-//    "launch analysis button should be diabled and show error if clicked" in
+    "launch analysis button should be diabled and show error if clicked" in withWebDriver { implicit driver =>
+      withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
+        withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_launch_analysis_error", billingProject, workspaceName, true) { configName =>
+          signIn(uiUser)
+          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, configName).open
+          assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
+
+          methodConfigDetailsPage.ui.openLaunchAnalysisModal()
+          val errorModal = ErrorModal()
+          assert(errorModal.validateLocation)
+          errorModal.clickOk()
+        }
+      }
+    }
+    "should be able to be deleted when no unredacted snapshot exists" in withWebDriver { implicit driver =>
+      withWorkspace(billingProject, "MethodConfigTabSpec_redacted_delete") { workspaceName =>
+        withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_delete", billingProject, workspaceName, false) { configName =>
+          signIn(uiUser)
+          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, configName).open
+          assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
+
+          methodConfigDetailsPage.ui.openEditMode()
+          val errorModal = ErrorModal()
+          assert(errorModal.validateLocation)
+          errorModal.clickOk()
+
+          methodConfigDetailsPage.ui.deleteMethodConfig()
+          val list = new WorkspaceMethodConfigListPage(billingProject, workspaceName)
+          assert(!list.ui.hasConfig(configName))
+        }
+      }
+    }
   }
 
 

@@ -1,38 +1,37 @@
-package org.broadinstitute.dsde.firecloud.page.workspaces
+package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
-import org.broadinstitute.dsde.firecloud.page.methods.MethodConfigDetailsPage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 
-class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigPage] {
+class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigListPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
+
 
 //To-Do: Make this accept method namespace and participant
   /**
     * Imports Methods and Method Configs from the Method Repo. Note that the rootEntityType is only
     * necessary for Methods, but not Method Configs
     */
-  def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): MethodConfigDetailsPage = {
+  def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): WorkspaceMethodConfigDetailsPage = {
     val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
-    new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
+    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
   def filter(searchText: String): Unit = {
     ui.filter(searchText)
   }
 
-  def openMethodConfig(methodNamespace: String, methodName: String): MethodConfigDetailsPage = {
+  def openMethodConfig(methodNamespace: String, methodName: String): WorkspaceMethodConfigDetailsPage = {
     ui.openMethodConfig(methodName)
-    new MethodConfigDetailsPage(namespace, name, methodNamespace, methodName)
+    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodName)
   }
-
-//  def is_method_config_present
-
+  
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
     private val filterInput = testId("-input")
@@ -54,6 +53,11 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
       val link = testId(linkId)
       click on (await enabled link)
     }
+
+    def hasConfig(name: String): Boolean = {
+      find(title(s"$name")).isDefined
+    }
+
   }
   object ui extends UI
 }

@@ -1,12 +1,13 @@
-package org.broadinstitute.dsde.firecloud.page.methods
+package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.workspaces.{SubmissionDetailsPage, WorkspacePage, WorkspaceMethodConfigPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
+import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[MethodConfigDetailsPage] {
+class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
@@ -36,14 +37,14 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     ui.isLaunchAnalysisButtonPresent()
   }
 
-  override def awaitLoaded(): MethodConfigDetailsPage = {
+  override def awaitLoaded(): WorkspaceMethodConfigDetailsPage = {
     await condition isLoaded
     this
   }
 
-  def deleteMethodConfig(): WorkspaceMethodConfigPage = {
+  def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
     ui.deleteMethodConfig()
-    new WorkspaceMethodConfigPage(namespace, name)
+    new WorkspaceMethodConfigListPage(namespace, name)
   }
 
   trait UI extends super.UI {

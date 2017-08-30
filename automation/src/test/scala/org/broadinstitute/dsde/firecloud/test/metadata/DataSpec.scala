@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrows
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
 
-class DataTabSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
+class DataSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   behavior of "Data"
 
