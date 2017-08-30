@@ -10,7 +10,6 @@ object Config {
   private val gcsConfig = config.getConfig("gcs")
 
   object GCS {
-    val appsDomain = gcsConfig.getString("appsDomain")
     val pathToQAPem = gcsConfig.getString("qaPemFile")
     val qaEmail = gcsConfig.getString("qaEmail")
     val appsDomain = gcsConfig.getString("appsDomain")
