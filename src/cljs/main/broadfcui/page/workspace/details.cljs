@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -71,68 +72,29 @@
         (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
-(react/defc- Tab
-  {:render
-   (fn [{:keys [props state]}]
-     [:a {:style {:flex "0 0 auto" :padding "1em 2em"
-                  :borderLeft (when (:first? props) style/standard-line)
-                  :borderRight style/standard-line
-                  :backgroundColor (when (:active? props) "white")
-                  :cursor "pointer" :textDecoration "none" :color "inherit"
-                  :position "relative"}
-          :href (:href props)
-          :data-test-id (:data-test-id props)
-          :onMouseOver #(swap! state assoc :hovering? true)
-          :onMouseOut #(swap! state dissoc :hovering?)
-          :onClick (:on-refresh props)}
-      (:text props)
-      (when (or (:active? props) (:hovering? @state))
-        [:div {:style {:position "absolute" :top "-0.25rem" :left 0
-                       :width "100%" :height "0.25rem"
-                       :backgroundColor (:button-primary style/colors)}}])
-      (when (:active? props)
-        [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
-                       :backgroundColor "white"}}])])})
-
 (react/defc- WorkspaceDetails
   {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
            {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
-           is-active? (fn [tab] (if (= tab SUMMARY) (nil? active-tab) (= tab active-tab)))
            request-refresh #(this :-refresh-workspace)
-           make-tab (fn [text]
-                      (let [active? (is-active? text)]
-                        [Tab {:text text :first? (= text SUMMARY) :active? active?
-                              :href (nav/get-link
-                                     (condp = text
-                                       SUMMARY :workspace-summary
-                                       DATA :workspace-data
-                                       ANALYSIS :workspace-analysis
-                                       CONFIGS :workspace-method-configs
-                                       MONITOR :workspace-monitor)
-                                     workspace-id)
-                              :data-test-id (config/when-debug (str text "-tab"))
-                              :on-refresh #(when active?
-                                             ((@refs text) :refresh)
-                                             (request-refresh))}]))]
+           refresh-tab #((@refs %) :refresh)]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
          (bucket-banner (select-keys @state [:bucket-access? :bucket-status-code]))]
         [:div {:style {:marginTop "1rem" :padding "0 1.5rem"
                        :display "flex" :justifyContent "space-between"}}
-         [:div {:style {:fontSize "125%"}}
-          "Workspace: "
-          [:span {:style {:fontWeight 500}}
-           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace workspace-id)]
-           "/"
-           [:span {:data-test-id (config/when-debug "header-name")} (:name workspace-id)]]]
+         (tab-bar/render-title "WORKSPACE"
+                               [:span {}
+                                [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace workspace-id)]
+                                "/"
+                                [:span {:data-test-id (config/when-debug "header-name")} (:name workspace-id)]])
          [common/FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"
-           :style {:marginRight "-0.5rem" :borderBottom "none"}
+           :style {:marginRight "-0.5rem" :borderBottom "none" :alignSelf "center"}
            :data-hover-delay "1000" :data-click-open "false"
            :text
            (common/render-icon-dropdown
@@ -143,16 +105,14 @@
              :contents [notifications/WorkspaceComponent
                         (merge (select-keys props [:workspace-id])
                                {:close-self #((:infobox @locals) :close)})]})}]]
-        [:div {:style {:marginTop "1rem"
-                       :display "flex" :backgroundColor (:background-light style/colors)
-                       :borderTop style/standard-line :borderBottom style/standard-line
-                       :padding "0 1.5rem" :justifyContent "space-between"}}
-         [:div {:style {:display "flex"}}
-          (make-tab SUMMARY)
-          (make-tab DATA)
-          (make-tab ANALYSIS)
-          (make-tab CONFIGS)
-          (make-tab MONITOR)]]
+        (tab-bar/create-bar (merge {:tabs [[SUMMARY :workspace-summary]
+                                           [DATA :workspace-data]
+                                           [ANALYSIS :workspace-analysis]
+                                           [CONFIGS :workspace-method-configs]
+                                           [MONITOR :workspace-monitor]]
+                                    :context-id workspace-id
+                                    :active-tab (or active-tab SUMMARY)}
+                                   (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
