@@ -41,7 +41,8 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
-  (method-repo2/add-nav-paths)
+  (config/when-debug
+    (method-repo2/add-nav-paths))
   (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
@@ -58,24 +59,26 @@
         [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
          (when (= :registered (:registration-status @state))
            [header/TopNavBar
-            {:items [{:label "Workspaces"
-                      :nav-key :workspaces
-                      :data-test-id (config/when-debug "workspace-nav-link")
-                      :is-selected? #(or (empty? path)
-                                         (string/starts-with? path "workspaces/"))}
-                     {:label "Data Library"
-                      :nav-key :library
-                      :data-test-id (config/when-debug "library-nav-link")
-                      :is-selected? #(= path "library")}
-                     {:label "Method Repository"
-                      :nav-key :method-repo
-                      :data-test-id (config/when-debug "method-repo-nav-link")
-                      :is-selected? #(or (= path "methods")
-                                         (string/starts-with? path "methods/"))}
-                     {:label "New Method Repository"
-                      :nav-key :method-repo2
-                      :is-selected? #(or (= path "methods2")
-                                         (string/starts-with? path "methods2/"))}]}])
+            {:items (concat
+                     [{:label "Workspaces"
+                       :nav-key :workspaces
+                       :data-test-id (config/when-debug "workspace-nav-link")
+                       :is-selected? #(or (empty? path)
+                                          (string/starts-with? path "workspaces/"))}
+                      {:label "Data Library"
+                       :nav-key :library
+                       :data-test-id (config/when-debug "library-nav-link")
+                       :is-selected? #(= path "library")}
+                      {:label "Method Repository"
+                       :nav-key :method-repo
+                       :data-test-id (config/when-debug "method-repo-nav-link")
+                       :is-selected? #(or (= path "methods")
+                                          (string/starts-with? path "methods/"))}]
+                     (config/when-debug
+                      [{:label "New Method Repository"
+                        :nav-key :method-repo2
+                        :is-selected? #(or (= path "methods2")
+                                           (string/starts-with? path "methods2/"))}]))}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
