@@ -26,7 +26,8 @@
         (cond error [comps/ErrorViewer {:error error}]
               (not methods) [comps/Spinner {:text "Loading..."}]
               :else
-              [Table {:data methods
+              [Table {:persistence-key "method-repo-table2" :v 1
+                      :data methods
                       :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
                       :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
                                      :backgroundColor (:background-light style/colors)}
