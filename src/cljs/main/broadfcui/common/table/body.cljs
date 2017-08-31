@@ -16,6 +16,7 @@
 
 
 (def ^:private column-drag-margin 11)
+(def ^:private minimum-column-size 16)
 
 
 (defn- header [{:keys [joined-columns sort-column sort-order set-sort style
@@ -99,12 +100,14 @@
                                           :column-display (:column-display props)
                                           :table-behavior (:behavior props)})
             start-column-drag
-            (fn [{:keys [e width index]}]
+            (fn [{:keys [e index]}]
               (swap! locals assoc
-                     :add-to-right? (and (.-shiftKey e) (< index (dec (count columns))))
-                     :start-width-right (get-in column-display [(inc index) :width])
-                     :start-mouse-x (.-clientX e)
-                     :start-width width)
+                     :next-column-index (when (.-shiftKey e)
+                                          (some->> (zipmap (range) joined-columns)
+                                                   (drop (inc index))
+                                                   (filter (comp :resizable? val))
+                                                   first key))
+                     :mouse-x (.-clientX e))
               (swap! state assoc
                      :dragging? true :drag-column index
                      :saved-user-select-state (common/disable-text-selection)))
@@ -121,16 +124,22 @@
       (when (:dragging? @state)
         (let [{:keys [update-column-display column-display]} props
               {:keys [drag-column]} @state
-              {:keys [add-to-right? start-width-right start-mouse-x start-width]} @locals
-              delta-x (- (.-clientX e) start-mouse-x)
-              new-width (max (+ start-width delta-x) 10)
-              width-right (when (and add-to-right? (not= start-width new-width))
-                            (+ start-width-right (- start-width new-width)))]
-          (if width-right
-            (update-column-display (-> column-display
-                                       (assoc-in [drag-column :width] new-width)
-                                       (assoc-in [(inc drag-column) :width] width-right)))
-            (update-column-display (assoc-in column-display [drag-column :width] new-width))))))}
+              {:keys [next-column-index mouse-x]} @locals
+              new-x (.-clientX e)
+              delta-x (- new-x mouse-x)
+              new-this-width (+ (get-in column-display [drag-column :width]) delta-x)
+              new-next-width (when next-column-index
+                               (- (get-in column-display [next-column-index :width]) delta-x))]
+          (when (and (not (zero? delta-x))
+                     (> new-this-width minimum-column-size)
+                     (or (not next-column-index)
+                         (> new-next-width minimum-column-size)))
+            (swap! locals assoc :mouse-x new-x)
+            (if next-column-index
+              (update-column-display (-> column-display
+                                         (assoc-in [drag-column :width] new-this-width)
+                                         (assoc-in [next-column-index :width] new-next-width)))
+              (update-column-display (assoc-in column-display [drag-column :width] new-this-width)))))))}
    (utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]
