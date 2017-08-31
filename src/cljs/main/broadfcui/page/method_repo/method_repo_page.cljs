@@ -46,7 +46,7 @@
     :make-path (fn [method-id]
                  (str "methods/m/" (:namespace method-id) "/" (:name method-id) "/"
                       (:snapshot-id method-id)))})
-  (nav/defpath
+  #_(nav/defpath
    :method-config
    {:component Page
     :regex #"methods/c/([^/]+)/([^/]+)/([^/]+)"
