@@ -1,11 +1,15 @@
 (ns broadfcui.page.method-repo.method.details
   (:require
    [dmohs.react :as react]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.method-repo.method.summary :refer [Summary]]
+   [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
+   [broadfcui.page.method-repo.method.configs :refer [Configs]]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -20,18 +24,20 @@
   {:render
    (fn [{:keys [props state refs this]}]
      (let [{:keys [method-id]} props
-           {:keys [method method-error bucket-access?]} @state
+           {:keys [method method-error]} @state
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-method)
            refresh-tab #((@refs %) :refresh)]
        [:div {}
-        [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem"
-                       :display "flex" :justifyContent "space-between"}}
-         (tab-bar/render-title "METHOD"
-                               [:span {}
-                                [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace method-id)]
-                                "/"
-                                [:span {:data-test-id (config/when-debug "header-name")} (:name method-id)]])]
+        [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem" :display "flex"}}
+         (tab-bar/render-title
+          "METHOD"
+          [:span {}
+           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace method-id)]
+           "/"
+           [:span {:data-test-id (config/when-debug "header-name")} (:name method-id)]])
+         [:div {:style {:paddingLeft "2rem"}}
+          (tab-bar/render-title "SNAPSHOT" (this :-render-snapshot-selector))]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
@@ -39,27 +45,26 @@
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
-         (if-let [error (:method-error @state)]
+         (if method-error
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
                   :data-test-id (config/when-debug "method-details-error")}
-            "Error loading method: " error]
+            "Error loading method: " method-error]
            (if-not method
              [:div {:style {:textAlign "center" :padding "1rem"}}
               [comps/Spinner {:text "Loading method..."}]]
-             #_(condp = active-tab
+             (condp = active-tab
                nil (react/create-element
-                    [summary-tab/Summary
+                    [Summary
                      (merge {:key method-id :ref SUMMARY}
-                            (utils/restructure method-id method request-refresh bucket-access?))])
+                            (utils/restructure method-id method request-refresh))])
                WDL (react/create-element
-                     [data-tab/WorkspaceData
-                      (merge {:ref WDL}
-                             (utils/restructure method-id method method-error request-refresh))])
+                    [WDLViewer
+                     (merge {:ref WDL :wdl (:payload method)})])
                CONFIGS (react/create-element
-                        [method-configs-tab/Page
+                        [Configs
                          (merge {:ref CONFIGS
                                  :on-submission-success #(nav/go-to-path :method-submission method-id %)}
-                                (utils/restructure method-id method request-refresh bucket-access?)
+                                (utils/restructure method-id method request-refresh)
                                 (select-keys props [:config-id]))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
@@ -67,18 +72,26 @@
    :component-will-receive-props
    (fn [{:keys [this after-update]}]
      (after-update this :-refresh-method))
+   :-render-snapshot-selector
+   (fn [{:keys [state]}]
+     (let [{:keys [method]} @state
+           selected-snapshot (or (:selected-snapshot @state) "Select")]
+       (common/render-dropdown-menu
+        {:label [:div {:style {:display "flex" :alignItems "center"}
+                       :data-test-id (config/when-debug "snapshot-dropdown")}
+                 [:span {} (if (:method @state) selected-snapshot "Loading...")]
+                 [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]]
+         :width :auto
+         :button-style {}
+         :items (vec (map #() method))})))
    :-refresh-method
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/check-bucket-read-access (:method-id props))
-       :on-done (fn [{:keys [status-code success?]}]
-                  (swap! state assoc :bucket-status-code status-code :bucket-access? success?))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-method-snapshots (:method-id props))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
-                     (swap! state assoc :method (parsed-response))
+                     (swap! state assoc :method parsed-response)
                      (swap! state assoc :method-error (:message parsed-response)))))}))})
 
 (defn- ws-path [ws-id]

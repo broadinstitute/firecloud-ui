@@ -65,7 +65,7 @@
     :createdDate (.toISOString (js/Date.))}})
 
 (defn get-method-snapshots [{:keys [namespace name]}]
-  {:path (str "/methods/?namespace=" namespace "&name=" name)
+  {:path (str "/methods?namespace=" namespace "&name=" name)
    :method :get})
 
 (defn get-workspace [workspace-id]
