@@ -114,14 +114,14 @@
                        (swap! state assoc :selected-snapshot parsed-response)
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
-(defn- method-path [method-id snapshot-id]
-  (str "methods/" (:namespace method-id) "/" (:name method-id) "/" snapshot-id))
+(defn- method-path [{:keys [namespace name snapshot-id]}]
+  (str "methods/" namespace "/" name "/" snapshot-id))
 
 (defn add-nav-paths []
   (nav/defpath
    :method-summary
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/([^/]+)"
+    :regex #"methods/([^/]+)/([^/]+)/(\d+)"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id})
@@ -129,32 +129,32 @@
   (nav/defpath
    :method-wdl
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/([^/]+)/wdl"
+    :regex #"methods/([^/]+)/([^/]+)/(\d+)/wdl"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
                    :tab-name "WDL"})
-    :make-path (fn [method-id snapshot-id]
-                 (str (method-path method-id snapshot-id) "/wdl"))})
+    :make-path (fn [method-id]
+                 (str (method-path method-id) "/wdl"))})
   (nav/defpath
    :method-configs
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/configs"
+    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
                    :tab-name "Configurations"})
-    :make-path (fn [method-id snapshot-id]
-                 (str (method-path method-id snapshot-id) "/configs"))})
+    :make-path (fn [method-id]
+                 (str (method-path method-id) "/configs"))})
   (nav/defpath
    :method-config
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/([^/]+)/configs/([^/]+)/([^/]+)"
+    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs/([^/]+)/([^/]+)"
     :make-props (fn [namespace name snapshot-id config-ns config-name]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
                    :tab-name "Configurations"
                    :config-id {:namespace config-ns :name config-name}})
-    :make-path (fn [method-id snapshot-id config-id]
-                 (str (method-path method-id snapshot-id) "/configs/"
+    :make-path (fn [method-id config-id]
+                 (str (method-path method-id) "/configs/"
                       (:namespace config-id) "/" (:name config-id)))}))
