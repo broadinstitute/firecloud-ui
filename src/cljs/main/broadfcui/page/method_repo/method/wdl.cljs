@@ -11,4 +11,5 @@
      [:div {:style {:margin "2.5rem 1.5rem"}}
       [CodeMirror {:text (:wdl props)}]])
    :refresh
-   identity})
+   (fn [{:keys [props]}]
+     ((:request-refresh props)))})

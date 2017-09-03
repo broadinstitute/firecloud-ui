@@ -23,10 +23,12 @@
 (react/defc- MethodDetails
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id]} props
-           {:keys [method method-error]} @state
+     (let [{:keys [method-id snapshot-id]} props
+           {:keys [method method-error selected-snapshot]} @state
            active-tab (:tab-name props)
-           request-refresh #(this :-refresh-method)
+           request-refresh #(do (this :-refresh-method)
+                                (when selected-snapshot
+                                  (this :-refresh-snapshot (:snapshotId selected-snapshot))))
            refresh-tab #((@refs %) :refresh)]
        [:div {}
         [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem" :display "flex"}}
@@ -36,12 +38,11 @@
            [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace method-id)]
            "/"
            [:span {:data-test-id (config/when-debug "header-name")} (:name method-id)]])
-         [:div {:style {:paddingLeft "2rem"}}
-          (tab-bar/render-title "SNAPSHOT" (this :-render-snapshot-selector))]]
+         [:div {:style {:paddingLeft "2rem"}} (this :-render-snapshot-selector)]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
-                                    :context-id method-id
+                                    :context-id (merge method-id (utils/restructure snapshot-id))
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
@@ -59,7 +60,8 @@
                             (utils/restructure method-id method request-refresh))])
                WDL (react/create-element
                     [WDLViewer
-                     (merge {:ref WDL :wdl (:payload method)})])
+                     (merge {:ref WDL :wdl (:payload selected-snapshot)}
+                            (utils/restructure request-refresh))])
                CONFIGS (react/create-element
                         [Configs
                          (merge {:ref CONFIGS
@@ -73,17 +75,25 @@
    (fn [{:keys [this after-update]}]
      (after-update this :-refresh-method))
    :-render-snapshot-selector
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this props]}]
      (let [{:keys [method]} @state
-           selected-snapshot (or (:selected-snapshot @state) "Select")]
+           selected-snapshot-id (or
+                                 (:snapshot-id props)
+                                 (:snapshotId (last method)))]
        (common/render-dropdown-menu
-        {:label [:div {:style {:display "flex" :alignItems "center"}
-                       :data-test-id (config/when-debug "snapshot-dropdown")}
-                 [:span {} (if (:method @state) selected-snapshot "Loading...")]
-                 [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]]
+        {:label (tab-bar/render-title
+                 "SNAPSHOT"
+                 [:div {:style {:display "flex" :alignItems "center"}
+                        :data-test-id (config/when-debug "snapshot-dropdown")}
+                  [:span {} (if (:method @state) selected-snapshot-id "Loading...")]
+                  [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]])
          :width :auto
          :button-style {}
-         :items (vec (map #() method))})))
+         :items (vec (map
+                      (fn [{:keys [snapshotId]}]
+                        {:text snapshotId
+                         :dismiss #(this :-refresh-snapshot snapshotId)})
+                      method))})))
    :-refresh-method
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -92,43 +102,59 @@
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
                      (swap! state assoc :method parsed-response)
-                     (swap! state assoc :method-error (:message parsed-response)))))}))})
+                     (swap! state assoc :method-error (:message parsed-response)))))}))
+   :-refresh-snapshot
+   (fn [{:keys [state props]} snapshot-id]
+     (let [{:keys [namespace name]} (:method-id props)]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
+         :on-done (net/handle-ajax-response
+                   (fn [{:keys [success? parsed-response]}]
+                     (if success?
+                       (swap! state assoc :selected-snapshot parsed-response)
+                       (swap! state assoc :method-error (:message parsed-response)))))})))})
 
-(defn- ws-path [ws-id]
-  (str "methods/" (:namespace ws-id) "/" (:name ws-id)))
+(defn- method-path [method-id snapshot-id]
+  (str "methods/" (:namespace method-id) "/" (:name method-id) "/" snapshot-id))
 
 (defn add-nav-paths []
   (nav/defpath
    :method-summary
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)"
-    :make-props (fn [namespace name]
-                  {:method-id (utils/restructure namespace name)})
-    :make-path ws-path})
+    :regex #"methods/([^/]+)/([^/]+)/([^/]+)"
+    :make-props (fn [namespace name snapshot-id]
+                  {:method-id (utils/restructure namespace name)
+                   :snapshot-id snapshot-id})
+    :make-path method-path})
   (nav/defpath
    :method-wdl
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/wdl"
-    :make-props (fn [namespace name]
-                  {:method-id (utils/restructure namespace name) :tab-name "WDL"})
-    :make-path (fn [method-id]
-                 (str (ws-path method-id) "/wdl"))})
+    :regex #"methods/([^/]+)/([^/]+)/([^/]+)/wdl"
+    :make-props (fn [namespace name snapshot-id]
+                  {:method-id (utils/restructure namespace name)
+                   :snapshot-id snapshot-id
+                   :tab-name "WDL"})
+    :make-path (fn [method-id snapshot-id]
+                 (str (method-path method-id snapshot-id) "/wdl"))})
   (nav/defpath
    :method-configs
    {:component MethodDetails
     :regex #"methods/([^/]+)/([^/]+)/configs"
-    :make-props (fn [namespace name]
+    :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
+                   :snapshot-id snapshot-id
                    :tab-name "Configurations"})
-    :make-path (fn [method-id]
-                 (str (ws-path method-id) "/configs"))})
+    :make-path (fn [method-id snapshot-id]
+                 (str (method-path method-id snapshot-id) "/configs"))})
   (nav/defpath
    :method-config
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/configs/([^/]+)/([^/]+)"
-    :make-props (fn [namespace name config-ns config-name]
-                  {:method-id (utils/restructure namespace name) :tab-name "Configurations"
+    :regex #"methods/([^/]+)/([^/]+)/([^/]+)/configs/([^/]+)/([^/]+)"
+    :make-props (fn [namespace name snapshot-id config-ns config-name]
+                  {:method-id (utils/restructure namespace name)
+                   :snapshot-id snapshot-id
+                   :tab-name "Configurations"
                    :config-id {:namespace config-ns :name config-name}})
-    :make-path (fn [method-id config-id]
-                 (str (ws-path method-id) "/configs/"
+    :make-path (fn [method-id snapshot-id config-id]
+                 (str (method-path method-id snapshot-id) "/configs/"
                       (:namespace config-id) "/" (:name config-id)))}))
