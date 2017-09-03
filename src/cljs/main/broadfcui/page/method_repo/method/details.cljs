@@ -72,9 +72,6 @@
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
-   ;:component-will-receive-props
-   ;(fn [{:keys [this after-update]}]
-   ;  (after-update this :-refresh-method))
    :-render-snapshot-selector
    (fn [{:keys [state this]}]
      (let [{:keys [method snapshot-id]} @state
@@ -91,9 +88,9 @@
          :width :auto
          :button-style {}
          :items (vec (map
-                      (fn [{:keys [snapshot-id]}]
-                        {:text snapshot-id
-                         :dismiss #(this :-refresh-snapshot snapshot-id)})
+                      (fn [{:keys [snapshotId]}]
+                        {:text snapshotId
+                         :dismiss #(this :-refresh-snapshot snapshotId)})
                       method))})))
    :-refresh-method
    (fn [{:keys [props state this]}]
