@@ -21,14 +21,15 @@
 (def ^:private CONFIGS "Configurations")
 
 (react/defc- MethodDetails
-  {:render
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:snapshot-id (:snapshot-id props)})
+   :render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id snapshot-id]} props
-           {:keys [method method-error selected-snapshot]} @state
+     (let [{:keys [method-id]} props
+           {:keys [method method-error snapshot-id selected-snapshot]} @state
            active-tab (:tab-name props)
-           request-refresh #(do (this :-refresh-method)
-                                (when selected-snapshot
-                                  (this :-refresh-snapshot (:snapshotId selected-snapshot))))
+           request-refresh #(this :-refresh-method)
            refresh-tab #((@refs %) :refresh)]
        [:div {}
         [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem" :display "flex"}}
@@ -50,7 +51,7 @@
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
                   :data-test-id (config/when-debug "method-details-error")}
             "Error loading method: " method-error]
-           (if-not method
+           (if-not selected-snapshot
              [:div {:style {:textAlign "center" :padding "1rem"}}
               [comps/Spinner {:text "Loading method..."}]]
              (condp = active-tab
@@ -71,15 +72,15 @@
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
-   :component-will-receive-props
-   (fn [{:keys [this after-update]}]
-     (after-update this :-refresh-method))
+   ;:component-will-receive-props
+   ;(fn [{:keys [this after-update]}]
+   ;  (after-update this :-refresh-method))
    :-render-snapshot-selector
-   (fn [{:keys [state this props]}]
-     (let [{:keys [method]} @state
+   (fn [{:keys [state this]}]
+     (let [{:keys [method snapshot-id]} @state
            selected-snapshot-id (or
-                                 (:snapshot-id props)
-                                 (:snapshotId (last method)))]
+                                 snapshot-id
+                                 (:snapshot-id (last method)))]
        (common/render-dropdown-menu
         {:label (tab-bar/render-title
                  "SNAPSHOT"
@@ -90,18 +91,21 @@
          :width :auto
          :button-style {}
          :items (vec (map
-                      (fn [{:keys [snapshotId]}]
-                        {:text snapshotId
-                         :dismiss #(this :-refresh-snapshot snapshotId)})
+                      (fn [{:keys [snapshot-id]}]
+                        {:text snapshot-id
+                         :dismiss #(this :-refresh-snapshot snapshot-id)})
                       method))})))
    :-refresh-method
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state this]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-method-snapshots (:method-id props))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
-                     (swap! state assoc :method parsed-response)
+                     (do
+                       (swap! state assoc :method parsed-response)
+                       (when-not (and (:snapshot-id @state) (:selected-snapshot @state))
+                         (this :-refresh-snapshot (or (:snapshot-id @state) (:snapshotId (last parsed-response))))))
                      (swap! state assoc :method-error (:message parsed-response)))))}))
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
@@ -111,13 +115,23 @@
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
-                       (swap! state assoc :selected-snapshot parsed-response)
+                       (do
+                         (swap! state assoc :selected-snapshot parsed-response :snapshot-id snapshot-id)
+                         (nav/push-history-item :method-summary nil namespace name snapshot-id))
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
-(defn- method-path [{:keys [namespace name snapshot-id]}]
+(defn- method-path [{:keys [namespace name snapshot-id] :as foo}]
+  (utils/log foo)
   (str "methods/" namespace "/" name "/" snapshot-id))
 
 (defn add-nav-paths []
+  (nav/defpath
+   :method-loader
+   {:component MethodDetails
+    :regex #"methods/([^/]+)/([^/]+)/$"
+    :make-props (fn [namespace name]
+                  {:method-id (utils/restructure namespace name)})
+    :make-path method-path})
   (nav/defpath
    :method-summary
    {:component MethodDetails
