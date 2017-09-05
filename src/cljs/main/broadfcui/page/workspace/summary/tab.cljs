@@ -256,15 +256,14 @@
            {:keys [owners]
             {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
            render-detail-box (fn [title & children]
-                               [:div
-                                {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
+                               [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
                                 [:div {:style {:paddingBottom "0.5rem"}}
                                  (style/create-section-header title)]
                                 (map-indexed
                                  (fn [i child]
                                    (if (even? i)
-                                     [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
-                                     [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
+                                     (style/create-subsection-label child)
+                                     (style/create-subsection-contents child)))
                                  children)])
            processed-tags (flatten (map :items (vals tags)))]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}

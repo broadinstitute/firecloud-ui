@@ -62,8 +62,8 @@
              (condp = active-tab
                nil (react/create-element
                     [Summary
-                     (merge {:key method-id :ref SUMMARY}
-                            (utils/restructure method-id method request-refresh))])
+                     (merge {:ref SUMMARY}
+                            (utils/restructure selected-snapshot request-refresh))])
                WDL (react/create-element
                     [WDLViewer
                      (merge {:ref WDL :wdl (:payload selected-snapshot)}
