@@ -103,7 +103,7 @@
             (fn [{:keys [e index]}]
               (swap! locals assoc
                      :next-column-index (when (.-shiftKey e)
-                                          (some->> (zipmap (range) joined-columns)
+                                          (some->> (map vector (range) joined-columns)
                                                    (drop (inc index))
                                                    (filter (comp :resizable? val))
                                                    first key))
