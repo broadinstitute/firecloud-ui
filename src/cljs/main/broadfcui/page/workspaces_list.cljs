@@ -212,7 +212,7 @@
      (let [{:keys [filters-expanded? request-access-modal-props]} @state]
        [:div {}
         (when request-access-modal-props
-          [:div {:data-test-id (config/when-debug "request-access-modal")}
+          [:div {:data-test-id "request-access-modal"}
             [RequestAuthDomainAccessDialog
              (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
@@ -278,7 +278,7 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+          :toolbar {:filter-bar {:inner {:width 300 :data-test-id "workspace-list-filter"}}
                     :style {:padding "1rem" :margin 0
                             :backgroundColor (:background-light style/colors)}
                     :get-items

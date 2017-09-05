@@ -30,7 +30,7 @@
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
-                     :data-test-id (config/when-debug "create-workspace-button")
+                     :data-test-id "create-workspace-button"
                      :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")
@@ -42,19 +42,19 @@
            (style/create-form-label "Billing Project")
            (style/create-select
             {:ref "project" :value selected-project
-             :data-test-id (config/when-debug "billing-project-select")
+             :data-test-id "billing-project-select"
              :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
             (:billing-projects props))
            (style/create-form-label "Name")
            [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
                              :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
-                             :data-test-id (config/when-debug "workspace-name-input")
+                             :data-test-id "workspace-name-input"
                              :predicates [(input/nonempty "Workspace name")
                                           (input/alphanumeric_- "Workspace name")]}]
            (style/create-textfield-hint input/hint-alphanumeric_-)
            (style/create-form-label "Description (optional)")
            (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                    :data-test-id (config/when-debug "workspace-description-text-field")
+                                    :data-test-id "workspace-description-text-field"
                                     :defaultValue (:description props)})
            [:div {:style {:display "flex"}}
             (style/create-form-label "Authorization Domain (optional)")
@@ -145,7 +145,7 @@
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
                   {:value opt
-                   :data-test-id (config/when-debug "selected-auth-domain-group")
+                   :data-test-id "selected-auth-domain-group"
                    :disabled (utils/seq-contains? locked-groups opt)
                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
                   (set/difference all-groups (set (utils/delete selected-groups i))))]
@@ -165,7 +165,7 @@
             [:div {:style {:float "left" :width "90%"}}
              (style/create-identity-select-name
               {:defaultValue -1
-               :data-test-id (config/when-debug "workspace-auth-domain-select")
+               :data-test-id "workspace-auth-domain-select"
                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
               (set/difference all-groups (set selected-groups))
               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
@@ -184,7 +184,7 @@
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
                 "Create New Workspace...")
         :icon :add-new
-        :data-test-id (config/when-debug "open-create-workspace-modal-button")
+        :data-test-id "open-create-workspace-modal-button"
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."

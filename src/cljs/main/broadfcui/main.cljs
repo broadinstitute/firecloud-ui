@@ -58,16 +58,16 @@
            [header/TopNavBar
             {:items [{:label "Workspaces"
                       :nav-key :workspaces
-                      :data-test-id (config/when-debug "workspace-nav-link")
+                      :data-test-id "workspace-nav-link"
                       :is-selected? #(or (empty? path)
                                          (string/starts-with? path "workspaces/"))}
                      {:label "Data Library"
                       :nav-key :library
-                      :data-test-id (config/when-debug "library-nav-link")
+                      :data-test-id "library-nav-link"
                       :is-selected? #(= path "library")}
                      {:label "Method Repository"
                       :nav-key :method-repo
-                      :data-test-id (config/when-debug "method-repo-nav-link")
+                      :data-test-id "method-repo-nav-link"
                       :is-selected? #(or (= path "methods")
                                          (string/starts-with? path "methods/"))}]}])
          flex/spring

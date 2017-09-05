@@ -106,7 +106,7 @@
              (style/create-form-label (:label field))
              (if (= (:type field) "identity-select")
                (style/create-identity-select {:ref field-name
-                                              :data-test-id (config/when-debug "import-root-entity-type-select")
+                                              :data-test-id "import-root-entity-type-select"
                                               :defaultValue entity-val}
                                              (:options field))
                [input/TextField {:ref field-name

@@ -86,23 +86,23 @@
              (list
               [comps/SidebarButton {:color :success-state
                                     :text "Save" :icon :done
-                                    :data-test-id (config/when-debug "save-editted-method-config-button")
+                                    :data-test-id "save-editted-method-config-button"
                                     :onClick #(parent :-commit)}]
               [comps/SidebarButton {:color :exception-state :margin :top
                                     :text "Cancel Editing" :icon :cancel
-                                    :data-test-id (config/when-debug "cancel-edit-method-config-button")
+                                    :data-test-id "cancel-edit-method-config-button"
                                     :onClick #(parent :-cancel-editing)}])
              (concat
               (when can-edit?
                 [[comps/SidebarButton {:style :light :color :button-primary
                                        :text "Edit Configuration" :icon :edit
                                        :disabled? (when locked? "The workspace is locked")
-                                       :data-test-id (config/when-debug "edit-method-config-button")
+                                       :data-test-id "edit-method-config-button"
                                        :onClick #(parent :-begin-editing)}]
                  [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                        :text "Delete" :icon :delete
                                        :disabled? (when locked? "The workspace is locked")
-                                       :data-test-id (config/when-debug "delete-method-config-button")
+                                       :data-test-id "delete-method-config-button"
                                        :onClick #(swap! state assoc :show-delete-dialog? true)}]])
               [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
                                      :text "Publish..." :icon :share
@@ -177,10 +177,10 @@
         (create-section
          (if editing?
            (style/create-text-field {:ref "confname" :style {:width 500}
-                                     :data-test-id (config/when-debug "edit-method-config-name-input")
+                                     :data-test-id "edit-method-config-name-input"
                                      :defaultValue (:name config)})
            [:div {:style {:padding "0.5em 0 1em 0"}
-                  :data-test-id (config/when-debug "method-config-name")} (:name config)]))
+                  :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
         (create-section [MethodDetailsViewer
                          (merge {:ref "methodDetailsViewer"
@@ -193,7 +193,7 @@
         (create-section
          (if editing?
            (style/create-identity-select {:ref "rootentitytype"
-                                          :data-test-id (config/when-debug "edit-method-config-root-entity-type-select")
+                                          :data-test-id "edit-method-config-root-entity-type-select"
                                           :defaultValue (:rootEntityType config)
                                           :style {:width 500}
                                           :onChange #(refresh-autocomplete {:engine engine

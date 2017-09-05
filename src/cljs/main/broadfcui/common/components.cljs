@@ -20,7 +20,7 @@
   {:render
    (fn [{:keys [props]}]
      [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
-             :data-test-id (config/when-debug "spinner")}
+             :data-test-id "spinner"}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
@@ -106,7 +106,7 @@
       [:a {:style {:color (:text-light style/colors)}
            :href "javascript:;"
            :onClick (:dismiss props)
-           :id (:id props) :data-test-id (config/when-debug "x-button")}
+           :id (:id props) :data-test-id "x-button"}
        (icons/icon {:style {:fontSize "80%"}} :close)]])})
 
 
@@ -152,7 +152,7 @@
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
                       :verticalAlign "middle"}
-              :data-test-id (config/when-debug "submission-status")}
+              :data-test-id "submission-status"}
        (:text props)]])})
 
 (react/defc SidebarButton
@@ -217,7 +217,7 @@
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
                  (style/create-identity-select {:ref key
-                                                :data-test-id (config/when-debug "edit-method-config-snapshot-id-select")
+                                                :data-test-id "edit-method-config-snapshot-id-select"
                                                 :style {:width 100}
                                                 :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
@@ -592,14 +592,14 @@
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-primary style/colors)}
                    :href "javascript:;"
-                   :data-test-id (config/when-debug "cancel-button")
+                   :data-test-id "cancel-button"
                    :onClick modal/pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
             (when ok-button
-              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button") :onClick modal/pop-modal}]
-                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button") :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button")} ok-button)]
+              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
+                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
@@ -634,17 +634,17 @@
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
    {:header (or header "Message")
-    :data-test-id (config/when-debug "push-message")
+    :data-test-id "push-message"
     :content [:div {:style {:maxWidth 500}} message]
     :show-cancel? false :ok-button "OK"}))
 
 (defn push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id (config/when-debug "push-error")}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "push-error"}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
-    :data-test-id (config/when-debug "push-error")
+    :data-test-id "push-error"
     :content [:div {:style {:maxWidth "50vw"}} content]
     :show-cancel? false :ok-button "OK"}))
 

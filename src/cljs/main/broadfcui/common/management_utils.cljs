@@ -20,7 +20,7 @@
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm
       {:header (str "Add user to " (:group-name props))
-       :ok-button {:text "Add User" :data-test-id (config/when-debug "billing-project-add-user-modal-confirm-button") :onClick #(this :-add-user)}
+       :ok-button {:text "Add User" :data-test-id "billing-project-add-user-modal-confirm-button" :onClick #(this :-add-user)}
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
@@ -31,14 +31,14 @@
           [:div {:style {:flex "1 1 auto"}}
            (style/create-form-label "User email")
            [input/TextField {:ref "email" :autoFocus true
-                             :data-test-id (config/when-debug "billing-project-add-user-modal-user-email-input")
+                             :data-test-id "billing-project-add-user-modal-user-email-input"
                              :style {:width "100%"}
                              :predicates [(input/valid-email "Email")]
                              :onKeyDown (common/create-key-handler [:enter] #(this :-add-user))}]]
           [:div {:style {:flex "0 0 10px"}}]
           [:div {:style {:flex "0 0 100px"}}
            (style/create-form-label "Role")
-           (style/create-identity-select {:ref "role" :data-test-id (config/when-debug "billing-project-add-user-modal-user-role-select")} [(:user props) (:admin props)])]]
+           (style/create-identity-select {:ref "role" :data-test-id "billing-project-add-user-modal-user-role-select"} [(:user props) (:admin props)])]]
          (:footer props)
          (style/create-validation-error-message (:fails @state))
          [comps/ErrorViewer {:error (:server-error @state)
@@ -105,7 +105,7 @@
                            [flex/spring
                             [comps/Button
                              {:text "Add User..." :icon :add-new
-                              :data-test-id (config/when-debug "billing-project-add-user-button")
+                              :data-test-id "billing-project-add-user-button"
                               :onClick (fn [_]
                                          (modal/push-modal
                                           [AddUserDialog {:endpoint (:add-endpoint props)

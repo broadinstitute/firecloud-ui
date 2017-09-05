@@ -22,7 +22,7 @@
        :dismiss (:dismiss props)
        :ok-button
        {:text "Delete"
-        :data-test-id (config/when-debug "modal-confirm-delete-button")
+        :data-test-id "modal-confirm-delete-button"
         :onClick
         #(do (swap! state assoc :deleting? true :error nil)
              (endpoints/call-ajax-orch

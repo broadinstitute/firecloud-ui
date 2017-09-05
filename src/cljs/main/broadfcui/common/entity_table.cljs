@@ -70,7 +70,7 @@
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
              {:ref "table" :key selected-entity-type
-              :data-test-id (config/when-debug "entity-table")
+              :data-test-id "entity-table"
               :persistence-key (when selected-entity-type
                                  (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2

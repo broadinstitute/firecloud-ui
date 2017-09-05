@@ -112,13 +112,13 @@
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
-           {:filter-bar {:inner {:data-test-id (config/when-debug "billing-project-list-filter")}}
+           {:filter-bar {:inner {:data-test-id "billing-project-list-filter"}}
             :get-items
             (constantly
              [flex/spring
               [comps/Button
                {:text "Create New Billing Project..."
-                :data-test-id (config/when-debug "begin-create-billing-project")
+                :data-test-id "begin-create-billing-project"
                 :onClick
                 (fn []
                   (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
