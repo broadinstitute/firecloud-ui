@@ -76,8 +76,5 @@
         (js-invoke (aget js/window "location") "replace" (str "#" (make-path)))
         true))))
 
-(defn push-history-item [k & args]
-  (js/window.history.pushState nil "" (apply get-link k args)))
-
-(defn replace-history-item [k & args]
+(defn replace-history-state [k & args]
   (js/window.history.replaceState nil "" (apply get-link k args)))

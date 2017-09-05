@@ -26,17 +26,16 @@
    CONFIGS :method-configs})
 
 (react/defc- MethodDetails
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:snapshot-id (:snapshot-id props)})
-   :render
+  {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id]} props
-           {:keys [method method-error snapshot-id selected-snapshot]} @state
+     (let [{:keys [method-id snapshot-id]} props
+           {:keys [method method-error selected-snapshot loading-snapshot?]} @state
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-method)
            refresh-tab #((@refs %) :refresh)]
-       [:div {}
+       [:div {:style {:position "relative"}}
+        (when loading-snapshot?
+          (comps/render-blocker "Loading..."))
         [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem" :display "flex"}}
          (tab-bar/render-title
           "METHOD"
@@ -78,11 +77,10 @@
    (fn [{:keys [this]}]
      (this :-refresh-method))
    :-render-snapshot-selector
-   (fn [{:keys [state this]}]
-     (let [{:keys [method snapshot-id]} @state
-           selected-snapshot-id (or
-                                 snapshot-id
-                                 (:snapshot-id (last method)))]
+   (fn [{:keys [state this props]}]
+     (let [{:keys [method]} @state
+           {:keys [snapshot-id]} props
+           selected-snapshot-id (or snapshot-id (:snapshot-id (last method)))]
        (common/render-dropdown-menu
         {:label (tab-bar/render-title
                  "SNAPSHOT"
@@ -99,32 +97,36 @@
                       method))})))
    :-refresh-method
    (fn [{:keys [props state this]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-method-snapshots (:method-id props))
-       :on-done (net/handle-ajax-response
-                 (fn [{:keys [success? parsed-response]}]
-                   (if success?
-                     (do
-                       (swap! state assoc :method parsed-response)
-                       (when-not (and (:snapshot-id @state) (:selected-snapshot @state))
-                         (this :-refresh-snapshot (or (:snapshot-id @state) (:snapshotId (last parsed-response))))))
-                     (swap! state assoc :method-error (:message parsed-response)))))}))
+     (let [{:keys [snapshot-id]} props]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-method-snapshots (:method-id props))
+         :on-done (net/handle-ajax-response
+                   (fn [{:keys [success? parsed-response]}]
+                     (if success?
+                       (do
+                         (swap! state assoc :method parsed-response)
+                         (when-not (:selected-snapshot @state)
+                           (this :-refresh-snapshot (or snapshot-id (:snapshotId (last parsed-response))))))
+                       (swap! state assoc :method-error (:message parsed-response)))))})))
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
+     (swap! state assoc :loading-snapshot? true)
      (let [{:keys [namespace name]} (:method-id props)
-           old-snapshot-id (:snapshot-id @state)]
+           old-snapshot-id (:snapshot-id props)
+           tab-key (tab-nav-map (:tab-name props))
+           context-id (utils/restructure namespace name snapshot-id)]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
                        (do
-                         (swap! state assoc :selected-snapshot parsed-response :snapshot-id snapshot-id)
+                         (swap! state assoc :selected-snapshot parsed-response)
                          (when (not= old-snapshot-id snapshot-id)
-                           ((if old-snapshot-id
-                              nav/push-history-item
-                              nav/replace-history-item)
-                            (tab-nav-map (:tab-name props)) (utils/restructure namespace name snapshot-id))))
+                           (if old-snapshot-id
+                             (nav/go-to-path tab-key context-id)
+                             (nav/replace-history-state tab-key context-id)))
+                         (swap! state dissoc :loading-snapshot?))
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]
