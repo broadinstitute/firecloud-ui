@@ -1,4 +1,4 @@
-(ns broadfcui.page.method-repo.redact
+(ns broadfcui.page.method-repo.redactor
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]

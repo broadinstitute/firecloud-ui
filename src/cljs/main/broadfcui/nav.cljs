@@ -77,9 +77,7 @@
         true))))
 
 (defn push-history-item [k & args]
-  (utils/log "push" k)
   (js/window.history.pushState nil "" (apply get-link k args)))
 
 (defn replace-history-item [k & args]
-  (utils/log "replace" k)
   (js/window.history.replaceState nil "" (apply get-link k args)))

@@ -4,9 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.links :as links]
-   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+   [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
@@ -14,34 +12,28 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.page.workspace.create :as create]
-   [broadfcui.page.workspace.monitor.common :as moncommon]
-   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-   [broadfcui.page.workspace.summary.library-utils :as library-utils]
-   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-   [broadfcui.page.workspace.summary.publish :as publish]
-   [broadfcui.page.workspace.summary.synchronize :as ws-sync]
    [broadfcui.utils :as utils]
+   [broadfcui.page.method-repo.create-method :as create]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.redactor :refer [Redactor]]
    ))
 
 
-(react/defc- DeleteDialog
+(react/defc- RedactDialog
   {:render
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
-      {:header "Confirm Delete"
+      {:header "Confirm Redact"
        :content
        [:div {}
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting..."}])
-        [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
-        [:p {} "Bucket data will be deleted too."]
+        [:p {:style {:margin 0}} "Are you sure you want to redact this method snapshot?"]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(this :delete)
-                   :data-test-id (config/when-debug "confirm-delete-workspace-button")}}])
-   :delete
+       :ok-button {:text "Redact" :onClick #(this :redact)
+                   :data-test-id (config/when-debug "confirm-redact-method-button")}}])
+   :redact
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
      (endpoints/call-ajax-orch
@@ -55,17 +47,12 @@
 (react/defc Summary
   {:component-will-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
+     (swap! locals assoc :body-id (gensym "summary")))
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [selected-snapshot request-refresh]} props]
        [:div {}
         [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-         (when (:sharing? @state)
-           [AclEditor
-            (merge (utils/restructure selected-snapshot request-refresh)
-                   {:dismiss #(swap! state dissoc :sharing?)
-                    :on-users-added (constantly nil)})])
          (this :-render-sidebar)
          (this :-render-main)]]))
    :component-will-receive-props
@@ -76,16 +63,36 @@
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [selected-snapshot request-refresh]} props
-           {:keys [synopsis managers createDate documentation]} selected-snapshot
+           {:keys [managers documentation]} selected-snapshot
+           owner? (contains? (set managers) (utils/get-user-email))
            method-id (select-keys selected-snapshot [:name :namespace])
-           {:keys [can-share? owner?]} @state
-           {:keys [body-id]} @locals]
+           {:keys [can-share?]} @state
+           {:keys [body-id]} @locals
+           on-method-created (fn [_ id]
+                               (nav/go-to-path :method id)
+                               (common/scroll-to-top))
+           on-delete #(nav/go-to-path :method-repo)]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-        (when (:cloning? @state)
-            [create/CreateDialog
-             {:dismiss #(swap! state dissoc :cloning?)
-              :method-id method-id
-              :documentation documentation}])
+        (modals/show-modals
+         state
+         {:deleting?
+          [Redactor (utils/restructure selected-snapshot false on-delete)]
+          :sharing?
+          [mca/AgoraPermsEditor
+           {:save-endpoint (endpoints/persist-agora-entity-acl false selected-snapshot)
+            :load-endpoint (endpoints/get-agora-entity-acl false selected-snapshot)
+            :entityType (:entityType selected-snapshot)
+            :entityName (mca/get-ordered-name selected-snapshot)
+            :title (str (:entityType selected-snapshot) " " (mca/get-ordered-name selected-snapshot))
+            :on-users-added #((@refs "sync-container") :check-synchronization %)}]
+          :cloning?
+          [create/CreateMethodDialog
+           {:duplicate selected-snapshot
+            :on-created on-method-created}]
+          :editing-method?
+          [create/CreateMethodDialog
+           {:snapshot selected-snapshot
+            :on-created on-method-created}]})
         [Sticky
          {:sticky-props {:data-check-every 1
                          :data-anchor body-id}
@@ -110,11 +117,12 @@
              :data-test-id (config/when-debug "open-clone-method-modal-button")
              :onClick #(swap! state assoc :cloning? true)}]
            (when owner?
-             [comps/SidebarButton {:style :light :margin :top :color :exception-state
-                                   :text "Delete" :icon :delete
-                                   :data-test-id (config/when-debug "delete-workspace-button")
-                                   :onClick #(modal/push-modal
-                                              [DeleteDialog (utils/restructure method-id)])}])]}]]))
+             [comps/SidebarButton
+              {:style :light :margin :top :color :exception-state
+               :text "Redact" :icon :delete
+               :data-test-id (config/when-debug "redact-method-button")
+               :onClick #(modal/push-modal
+                          [RedactDialog (utils/restructure method-id)])}])]}]]))
    :-render-main
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
@@ -150,7 +158,7 @@
              [MarkdownView {:text documentation}]
              [:em {} "No documentation provided"])]}]]))
    :refresh
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state]}]
      (swap! state dissoc :server-response)
      (endpoints/get-billing-projects
       (fn [err-text projects]

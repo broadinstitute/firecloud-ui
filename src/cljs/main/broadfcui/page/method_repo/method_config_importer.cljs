@@ -18,7 +18,7 @@
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
-   [broadfcui.page.method-repo.redact :refer [Redactor]]
+   [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.utils :as utils]
    ))
 
