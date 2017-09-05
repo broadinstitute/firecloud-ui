@@ -86,7 +86,7 @@
                  "SNAPSHOT"
                  [:div {:style {:display "flex" :alignItems "center"}
                         :data-test-id (config/when-debug "snapshot-dropdown")}
-                  [:span {} (if (:method @state) selected-snapshot-id "Loading...")]
+                  [:span {} (if method selected-snapshot-id "Loading...")]
                   [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]])
          :width :auto
          :button-style {}
@@ -115,6 +115,10 @@
            old-snapshot-id (:snapshot-id props)
            tab-key (tab-nav-map (:tab-name props))
            context-id (utils/restructure namespace name snapshot-id)]
+       (when (not= old-snapshot-id snapshot-id)
+         (if old-snapshot-id
+           (nav/go-to-path tab-key context-id)
+           (nav/replace-history-state tab-key context-id)))
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response
@@ -122,10 +126,6 @@
                      (if success?
                        (do
                          (swap! state assoc :selected-snapshot parsed-response)
-                         (when (not= old-snapshot-id snapshot-id)
-                           (if old-snapshot-id
-                             (nav/go-to-path tab-key context-id)
-                             (nav/replace-history-state tab-key context-id)))
                          (swap! state dissoc :loading-snapshot?))
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
