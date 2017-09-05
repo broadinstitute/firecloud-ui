@@ -166,7 +166,7 @@
                 :snapshot-id snapshotId}
             type (if (= entityType "Configuration") :method-config :method)]
         (links/create-internal
-         {:data-test-id (config/when-debug (str name "_" snapshotId))
+         {:data-test-id (str name "_" snapshotId)
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
                                 :component (confirm-entity (assoc props :type type :id id))})}
          (style/render-name-id name snapshotId))))}])

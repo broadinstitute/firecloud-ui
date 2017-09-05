@@ -31,7 +31,7 @@
        :resizable? false :sortable? false :filterable? false :hidden? true
        :column-data :submissionId
        :as-text (constantly "View analysis details")
-       :render #(links/create-internal {:data-test-id (config/when-debug (str "submission-" %))
+       :render #(links/create-internal {:data-test-id (str "submission-" %)
                                         :href (nav/get-link :workspace-submission workspace-id %)}
                                        "View")}
       {:header "Status" :as-text :status :sort-by :text

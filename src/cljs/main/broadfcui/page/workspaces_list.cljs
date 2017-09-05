@@ -334,7 +334,7 @@
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}
-                   :data-test-id (config/when-debug (str "restricted-" namespace "-" name))}
+                   :data-test-id (str "restricted-" namespace "-" name)}
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]

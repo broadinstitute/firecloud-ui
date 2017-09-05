@@ -240,7 +240,7 @@
                  [comps/Typeahead {:ref (str ref-prefix "_" name)
                                    :field-attributes {:defaultValue field-value
                                                       :style {:width 500 :margin 0}
-                                                      :data-test-id (config/when-debug (str name "-text-input"))}
+                                                      :data-test-id (str name "-text-input")}
                                    :engine (:engine @locals)
                                    :behavior {:minLength 1}}])
                (when-not editing?

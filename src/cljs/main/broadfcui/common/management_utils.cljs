@@ -85,7 +85,7 @@
                        [{:header "Email" :initial-width 500 :column-data :email
                          :render
                          (fn [email]
-                           [:div {:style table-style/table-cell-plank-left :data-test-id (config/when-debug (str email))} email])}
+                           [:div {:style table-style/table-cell-plank-left :data-test-id (str email)} email])}
                         {:header "Role" :initial-width 100 :resizable? false
                          :column-data :role :sort-initial :asc
                          :render

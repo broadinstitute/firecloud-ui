@@ -113,7 +113,7 @@
                                        CONFIGS :workspace-method-configs
                                        MONITOR :workspace-monitor)
                                      workspace-id)
-                              :data-test-id (config/when-debug (str text "-tab"))
+                              :data-test-id (str text "-tab")
                               :on-refresh #(when active?
                                              ((@refs text) :refresh)
                                              (request-refresh))}]))]

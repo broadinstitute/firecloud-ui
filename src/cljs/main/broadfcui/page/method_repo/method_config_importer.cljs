@@ -111,7 +111,7 @@
                                              (:options field))
                [input/TextField {:ref field-name
                                  :defaultValue entity-val
-                                 :data-test-id (config/when-debug (str "method-config-import-" field-name "-input"))
+                                 :data-test-id (str "method-config-import-" field-name "-input")
                                  :placeholder "Required"
                                  :predicates [(input/nonempty "Fields")]}])]))
         fields)
@@ -142,7 +142,7 @@
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
-                      :data-test-id (config/when-debug (if workspace-id "import-button" "export-button"))
+                      :data-test-id (if workspace-id "import-button" "export-button")
                       :onClick #(this :perform-copy)}]]]]))
 
 
@@ -324,7 +324,7 @@
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
                 (links/create-internal
-                  {:data-test-id (config/when-debug (str name "_" snapshotId))
+                  {:data-test-id (str name "_" snapshotId)
                    :href (if workspace-id "javascript:;" (nav/get-link type id))
                    :onClick (when workspace-id
                               #(swap! state assoc :type type :id id))}

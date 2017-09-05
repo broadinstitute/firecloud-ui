@@ -80,7 +80,7 @@
           {:data projects
            :body {:behavior {:reorderable-columns? false}
                   :style table-style/table-light
-                  :data-props {:row (fn [project] {:data-test-id (config/when-debug (str (:projectName project) "-row"))})}
+                  :data-props {:row (fn [project] {:data-test-id (str (:projectName project) "-row")})}
                   :columns
                   [{:id "Status Icon" :initial-width 16
                     :resizable? false :sortable? false :filterable? false
@@ -100,7 +100,7 @@
                           {:project-name projectName
                            :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
-                         (links/create-internal {:data-test-id (config/when-debug (str projectName "-link"))
+                         (links/create-internal {:data-test-id (str projectName "-link")
                                                  :href (nav/get-link :billing-project projectName)}
                                                 projectName)
                          :else projectName)

@@ -73,7 +73,7 @@
                            [:tr {:style {:borderTop style/standard-line}}
                             [:td {:style {:borderTop style/standard-line}}
                              [:input {:type "radio" :value (account "accountName")
-                                      :data-test-id (config/when-debug (account "displayName"))
+                                      :data-test-id (account "displayName")
                                       :name "billing-account-select"
                                       :disabled (not (account "firecloudHasAccess"))
                                       :id (account "accountName")
