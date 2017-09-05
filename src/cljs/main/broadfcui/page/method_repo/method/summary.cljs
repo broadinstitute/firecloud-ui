@@ -5,68 +5,32 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.markdown :refer [MarkdownView]]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.sticky :refer [Sticky]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
    [broadfcui.page.method-repo.create-method :as create]
-   [broadfcui.components.modals :as modals]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
+   [broadfcui.utils :as utils]
    ))
-
-
-(react/defc- RedactDialog
-  {:render
-   (fn [{:keys [state this]}]
-     [comps/OKCancelForm
-      {:header "Confirm Redact"
-       :content
-       [:div {}
-        (when (:deleting? @state)
-          [comps/Blocker {:banner "Deleting..."}])
-        [:p {:style {:margin 0}} "Are you sure you want to redact this method snapshot?"]
-        [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Redact" :onClick #(this :redact)
-                   :data-test-id (config/when-debug "confirm-redact-method-button")}}])
-   :redact
-   (fn [{:keys [props state]}]
-     (swap! state assoc :deleting? true :server-error nil)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/delete-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :deleting?)
-                  (if success?
-                    (do (modal/pop-modal) (nav/go-to-path :workspaces))
-                    (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 (react/defc Summary
   {:component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :body-id (gensym "summary")))
    :render
-   (fn [{:keys [state props this refs]}]
-     (let [{:keys [selected-snapshot request-refresh]} props]
-       [:div {}
-        [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-         (this :-render-sidebar)
-         (this :-render-main)]]))
-   :component-will-receive-props
-   (fn [{:keys [props next-props state this]}]
-     (swap! state dissoc :editing? :cloning? :sharing?)
-     (when-not (= (:selected-snapshot props) (:selected-snapshot next-props))
-       (this :refresh)))
+   (fn [{:keys [this]}]
+     [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
+      (this :-render-sidebar)
+      (this :-render-main)])
    :-render-sidebar
-   (fn [{:keys [props state locals refs this]}]
-     (let [{:keys [selected-snapshot request-refresh]} props
-           {:keys [managers documentation]} selected-snapshot
+   (fn [{:keys [props state locals refs]}]
+     (let [{:keys [selected-snapshot]} props
+           {:keys [managers]} selected-snapshot
            owner? (contains? (set managers) (utils/get-user-email))
-           method-id (select-keys selected-snapshot [:name :namespace])
-           {:keys [can-share?]} @state
            {:keys [body-id]} @locals
            on-method-created (fn [_ id]
                                (nav/go-to-path :method id)
@@ -85,44 +49,38 @@
             :entityName (mca/get-ordered-name selected-snapshot)
             :title (str (:entityType selected-snapshot) " " (mca/get-ordered-name selected-snapshot))
             :on-users-added #((@refs "sync-container") :check-synchronization %)}]
+          :editing?
+          [create/CreateMethodDialog
+           {:snapshot selected-snapshot
+            :on-created on-method-created}]
           :cloning?
           [create/CreateMethodDialog
            {:duplicate selected-snapshot
-            :on-created on-method-created}]
-          :editing-method?
-          [create/CreateMethodDialog
-           {:snapshot selected-snapshot
             :on-created on-method-created}]})
         [Sticky
          {:sticky-props {:data-check-every 1
                          :data-anchor body-id}
           :contents
           [:div {:style {:width 270}}
-           (when-not (some? can-share?)
-             (comps/render-blocker "Loading..."))
-           (when can-share?
+           (when owner?
              [comps/SidebarButton
-              {:style :light :margin :top :color :button-primary
-               :text "Share..." :icon :share
-               :data-test-id (config/when-debug "share-method-button")
+              {:style :light :color :button-primary
+               :text "Permissions..." :icon :settings :margin :bottom
                :onClick #(swap! state assoc :sharing? true)}])
-
+           (when owner?
+             [comps/SidebarButton
+              {:style :light :color :button-primary
+               :text "Edit..." :icon :edit :margin :bottom
+               :onClick #(swap! state assoc :editing? true)}])
            [comps/SidebarButton
-            {:style :light :color :button-primary :margin :top
-             :text "Edit..." :icon :edit
-             :onClick #(swap! state assoc :editing? true)}]
-           [comps/SidebarButton
-            {:style :light :margin :top :color :button-primary
-             :text "Clone..." :icon :clone
-             :data-test-id (config/when-debug "open-clone-method-modal-button")
+            {:style :light :color :button-primary
+             :text "Clone..." :icon :clone :margin :bottom
              :onClick #(swap! state assoc :cloning? true)}]
            (when owner?
              [comps/SidebarButton
-              {:style :light :margin :top :color :exception-state
-               :text "Redact" :icon :delete
-               :data-test-id (config/when-debug "redact-method-button")
-               :onClick #(modal/push-modal
-                          [RedactDialog (utils/restructure method-id)])}])]}]]))
+              {:style :light :color :exception-state
+               :text "Redact" :icon :delete :margin :bottom
+               :onClick #(swap! state assoc :deleting? true)}])]}]]))
    :-render-main
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
@@ -158,17 +116,4 @@
              [MarkdownView {:text documentation}]
              [:em {} "No documentation provided"])]}]]))
    :refresh
-   (fn [{:keys [state]}]
-     (swap! state dissoc :server-response)
-     (endpoints/get-billing-projects
-      (fn [err-text projects]
-        (if err-text
-          (swap! state update :server-response assoc :server-error err-text)
-          (swap! state update :server-response
-                 assoc :billing-projects (map :projectName projects)))))
-     (endpoints/call-ajax-orch
-      {:endpoint endpoints/get-library-curator-status
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
-                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))}))})
+   (constantly nil)})

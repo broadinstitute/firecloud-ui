@@ -11,14 +11,14 @@
   {:render
    (fn [{:keys [props state this]}]
      [modals/OKCancelForm
-      {:header "Confirm redaction"
+      {:header "Confirm Redaction"
        :dismiss (:dismiss props)
        :content
        [:div {:style {:width 500}}
         (when (:redacting? @state)
           [comps/Blocker {:banner "Redacting..."}])
         [:div {:style {:marginBottom "1em"}}
-         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
+         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method snapshot") "?")]
         [comps/ErrorViewer {:error (:error @state)
                             :expect {401 "Unauthorized"}}]]
        :ok-button {:text "Redact" :onClick #(this :-redact)}}])

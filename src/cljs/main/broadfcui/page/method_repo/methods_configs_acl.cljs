@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
@@ -14,7 +15,7 @@
 
 
 (defn get-ordered-name [entity]
-  (clojure.string/join ":" (replace entity [:namespace :name :snapshotId])))
+  (string/join "/" (replace entity [:namespace :name :snapshotId])))
 
 (def ^:private reader-level "READER")
 (def ^:private owner-level "OWNER")
