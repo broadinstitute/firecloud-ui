@@ -104,7 +104,8 @@
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
    :render
    (fn [{:keys [state props this refs]}]
-     (let [{:keys [server-response]} @state
+     [:div {} "Summary!"]
+     #_(let [{:keys [server-response]} @state
            {:keys [workspace workspace-id request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {}
@@ -131,14 +132,14 @@
                [comps/Blocker {:banner "Updating Attributes..."}])
              (when (contains? @state :locking?)
                [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (this :refresh))
-   :component-will-receive-props
-   (fn [{:keys [props next-props state this]}]
-     (swap! state dissoc :updating-attrs? :editing?)
-     (when-not (= (:workspace-id props) (:workspace-id next-props))
-       (this :refresh)))
+   ;:component-did-mount
+   ;(fn [{:keys [this]}]
+   ;  (this :refresh))
+   ;:component-will-receive-props
+   ;(fn [{:keys [props next-props state this]}]
+   ;  (swap! state dissoc :updating-attrs? :editing?)
+   ;  (when-not (= (:workspace-id props) (:workspace-id next-props))
+   ;    (this :refresh)))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]

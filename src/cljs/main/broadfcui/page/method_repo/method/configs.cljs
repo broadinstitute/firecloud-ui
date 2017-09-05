@@ -6,4 +6,5 @@
 
 (react/defc Configs
   {:render
-   identity})
+   (fn []
+     [:div {} "Configs!"])})

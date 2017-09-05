@@ -20,6 +20,11 @@
 (def ^:private WDL "WDL")
 (def ^:private CONFIGS "Configurations")
 
+(def ^:private tab-nav-map
+  {nil :method-summary
+   WDL :method-wdl
+   CONFIGS :method-configs})
+
 (react/defc- MethodDetails
   {:get-initial-state
    (fn [{:keys [props]}]
@@ -106,7 +111,8 @@
                      (swap! state assoc :method-error (:message parsed-response)))))}))
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
-     (let [{:keys [namespace name]} (:method-id props)]
+     (let [{:keys [namespace name]} (:method-id props)
+           old-snapshot-id (:snapshot-id @state)]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response
@@ -114,11 +120,14 @@
                      (if success?
                        (do
                          (swap! state assoc :selected-snapshot parsed-response :snapshot-id snapshot-id)
-                         (nav/push-history-item :method-summary nil namespace name snapshot-id))
+                         (when (not= old-snapshot-id snapshot-id)
+                           ((if old-snapshot-id
+                              nav/push-history-item
+                              nav/replace-history-item)
+                            (tab-nav-map (:tab-name props)) (utils/restructure namespace name snapshot-id))))
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
-(defn- method-path [{:keys [namespace name snapshot-id] :as foo}]
-  (utils/log foo)
+(defn- method-path [{:keys [namespace name snapshot-id]}]
   (str "methods/" namespace "/" name "/" snapshot-id))
 
 (defn add-nav-paths []
