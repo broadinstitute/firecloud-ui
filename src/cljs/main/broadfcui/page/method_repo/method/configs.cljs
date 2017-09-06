@@ -33,7 +33,7 @@
                                {:header "Snapshot" :initial-width 100 :filterable? false
                                 :column-data :snapshotId}
                                {:header "Method Snapshot" :initial-width 150 :filterable? false
-                                :column-data #(get-in (utils/log %) [:payload :methodRepoMethod :methodVersion]) :sort-by :text}
+                                :column-data #(get-in % [:payload :methodRepoMethod :methodVersion]) :sort-by :text}
                                {:header "Synopsis" :initial-width :auto
                                 :column-data :synopsis}]}}]))]))
    :component-did-mount
