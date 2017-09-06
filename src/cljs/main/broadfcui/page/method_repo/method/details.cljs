@@ -80,7 +80,7 @@
    (fn [{:keys [state this props]}]
      (let [{:keys [method]} @state
            {:keys [snapshot-id]} props
-           selected-snapshot-id (or snapshot-id (:snapshot-id (last method)))]
+           selected-snapshot-id (or snapshot-id (:snapshotId (last method)))]
        (common/render-dropdown-menu
         {:label (tab-bar/render-title
                  "SNAPSHOT"
