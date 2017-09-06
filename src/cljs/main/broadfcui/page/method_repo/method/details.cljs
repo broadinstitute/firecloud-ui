@@ -30,6 +30,7 @@
    (fn [{:keys [props state refs this]}]
      (let [{:keys [method-id snapshot-id]} props
            {:keys [method method-error selected-snapshot loading-snapshot?]} @state
+           selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-method)
            refresh-tab #((@refs %) :refresh)]
@@ -47,7 +48,7 @@
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
-                                    :context-id (merge method-id (utils/restructure snapshot-id))
+                                    :context-id (assoc method-id :snapshot-id selected-snapshot-id)
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
@@ -62,16 +63,14 @@
                nil (react/create-element
                     [Summary
                      (merge {:ref SUMMARY}
-                            (utils/restructure selected-snapshot request-refresh))])
+                            (utils/restructure selected-snapshot))])
                WDL (react/create-element
                     [WDLViewer
-                     (merge {:ref WDL :wdl (:payload selected-snapshot)}
-                            (utils/restructure request-refresh))])
+                     {:ref WDL :wdl (:payload selected-snapshot)}])
                CONFIGS (react/create-element
                         [Configs
-                         (merge {:ref CONFIGS
-                                 :on-submission-success #(nav/go-to-path :method-submission method-id %)}
-                                (utils/restructure method-id method request-refresh)
+                         (merge {:ref CONFIGS}
+                                (utils/restructure method-id request-refresh)
                                 (select-keys props [:config-id]))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]

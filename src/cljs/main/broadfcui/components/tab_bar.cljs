@@ -40,8 +40,8 @@
         :href (nav/get-link link-key context-id)
         :data-test-id (config/when-debug (str label "-tab"))
         :on-refresh #(when active?
-                       (refresh-tab label)
-                       (request-refresh))}])
+                       (request-refresh)
+                       (refresh-tab label))}])
 
 (defn create-bar [{:keys [tabs active-tab context-id refresh-tab request-refresh]}]
   [:div {:style {:marginTop "1rem"
