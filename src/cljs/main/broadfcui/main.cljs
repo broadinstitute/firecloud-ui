@@ -41,7 +41,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
-  (config/when-debug
+  (when (config/debug?)
     (method-repo2/add-nav-paths))
   (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
@@ -74,7 +74,7 @@
                        :data-test-id (config/when-debug "method-repo-nav-link")
                        :is-selected? #(or (= path "methods")
                                           (string/starts-with? path "methods/"))}]
-                     (config/when-debug
+                     (when (config/debug?)
                       [{:label "New Method Repository"
                         :nav-key :method-repo2
                         :is-selected? #(or (= path "methods2")
