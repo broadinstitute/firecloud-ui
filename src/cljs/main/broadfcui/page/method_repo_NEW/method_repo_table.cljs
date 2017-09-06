@@ -39,9 +39,11 @@
                                                        (contains? (set (:managers method)) (utils/get-user-email))))}]}
                       :body {:behavior {:reorderable-columns? false}
                              :style (utils/deep-merge table-style/table-light
-                                                      {:body {:fontWeight "initial" :fontSize "120%"}
-                                                       :body-row (constantly {:borderTop style/standard-line
-                                                                              :alignItems "center"})})
+                                                      {:body {:fontWeight "initial" :fontSize "120%"
+                                                              :border style/standard-line}
+                                                       :body-row (fn [{:keys [index]}]
+                                                                   {:borderTop (when (pos? index) style/standard-line)
+                                                                    :alignItems "center"})})
                              :columns
                              [{:header "Method" :initial-width 300
                                :column-data (juxt :namespace :name)
