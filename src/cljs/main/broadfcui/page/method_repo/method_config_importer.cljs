@@ -223,10 +223,8 @@
                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                       (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-configuration
-                  (get-in props [:id :namespace])
-                  (get-in props [:id :name])
-                  (get-in props [:id :snapshot-id]))
+      {:endpoint (let [{:keys [namespace name snapshot-id]} (:id props)]
+                   (endpoints/get-configuration namespace name snapshot-id true))
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
