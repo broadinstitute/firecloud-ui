@@ -64,7 +64,7 @@
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
          :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+         :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
                       (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
@@ -146,17 +146,15 @@
    (fn [{:keys [state]}]
      (let [{:keys [methods loaded-config]} @state]
        (when (and (not methods) loaded-config)
-         (let [;methodConfiguration (:methodConfiguration loaded-config)
-               ;methodRepoMethod (:methodRepoMethod methodConfiguration)
-               {:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
+         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                         (let [response (get-parsed-response)]
                           (if success?
-                            (swap! state assoc :methods-response response :methods (->> response
-                                                                                        (group-by (juxt :namespace :name))
-                                                                                        (utils/map-values (partial map :snapshotId))))
+                            (swap! state assoc
+                                   :methods-response response
+                                   :methods {[methodNamespace methodName] (mapv #(:snapshotId %) response)})
                             ;; FIXME: :error-message is unused
                             (swap! state assoc :error-message status-text))))})))))
    :-render-display
@@ -205,10 +203,9 @@
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id (config/when-debug "method-config-name")} (:name config)]))
         (create-section-header "Referenced Method")
-        (let [matching-methods (filter #(and (= methodNamespace (:namespace %)) (= methodName (:name %))) methods-response)
-              method (if (empty? matching-methods)
+        (let [method (if (empty? methods-response)
                        {:name methodName :namespace methodNamespace :entityType "Workflow"}
-                       (first matching-methods))]
+                       (first methods-response))]
           (create-section [MethodDetailsViewer
                            (merge {:ref "methodDetailsViewer"
                                    :name methodName
