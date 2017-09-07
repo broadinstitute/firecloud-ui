@@ -115,12 +115,11 @@
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
       (when config?
-        (let [{:keys [method payload]} entity
-              parsed-payload (utils/parse-json-string payload true)]
+        (let [{:keys [method payloadObject]} entity]
           [IOView {:method-ref {:methodNamespace (:namespace method)
                                 :methodName (:name method)
                                 :methodVersion (:snapshotId method)}
-                   :values (select-keys parsed-payload [:inputs :outputs])}]))
+                   :values (select-keys payloadObject [:inputs :outputs])}]))
       [:div {:style {:border style/standard-line
                      :backgroundColor (:background-light style/colors)
                      :borderRadius 8 :padding "1em" :marginTop "1em"}}
