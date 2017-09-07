@@ -28,7 +28,7 @@
 (react/defc- MethodDetails
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id snapshot-id]} props
+     (let [{:keys [method-id snapshot-id config-id config-snapshot-id]} props
            {:keys [method method-error selected-snapshot loading-snapshot?]} @state
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
@@ -70,8 +70,7 @@
                CONFIGS (react/create-element
                         [Configs
                          (merge {:ref CONFIGS}
-                                (utils/restructure method-id request-refresh)
-                                (select-keys props [:config-id]))]))))]]))
+                                (utils/restructure method-id snapshot-id config-id config-snapshot-id))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
@@ -168,14 +167,15 @@
     :make-path (fn [method-id]
                  (str (method-path method-id) "/configs"))})
   (nav/defpath
-   :method-config
+   :method-config-viewer
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs/([^/]+)/([^/]+)"
-    :make-props (fn [namespace name snapshot-id config-ns config-name]
+    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs/([^/]+)/([^/]+)/(\d+)"
+    :make-props (fn [namespace name snapshot-id config-ns config-name config-snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
                    :tab-name "Configurations"
-                   :config-id {:namespace config-ns :name config-name}})
-    :make-path (fn [method-id config-id]
-                 (str (method-path method-id) "/configs/"
-                      (:namespace config-id) "/" (:name config-id)))}))
+                   :config-id {:namespace config-ns :name config-name}
+                   :config-snapshot-id config-snapshot-id})
+    :make-path (fn [method-id snapshot-id {:keys [config-ns config-name]} config-snapshot-id]
+                 (str (method-path (assoc method-id :snapshot-id snapshot-id)) "/configs/"
+                      config-ns "/" config-name "/" config-snapshot-id))}))
