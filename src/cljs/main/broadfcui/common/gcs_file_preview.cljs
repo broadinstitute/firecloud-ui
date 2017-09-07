@@ -37,7 +37,7 @@
                       "Preview is not supported for this filetype."
                       "Previews may not be supported for some filetypes.")]
            (when (and (not bam?) (> data-size preview-byte-count))
-             (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
+             (str "Last " (:preview-line-count @state) " out of " data-size " lines are shown. Use link below to view entire file."))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
            (when-not (or data-empty bam?)
