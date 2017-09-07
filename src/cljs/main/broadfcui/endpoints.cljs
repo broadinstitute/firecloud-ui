@@ -455,6 +455,10 @@
        :entityType (rand-nth ["Task" "Workflow"])})
     (range (rand-int 100)))})
 
+(def list-method-definitions
+  {:path "/methods/definitions"
+   :method :get})
+
 (def post-method
   {:path "/methods"
    :method :post})
