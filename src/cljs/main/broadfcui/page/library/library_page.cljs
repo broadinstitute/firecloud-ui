@@ -50,6 +50,7 @@
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
          :fetch-data (this :pagination)
+         :style {:content {:marginLeft "2rem"}}
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
@@ -113,7 +114,10 @@
                                 (when-not (= 1 total) "s")
                                 " found"))]]
                        flex/spring])
-          :style {:alignItems "flex-start" :marginBottom "0.5rem"}
+          :style {:alignItems "baseline" :marginBottom "0.5rem" :padding "1rem"
+                  ;; The following to line up "Matching Cohorts" to the first (real) column
+                  :paddingLeft "calc(3rem + 12px)"
+                  :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
    :execute-search
@@ -181,20 +185,16 @@
                    (let [{:keys [total results aggregations]} (get-parsed-response)]
                      (swap! state assoc :total total)
                      (on-done {:total-count total
-                               :filtered-count total
                                :results results})
                      (when update-aggregates?
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
-(defn- encode [text]
-  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
-  (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
 (defn- highlight-suggestion [suggestion highlight]
   (if (not (string/blank? highlight))
-    (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
-    (encode suggestion)))
+    (string/replace (utils/encode suggestion) (utils/encode highlight) (str "<strong>" (utils/encode highlight) "</strong>"))
+    (utils/encode suggestion)))
 
 (react/defc- SearchSection
   {:get-filters
@@ -295,15 +295,14 @@
            (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
          "typeahead-multiselect"
          (let [tags (mapv :key (:buckets aggregations))
-               ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
-               selected-tags (set/intersection (:selected-items props) (set tags))]
+               selected-tags (:selected-items props)]
            (filter/section
             {:title title
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
                          :tags selected-tags
-                         :data (set tags)
+                         :data (distinct (concat selected-tags (set tags)))
                          :show-counts? false
                          :allow-new? false
                          :on-change #((:update-filter props) aggregate-field %)}])
@@ -352,10 +351,9 @@
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]
-      ;; TODO: Refactor this to use filter.cljs
-      [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
+      [:div {:style {:display "flex"}}
        (apply
-        filter/area {:style {:width 260 :boxSizing "border-box" :marginRight "2em"}}
+        filter/area {:style {:width 260 :boxSizing "border-box"}}
         [SearchSection {:search-text (:search-text @state)
                         :facet-filters (:facet-filters @state)
                         :on-filter (fn [text]

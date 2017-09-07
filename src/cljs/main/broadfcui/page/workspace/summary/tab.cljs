@@ -135,9 +135,10 @@
    (fn [{:keys [this]}]
      (this :refresh))
    :component-will-receive-props
-   (fn [{:keys [state this]}]
-     (this :refresh)
-     (swap! state dissoc :updating-attrs? :editing?))
+   (fn [{:keys [props next-props state this]}]
+     (swap! state dissoc :updating-attrs? :editing?)
+     (when-not (= (:workspace-id props) (:workspace-id next-props))
+       (this :refresh)))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
@@ -169,9 +170,11 @@
         [Sticky
          {:sticky-props {:data-check-every 1
                          :data-top-anchor (str label-id ":bottom")
-                         :data-bottom-anchor (str body-id ":bottom")}
+                         :data-btm-anchor (str body-id ":bottom")}
           :contents
           [:div {:style {:width 270}}
+           (when-not (and library-schema billing-projects (some? curator?))
+             (comps/render-blocker "Loading..."))
            (when (and can-share? (not editing?))
              [comps/SidebarButton
               {:style :light :margin :top :color :button-primary
@@ -270,7 +273,8 @@
           "Workspace Access"
 
           "Access Level"
-          (style/prettify-access-level user-access-level)
+          [:span {:data-test-id (config/when-debug "workspace-access-level")}
+           (style/prettify-access-level user-access-level)]
 
           (str "Workspace Owner" (when (> (count owners) 1) "s"))
           (string/join ", " owners)
@@ -367,7 +371,7 @@
    :refresh
    (fn [{:keys [state refs]}]
      (swap! state dissoc :server-response)
-     ((@refs "storage-estimate") :refresh)
+     (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
      (endpoints/get-billing-projects
       (fn [err-text projects]

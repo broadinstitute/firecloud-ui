@@ -13,23 +13,22 @@
 (react/defc- Page
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:padding "1.5rem 1rem 0"}}
-      [MethodConfigImporter
-       (merge
-        (select-keys props [:id :type])
-        {:allow-edit true
-         :after-import
-         (fn [{:keys [workspace-id config-id]}]
-           (comps/push-ok-cancel-modal
-            {:header "Export successful"
-             :content "Would you like to go to the edit page now?"
-             :cancel-text "No, stay here"
-             :ok-button
-             {:text "Yes"
-              :onClick (fn [_]
-                         (modal/pop-modal)
-                         (mc-sync/flag-synchronization))
-              :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})]])})
+     [MethodConfigImporter
+      (merge
+       (select-keys props [:id :type])
+       {:allow-edit true
+        :after-import
+        (fn [{:keys [workspace-id config-id]}]
+          (comps/push-ok-cancel-modal
+           {:header "Export successful"
+            :content "Would you like to go to the edit page now?"
+            :cancel-text "No, stay here"
+            :ok-button
+            {:text "Yes"
+             :onClick (fn [_]
+                        (modal/pop-modal)
+                        (mc-sync/flag-synchronization))
+             :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})])})
 
 (defn add-nav-paths []
   (nav/defpath

@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
+import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
+import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
 import org.openqa.selenium.WebDriver
@@ -38,7 +40,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @param authDomain the authorization domain for the new workspace
     * @return a WorkspaceSummaryPage for the created workspace
     */
-  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): WorkspaceSummaryPage = {
+  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
     val cloneModal = ui.clickCloneButton()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
     cloneModal.cloneWorkspaceWait()
@@ -93,6 +95,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val unpublishButtonQuery = testId("unpublish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
     private val workspaceError = testId("workspace-details-error")
+    private val accessLevel = testId("workspace-access-level")
 
     def clickCloneButton(): CloneWorkspaceModal = {
       click on (await enabled cloneButton)
@@ -143,6 +146,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     def readWorkspaceName: String = {
       readText(nameHeader)
     }
+
+    def readAccessLevel(): WorkspaceAccessLevel = {
+      WorkspaceAccessLevel.withName(readText(accessLevel).toUpperCase)
+    }
   }
   object ui extends UI
 }
@@ -156,7 +163,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     * @param workspaceName the name for the new workspace
     * @param billingProjectName the billing project for the workspace
     */
-  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): Unit = {
+  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
     ui.selectBillingProject(billingProjectName)
     ui.fillWorkspaceName(workspaceName)
     authDomain foreach { ui.selectAuthDomain(_) }

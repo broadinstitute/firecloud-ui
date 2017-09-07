@@ -5,7 +5,7 @@ require('jquery-ui/ui/widgets/draggable');
 exports.Bloodhound = require('corejs-typeahead');
 exports.CodeMirror = require('codemirror');
 require('codemirror/mode/clojure/clojure');
-exports.marked = require('marked');
+exports.MarkdownIt = require('markdown-it');
 require('./js/timingDiagram');
 require('./js/igvPatch');
 require('any-resize-event');
@@ -20,6 +20,7 @@ require('foundation-sites/js/foundation.magellan');
 require('foundation-sites/js/foundation.sticky');
 require('foundation-sites/js/foundation.tooltip');
 require('select2');
+require('./js/select2MonkeyPatch');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');

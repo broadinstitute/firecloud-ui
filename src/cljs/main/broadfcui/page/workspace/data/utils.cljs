@@ -14,14 +14,14 @@
      {:endpoint (endpoints/get-entity workspace-id entity-type entity-name)
       :on-done (fn [{:keys [success? get-parsed-response]}]
                  (if success?
-                   (let [attrs (:attributes (get-parsed-response true))]
+                   (let [attrs (:attributes (get-parsed-response))]
                      (if (is-entity-set? entity-type)
                        ;; for set entity types we display _only_ the set elements, expanded into separate rows.
                        (let [entities (case entity-type
                                         "sample_set" (:samples attrs)
                                         "pair_set" (:pairs attrs)
                                         "participant_set" (:participants attrs))]
-                         (update-parent-state :selected-attr-list (:items entities) :loading-attributes false))
+                         (update-parent-state :selected-attr-list (:items entities) :loading-attributes? false))
                        ;; otherwise display all attribute values, expanded into separate rows.
                        ;; generate a user-friendly string for list-valued attributes.
                        (let [attr-value-mapper
@@ -31,8 +31,8 @@
                                    "0 items"
                                    (str (count items) " items: " (clojure.string/join ", " items)))
                                  v))]
-                         (update-parent-state :selected-attr-list (utils/map-values attr-value-mapper attrs) :loading-attributes false)))
-                     (update-parent-state :server-error (get-parsed-response false) :loading-attributes false))))})))
+                         (update-parent-state :selected-attr-list (utils/map-values attr-value-mapper attrs) :loading-attributes? false))))
+                   (update-parent-state :server-error (get-parsed-response false) :loading-attributes? false)))})))
 
 (defn get-column-defaults [json-column-defaults]
   (let [parsed

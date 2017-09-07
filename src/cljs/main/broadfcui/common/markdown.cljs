@@ -6,41 +6,14 @@
    [broadfcui.utils :as utils]
    ))
 
-;; Documentation:
-;; https://github.com/chjj/marked
-
-(def marked (aget js/window "webpack-deps" "marked"))
-
-(def ^:private renderer-js (aget marked "Renderer"))
-(defonce ^:private renderer (renderer-js.))
-
-(set! (.-link renderer)
-      (fn [href title text]
-        ;; whitelist http/https to guard agaisnt XSS
-        (if-not (re-matches #"^https?://.*" href)
-          text
-          (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
-               text
-               "</a>"))))
-
-(js-invoke marked "setOptions"
-           #js{:sanitize true :renderer renderer})
+(def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
+(def ^:private markdown-it (MarkdownIt-js. #js{:linkify true}))
 
 (react/defc MarkdownView
   {:render
-   (fn []
-     [:div {:ref "ref" :className "markdown-body firecloud-markdown"}])
-   :component-did-mount
-   (fn [{:keys [props this]}]
-     (react/call :refresh this (:text props)))
-   :component-will-receive-props
-   (fn [{:keys [next-props this]}]
-     (react/call :refresh this (:text next-props)))
-   :refresh
-   (fn [{:keys [refs]} text]
-     (when text ; marked doesn't like trying to render null text
-       (set! (.-innerHTML (@refs "ref"))
-             (marked text))))})
+   (fn [{:keys [props]}]
+     [:div {:className "markdown-body firecloud-markdown"
+            :dangerouslySetInnerHTML #js{"__html" (.render markdown-it (or (:text props) ""))}}])})
 
 (react/defc MarkdownEditor
   {:get-text
@@ -72,7 +45,7 @@
          (tab :side-by-side "Side-by-side")]
         (case mode
           :edit text-area
-          :preview markdown-view
+          :preview [:div {:style {:paddingTop "0.5rem"}} markdown-view]
           :side-by-side [comps/SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]

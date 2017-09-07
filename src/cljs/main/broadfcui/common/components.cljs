@@ -111,9 +111,9 @@
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
-(defn- blocker [text position]
+(defn render-blocker [text & [fixed?]]
   [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                 :position position :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
+                 :position (if fixed? "fixed" "absolute") :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
                  :display "flex" :justifyContent "center" :alignItems "center"}}
    [:div {:style {:backgroundColor "#fff" :padding "2em"}}
     [Spinner {:text text}]]])
@@ -122,7 +122,7 @@
   {:render
    (fn [{:keys [props]}]
      (when-let [text (:banner props)]
-       (blocker text "fixed")))})
+       (render-blocker text)))})
 
 (react/defc DelayedBlocker
   {:show
@@ -140,7 +140,7 @@
    :render
    (fn [{:keys [props state]}]
      (when (:showing? @state)
-       (blocker (:banner props) "absolute")))})
+       (render-blocker (:banner props))))})
 
 
 (react/defc StatusLabel
@@ -718,8 +718,25 @@
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
-   :should-component-update ; prevent React from trying to re-render non-React components (the typeahead) that were added since the initial render
+   ;; React can't re-render since select2 clobbers the DOM...
+   :should-component-update
    (constantly false)
+   ;; ...but we do need to patch in new client-side options
+   :component-will-receive-props
+   (fn [{:keys [refs props next-props this]}]
+     (let [new-data (:data next-props)]
+       (when (not= (:data props) new-data)
+         (let [selected (this :get-tags)
+               selected-list (if (sequential? selected) selected [selected])
+               new-data (distinct (concat selected-list new-data))
+               new-options (map (fn [item]
+                                  (let [encoded (utils/encode item)]
+                                    (str "<option value=\"" encoded "\">" encoded "</option>")))
+                                new-data)]
+           (.. (js/$ (@refs "input-element"))
+               (html (string/join new-options))
+               (val (clj->js selected))
+               (change))))))
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]
@@ -802,47 +819,3 @@
                                  (icons/icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})
-
-(react/defc FilterGroupBar
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [filter-groups selected-index data on-change]} props]
-       [:div {:style {:display "flex"}}
-        (map-indexed (fn [index {:keys [text pred count-override]}]
-                       (let [first? (zero? index)
-                             last? (= index (dec (count filter-groups)))
-                             selected? (= index selected-index)]
-                         [:div {:style {:textAlign "center" :flexShrink 0
-                                        :backgroundColor (if selected?
-                                                           (:button-primary style/colors)
-                                                           (:background-light style/colors))
-                                        :color (when selected? "white")
-                                        :padding "1ex" :minWidth 50
-                                        :marginLeft (when-not first? -1)
-                                        :border style/standard-line
-                                        :borderTopLeftRadius (when first? 8)
-                                        :borderBottomLeftRadius (when first? 8)
-                                        :borderTopRightRadius (when last? 8)
-                                        :borderBottomRightRadius (when last? 8)
-                                        :cursor "pointer"}
-                                :data-test-id (config/when-debug (str text "-filter-button"))
-                                :onClick #(on-change
-                                           index
-                                           (if pred (filter pred data) data))}
-                          (str text
-                               " ("
-                               (cond count-override count-override
-                                     pred (count (filter pred data))
-                                     :else (count data))
-                               ")")]))
-                     filter-groups)]))
-   :component-did-mount
-   (fn [{:keys [props]}]
-     (let [{:keys [filter-groups selected-index data on-change]} props]
-       (when selected-index
-         (let [{:keys [pred]} (nth filter-groups selected-index)]
-           ; on-change is likely to refer to the parent component.
-           ; trigger at the end of the event loop to allow the parent to mount
-           (js/setTimeout
-            #(on-change selected-index (if pred (filter pred data) data))
-            0)))))})
