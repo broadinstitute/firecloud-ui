@@ -156,10 +156,10 @@ For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+F
 ### IntelliJ
 We now recommend opening a separate IntelliJ project for the automation test code. From 
 IntelliJ choose File->New->Project From Existing Sources and select automation/build.sbt.
-You will need to set automation as the root source. In your firecloud-ui closure project
-you may want to choose the automation directory and set it to ignore. If you add a new file
-in the scala project and choose not to add it to the git repo, you may be asked again 
-in the closure project.
+You will need to set automation as the root source and accept the suggestion to add the 
+git root. In your firecloud-ui clojure project you may want to choose the automation 
+directory and set it to ignore. If you add a new file in the scala project and choose 
+not to add it to the git repo, you may be asked again in the clojure project.
 
 For reference, these are the old instructions for the combined project:
 After opening the project, if IntelliJ shows errors in scala source or running a test
