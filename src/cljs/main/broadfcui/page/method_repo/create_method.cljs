@@ -9,7 +9,6 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
