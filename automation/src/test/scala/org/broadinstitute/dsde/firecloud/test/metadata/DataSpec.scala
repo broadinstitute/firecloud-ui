@@ -11,7 +11,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution w
   behavior of "Data"
 
   it should "import a participants file" in withWebDriver { implicit driver =>
-    val filename = "automation/src/test/resources/participants.txt"
+    val filename = "src/test/resources/participants.txt"
 
     val billingProject = Config.Projects.default
     val wsName = "TestSpec_FireCloud_import_participants_file_" + randomUuid
