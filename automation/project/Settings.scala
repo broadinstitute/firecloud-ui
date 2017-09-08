@@ -15,8 +15,7 @@ object Settings {
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-target:jvm-1.8",
-    "-Xmax-classfile-name", "100"
+    "-target:jvm-1.8"
   )
 
   val testSettings = List(
