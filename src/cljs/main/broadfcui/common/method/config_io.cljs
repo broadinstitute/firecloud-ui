@@ -63,7 +63,7 @@
                                        value (get-in values [io-key k-name])]
                                    (merge (dissoc item :inputType :outputType :optional)
                                           (utils/restructure task variable error-message value)
-                                          {:type (process-type (or inputType outputType))
+                                          {:type (some-> (or inputType outputType) process-type)
                                            :optional? optional})))))
                :body {:empty-message (str "No " (string/capitalize (name io-key)))
                       :style (merge
@@ -97,7 +97,7 @@
                                                         (merge table-style/table-cell-plank-right
                                                                table-style/table-cell-optional)
                                                         table-style/table-cell-plank-right))}
-                                   type])}]
+                                   (or type "unknown")])}]
                               (when values
                                 [{:header "Attribute" :initial-width 200
                                   :as-text :value
