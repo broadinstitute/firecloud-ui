@@ -34,13 +34,12 @@
            {:keys [body-id]} @locals
            on-method-created (fn [_ id]
                                (nav/go-to-path :method id)
-                               (common/scroll-to-top))
-           on-delete #(nav/go-to-path :method-repo)]
+                               (common/scroll-to-top))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (modals/show-modals
          state
          {:deleting?
-          [Redactor (utils/restructure selected-snapshot false on-delete)]
+          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo)}]
           :sharing?
           [mca/AgoraPermsEditor
            {:save-endpoint (endpoints/persist-agora-entity-acl false selected-snapshot)

@@ -3,26 +3,36 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
+   [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.utils :as utils]
    ))
 
 
 (react/defc MethodRepoTable
   {:render
-   (fn [{:keys [state this]}]
-     (let [{:keys [methods error]} @state]
+   (fn [{:keys [props state]}]
+     (let [{:keys [methods error editing-namespace]} @state
+           {:keys [allow-modals? make-method-clicked-props]} props]
        [:div {}
         (when (:creating? @state)
           [CreateMethodDialog
            {:dismiss #(swap! state dissoc :creating?)
             :on-created (fn [_ method-id]
-                          (utils/log "TODO: nav to " method-id)
-                          (this :-refresh))}])
+                          (nav/go-to-path :method-summary method-id))}])
+        (when editing-namespace
+          [mca/AgoraPermsEditor
+           {:dismiss #(swap! state dissoc :editing-namespace)
+            :save-endpoint (endpoints/post-agora-namespace-acl editing-namespace false)
+            :load-endpoint (endpoints/get-agora-namespace-acl editing-namespace false)
+            :entityType "Namespace" :entityName editing-namespace
+            :title (str "Namespace " editing-namespace)}])
         (cond error [comps/ErrorViewer {:error error}]
               (not methods) [comps/Spinner {:text "Loading..."}]
               :else
@@ -51,9 +61,18 @@
                                :sort-by (comp string/lower-case second)
                                :render
                                (fn [[namespace name]]
-                                 [:div {}
-                                  [:div {:style {:fontSize "80%"}} namespace]
-                                  [:div {:style {:fontWeight 500}} name]])}
+                                 (links/create-internal
+                                  (utils/deep-merge
+                                   {:style {:display "block"}}
+                                   (make-method-clicked-props (utils/restructure namespace name)))
+                                  [:div
+                                   {:className (when allow-modals? "underline-on-hover")
+                                    :style {:fontSize "80%" :color "black"}
+                                    :onClick (when allow-modals? (fn [e]
+                                                                  (.preventDefault e)
+                                                                  (swap! state assoc :editing-namespace namespace)))}
+                                   namespace]
+                                  [:div {:style {:fontWeight 600}} name]))}
                               {:header "Synopsis" :initial-width 700
                                :column-data :synopsis
                                :sort-by string/lower-case}
