@@ -80,10 +80,11 @@ Selenium tests are found in the `automation` directory.  They should run against
 First build the docker image
 
 ```bash
+cd automation
 docker build -f Dockerfile-tests -t automation .
 ```
 
-Then run the run-tests script with the newly created image. Sometimes using 4 instances is too many and will cause the docker to crash. If this happens use 2 or 3 instances. This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
+Make sure your docker has enough memory allocated (go to Docker->Preferences->Advanced and set the memory to 4 GB). Then run the run-tests script with the newly created image. This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
 
 ```bash
 cd automation/docker
@@ -153,6 +154,14 @@ For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+F
 
 
 ### IntelliJ
+We now recommend opening a separate IntelliJ project for the automation test code. From 
+IntelliJ choose File->New->Project From Existing Sources and select automation/build.sbt.
+You will need to set automation as the root source and accept the suggestion to add the 
+git root. In your firecloud-ui clojure project you may want to choose the automation 
+directory and set it to ignore. If you add a new file in the scala project and choose 
+not to add it to the git repo, you may be asked again in the clojure project.
+
+For reference, these are the old instructions for the combined project:
 After opening the project, if IntelliJ shows errors in scala source or running a test
 throws a `MethodNotFoundException`, open the SBT panel and click the button for "Refresh
 all SBT projects" (and keep reading).

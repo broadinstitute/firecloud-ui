@@ -155,22 +155,38 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
     def createMethodConfigInWorkspace(ns: String, wsName: String, methodConfigVersion: Int,
                                       methodNamespace: String, methodName: String, methodVersion: Int,
-                                      destinationNamespace: String, destinationName: String,
-                                      inputName: String, inputText: String, outputName: String, outputText: String,
+                                      destinationNamespace: String, destinationName: String, inputs: Map[String, String], outputs: Map[String, String],
                                       rootEntityType: String)(implicit token: AuthToken): String = {
       logger.info(s"Creating method config: $ns/$wsName $methodConfigVersion method: $methodNamespace/$methodName destination: $destinationNamespace/$destinationName")
       postRequest(apiUrl(s"api/workspaces/$ns/$wsName/methodconfigs"),
         Map("deleted" -> false,
-          "inputs" -> Map(inputName -> inputText),
+          "inputs" -> inputs,
           "methodConfigVersion" -> methodConfigVersion,
           "methodRepoMethod" -> Map("methodNamespace" -> methodNamespace, "methodName" -> methodName, "methodVersion" -> methodVersion),
-          "namespace" -> destinationNamespace, "name" -> destinationName,
-          "outputs" -> Map(outputName -> outputText),
+          "namespace" -> destinationNamespace,
+          "name" -> destinationName,
+          "outputs" -> outputs,
           "prerequisites" -> Map(),
           "rootEntityType" -> rootEntityType)
       )
     }
 
+    def createMethodConfig(methodConfigData: Map[String,Any])(implicit token: AuthToken): String = {
+      logger.info(s"Adding a method config")
+      postRequest(apiUrl(s"api/configurations"), methodConfigData)
+    }
+  }
+
+  object methods {
+    def createMethod(methodData: Map[String,Any])(implicit token: AuthToken): Unit = {
+      logger.info(s"Adding a method")
+      postRequest(apiUrl(s"api/methods"), methodData)
+    }
+
+    def redact(ns: String, name: String, snapshotId: Int)(implicit token: AuthToken): Unit = {
+      logger.info(s"Redacting method: $ns/$name:$snapshotId")
+      deleteRequest(apiUrl(s"api/methods/$ns/$name/$snapshotId"))
+    }
   }
 
   /*

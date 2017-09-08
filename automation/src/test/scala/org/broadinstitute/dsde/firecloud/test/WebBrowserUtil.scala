@@ -96,6 +96,14 @@ trait WebBrowserUtil extends WebBrowser {
       }
     }
 
+    def forState(element: Element, state: String, timeOutInSeconds: Long = defaultTimeOutInSeconds)
+                    (implicit webDriver: WebDriver): Element = {
+      withWaitForCondition(timeOutInSeconds) {
+        element.attribute("data-test-state").getOrElse("") == state
+      }
+      element
+    }
+
     /**
       * Waits for an element to be enabled, then clicks it.
       *
@@ -188,6 +196,10 @@ trait WebBrowserUtil extends WebBrowser {
     */
   def testId(id: String)(implicit webDriver: WebDriver): Query = {
     cssSelector(s"[data-test-id='$id']")
+  }
+
+  def testState(state: String)(implicit webDriver: WebDriver): Query = {
+    cssSelector(s"[data-test-state='$state']")
   }
 
   def typeSelector(selector: String)(implicit webDriver: WebDriver): Query = {
