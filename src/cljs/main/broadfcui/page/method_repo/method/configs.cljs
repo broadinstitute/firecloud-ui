@@ -1,23 +1,26 @@
 (ns broadfcui.page.method-repo.method.configs
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.sticky :refer [Sticky]]
-   [broadfcui.page.method-repo.redactor :refer [Redactor]]
+   [broadfcui.components.tab-bar :as tab-bar]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
    [broadfcui.net :as net]
-   [broadfcui.common :as common]
-   [broadfcui.utils :as utils]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
-   [clojure.string :as string]
+   [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
-   [broadfcui.components.tab-bar :as tab-bar]))
+   [broadfcui.utils :as utils]
+   [broadfcui.page.method-repo.method-config-importer :as mci]
+   [broadfcui.common.input :as input]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
+   [broadfcui.common.modal :as modal]))
 
 (defn render-config-table [{:keys [make-config-link-props configs]}]
   [Table
@@ -81,7 +84,7 @@
            (this :-render-main)])]))
    :-render-sidebar
    (fn [{:keys [state locals refs]}]
-     (let [{:keys [config]} @state
+     (let [{:keys [config exported-config-id exported-workspace-id]} @state
            {:keys [body-id]} @locals]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (modals/show-modals
@@ -110,8 +113,8 @@
              :text "Redact" :icon :delete :margin :bottom
              :onClick #(swap! state assoc :deleting? true)}]]}]]))
    :-render-main
-   (fn [{:keys [state locals]}]
-     (let [{:keys [config]} @state
+   (fn [{:keys [state locals this]}]
+     (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
            {:keys [managers method entityType]} config
            {:keys [body-id]} @locals
            make-block (fn [title body]
@@ -131,7 +134,54 @@
 
         (make-block
          "Entity Type"
-         entityType)]))})
+         entityType)
+
+        (style/create-section-header
+         "HI HELLO I/O TABLES GO HERE THANKS")
+
+        (cond
+          blocking-text
+          [comps/Blocker {:banner blocking-text}]
+          exported-config-id
+          [modals/OKCancelForm
+           {:header "Export successful"
+            :content "Would you like to go to the edit page now?"
+            :cancel-text "No, stay here"
+            :dismiss #(swap! state dissoc :exported-workspace-id :exported-config-id)
+            :ok-button
+            {:text "Yes"
+             :onClick #(mc-sync/flag-synchronization)
+             :href (nav/get-link :workspace-method-config exported-workspace-id exported-config-id)}}])
+
+        [mci/ConfigExporter
+         {:entity config
+          :perform-copy (partial this :-perform-copy)}]
+        ]))
+   :-perform-copy
+   (fn [{:keys [props state]} selected-workspace refs]
+     (let [{:keys [workspace-id]} props
+           {:keys [config]} @state
+           [namespace name & fails] (input/get-and-validate refs "namespace" "name")
+           workspace-id (or workspace-id
+                            (select-keys (:workspace selected-workspace) [:namespace :name]))]
+       (if fails
+         (swap! state assoc :validation-error fails)
+         (do
+           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
+           (endpoints/call-ajax-orch
+            {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+             :payload {"configurationNamespace" (:namespace config)
+                       "configurationName" (:name config)
+                       "configurationSnapshotId" (:snapshotId config)
+                       "destinationNamespace" namespace
+                       "destinationName" name}
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :blocking-text)
+                        (if success?
+                          (swap! state assoc :exported-config-id {:namespace namespace :name name}
+                                 :exported-workspace-id workspace-id)
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 (react/defc Configs
   {:render
