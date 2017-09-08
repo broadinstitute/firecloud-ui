@@ -60,12 +60,12 @@
          (let [{:keys [namespace name]} (:config-id props)]
            [:div {:style {:display "flex" :marginLeft (when owner? "300px")}}
             (tab-bar/render-title
-             "CONFIG"
+             "CONFIGURATION"
              (str namespace "/" name))
             [:div {:style {:paddingLeft "2rem"}}
              (tab-bar/render-title
               "SNAPSHOT"
-              (:snapshot-id props))]])]
+              (:config-snapshot-id props))]])]
         (cond
           config-error
           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
@@ -112,7 +112,7 @@
    :-render-main
    (fn [{:keys [state locals]}]
      (let [{:keys [config]} @state
-           {:keys [managers createDate]} config
+           {:keys [managers method entityType]} config
            {:keys [body-id]} @locals
            make-block (fn [title body]
                         [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
@@ -122,12 +122,16 @@
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
         [:div {:style {:display "flex"}}
          (make-block
-          (str "Method Owner" (when (> (count managers) 1) "s"))
+          (str "Config Owner" (when (> (count managers) 1) "s"))
           (string/join ", " managers))
 
          (make-block
-          "Created"
-          (common/format-date createDate))]]))})
+          "Designed For"
+          (str "Method Snapshot " (:snapshotId method)))]
+
+        (make-block
+         "Entity Type"
+         entityType)]))})
 
 (react/defc Configs
   {:render
