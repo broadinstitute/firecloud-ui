@@ -94,7 +94,8 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     ui.fillNamespace(methodNamespace)
     ui.fillMethodConfigName(methodConfigName)
     if (rootEntityType != None) { ui.chooseRootEntityType(rootEntityType.get) }
-    ui.clickimportMethodConfigButton()
+    ui.clickImportMethodConfigButton()
+    await spinner "Importing..."
   }
 
   object ui {
@@ -132,7 +133,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     }
 
 
-    def clickimportMethodConfigButton(): Unit = {
+    def clickImportMethodConfigButton(): Unit = {
       click on (await enabled importMethodConfigButtonQuery)
     }
 

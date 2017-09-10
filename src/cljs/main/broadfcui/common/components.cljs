@@ -22,7 +22,7 @@
      [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
              :data-test-id "spinner"}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
-      (:text props)])})
+      [:span {:data-test-id "spinner-text"} (:text props)]])})
 
 
 (react/defc AnimatedEllipsis
