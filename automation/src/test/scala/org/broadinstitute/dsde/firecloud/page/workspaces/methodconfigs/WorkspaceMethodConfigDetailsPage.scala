@@ -39,6 +39,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   override def awaitLoaded(): WorkspaceMethodConfigDetailsPage = {
     await condition isLoaded
+    await spinner "Checking permissions..."
     this
   }
 

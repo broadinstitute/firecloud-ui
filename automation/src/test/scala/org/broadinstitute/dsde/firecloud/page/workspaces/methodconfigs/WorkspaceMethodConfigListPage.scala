@@ -20,7 +20,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): WorkspaceMethodConfigDetailsPage = {
     val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
-    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
+    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName).awaitLoaded()
   }
 
   def filter(searchText: String): Unit = {
