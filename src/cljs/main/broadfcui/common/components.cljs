@@ -177,7 +177,6 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :data-test-id (:data-test-id props)
-              :data-test-state (config/when-debug (if disabled? "disabled" "enabled"))
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
@@ -234,12 +233,12 @@
                                                     (:snapshots props)
                                                     redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
-                   [:span {:title rendered :data-test-id (config/when-debug (str "method-label-" label))} rendered]))]])]
+                   [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
        [:div {}
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
           (when redacted?
-            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id (config/when-debug "snapshot-redacted-title")}
+            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
              (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")

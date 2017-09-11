@@ -106,7 +106,7 @@
                                       :text "Edit Configuration" :icon :edit
                                       :disabled? (cond locked? "The workspace is locked"
                                                        (and redacted? (empty? snapshots)) "There are no available method snapshots.")
-                                      :data-test-id (config/when-debug "edit-method-config-button")
+                                      :data-test-id "edit-method-config-button"
                                       :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
