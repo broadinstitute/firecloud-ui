@@ -66,7 +66,7 @@ docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
-    -e ENVIRONMENT=${ENV} -e ROOT_DIR=/app/automation -v ${WORKING_DIR}:/working \
+    -e ENVIRONMENT=${ENV} -e ROOT_DIR=/app -v ${WORKING_DIR}:/working \
     -e OUT_PATH=/working/target -e INPUT_PATH=/working \
     broadinstitute/dsde-toolbox:dev render-templates.sh
 
@@ -79,8 +79,8 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --add-host=rawls.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=thurloe.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
-    -v $WORKING_DIR/target/application.conf:/app/automation/src/test/resources/application.conf \
-    -v $WORKING_DIR/target/firecloud-account.pem:/app/automation/src/test/resources/firecloud-account.pem \
+    -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
+    -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \

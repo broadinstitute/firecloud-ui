@@ -1,7 +1,8 @@
-package org.broadinstitute.dsde.firecloud.page.workspaces
+package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

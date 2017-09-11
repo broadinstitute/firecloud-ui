@@ -33,19 +33,25 @@
     (.clear engine)
     (.add engine (clj->js datums))))
 
+
 (react/defc- MethodDetailsViewer
   {:get-fields
    (fn [{:keys [refs]}]
      ((@refs "methodDetails") :get-fields))
+   :clear-redacted-snapshot
+   (fn [{:keys [refs]}]
+     ((@refs "methodDetails") :clear-redacted-snapshot))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     {:redacted? (:redacted? props)})
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [loaded-method error]} @state]
+     (let [{:keys [loaded-method error redacted?]} @state]
        (cond loaded-method [comps/EntityDetails
                             (merge {:ref "methodDetails"
-                                    :snapshots (get (:methods props)
-                                                    (replace loaded-method [:namespace :name]))
-                                    :entity loaded-method}
-                                   (select-keys props [:editing? :wdl-parse-error :onSnapshotIdChange]))]
+                                    :entity loaded-method
+                                    :redacted? redacted?}
+                                   (select-keys props [:editing? :snapshots :wdl-parse-error :onSnapshotIdChange]))]
              error (style/create-server-error-message error)
              :else [comps/Spinner {:text "Loading details..."}])))
    :component-did-mount
@@ -53,20 +59,21 @@
      (this :load-agora-method))
    :load-agora-method
    (fn [{:keys [props state]} & [method-ref]]
-     (let [{:keys [namespace name snapshotId]} (or method-ref props)]
+     (let [{:keys [namespace name snapshotId]} (or method-ref props)
+           method (:method props)]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
          :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+         :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response))
-                      (swap! state assoc :error status-text)))})))})
+                      (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
+                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
 
 
 (react/defc- Sidebar
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [access-level workspace-id after-delete
+     (let [{:keys [access-level workspace-id after-delete redacted? snapshots
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
            config-id (ws-common/config->id (:methodConfiguration loaded-config))]
@@ -86,27 +93,31 @@
              (list
               [comps/SidebarButton {:color :success-state
                                     :text "Save" :icon :done
+                                    :disabled? (when redacted? "Choose an available snapshot")
                                     :data-test-id "save-editted-method-config-button"
                                     :onClick #(parent :-commit)}]
               [comps/SidebarButton {:color :exception-state :margin :top
                                     :text "Cancel Editing" :icon :cancel
                                     :data-test-id "cancel-edit-method-config-button"
                                     :onClick #(parent :-cancel-editing)}])
-             (concat
+             (list
               (when can-edit?
-                [[comps/SidebarButton {:style :light :color :button-primary
-                                       :text "Edit Configuration" :icon :edit
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :data-test-id "edit-method-config-button"
-                                       :onClick #(parent :-begin-editing)}]
-                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                       :text "Delete" :icon :delete
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :data-test-id "delete-method-config-button"
-                                       :onClick #(swap! state assoc :show-delete-dialog? true)}]])
-              [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                     :text "Publish..." :icon :share
-                                     :onClick #(swap! state assoc :show-publish-dialog? true)}]]))]}]]))})
+                [comps/SidebarButton {:style :light :color :button-primary
+                                      :text "Edit Configuration" :icon :edit
+                                      :disabled? (cond locked? "The workspace is locked"
+                                                       (and redacted? (empty? snapshots)) "There are no available method snapshots.")
+                                      :data-test-id (config/when-debug "edit-method-config-button")
+                                      :onClick #(parent :-begin-editing snapshots)}])
+              (when can-edit?
+                [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                      :text "Delete" :icon :delete
+                                      :disabled? (when locked? "The workspace is locked")
+                                      :data-test-id "delete-method-config-button"
+                                      :onClick #(swap! state assoc :show-delete-dialog? true)}])
+              (when-not redacted?
+                [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                      :text "Publish..." :icon :share
+                                      :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
 
 (react/defc MethodConfigEditor
@@ -115,7 +126,7 @@
      {:editing? false
       :sidebar-visible? true})
    :component-will-mount
-   (fn [{:keys [locals props]}]
+   (fn [{:keys [locals]}]
      (swap! locals assoc
             :body-id (gensym "config")
             :engine (comps/create-bloodhound-engine
@@ -129,36 +140,44 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [props state this]}]
-     (this :-load-validated-method-config)
-     (endpoints/call-ajax-orch
-      {:endpoint endpoints/list-methods
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :methods (->> (get-parsed-response)
-                                                     (map #(select-keys % [:namespace :name :snapshotId]))
-                                                     (group-by (juxt :namespace :name))
-                                                     (utils/map-values (partial map :snapshotId))))
-                    ;; FIXME: :error-message is unused
-                    (swap! state assoc :error-message status-text)))}))
+   (fn [{:keys [this]}]
+     (this :-load-validated-method-config))
+   :component-did-update
+   (fn [{:keys [state]}]
+     (let [{:keys [methods loaded-config]} @state]
+       (when (and (not methods) loaded-config)
+         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
+           (endpoints/call-ajax-orch
+            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                        (let [response (get-parsed-response)]
+                          (if success?
+                            (swap! state assoc
+                                   :methods-response response
+                                   :methods {[methodNamespace methodName] (mapv #(:snapshotId %) response)})
+                            ;; FIXME: :error-message is unused
+                            (swap! state assoc :error-message status-text))))})))))
    :-render-display
    (fn [{:keys [props state locals this]}]
-     (let [locked? (get-in props [:workspace :workspace :isLocked])]
+     (let [locked? (get-in props [:workspace :workspace :isLocked])
+           methods (:methods @state)
+           methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
-                         (select-keys @state [:editing? :loaded-config])
+                         (select-keys @state [:editing? :loaded-config :redacted?])
                          (select-keys @locals [:body-id])
-                         {:parent this :locked? locked?})]
+                         {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
          (this :-render-main locked?)
          (common/clear-both)]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods entity-types]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
-           {:keys [methodRepoMethod]} config
+           {:keys [methodRepoMethod rootEntityType]} config
+           {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id engine]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        [:div {:style {:flex "1 1 auto"} :id body-id}
@@ -166,12 +185,14 @@
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
-                                  :root-entity-type (:rootEntityType config)
+                                  :root-entity-type rootEntityType
                                   :disabled? (cond locked?
                                                    "This workspace is locked."
                                                    (not (:bucket-access? props))
                                                    (str "You do not currently have access"
-                                                        " to the Google Bucket associated with this workspace."))
+                                                        " to the Google Bucket associated with this workspace.")
+                                                   redacted?
+                                                   "The method snapshot this config references has been redacted.")
                                   :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
@@ -182,26 +203,31 @@
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
-        (create-section [MethodDetailsViewer
-                         (merge {:ref "methodDetailsViewer"
-                                 :name (:methodName methodRepoMethod)
-                                 :namespace (:methodNamespace methodRepoMethod)
-                                 :snapshotId (:methodVersion methodRepoMethod)
-                                 :onSnapshotIdChange #(this :-load-new-method-template %)}
-                                (utils/restructure config methods editing? wdl-parse-error))])
+        (let [method (if (empty? methods-response)
+                       {:name methodName :namespace methodNamespace :entityType "Workflow"}
+                       (first methods-response))]
+          (create-section [MethodDetailsViewer
+                           (merge {:ref "methodDetailsViewer"
+                                   :name methodName
+                                   :namespace methodNamespace
+                                   :snapshotId methodVersion
+                                   :onSnapshotIdChange #(this :-load-new-method-template %)
+                                   :method method
+                                   :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
+                                  (utils/restructure redacted? config methods editing? wdl-parse-error))]))
         (create-section-header "Root Entity Type")
         (create-section
          (if editing?
            (style/create-identity-select {:ref "rootentitytype"
                                           :data-test-id "edit-method-config-root-entity-type-select"
-                                          :defaultValue (:rootEntityType config)
+                                          :defaultValue rootEntityType
                                           :style {:width 500}
                                           :onChange #(refresh-autocomplete {:engine engine
                                                                             :workspace-attributes workspace-attributes
                                                                             :entity-types entity-types
                                                                             :selected-entity-type (.. % -target -value)})}
                                          common/root-entity-types)
-           [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
+           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
         (create-section-header "Inputs")
         (this :-render-input-output-list
               {:values (:inputs config)
@@ -231,7 +257,7 @@
                               :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
                               :backgroundColor (:background-light style/colors)
                               :border style/standard-line :borderRadius 2}}
-                (str name ": (" (when optional "optional ") type ")")]
+                (str name (when type (str ": (" (when optional "optional ") type ")")))]
                (when (and error (not editing?) (not optional))
                  (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
                                       :color (:exception-state style/colors)}}
@@ -272,14 +298,13 @@
                         (swap! state assoc :entity-types entity-types))
                       ;; FIXME: :data-attribute-load-error is unused
                       (swap! state assoc :data-attribute-load-error status-text)))}))
-     (let [{:keys [loaded-config inputs-outputs]} @state]
-       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
+     (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
+       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?)))
    :-cancel-editing
    (fn [{:keys [state refs]}]
-     (let [original-loaded-config (:original-config @state)
-           original-inputs-outputs (:original-inputs-outputs @state)
-           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+     (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
+           method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
+       (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
        ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
                                                           :name (:methodName method-ref)
                                                           :snapshotId (:methodVersion method-ref)})))
@@ -308,7 +333,9 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
-                      (do ((:on-rename props) name)
+                      (do (swap! state dissoc :redacted?)
+                          ((:on-rename props) name)
+                          ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                       (comps/push-error-response (get-parsed-response false))))})))
    :-load-validated-method-config
@@ -317,15 +344,19 @@
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (get-parsed-response)]
+                    (let [response (get-parsed-response)
+                          fake-inputs-outputs (fn [data]
+                                                (let [method-config (:methodConfiguration data)]
+                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
                       (endpoints/call-ajax-orch
                        {:endpoint endpoints/get-inputs-outputs
                         :payload (get-in response [:methodConfiguration :methodRepoMethod])
                         :headers utils/content-type=json
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
-                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
-                                     (swap! state assoc :error (:message (get-parsed-response)))))}))
+                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
+                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -363,8 +394,9 @@
                                                                  :validInputs {}
                                                                  :invalidOutputs {}
                                                                  :validOutputs {})
-                                                :inputs-outputs (get-parsed-response))
+                                                :inputs-outputs (get-parsed-response)
+                                                :redacted? false)
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
-                          (swap! state assoc :blocker nil :wdl-parse-error (:message response))
+                          (swap! state assoc :redacted? true :blocker nil :wdl-parse-error (:message response))
                           (comps/push-error (style/create-server-error-message (:message response)))))))})))})

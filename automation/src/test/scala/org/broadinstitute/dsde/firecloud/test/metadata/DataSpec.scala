@@ -6,12 +6,12 @@ import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrows
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
 
-class DataTabSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
+class DataSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   behavior of "Data"
 
   it should "import a participants file" in withWebDriver { implicit driver =>
-    val filename = "automation/src/test/resources/participants.txt"
+    val filename = "src/test/resources/participants.txt"
 
     val billingProject = Config.Projects.default
     val wsName = "TestSpec_FireCloud_import_participants_file_" + randomUuid
