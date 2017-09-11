@@ -29,7 +29,7 @@
 
 (react/defc- DeleteDialog
   {:render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      [comps/OKCancelForm
       {:header "Confirm Delete"
        :content
@@ -38,6 +38,8 @@
           [comps/Blocker {:banner "Deleting..."}])
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} "Bucket data will be deleted too."]
+        (when (:published? props)
+          [:p {} "This workspace is published, deleting it will also un-publish it."])
         [comps/ErrorViewer {:error (:server-error @state)}]]
        :ok-button {:text "Delete" :onClick #(this :delete)
                    :data-test-id "confirm-delete-workspace-button"}}])
@@ -240,12 +242,17 @@
                                    :icon (if isLocked :unlock :lock)
                                    :onClick #(this :-lock-or-unlock isLocked)}])
            (when (and owner? (not editing?))
-             [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                                   :text "Delete" :icon :delete
-                                   :data-test-id "delete-workspace-button"
-                                   :disabled? (when isLocked "This workspace is locked.")
-                                   :onClick #(modal/push-modal
-                                              [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
+             (let [published? (:library:published library-attributes)
+                   publisher? (and curator? (or catalog-with-read? owner?))]
+               [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                                     :text "Delete" :icon :delete
+                                     :data-test-id "delete-workspace-button"
+                                     :disabled? (cond
+                                                  isLocked "This workspace is locked."
+                                                  (not (and published? publisher?)) "Curator permissions insufficient to delete this workspace.")
+                                     :onClick #(modal/push-modal
+                                                [DeleteDialog {:workspace-id workspace-id
+                                                               :published? published?}])}]))]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
