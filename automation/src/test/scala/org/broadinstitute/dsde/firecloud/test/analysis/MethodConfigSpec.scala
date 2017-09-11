@@ -253,7 +253,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
-    "launch analysis button should be diabled and show error if clicked" in withWebDriver { implicit driver =>
+    "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
         withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_launch_analysis_error", billingProject, workspaceName, true) { configName =>
           signIn(uiUser)
