@@ -75,7 +75,7 @@
                                  :sortable-columns? (not editing?)}
                       :columns
                       (concat [{:header "Task" :initial-width 180
-                                :column-data :task
+                                :column-data :task :sort-initial :asc
                                 :render (fn [task]
                                           [:div {:style (clip table-style/table-cell-plank-left)} task])}
                                {:header "Variable" :initial-width 180
