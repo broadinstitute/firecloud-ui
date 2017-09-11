@@ -48,16 +48,16 @@
                              :fontWeight 500 :textDecoration "none"
                              :color (:button-primary style/colors)}
                      :href "javascript:;"
-                     :data-test-id (config/when-debug "cancel-button")
+                     :data-test-id "cancel-button"
                      :onClick dismiss
                      :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
                  cancel-text])
               (when ok-button
                 (cond
                   (string? ok-button)
-                  [comps/Button {:text ok-button :ref "ok-button" :data-test-id (config/when-debug "ok-button") :onClick dismiss}]
-                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id (config/when-debug "ok-button") :onClick ok-button}]
-                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id (config/when-debug "ok-button")} ok-button)]
+                  [comps/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
                   :else ok-button))])]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))

@@ -180,3 +180,4 @@ the scala code, you'll see an error about shared compile output paths. An issue 
 filed against IntelliJ: [https://youtrack.jetbrains.com/issue/SCL-12358](). (Please vote for
 it if you want to see it fixed.) A workaround feature for Cursive has been requested in a
 related issue: [https://github.com/cursive-ide/cursive/issues/282]().
+
