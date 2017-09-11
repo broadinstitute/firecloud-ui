@@ -42,7 +42,7 @@
           {:configs (map #(add-redacted-attribute % methods) configs)
            :render-name (fn [config]
                           (links/create-internal
-                           {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
+                           {:data-test-id (str "method-config-" (:name config) "-link")
                             :href (nav/get-link :workspace-method-config
                                                 (:workspace-id props)
                                                 (ws-common/config->id config))}
@@ -55,11 +55,11 @@
                            nil "Looking up workspace status..."
                            true "This workspace is locked."
                            false)
-              :data-test-id (config/when-debug "import-config-button")
+              :data-test-id "import-config-button"
               :onClick #(modal/push-modal
                          [import-config/ConfigImporter
                           {:workspace-id (:workspace-id props)
-                           :data-test-id (config/when-debug "import-method-configuration-modal")
+                           :data-test-id "import-method-configuration-modal"
                            :after-import (fn [{:keys [config-id]}]
                                            (modal/pop-modal)
                                            (mc-sync/flag-synchronization)

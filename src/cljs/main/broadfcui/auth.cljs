@@ -62,7 +62,7 @@
      ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
      ;; than removing it from the page.
      [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
-      [comps/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click) :data-test-id (config/when-debug "sign-in-button")}]
+      [comps/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click) :data-test-id "sign-in-button"}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
        [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account.

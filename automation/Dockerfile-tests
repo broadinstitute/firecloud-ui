@@ -2,8 +2,8 @@ FROM hseeberger/scala-sbt
 
 RUN mkdir /app
 
-COPY automation/src /app/automation/src
-COPY automation/test.sh /app
+COPY src /app/src
+COPY test.sh /app
 COPY project /app/project
 COPY build.sbt /app
 

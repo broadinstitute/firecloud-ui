@@ -93,11 +93,11 @@
               [comps/SidebarButton {:color :success-state
                                     :text "Save" :icon :done
                                     :disabled? (when redacted? "Choose an available snapshot")
-                                    :data-test-id (config/when-debug "save-editted-method-config-button")
+                                    :data-test-id "save-editted-method-config-button"
                                     :onClick #(parent :-commit)}]
               [comps/SidebarButton {:color :exception-state :margin :top
                                     :text "Cancel Editing" :icon :cancel
-                                    :data-test-id (config/when-debug "cancel-edit-method-config-button")
+                                    :data-test-id "cancel-edit-method-config-button"
                                     :onClick #(parent :-cancel-editing)}])
              (list
               (when can-edit?
@@ -105,13 +105,13 @@
                                       :text "Edit Configuration" :icon :edit
                                       :disabled? (cond locked? "The workspace is locked"
                                                        (and redacted? (empty? snapshots)) "There are no available method snapshots.")
-                                      :data-test-id (config/when-debug "edit-method-config-button")
+                                      :data-test-id "edit-method-config-button"
                                       :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                       :text "Delete" :icon :delete
                                       :disabled? (when locked? "The workspace is locked")
-                                      :data-test-id (config/when-debug "delete-method-config-button")
+                                      :data-test-id "delete-method-config-button"
                                       :onClick #(swap! state assoc :show-delete-dialog? true)}])
               (when-not redacted?
                 [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
@@ -192,10 +192,10 @@
         (create-section
          (if editing?
            (style/create-text-field {:ref "confname" :style {:width 500}
-                                     :data-test-id (config/when-debug "edit-method-config-name-input")
+                                     :data-test-id "edit-method-config-name-input"
                                      :defaultValue (:name config)})
            [:div {:style {:padding "0.5em 0 1em 0"}
-                  :data-test-id (config/when-debug "method-config-name")} (:name config)]))
+                  :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
         (let [method (if (empty? methods-response)
                        {:name methodName :namespace methodNamespace :entityType "Workflow"}
@@ -213,7 +213,7 @@
         (create-section
          (if editing?
            (style/create-identity-select {:ref "rootentitytype"
-                                          :data-test-id (config/when-debug "edit-method-config-root-entity-type-select")
+                                          :data-test-id "edit-method-config-root-entity-type-select"
                                           :defaultValue rootEntityType
                                           :style {:width 500}
                                           :onChange #(swap! state assoc :autocomplete-list
@@ -222,7 +222,7 @@
                                                               :entity-types entity-types
                                                               :selected-entity-type (.. % -target -value)}))}
                                          common/root-entity-types)
-           [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
+           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs

@@ -74,7 +74,7 @@
                   {:header "Status" :initial-width 120
                    :column-data :status
                    :render (fn [status]
-                             [:div {:data-test-id (config/when-debug "workflow-status")}
+                             [:div {:data-test-id "workflow-status"}
                               (moncommon/icon-for-wf-status status)
                               status])}
                   {:header "Messages" :initial-width 300
@@ -121,13 +121,13 @@
                [comps/Blocker {:banner "Aborting submission..."}])
              [comps/SidebarButton {:color :exception-state :style :light :margin :top
                                    :text "Abort" :icon :warning
-                                   :data-test-id (config/when-debug "submission-abort-button")
+                                   :data-test-id "submission-abort-button"
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
                                                 :on-confirm
                                                 [comps/Button {:text "Abort Submission"
-                                                               :data-test-id (config/when-debug "submission-abort-modal-confirm-button")
+                                                               :data-test-id "submission-abort-modal-confirm-button"
                                                                :onClick #(this :abort-submission)}]}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
@@ -189,7 +189,7 @@
             [:div {} (common/format-date (:submissionDate submission)) " ("
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
-           (links/create-external {:data-test-id (config/when-debug "submission-id")
+           (links/create-external {:data-test-id "submission-id"
                                    :href (str moncommon/google-cloud-context
                                               (:bucketName props) "/" (:submissionId submission) "/")}
                                   (style/create-paragraph (:submissionId submission)))]
