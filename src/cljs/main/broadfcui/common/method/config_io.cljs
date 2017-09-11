@@ -75,13 +75,15 @@
                                  :sortable-columns? (not editing?)}
                       :columns
                       (concat [{:header "Task" :initial-width 180
-                                :column-data :task :sort-initial :asc
-                                :render (fn [task]
+                                :sort-by (comp (partial mapv string/lower-case) (juxt :task :variable))
+                                :sort-initial :asc
+                                :as-text :task
+                                :render (fn [{:keys [task]}]
                                           [:div {:style (clip table-style/table-cell-plank-left)} task])}
                                {:header "Variable" :initial-width 180
                                 :as-text (fn [{:keys [variable optional?]}]
                                            (str variable (when optional? " (optional)")))
-                                :sort-by :text
+                                :sort-by (comp string/lower-case :text)
                                 :render (fn [{:keys [variable optional?]}]
                                           [:div {:style (clip (if optional?
                                                                 (merge table-style/table-cell-plank-middle
