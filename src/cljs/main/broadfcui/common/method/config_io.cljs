@@ -37,7 +37,7 @@
        [:div {:id id :style (:style props)}
         (when (:editing? @state)
           [:style {} (str ".select2-results__option" ;; TODO - just make this global?
-                          "{font-size: 80%}"
+                          "{font-size: 80%; word-break: break-all;}"
                           "#" id " .select2-container--default .select2-selection--multiple .select2-selection__choice__remove"
                           "{display: none}"
                           "#" id " .select2-container .selection li.select2-selection__choice"
