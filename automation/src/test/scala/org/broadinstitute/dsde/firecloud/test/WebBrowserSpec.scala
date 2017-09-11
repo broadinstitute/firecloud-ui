@@ -59,6 +59,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
   private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
     implicit val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
+    driver.manage.window.setSize(new org.openqa.selenium.Dimension(1000, 2400))
     driver.setFileDetector(new LocalFileDetector())
     try {
       withScreenshot {
