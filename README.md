@@ -121,10 +121,12 @@ FIAB=true ENV=qa ./config/docker-rsync-local-ui.sh
 
 #### Running tests
 
-##### From intellij
+##### From IntelliJ
 
 Edit your run config defaults for ScalaTest.
 Add this to the VM parameters: `-Djsse.enableSNIExtension=false  -Dheadless=false`
+
+Also make sure that there is a `Build` task configured to run before launch.
 
 ##### From the command line
 
@@ -154,30 +156,23 @@ For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+F
 
 
 ### IntelliJ
-We now recommend opening a separate IntelliJ project for the automation test code. From 
-IntelliJ choose File->New->Project From Existing Sources and select automation/build.sbt.
-You will need to set automation as the root source and accept the suggestion to add the 
-git root. In your firecloud-ui clojure project you may want to choose the automation 
+
+There are effectively two projects in this repository: a ClojureScript project for the
+FireCloud UI and a Scala project for the Selenium-based UI tests. They are logically
+linked because the tests rely on the rendered DOM structure (primarily `data-test-id`
+attributes) but are otherwise largely separate. Therefore (also in part because of
+[https://youtrack.jetbrains.com/issue/SCL-12358]()) we recommend opening
+separate IntelliJ projects for each.
+
+For the ClojureScript project, choose `File` -> `Open` and select the base `firecloud-ui`
+directory of your git clone. If prompted for a Project JDK, select a recent Java SDK to
+use. Assuming you have the Cursive plugin installed, IntelliJ will automatically detect
+the `project.clj` file and configure the CLJS Leiningen project.
+
+For the Scala project, choose `File` -> `Open` and select the `automation` directory
+inside the git clone. Select a recent Java SDK (i.e. 1.8) and click `OK`. IntelliJ will
+automatically detect the `build.sbt` file and configure the Scala/SBT project. You will
+need to set `automation` as the root source and accept the suggestion to add the git
+root. In your firecloud-ui clojure project you may want to choose the automation 
 directory and set it to ignore. If you add a new file in the scala project and choose 
 not to add it to the git repo, you may be asked again in the clojure project.
-
-For reference, these are the old instructions for the combined project:
-After opening the project, if IntelliJ shows errors in scala source or running a test
-throws a `MethodNotFoundException`, open the SBT panel and click the button for "Refresh
-all SBT projects" (and keep reading).
-
-If IntelliJ shows errors in cljs source (which will happen after refreshing SBT projects),
-open the Leiningen panel and click the button for "Refresh Leiningen Projects". Then open
-Project Structure > Modules > firecloue-ui > Paths and change "Test output path" to be
-different than the value for "Output path", e.g.
-`/{your firecloud-ui project root}/firecloud-ui/resources/public/target/test-classes`
-(and keep reading to learn why).
-
-There is currently an issue with IntelliJ's scala/SBT support that causes the scala build
-to incorrectly pay attention to unrelated (i.e. Leiningen) modules. Cursive sets both
-"Output path" and "Test output path" to the same value. The result is that, when building
-the scala code, you'll see an error about shared compile output paths. An issue has been
-filed against IntelliJ: [https://youtrack.jetbrains.com/issue/SCL-12358](). (Please vote for
-it if you want to see it fixed.) A workaround feature for Cursive has been requested in a
-related issue: [https://github.com/cursive-ide/cursive/issues/282]().
-
