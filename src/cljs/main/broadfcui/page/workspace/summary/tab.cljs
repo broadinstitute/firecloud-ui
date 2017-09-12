@@ -251,8 +251,7 @@
                                                   isLocked "This workspace is locked."
                                                   (not (and published? publisher?)) "Curator permissions insufficient to delete this workspace.")
                                      :onClick #(modal/push-modal
-                                                [DeleteDialog {:workspace-id workspace-id
-                                                               :published? published?}])}]))]}]]))
+                                                [DeleteDialog (utils/restructure workspace-id published?)])}]))]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
