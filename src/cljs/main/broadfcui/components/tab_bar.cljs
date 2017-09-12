@@ -38,7 +38,7 @@
 (defn- make-tab [{:keys [label first? active? link-key context-id refresh-tab request-refresh]}]
   [Tab {:label label :first? first? :active? active?
         :href (nav/get-link link-key context-id)
-        :data-test-id (config/when-debug (str label "-tab"))
+        :data-test-id (str label "-tab")
         :on-refresh #(when active?
                        (request-refresh)
                        (refresh-tab label))}])

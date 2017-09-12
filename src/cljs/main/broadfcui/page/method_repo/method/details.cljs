@@ -5,7 +5,6 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.components.tab-bar :as tab-bar]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
    [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
@@ -41,9 +40,9 @@
          (tab-bar/render-title
           "METHOD"
           [:span {}
-           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace method-id)]
+           [:span {:data-test-id "header-namespace"} (:namespace method-id)]
            "/"
-           [:span {:data-test-id (config/when-debug "header-name")} (:name method-id)]])
+           [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:paddingLeft "2rem"}} (this :-render-snapshot-selector)]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
@@ -54,7 +53,7 @@
         [:div {:style {:marginTop "2rem"}}
          (if method-error
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
-                  :data-test-id (config/when-debug "method-details-error")}
+                  :data-test-id "method-details-error"}
             "Error loading method: " method-error]
            (if-not selected-snapshot
              [:div {:style {:textAlign "center" :padding "1rem"}}
@@ -83,7 +82,7 @@
         {:label (tab-bar/render-title
                  "SNAPSHOT"
                  [:div {:style {:display "flex" :alignItems "center"}
-                        :data-test-id (config/when-debug "snapshot-dropdown")}
+                        :data-test-id "snapshot-dropdown"}
                   [:span {} (if method selected-snapshot-id "Loading...")]
                   [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]])
          :width :auto

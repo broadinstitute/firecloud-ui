@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
+   [broadfcui.common.method.config-io :as config-io]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
@@ -20,7 +21,30 @@
    [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.common.input :as input]
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
-   [broadfcui.common.modal :as modal]))
+   ))
+
+
+(react/defc IOView
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [error inputs-outputs]} @state]
+       (cond error [comps/ErrorViewer (:error error)]
+             inputs-outputs [config-io/IOTables {:default-hidden? true
+                                                 :style {:marginTop "1rem"}
+                                                 :inputs-outputs inputs-outputs
+                                                 :values (:values props)}]
+             :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-inputs-outputs
+       :payload (:method-ref props)
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :inputs-outputs (get-parsed-response))
+                    (swap! state assoc :error (get-parsed-response false))))}))})
+
 
 (defn render-config-table [{:keys [make-config-link-props configs]}]
   [Table
@@ -48,7 +72,7 @@
      (swap! state dissoc :configs :configs-error)
      (let [{:keys [config-id config-snapshot-id]} props]
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-configuration (:namespace config-id) (:name config-id) config-snapshot-id)
+        {:endpoint (endpoints/get-configuration (:namespace config-id) (:name config-id) config-snapshot-id true)
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
@@ -84,7 +108,7 @@
            (this :-render-main)])]))
    :-render-sidebar
    (fn [{:keys [state locals refs]}]
-     (let [{:keys [config exported-config-id exported-workspace-id]} @state
+     (let [{:keys [config]} @state
            {:keys [body-id]} @locals]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (modals/show-modals
@@ -115,7 +139,7 @@
    :-render-main
    (fn [{:keys [state locals this]}]
      (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
-           {:keys [managers method entityType]} config
+           {:keys [managers method entityType payloadObject]} config
            {:keys [body-id]} @locals
            make-block (fn [title body]
                         [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
@@ -137,7 +161,12 @@
          entityType)
 
         (style/create-section-header
-         "HI HELLO I/O TABLES GO HERE THANKS")
+         "Connections")
+
+        [IOView {:method-ref {:methodNamespace (:namespace method)
+                              :methodName (:name method)
+                              :methodVersion (:snapshotId method)}
+                 :values (select-keys payloadObject [:inputs :outputs])}]
 
         (cond
           blocking-text
@@ -155,8 +184,7 @@
 
         [mci/ConfigExporter
          {:entity config
-          :perform-copy (partial this :-perform-copy)}]
-        ]))
+          :perform-copy (partial this :-perform-copy)}]]))
    :-perform-copy
    (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id]} props

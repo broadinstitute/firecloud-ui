@@ -129,7 +129,7 @@
                (map-indexed (fn [index {:keys [label size] :as tab}]
                               (let [selected? (= index selected-tab-index)
                                     tab-count (get tab-counts label)]
-                                [:div {:data-test-id (config/when-debug (str label "-filter-button"))
+                                [:div {:data-test-id (str label "-filter-button")
                                        :style {:display "inline-block" :textAlign "center"
                                                :padding "0.5rem 1rem" :cursor "pointer"
                                                :fontWeight (when selected? 500)

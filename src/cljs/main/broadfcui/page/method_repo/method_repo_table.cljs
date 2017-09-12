@@ -32,7 +32,7 @@
          (utils/deep-merge
           {:persistence-key "method-repo-table" :v 1
            :data (concat (:methods @state) (:configs @state))
-           :data-test-id (config/when-debug "method-repo-table")
+           :data-test-id "method-repo-table"
            :tabs {:style {:marginTop "-0.6rem" :marginBottom "0.3rem"}
                   :items [{:label "All"}
                           {:label "Methods Only" :predicate (comp (partial = :method) :type)}

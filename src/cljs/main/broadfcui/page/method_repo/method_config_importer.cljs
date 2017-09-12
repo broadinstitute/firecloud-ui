@@ -11,7 +11,6 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :as create]
@@ -108,12 +107,12 @@
               (style/create-form-label (:label field))
               (if (= (:type field) "identity-select")
                 (style/create-identity-select {:ref field-name
-                                               :data-test-id (config/when-debug "import-root-entity-type-select")
+                                               :data-test-id "import-root-entity-type-select"
                                                :defaultValue entity-val}
                                               (:options field))
                 [input/TextField {:ref field-name
                                   :defaultValue entity-val
-                                  :data-test-id (config/when-debug (str "method-config-import-" field-name "-input"))
+                                  :data-test-id (str "method-config-import-" field-name "-input")
                                   :placeholder "Required"
                                   :predicates [(input/nonempty "Fields")]}])]))
          (filterv some?
@@ -151,7 +150,7 @@
         [comps/ErrorViewer {:error (:server-error @state)}]
         [comps/Button {:text (if workspace-id "Import" "Export")
                        :disabled? (not (or workspace-id workspaces-list))
-                       :data-test-id (config/when-debug (if workspace-id "import-button" "export-button"))
+                       :data-test-id (if workspace-id "import-button" "export-button")
                        :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
 
 (defn- create-import-form [state props entity config? perform-copy]
@@ -207,10 +206,8 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-configuration
-                  (get-in props [:id :namespace])
-                  (get-in props [:id :name])
-                  (get-in props [:id :snapshot-id]))
+      {:endpoint (let [{:keys [namespace name snapshot-id]} (:id props)]
+                   (endpoints/get-configuration namespace name snapshot-id true))
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
@@ -325,7 +322,7 @@
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
                 (links/create-internal
-                  {:data-test-id (config/when-debug (str name "_" snapshotId))
+                  {:data-test-id (str name "_" snapshotId)
                    :href (if workspace-id "javascript:;" (nav/get-link type id))
                    :onClick (when workspace-id
                               #(swap! state assoc :type type :id id))}

@@ -212,7 +212,7 @@
      (let [{:keys [filters-expanded? request-access-modal-props]} @state]
        [:div {}
         (when request-access-modal-props
-          [:div {:data-test-id (config/when-debug "request-access-modal")}
+          [:div {:data-test-id "request-access-modal"}
             [RequestAuthDomainAccessDialog
              (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
@@ -259,6 +259,7 @@
              :as-text common/format-date}
             {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
              :initial-width 132 :resizable? false :filterable? false
+             :as-text (comp style/prettify-access-level :access-level)
              :sort-by :access-level-index
              :sort-initial :asc
              :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
@@ -278,7 +279,7 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+          :toolbar {:filter-bar {:inner {:width 300 :data-test-id "workspace-list-filter"}}
                     :style {:padding "1rem" :margin 0
                             :backgroundColor (:background-light style/colors)}
                     :get-items
@@ -334,7 +335,7 @@
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}
-                   :data-test-id (config/when-debug (str "restricted-" namespace "-" name))}
+                   :data-test-id (str "restricted-" namespace "-" name)}
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]
