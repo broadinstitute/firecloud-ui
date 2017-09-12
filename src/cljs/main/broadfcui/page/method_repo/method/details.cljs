@@ -100,10 +100,9 @@
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
-                       (do
-                         (swap! state assoc :method parsed-response)
-                         (when-not (:selected-snapshot @state)
-                           (this :-refresh-snapshot (or snapshot-id (:snapshotId (last parsed-response))))))
+                       (do (swap! state assoc :method parsed-response)
+                           (when-not (:selected-snapshot @state)
+                             (this :-refresh-snapshot (or snapshot-id (:snapshotId (last parsed-response))))))
                        (swap! state assoc :method-error (:message parsed-response)))))})))
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
@@ -121,9 +120,7 @@
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
-                       (do
-                         (swap! state assoc :selected-snapshot parsed-response)
-                         (swap! state dissoc :loading-snapshot?))
+                       (swap! state assoc :selected-snapshot parsed-response :loading-snapshot? false)
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]

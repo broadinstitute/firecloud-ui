@@ -82,28 +82,13 @@
    :-render-main
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
-           {:keys [body-id]} @locals
-           make-block (fn [title body]
-                        [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
-                         [:div {:style {:paddingBottom "0.5rem"}}
-                          (style/create-subsection-header title)]
-                         (style/create-subsection-contents body)])]
+           {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-
-        [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
-         [:div {:style {:paddingBottom "0.5rem"}}
-          (style/create-subsection-header "Synopsis")]
-         (style/create-subsection-contents synopsis)]
-
-
+        (style/create-summary-block "Synopsis" synopsis)
         [:div {:style {:display "flex"}}
-         (make-block
-          (str "Method Owner" (when (> (count managers) 1) "s"))
-          (string/join ", " managers))
-
-         (make-block
-          "Created"
-          (common/format-date createDate))]
+         (style/create-summary-block (str "Method Owner" (when (> (count managers) 1) "s"))
+                                     (string/join ", " managers))
+         (style/create-summary-block "Created" (common/format-date createDate))]
 
         [Collapse
          {:style {:marginBottom "2rem"}

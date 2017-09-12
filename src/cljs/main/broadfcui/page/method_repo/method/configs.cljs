@@ -140,29 +140,16 @@
    (fn [{:keys [state locals this]}]
      (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
            {:keys [managers method entityType payloadObject]} config
-           {:keys [body-id]} @locals
-           make-block (fn [title body]
-                        [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
-                         [:div {:style {:paddingBottom "0.5rem"}}
-                          (style/create-subsection-header title)]
-                         (style/create-subsection-contents body)])]
+           {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
         [:div {:style {:display "flex"}}
-         (make-block
-          (str "Config Owner" (when (> (count managers) 1) "s"))
-          (string/join ", " managers))
+         (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
+                                     (string/join ", " managers))
+         (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
 
-         (make-block
-          "Designed For"
-          (str "Method Snapshot " (:snapshotId method)))]
+        (style/create-summary-block "Entity Type" entityType)
 
-        (make-block
-         "Entity Type"
-         entityType)
-
-        (style/create-section-header
-         "Connections")
-
+        (style/create-section-header "Connections")
         [IOView {:method-ref {:methodNamespace (:namespace method)
                               :methodName (:name method)
                               :methodVersion (:snapshotId method)}
@@ -182,9 +169,7 @@
              :onClick #(mc-sync/flag-synchronization)
              :href (nav/get-link :workspace-method-config exported-workspace-id exported-config-id)}}])
 
-        [mci/ConfigExporter
-         {:entity config
-          :perform-copy (partial this :-perform-copy)}]]))
+        [mci/ConfigExporter {:entity config :perform-copy (partial this :-perform-copy)}]]))
    :-perform-copy
    (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id]} props
@@ -227,8 +212,7 @@
           (not configs) [:div {:style {:textAlign "center" :padding "1rem"}}
                          [comps/Spinner {:text "Loading configs..."}]]
           config-id [ConfigViewer (utils/restructure config-id config-snapshot-id)]
-          :else
-          (render-config-table (utils/restructure make-config-link-props configs)))]))
+          :else (render-config-table (utils/restructure make-config-link-props configs)))]))
    :component-will-mount
    (fn [{:keys [props this]}]
      (when-not (:config-id props)
