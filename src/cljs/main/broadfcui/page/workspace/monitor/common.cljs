@@ -45,28 +45,28 @@
 (defn render-success-icon []
   (icons/icon {:style {:color (:success-state style/colors) :marginRight 4
                        :width table-style/table-icon-size :height table-style/table-icon-size}
-               :data-test-id (config/when-debug "status-icon") :data-test-value "success"}
+               :data-test-id "status-icon" :data-test-value "success"}
               :done))
 (defn render-running-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:running-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
-          :data-test-id (config/when-debug "status-icon") :data-test-value "running"}
+          :data-test-id "status-icon" :data-test-value "running"}
    [icons/RunningIcon {:size 12}]])
 (defn render-failure-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:exception-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
-          :data-test-id (config/when-debug "status-icon") :data-test-value "failure"}
+          :data-test-id "status-icon" :data-test-value "failure"}
    [icons/ExceptionIcon {:size 12}]])
 (defn render-unknown-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:background-dark style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
-          :data-test-id (config/when-debug "status-icon") :data-test-value "unknown"}
+          :data-test-id "status-icon" :data-test-value "unknown"}
    [icons/UnknownIcon {:size 12}]])
 
 

@@ -31,7 +31,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec") { authDomainName =>
+        withGroup("AuthDomain") { authDomainName =>
           withCleanUp {
             val workspaceListPage = signIn(Config.Users.fred)
 
@@ -45,7 +45,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
 
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
+        withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
             withCleanUp {
               val listPage = signIn(Config.Users.george)
@@ -73,7 +73,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is not inside of the group" - {
         "when the workspace is shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { authDomainName =>
+            withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 val workspaceListPage = signIn(Config.Users.ron)
                 workspaceListPage.filter(workspaceName)
@@ -88,7 +88,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { authDomainName =>
+            withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                 val workspaceListPage = signIn(Config.Users.ron)
 
@@ -110,7 +110,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is inside of the group" - {
         "when the workspace is shared with them" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
+            withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 val listPage = signIn(Config.Users.george)
                 listPage.filter(workspaceName)
@@ -123,7 +123,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
+            withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                 val workspaceListPage = signIn(Config.Users.george)
                 workspaceListPage.filter(workspaceName)
@@ -142,8 +142,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         //TCGA controlled access workspaces use-case
         "when the workspace is shared with the group" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val listPage = signIn(Config.Users.harry)
                   listPage.filter(workspaceName)
@@ -163,8 +163,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
     "with multiple groups inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec") { groupOneName =>
-          withGroup("AuthDomainSpec") { groupTwoName =>
+        withGroup("AuthDomain") { groupOneName =>
+          withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
               val workspaceListPage = signIn(Config.Users.fred)
 
@@ -179,8 +179,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupOneName =>
-          withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupTwoName =>
+        withGroup("AuthDomain", List(Config.Users.george.email)) { groupOneName =>
+          withGroup("AuthDomain", List(Config.Users.george.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
                 val listPage = signIn(Config.Users.george)
@@ -208,9 +208,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
       "can be cloned and have a group added to the auth domain" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupOneName =>
-          withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupTwoName =>
-            withGroup("AuthDomainSpec", List(Config.Users.george.email)) { groupThreeName =>
+        withGroup("AuthDomain", List(Config.Users.george.email)) { groupOneName =>
+          withGroup("AuthDomain", List(Config.Users.george.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.george.email)) { groupThreeName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withCleanUp {
                   val listPage = signIn(Config.Users.george)
@@ -233,8 +233,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
       "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec") { groupOneName =>
-          withGroup("AuthDomainSpec") { groupTwoName =>
+        withGroup("AuthDomain") { groupOneName =>
+          withGroup("AuthDomain") { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
               withCleanUp {
                 val workspaceListPage = signIn(Config.Users.fred)
@@ -247,8 +247,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
       "contains the list of auth domain groups in the workspace summary page" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec") { groupOneName =>
-          withGroup("AuthDomainSpec") { groupTwoName =>
+        withGroup("AuthDomain") { groupOneName =>
+          withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
               val workspaceListPage = signIn(Config.Users.fred)
 
@@ -266,8 +266,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is in none of the groups" - {
         "when shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { groupOneName =>
-              withGroup("AuthDomainSpec") { groupTwoName =>
+            withGroup("AuthDomain") { groupOneName =>
+              withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
@@ -283,8 +283,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { groupOneName =>
-              withGroup("AuthDomainSpec") { groupTwoName =>
+            withGroup("AuthDomain") { groupOneName =>
+              withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
 
@@ -307,8 +307,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is in one of the groups" - {
         "when shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.ron.email)) { groupTwoName =>
+            withGroup("AuthDomain") { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.ron.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
                   workspaceListPage.filter(workspaceName)
@@ -323,7 +323,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "when the user is a billing project owner" - {
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec") { authDomainName =>
+              withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.hermione)
                   workspaceListPage.filter(workspaceName)
@@ -338,8 +338,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec") { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.ron.email)) { groupTwoName =>
+            withGroup("AuthDomain") { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.ron.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.ron)
 
@@ -358,7 +358,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "when the user is a billing project owner" - {
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec") { authDomainName =>
+              withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.hermione)
                   workspaceListPage.filter(workspaceName)
@@ -376,8 +376,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is in all of the groups" - {
         "when shared with them" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val listPage = signIn(Config.Users.harry)
                   listPage.filter(workspaceName)
@@ -391,8 +391,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "and given writer access" - {
             "the user has correct permissions" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-                withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+                withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
                   withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
                     withCleanUp {
                       val workspaceListPage = signIn(Config.Users.harry)
@@ -408,8 +408,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "when the user is a billing project owner" - {
             "can be seen and is accessible" in withWebDriver { implicit driver =>
-              withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { groupOneName =>
-                withGroup("AuthDomainSpec", List(Config.Users.hermione.email)) { groupTwoName =>
+              withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupOneName =>
+                withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupTwoName =>
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
                     val listPage = signIn(Config.Users.hermione)
                     listPage.filter(workspaceName)
@@ -425,8 +425,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when shared with one of the groups in the auth domain" - {
           "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val listPage = signIn(Config.Users.harry)
                   listPage.filter(workspaceName)
@@ -439,8 +439,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             }
           }
           "can be seen but is not accessible by group member who is a member of only one auth domain group" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomainSpec") { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.harry)
                   workspaceListPage.filter(workspaceName)
@@ -459,8 +459,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomainSpec", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
                   val workspaceListPage = signIn(Config.Users.harry)
                   workspaceListPage.filter(workspaceName)

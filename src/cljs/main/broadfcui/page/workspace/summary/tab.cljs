@@ -40,7 +40,7 @@
         [:p {} "Bucket data will be deleted too."]
         [comps/ErrorViewer {:error (:server-error @state)}]]
        :ok-button {:text "Delete" :onClick #(this :delete)
-                   :data-test-id (config/when-debug "confirm-delete-workspace-button")}}])
+                   :data-test-id "confirm-delete-workspace-button"}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -135,9 +135,10 @@
    (fn [{:keys [this]}]
      (this :refresh))
    :component-will-receive-props
-   (fn [{:keys [state this]}]
-     (this :refresh)
-     (swap! state dissoc :updating-attrs? :editing?))
+   (fn [{:keys [props next-props state this]}]
+     (swap! state dissoc :updating-attrs? :editing?)
+     (when-not (= (:workspace-id props) (:workspace-id next-props))
+       (this :refresh)))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
@@ -178,13 +179,13 @@
              [comps/SidebarButton
               {:style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
-               :data-test-id (config/when-debug "share-workspace-button")
+               :data-test-id "share-workspace-button"
                :onClick #(swap! state assoc :sharing? true)}])
            (when (not editing?)
              [comps/SidebarButton
               {:style :light :color :button-primary :margin :top
                :icon :catalog :text "Catalog Dataset..."
-               :data-test-id (config/when-debug "catalog-button")
+               :data-test-id "catalog-button"
                :onClick #(modal/push-modal
                           [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
                                                             owner? curator? writer? catalog-with-read? request-refresh)])}])
@@ -230,7 +231,7 @@
              [comps/SidebarButton
               {:style :light :margin :top :color :button-primary
                :text "Clone..." :icon :clone
-               :data-test-id (config/when-debug "open-clone-workspace-modal-button")
+               :data-test-id "open-clone-workspace-modal-button"
                :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                :onClick #(swap! state assoc :cloning? true)}])
            (when (and owner? (not editing?))
@@ -241,7 +242,7 @@
            (when (and owner? (not editing?))
              [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                    :text "Delete" :icon :delete
-                                   :data-test-id (config/when-debug "delete-workspace-button")
+                                   :data-test-id "delete-workspace-button"
                                    :disabled? (when isLocked "This workspace is locked.")
                                    :onClick #(modal/push-modal
                                               [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
@@ -272,7 +273,7 @@
           "Workspace Access"
 
           "Access Level"
-          [:span {:data-test-id (config/when-debug "workspace-access-level")}
+          [:span {:data-test-id "workspace-access-level"}
            (style/prettify-access-level user-access-level)]
 
           (str "Workspace Owner" (when (> (count owners) 1) "s"))
@@ -280,7 +281,7 @@
 
           "Authorization Domain"
           (if-not (empty? auth-domain)
-            [:span {:data-test-id (config/when-debug "auth-domain-groups")}
+            [:span {:data-test-id "auth-domain-groups"}
              (string/join ", " (map :membersGroupName auth-domain))]
             "None")
 

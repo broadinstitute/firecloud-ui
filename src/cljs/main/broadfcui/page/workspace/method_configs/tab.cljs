@@ -16,6 +16,13 @@
    [broadfcui.utils :as utils]
    ))
 
+(defn- add-redacted-attribute [config methods]
+  (let [methodRepoMethod (:methodRepoMethod config)
+        {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
+        snapshots (set (get methods [methodNamespace methodName]))]
+    (if (contains? snapshots methodVersion)
+      (assoc config :redacted false)
+      (assoc config :redacted true))))
 
 (react/defc- MethodConfigurationsList
   {:reload
@@ -25,17 +32,17 @@
      (react/call :load this))
    :render
    (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
+     (let [{:keys [server-response methods]} @state
            {:keys [configs error-message]} server-response
            locked? (get-in props [:workspace :workspace :isLocked])]
        (cond
          error-message (style/create-server-error-message error-message)
-         configs
+         (and configs methods)
          (ws-common/method-config-selector
-          {:configs configs
+          {:configs (map #(add-redacted-attribute % methods) configs)
            :render-name (fn [config]
                           (links/create-internal
-                           {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
+                           {:data-test-id (str "method-config-" (:name config) "-link")
                             :href (nav/get-link :workspace-method-config
                                                 (:workspace-id props)
                                                 (ws-common/config->id config))}
@@ -48,11 +55,11 @@
                            nil "Looking up workspace status..."
                            true "This workspace is locked."
                            false)
-              :data-test-id (config/when-debug "import-config-button")
+              :data-test-id "import-config-button"
               :onClick #(modal/push-modal
                          [import-config/ConfigImporter
                           {:workspace-id (:workspace-id props)
-                           :data-test-id (config/when-debug "import-method-configuration-modal")
+                           :data-test-id "import-method-configuration-modal"
                            :after-import (fn [{:keys [config-id]}]
                                            (modal/pop-modal)
                                            (mc-sync/flag-synchronization)
@@ -64,6 +71,14 @@
      (react/call :load this))
    :load
    (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/list-methods
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (when success?
+                    (swap! state assoc :methods (->> (get-parsed-response)
+                                                     (map #(select-keys % [:namespace :name :snapshotId]))
+                                                     (group-by (juxt :namespace :name))
+                                                     (utils/map-values (partial map :snapshotId))))))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]

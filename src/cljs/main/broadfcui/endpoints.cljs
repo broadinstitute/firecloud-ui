@@ -433,6 +433,9 @@
   {:path (str "/workspaces/" (id-path workspace-id) "/storageCostEstimate")
    :method :get})
 
+(defn list-method-snapshots [namespace name]
+  {:path (str "/methods?namespace=" namespace "&name=" name)
+   :method :get})
 
 (def list-methods
   {:path "/methods"
@@ -450,6 +453,10 @@
        :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
        :entityType (rand-nth ["Task" "Workflow"])})
     (range (rand-int 100)))})
+
+(def list-method-definitions
+  {:path "/methods/definitions"
+   :method :get})
 
 (def post-method
   {:path "/methods"

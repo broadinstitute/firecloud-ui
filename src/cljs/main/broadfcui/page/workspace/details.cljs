@@ -26,7 +26,7 @@
                       :fontSize "small"
                       :padding "4px 0"
                       :textAlign "center"}
-              :data-test-id (config/when-debug "auth-domain-restriction-message")}
+              :data-test-id "auth-domain-restriction-message"}
         "Note: Access to this workspace is restricted to an Authorization Domain"]
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
@@ -84,9 +84,7 @@
           :data-test-id (:data-test-id props)
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state dissoc :hovering?)
-          :onClick (fn []
-                     (when (:active? props) ((:on-active-tab-clicked props)))
-                     ((:refresh-workspace props)))}
+          :onClick (:on-refresh props)}
       (:text props)
       (when (or (:active? props) (:hovering? @state))
         [:div {:style {:position "absolute" :top "-0.25rem" :left 0
@@ -105,18 +103,20 @@
            is-active? (fn [tab] (if (= tab SUMMARY) (nil? active-tab) (= tab active-tab)))
            request-refresh #(this :-refresh-workspace)
            make-tab (fn [text]
-                      [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
-                            :href (nav/get-link
-                                   (condp = text
-                                     SUMMARY :workspace-summary
-                                     DATA :workspace-data
-                                     ANALYSIS :workspace-analysis
-                                     CONFIGS :workspace-method-configs
-                                     MONITOR :workspace-monitor)
-                                   workspace-id)
-                            :data-test-id (config/when-debug (str text "-tab"))
-                            :on-active-tab-clicked #((@refs text) :refresh)
-                            :refresh-workspace request-refresh}])]
+                      (let [active? (is-active? text)]
+                        [Tab {:text text :first? (= text SUMMARY) :active? active?
+                              :href (nav/get-link
+                                     (condp = text
+                                       SUMMARY :workspace-summary
+                                       DATA :workspace-data
+                                       ANALYSIS :workspace-analysis
+                                       CONFIGS :workspace-method-configs
+                                       MONITOR :workspace-monitor)
+                                     workspace-id)
+                              :data-test-id (str text "-tab")
+                              :on-refresh #(when active?
+                                             ((@refs text) :refresh)
+                                             (request-refresh))}]))]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
@@ -126,7 +126,9 @@
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
           [:span {:style {:fontWeight 500}}
-           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace workspace-id)] "/" [:span {:data-test-id (config/when-debug "header-name")} (:name workspace-id)]]]
+           [:span {:data-test-id "header-namespace"} (:namespace workspace-id)]
+           "/"
+           [:span {:data-test-id "header-name"} (:name workspace-id)]]]
          [common/FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"
@@ -154,7 +156,7 @@
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
-                  :data-test-id (config/when-debug "workspace-details-error")}
+                  :data-test-id "workspace-details-error"}
             "Error loading workspace: " error]
            (if-not workspace
              [:div {:style {:textAlign "center" :padding "1rem"}}
@@ -173,8 +175,7 @@
                CONFIGS (react/create-element
                         [method-configs-tab/Page
                          (merge {:ref CONFIGS
-                                 :on-submission-success #(nav/go-to-path
-                                                          :workspace-submission workspace-id %)}
+                                 :on-submission-success #(nav/go-to-path :workspace-submission workspace-id %)}
                                 (utils/restructure workspace-id workspace request-refresh bucket-access?)
                                 (select-keys props [:config-id]))])
                MONITOR (react/create-element
@@ -199,7 +200,7 @@
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
-                     (swap! state assoc :workspace (process-workspace parsed-response) :workspace-response parsed-response)
+                     (swap! state assoc :workspace (process-workspace parsed-response))
                      (swap! state assoc :workspace-error (:message parsed-response)))))}))})
 
 (defn- ws-path [ws-id]

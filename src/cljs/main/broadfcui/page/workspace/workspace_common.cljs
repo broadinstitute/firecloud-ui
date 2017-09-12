@@ -6,6 +6,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.common.icons :as icons]
    [broadfcui.utils :as utils]
    ))
 
@@ -52,8 +53,16 @@
    {:data configs
     :body {:empty-message "There are no method configurations to display."
            :style table-style/table-heavy
-           :columns [{:header "Name" :initial-width 240
+           :columns [{:id "redacted" :hidden? true :resizable? false :sortable? false :filterable? false :initial-width 30
+                      :as-text (fn [config]
+                                 (when (:redacted config)
+                                   "The method snapshot referenced by this config has been redacted."))
+                      :render (fn [config]
+                                (when (:redacted config)
+                                  (icons/icon {:style {:alignSelf "center" :color (:warning-state style/colors)}} :warning)))}
+                     {:header "Name" :initial-width 240
                       :as-text :name :sort-by :text
+                      :sort-initial :asc
                       :render render-name}
                      {:header "Root Entity Type" :initial-width 140
                       :column-data :rootEntityType}
