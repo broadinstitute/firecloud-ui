@@ -63,14 +63,15 @@
                                (fn [[namespace name]]
                                  (links/create-internal
                                   (utils/deep-merge
-                                   {:style {:display "block"}}
+                                   {:style {:display "block" :marginTop -4}}
                                    (make-method-clicked-props (utils/restructure namespace name)))
-                                  [:div
+                                  [:span
                                    {:className (when allow-modals? "underline-on-hover")
                                     :style {:fontSize "80%" :color "black"}
-                                    :onClick (when allow-modals? (fn [e]
-                                                                  (.preventDefault e)
-                                                                  (swap! state assoc :editing-namespace namespace)))}
+                                    :onClick (when allow-modals?
+                                               (fn [e]
+                                                 (.preventDefault e)
+                                                 (swap! state assoc :editing-namespace namespace)))}
                                    namespace]
                                   [:div {:style {:fontWeight 600}} name]))}
                               {:header "Synopsis" :initial-width 700
