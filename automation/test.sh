@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sbt 'testOnly *.MethodConfigSpec -- -z "launch analysis button should be disabled and show error if clicked"' -Djsse.enableSNIExtension=false -Dheadless=true
+sbt test -Djsse.enableSNIExtension=false -Dheadless=true
 TEST_EXIT_CODE=$?
 sbt clean
 

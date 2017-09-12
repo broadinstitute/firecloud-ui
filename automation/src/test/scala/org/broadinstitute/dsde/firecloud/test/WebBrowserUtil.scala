@@ -104,17 +104,9 @@ trait WebBrowserUtil extends WebBrowser {
       element
     }
 
-    /*
-        def spinner(timeOutInSeconds: Long = defaultTimeOutInSeconds)
-                   (implicit webDriver: WebDriver): Unit = {
-          // micro-sleep to make sure the spinner has had a chance to appear before waiting for it to disappear
-          Thread sleep 100
-          notVisible(testId("spinner"))
-        }
-    */
-
     def spinner(text: String, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                (implicit webDriver: WebDriver): Unit = {
+      // Micro-sleep to make sure the spinner has had a chance to appear before waiting for it to disappear.
       Thread sleep 100
       notVisible(xpath(s"//*[@data-test-id='spinner-text' and contains(text(),'$text')]"))
     }
