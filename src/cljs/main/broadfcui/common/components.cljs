@@ -22,7 +22,7 @@
      [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
              :data-test-id "spinner"}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
-      (:text props)])})
+      [:span {:data-test-id "spinner-text"} (:text props)]])})
 
 
 (react/defc AnimatedEllipsis
@@ -177,6 +177,7 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :data-test-id (:data-test-id props)
+              :data-test-state (if disabled? "disabled" "enabled")
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}

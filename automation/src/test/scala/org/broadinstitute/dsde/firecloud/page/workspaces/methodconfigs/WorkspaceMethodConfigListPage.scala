@@ -20,7 +20,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): WorkspaceMethodConfigDetailsPage = {
     val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
-    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
+    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName).awaitLoaded()
   }
 
   def filter(searchText: String): Unit = {
@@ -94,7 +94,8 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     ui.fillNamespace(methodNamespace)
     ui.fillMethodConfigName(methodConfigName)
     if (rootEntityType != None) { ui.chooseRootEntityType(rootEntityType.get) }
-    ui.clickimportMethodConfigButton()
+    ui.clickImportMethodConfigButton()
+    await spinner "Importing..."
   }
 
   object ui {
@@ -132,7 +133,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     }
 
 
-    def clickimportMethodConfigButton(): Unit = {
+    def clickImportMethodConfigButton(): Unit = {
       click on (await enabled importMethodConfigButtonQuery)
     }
 
