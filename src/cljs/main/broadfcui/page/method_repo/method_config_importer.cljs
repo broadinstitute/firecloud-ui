@@ -85,7 +85,8 @@
    (fn [{:keys [props state]}]
      (let [{:keys [error inputs-outputs]} @state]
        (cond error [comps/ErrorViewer (:error error)]
-             inputs-outputs [config-io/IOTables {:style {:marginTop "1rem"}
+             inputs-outputs [config-io/IOTables {:default-hidden? true
+                                                 :style {:marginTop "1rem"}
                                                  :inputs-outputs inputs-outputs
                                                  :values (:values props)}]
              :else [comps/Spinner {:text "Loading inputs/outputs..."}])))

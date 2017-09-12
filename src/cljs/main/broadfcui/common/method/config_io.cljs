@@ -47,9 +47,11 @@
                           "#" id " .select2-selection__rendered > li+li"
                           "{width: 10px}")])
         [Collapse {:title "Inputs"
+                   :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
+                   :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
    (fn [{:keys [props state locals]} io-key]
