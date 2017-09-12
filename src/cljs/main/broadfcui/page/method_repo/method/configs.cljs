@@ -55,13 +55,13 @@
            :columns [{:header "Configuration" :initial-width 400
                       :as-text (fn [{:keys [name namespace snapshotId]}]
                                  (str namespace "/" name " snapshot " snapshotId))
-                      :sort-by :text
+                      :sort-by #(replace % [:namespace :name :snapshotId])
                       :render (fn [{:keys [name namespace snapshotId] :as config}]
                                 (links/create-internal
                                  (make-config-link-props config)
                                  (style/render-name-id (str namespace "/" name) snapshotId)))}
-                     {:header "Method Snapshot" :initial-width 150 :filterable? false
-                      :column-data #(get-in % [:payload :methodRepoMethod :methodVersion]) :sort-by :text}
+                     {:header "Method Snapshot" :initial-width 135 :filterable? false
+                      :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
                      {:header "Synopsis" :initial-width :auto
                       :column-data :synopsis}]}}])
 
