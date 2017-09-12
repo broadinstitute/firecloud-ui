@@ -82,6 +82,7 @@
   (merge {:resizable? (and (not= initial-width :auto) (:resizable-columns? behavior))
           :sortable? (:sortable-columns? behavior)
           :column-data identity
+          :as-text str
           :render (or as-text identity)}
          props))
 

@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.config :as config]
@@ -26,12 +27,10 @@
 (defn- create-section [children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
-(defn- refresh-autocomplete [{:keys [engine workspace-attributes entity-types selected-entity-type]}]
+(defn- build-autocomplete-list [{:keys [workspace-attributes entity-types selected-entity-type]}]
   (let [workspace-datums (map (partial str "workspace.") (map name (keys workspace-attributes)))
-        entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))
-        datums (concat entity-datums workspace-datums)]
-    (.clear engine)
-    (.add engine (clj->js datums))))
+        entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))]
+    (concat entity-datums workspace-datums)))
 
 
 (react/defc- MethodDetailsViewer
@@ -127,12 +126,7 @@
       :sidebar-visible? true})
    :component-will-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc
-            :body-id (gensym "config")
-            :engine (comps/create-bloodhound-engine
-                     {:local []
-                      :datum-tokenizer (aget comps/Bloodhound "tokenizers" "nonword")
-                      :query-tokenizer (aget comps/Bloodhound "tokenizers" "nonword")})))
+     (swap! locals assoc :body-id (gensym "config")))
    :render
    (fn [{:keys [state this]}]
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
@@ -178,7 +172,7 @@
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
-           {:keys [body-id engine]} @locals
+           {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        [:div {:style {:flex "1 1 auto"} :id body-id}
         (when-not editing?
@@ -222,86 +216,47 @@
                                           :data-test-id "edit-method-config-root-entity-type-select"
                                           :defaultValue rootEntityType
                                           :style {:width 500}
-                                          :onChange #(refresh-autocomplete {:engine engine
-                                                                            :workspace-attributes workspace-attributes
-                                                                            :entity-types entity-types
-                                                                            :selected-entity-type (.. % -target -value)})}
+                                          :onChange #(swap! state assoc :autocomplete-list
+                                                            (build-autocomplete-list
+                                                             {:workspace-attributes workspace-attributes
+                                                              :entity-types entity-types
+                                                              :selected-entity-type (.. % -target -value)}))}
                                          common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
-        (create-section-header "Inputs")
-        (this :-render-input-output-list
-              {:values (:inputs config)
-               :all-values (:inputs inputs-outputs)
-               :ref-prefix "in"
-               :invalid-values (:invalidInputs loaded-config)})
-        (create-section-header "Outputs")
-        (this :-render-input-output-list
-              {:values (:outputs config)
-               :all-values (:outputs inputs-outputs)
-               :ref-prefix "out"
-               :invalid-values (:invalidOutputs loaded-config)})]))
-   :-render-input-output-list
-   (fn [{:keys [state locals]}
-        {:keys [values ref-prefix invalid-values all-values]}]
-     (let [{:keys [editing?]} @state]
-       (create-section
-        (map
-         (fn [{:keys [name inputType outputType optional]}]
-           (let [type (or inputType outputType)
-                 name-kwd (keyword name)
-                 field-value (get values name-kwd "")
-                 error (get invalid-values name-kwd)]
-             [:div {:key name :style {:marginBottom "1rem"}}
-              (list
-               [:div {:style {:display "inline-block"
-                              :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
-                              :backgroundColor (:background-light style/colors)
-                              :border style/standard-line :borderRadius 2}}
-                (str name (when type (str ": (" (when optional "optional ") type ")")))]
-               (when (and error (not editing?) (not optional))
-                 (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
-                                      :color (:exception-state style/colors)}}
-                             :error))
-               (when editing?
-                 [comps/Typeahead {:ref (str ref-prefix "_" name)
-                                   :field-attributes {:defaultValue field-value
-                                                      :style {:width 500 :margin 0}
-                                                      :data-test-id (str name "-text-input")}
-                                   :engine (:engine @locals)
-                                   :behavior {:minLength 1}}])
-               (when-not editing?
-                 (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
-              (when (and error (not optional))
-                [:div {}
-                 [:div {:style {:display "inline-block"
-                                :padding "0.5em" :marginBottom "0.5rem"
-                                :backgroundColor (:exception-state style/colors)
-                                :border style/standard-line :borderRadius 2}}
-                  error]])]))
-         all-values))))
+        (create-section-header "Connections")
+        (create-section [IOTables {:ref "IOTables"
+                                   :inputs-outputs inputs-outputs
+                                   :values (select-keys config [:inputs :outputs])
+                                   :invalid-values {:inputs (:invalidInputs loaded-config)
+                                                    :outputs (:invalidOutputs loaded-config)}
+                                   :data (:autocomplete-list @state)}])]))
    :-begin-editing
-   (fn [{:keys [props state locals]}]
-     (when-not (:entities-loaded? @locals)
-       (swap! locals assoc :entities-loaded? true)
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-entity-types (:workspace-id props))
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (let [loaded-config (:loaded-config @state)
-                            entity-types (get-parsed-response)
-                            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
-                            selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
-                        (refresh-autocomplete {:engine (:engine @locals)
-                                               :workspace-attributes workspace-attributes
-                                               :entity-types entity-types
-                                               :selected-entity-type selected-entity-type})
-                        (swap! state assoc :entity-types entity-types))
-                      ;; FIXME: :data-attribute-load-error is unused
-                      (swap! state assoc :data-attribute-load-error status-text)))}))
-     (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
-       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?)))
+   (fn [{:keys [props state locals refs this]}]
+     (if-not (:entities-loaded? @locals)
+       (do (swap! state assoc :blocker "Loading attributes...")
+           (endpoints/call-ajax-orch
+            {:endpoint (endpoints/get-entity-types (:workspace-id props))
+             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                        (if success?
+                          (let [loaded-config (:loaded-config @state)
+                                entity-types (get-parsed-response)
+                                workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+                                selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
+                            (swap! locals assoc :entities-loaded? true)
+                            (swap! state assoc
+                                   :blocker nil
+                                   :entity-types entity-types
+                                   :autocomplete-list (build-autocomplete-list
+                                                       (utils/restructure workspace-attributes entity-types selected-entity-type)))
+                            (this :-begin-editing))
+                          ;; FIXME: :data-attribute-load-error is unused
+                          (swap! state assoc :data-attribute-load-error status-text)))}))
+       (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
+         ((@refs "IOTables") :start-editing)
+         (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?))))
    :-cancel-editing
    (fn [{:keys [state refs]}]
+     ((@refs "IOTables") :cancel-editing)
      (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
@@ -313,22 +268,17 @@
      (let [{:keys [workspace-id]} props
            config (-> @state :loaded-config :methodConfiguration)
            [name root-entity-type] (common/get-text refs "confname" "rootentitytype")
-           deref-vals (fn [io-key ref-prefix]
-                        (->> (io-key (:inputs-outputs @state))
-                             (map :name)
-                             (map (juxt identity #((@refs (str ref-prefix "_" %)) :get-text)))
-                             (into {})))]
+           selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/update-workspace-method-config workspace-id (ws-common/config->id config))
-         :payload (assoc config
-                    :name name
-                    :rootEntityType root-entity-type
-                    :inputs (deref-vals :inputs "in")
-                    :outputs (deref-vals :outputs "out")
-                    :methodRepoMethod (merge (:methodRepoMethod config)
-                                             ((@refs "methodDetailsViewer") :get-fields))
-                    :workspaceName workspace-id)
+         :payload (merge config
+                         selected-values
+                         {:name name
+                          :rootEntityType root-entity-type
+                          :methodRepoMethod (merge (:methodRepoMethod config)
+                                                   ((@refs "methodDetailsViewer") :get-fields))
+                          :workspaceName workspace-id})
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)

@@ -507,8 +507,9 @@
        :entityType "Task"})
     (range (rand-int 50)))})
 
-(defn get-configuration [namespace name snapshot-id]
-  {:path (str "/configurations/" namespace "/" name "/" snapshot-id)
+(defn get-configuration [namespace name snapshot-id & [payload-as-object?]]
+  {:path (str "/configurations/" namespace "/" name "/" snapshot-id
+              (when payload-as-object? "?payloadAsObject=true"))
    :method :get
    :mock-data
    {:method {:namespace (rand-nth ["broad" "public" "nci"])

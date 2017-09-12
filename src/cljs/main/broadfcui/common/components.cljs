@@ -699,6 +699,7 @@
    (fn []
      {:show-counts? true
       :allow-new? true
+      :allow-clear? false
       :minimum-input-length 3})
    :render
    (fn [{:keys [props]}]
@@ -708,7 +709,7 @@
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
-     (let [{:keys [data allow-new? minimum-input-length]} props
+     (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear? maximum-selection-length language]} props
            component (js/$ (@refs "input-element"))
            data-source (if data
                          {:data data}
@@ -723,11 +724,17 @@
         component
         (clj->js (merge
                   data-source
-                  {:templateResult (this :-template-result)
-                   :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
+                  {:placeholder placeholder
+                   :allowClear allow-clear?
+                   :templateResult (this :-template-result)
+                   :templateSelection (fn [x]
+                                        (when x
+                                          (or (aget x "tag") (aget x "text"))))
                    :tags allow-new?
+                   :maximumSelectionLength (or maximum-selection-length 0)
                    :minimumInputLength minimum-input-length
-                   :language {:inputTooShort #(str "Enter at least " minimum-input-length " characters to search")}})))
+                   :language (merge {:inputTooShort #(str "Enter at least " minimum-input-length " characters to search")}
+                                    language)})))
        (.on component "change" #(this :-on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]
@@ -771,6 +778,7 @@
        (if (.-loading res)
          "Loading..."
          (let [show-counts? (:show-counts? props)
+               ;; Insert zero-width space after underscore to allow line wrapping
                tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
                element (.createElement js/document "div")]
            (when show-counts?

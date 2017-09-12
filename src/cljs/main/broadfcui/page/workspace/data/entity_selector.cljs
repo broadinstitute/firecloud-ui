@@ -40,6 +40,7 @@
                       [{:id "add-button" :initial-width 40
                         :hidden? true :resizable? false :sortable? false :filterable? false
                         :column-data first
+                        :as-text (constantly "Select for import")
                         :render
                         (fn [index]
                           (links/create-internal {:onClick #(swap! state update :selected
