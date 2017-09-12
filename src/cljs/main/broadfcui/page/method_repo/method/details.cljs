@@ -127,20 +127,20 @@
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]
-  (str "methods/" namespace "/" name "/" snapshot-id))
+  (str "methods2/" namespace "/" name "/" snapshot-id))
 
 (defn add-nav-paths []
   (nav/defpath
    :method-loader
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/$"
+    :regex #"methods2/([^/]+)/([^/]+)/$"
     :make-props (fn [namespace name]
                   {:method-id (utils/restructure namespace name)})
     :make-path method-path})
   (nav/defpath
    :method-summary
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/(\d+)"
+    :regex #"methods2/([^/]+)/([^/]+)/(\d+)"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id})
@@ -148,7 +148,7 @@
   (nav/defpath
    :method-wdl
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/(\d+)/wdl"
+    :regex #"methods2/([^/]+)/([^/]+)/(\d+)/wdl"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
@@ -158,7 +158,7 @@
   (nav/defpath
    :method-configs
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs"
+    :regex #"methods2/([^/]+)/([^/]+)/(\d+)/configs"
     :make-props (fn [namespace name snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
@@ -168,7 +168,7 @@
   (nav/defpath
    :method-config-viewer
    {:component MethodDetails
-    :regex #"methods/([^/]+)/([^/]+)/(\d+)/configs/([^/]+)/([^/]+)/(\d+)"
+    :regex #"methods2/([^/]+)/([^/]+)/(\d+)/configs/([^/]+)/([^/]+)/(\d+)"
     :make-props (fn [namespace name snapshot-id config-ns config-name config-snapshot-id]
                   {:method-id (utils/restructure namespace name)
                    :snapshot-id snapshot-id
