@@ -45,6 +45,7 @@ object Config {
     val bill = Credentials(users.getString("bill"), notSoSecretPassword)
 
     val lunaTemp = Credentials(users.getString("luna"), notSoSecretPassword)
+    val lunaTempSubjectId = users.getString("lunaSubjectId")
     val nevilleTemp = Credentials(users.getString("neville"), notSoSecretPassword)
     val testUser = harry
     val dominique = harry

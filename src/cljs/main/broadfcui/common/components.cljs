@@ -22,7 +22,7 @@
      [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
              :data-test-id "spinner"}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
-      (:text props)])})
+      [:span {:data-test-id "spinner-text"} (:text props)]])})
 
 
 (react/defc AnimatedEllipsis
@@ -155,32 +155,6 @@
               :data-test-id "submission-status"}
        (:text props)]])})
 
-(react/defc SidebarButton
-  {:get-default-props
-   (fn []
-     {:style :heavy})
-   :render
-   (fn [{:keys [props]}]
-     (let [heavy? (= :heavy (:style props))
-           disabled? (:disabled? props)
-           margin (:margin props)
-           color (cond (keyword? (:color props)) (get style/colors (:color props))
-                       :else (:color props))]
-       [:div {:style {:fontSize "106%"
-                      :marginTop (when (= margin :top) "1em")
-                      :marginBottom (when (= margin :bottom) "1em")
-                      :padding "0.7em 0"
-                      :cursor (if disabled? "default" "pointer")
-                      :display "flex" :flexWrap "nowrap" :alignItems "center"
-                      :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
-                      :color (if heavy? "#fff" color)
-                      :border (when-not heavy? style/standard-line)
-                      :borderRadius 5}
-              :data-test-id (:data-test-id props)
-              :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
-        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
-        [:div {:style {:textAlign "center" :margin "auto"}}
-         (:text props)]]))})
 
 (react/defc EntityDetails
   {:get-fields
@@ -642,9 +616,11 @@
                            :style {:display "block"}}
                           "Learn how to create a billing project.")])
 
+;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
 
+;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
    {:header (or header "Message")
@@ -652,6 +628,7 @@
     :content [:div {:style {:maxWidth 500}} message]
     :show-cancel? false :ok-button "OK"}))
 
+;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "push-error"}
@@ -662,9 +639,11 @@
     :content [:div {:style {:maxWidth "50vw"}} content]
     :show-cancel? false :ok-button "OK"}))
 
+;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-error-response [error-response]
   (push-error [ErrorViewer {:error error-response}]))
 
+;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-confirm [{:keys [header text on-confirm]}]
   (push-ok-cancel-modal
    {:header (or header "Confirm")

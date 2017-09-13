@@ -9,6 +9,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -57,22 +58,22 @@
           :contents
           [:div {:style {:width 270}}
            (when workflow?
-             [comps/SidebarButton
+             [SidebarButton
               {:style :light :color :button-primary
                :text "Clone..." :icon :clone :margin :bottom
                :onClick #(swap! state assoc :cloning? true)}])
            (when owner?
              (list
               (when workflow?
-                [comps/SidebarButton
+                [SidebarButton
                  {:style :light :color :button-primary
                   :text "Edit..." :icon :edit :margin :bottom
                   :onClick #(swap! state assoc :editing-method? true)}])
-              [comps/SidebarButton
+              [SidebarButton
                {:style :light :color :button-primary
                 :text "Permissions..." :icon :settings :margin :bottom
                 :onClick #(swap! state assoc :editing-acl? true)}]
-              [comps/SidebarButton
+              [SidebarButton
                {:style :light :color :exception-state
                 :text "Redact" :icon :delete :margin :bottom
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
