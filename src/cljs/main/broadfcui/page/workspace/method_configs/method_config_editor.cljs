@@ -4,11 +4,10 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
@@ -66,7 +65,8 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
-                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
+                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
+                                                               {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
 
 
 (react/defc- Sidebar
@@ -90,33 +90,33 @@
           [:div {:style {:width 270}}
            (if editing?
              (list
-              [comps/SidebarButton {:color :success-state
-                                    :text "Save" :icon :done
-                                    :disabled? (when redacted? "Choose an available snapshot")
-                                    :data-test-id "save-editted-method-config-button"
-                                    :onClick #(parent :-commit)}]
-              [comps/SidebarButton {:color :exception-state :margin :top
-                                    :text "Cancel Editing" :icon :cancel
-                                    :data-test-id "cancel-edit-method-config-button"
-                                    :onClick #(parent :-cancel-editing)}])
+              [SidebarButton {:color :success-state
+                              :text "Save" :icon :done
+                              :disabled? (when redacted? "Choose an available snapshot")
+                              :data-test-id "save-editted-method-config-button"
+                              :onClick #(parent :-commit)}]
+              [SidebarButton {:color :exception-state :margin :top
+                              :text "Cancel Editing" :icon :cancel
+                              :data-test-id "cancel-edit-method-config-button"
+                              :onClick #(parent :-cancel-editing)}])
              (list
               (when can-edit?
-                [comps/SidebarButton {:style :light :color :button-primary
-                                      :text "Edit Configuration" :icon :edit
-                                      :disabled? (cond locked? "The workspace is locked"
-                                                       (and redacted? (empty? snapshots)) "There are no available method snapshots.")
-                                      :data-test-id "edit-method-config-button"
-                                      :onClick #(parent :-begin-editing snapshots)}])
+                [SidebarButton {:style :light :color :button-primary
+                                :text "Edit Configuration" :icon :edit
+                                :disabled? (cond locked? "The workspace is locked"
+                                                 (and redacted? (empty? snapshots)) "There are no available method snapshots.")
+                                :data-test-id "edit-method-config-button"
+                                :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
-                [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                      :text "Delete" :icon :delete
-                                      :disabled? (when locked? "The workspace is locked")
-                                      :data-test-id "delete-method-config-button"
-                                      :onClick #(swap! state assoc :show-delete-dialog? true)}])
+                [SidebarButton {:style :light :color :exception-state :margin :top
+                                :text "Delete" :icon :delete
+                                :disabled? (when locked? "The workspace is locked")
+                                :data-test-id "delete-method-config-button"
+                                :onClick #(swap! state assoc :show-delete-dialog? true)}])
               (when-not redacted?
-                [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                      :text "Publish..." :icon :share
-                                      :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
+                [SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                :text "Publish..." :icon :share
+                                :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
 
 (react/defc MethodConfigEditor

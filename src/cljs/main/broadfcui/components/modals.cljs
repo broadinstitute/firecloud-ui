@@ -81,10 +81,10 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(defn render-error [{:keys [header text on-dismiss]}]
+(defn render-error [{:keys [header text on-dismiss icon-color]}]
   [OKCancelForm
    {:header [:div {:style {:display "inline-flex" :align-items "center"}}
-             (icons/icon {:style {:color (:exception-state style/colors)
+             (icons/icon {:style {:color ((or icon-color :exception-state) style/colors)
                                   :marginRight "0.5rem"}} :error)
              (or header "Error")]
     :content [:div {:style {:width 500}} text]
