@@ -86,7 +86,9 @@
           [:div {:style {:display "inline-block" :width 400}} "User ID"]
           [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
           (when (common/access-greater-than-equal-to? user-access-level "OWNER")
-            [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
+            [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])
+          (when (common/access-greater-than-equal-to? user-access-level "OWNER")
+            [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Compute"])]
          [:datalist {:id "groups-datalist"}
           (when-let [groups (:user-groups @state)]
             (map (fn [group]
@@ -123,6 +125,13 @@
                          :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
                          :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
                          :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
+             (if (common/access-greater-than-equal-to? user-access-level "OWNER")
+               [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
+                [:input {:type "checkbox"
+                         :style {:verticalAlign "middle" :float "none"}
+                         :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canCompute] (.. % -target -checked))
+                         :disabled (or (common/access-equal-to? (:accessLevel acl-entry) "READER") (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER"))
+                         :checked (:canCompute acl-entry)}]])
              (when (:pending? acl-entry)
                [:span {:style {:fontStyle "italic" :color (:text-light style/colors) :marginLeft "1rem"}}
                 "Pending..."])])
@@ -135,7 +144,7 @@
                                                    ; Only owners can set new canShare permissions, so we only want to include
                                                    ; those in the default settings when the user is at least an owner
                                                    (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-                                                     (assoc permissions :canShare false)
+                                                     (assoc permissions :canShare false :canCompute false)
                                                      permissions)))}]]
          (style/create-validation-error-message (:validation-error @state))
          [comps/ErrorViewer {:error (:save-error @state)}]])))
