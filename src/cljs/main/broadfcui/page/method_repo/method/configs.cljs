@@ -209,9 +209,9 @@
         (cond
           configs-error [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
                          "Error loading configs: " configs-error]
+          config-id [ConfigViewer (utils/restructure config-id config-snapshot-id)]
           (not configs) [:div {:style {:textAlign "center" :padding "1rem"}}
                          [comps/Spinner {:text "Loading configs..."}]]
-          config-id [ConfigViewer (utils/restructure config-id config-snapshot-id)]
           :else (render-config-table (utils/restructure make-config-link-props configs)))]))
    :component-will-mount
    (fn [{:keys [props this]}]
