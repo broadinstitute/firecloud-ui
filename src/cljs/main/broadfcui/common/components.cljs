@@ -163,6 +163,7 @@
    (fn [{:keys [props]}]
      (let [heavy? (= :heavy (:style props))
            disabled? (:disabled? props)
+           disabled-handler (:disabled-handler props)
            margin (:margin props)
            color (cond (keyword? (:color props)) (get style/colors (:color props))
                        :else (:color props))]
@@ -177,7 +178,11 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :data-test-id (:data-test-id props)
-              :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
+              :onClick (if disabled?
+                         (if disabled-handler
+                           (disabled-handler)
+                           (create-error-message disabled?))
+                         (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
@@ -662,6 +667,16 @@
     :content [:div {:style {:maxWidth "50vw"}} content]
     :show-cancel? false :ok-button "OK"}))
 
+(defn push-alert [content]
+  (push-ok-cancel-modal
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "push-alert"}
+             (icons/icon {:style {:color (:warning-state style/colors)
+                                  :marginRight "0.5em"}} :error)
+             "Alert"]
+    :data-test-id "push-alert"
+    :content [:div {:style {:maxWidth "50vw"}} content]
+    :show-cancel? false :ok-button "OK"}))
+
 (defn push-error-response [error-response]
   (push-error [ErrorViewer {:error error-response}]))
 
@@ -686,6 +701,9 @@
   (when (renderable? thing)
     #(push-error thing)))
 
+(defn create-alert-message [thing]
+  (when (renderable? thing)
+    #(push-alert thing)))
 
 (react/defc TagAutocomplete
   {:get-tags

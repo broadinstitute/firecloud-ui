@@ -37,9 +37,9 @@
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting..."}])
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
-        [:p {} "Bucket data will be deleted too."]
-        (when (:published? props)
-          [:p {} "This workspace is published, deleting it will also un-publish it."])
+        [:p {} (str "Deleting it will delete the associated bucket data"
+                    (when (:published? props) " and unpublish the workspace from the Data Library")
+                    ".")]
         [comps/ErrorViewer {:error (:server-error @state)}]]
        :ok-button {:text "Delete" :onClick #(this :delete)
                    :data-test-id "confirm-delete-workspace-button"}}])
@@ -243,13 +243,23 @@
                                    :onClick #(this :-lock-or-unlock isLocked)}])
            (when (and owner? (not editing?))
              (let [published? (:library:published library-attributes)
-                   publisher? (and curator? (or catalog-with-read? owner?))]
+                   publisher? (and curator? (or catalog-with-read? owner?))
+                   published-and-publisher? (and published? publisher?)]
                [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                      :text "Delete" :icon :delete
                                      :data-test-id "delete-workspace-button"
                                      :disabled? (cond
                                                   isLocked "This workspace is locked."
-                                                  (not (and published? publisher?)) "Curator permissions insufficient to delete this workspace.")
+                                                  (not published-and-publisher?) true)
+                                     :disabled-handler (cond
+                                                         isLocked nil
+                                                         (not published-and-publisher?) #(comps/create-alert-message
+                                                                                          [:div {}
+                                                                                           [:p {}
+                                                                                            "This workspace is published in the Data Library and cannot be deleted. "
+                                                                                            "Contact a library curator to ask them to first unpublish the workspace."
+                                                                                            [:p {}
+                                                                                             "If you are unable to contact a curator, contact help@firecloud.org."]]]))
                                      :onClick #(modal/push-modal
                                                 [DeleteDialog (utils/restructure workspace-id published?)])}]))]}]]))
    :-render-main
