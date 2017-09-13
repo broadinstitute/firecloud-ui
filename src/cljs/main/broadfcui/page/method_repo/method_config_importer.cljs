@@ -7,6 +7,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
+   [broadfcui.common.method.config-io :as config-io]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -79,6 +80,28 @@
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
 
 
+(react/defc IOView
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [error inputs-outputs]} @state]
+       (cond error [comps/ErrorViewer (:error error)]
+             inputs-outputs [config-io/IOTables {:default-hidden? true
+                                                 :style {:marginTop "1rem"}
+                                                 :inputs-outputs inputs-outputs
+                                                 :values (:values props)}]
+             :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-inputs-outputs
+       :payload (:method-ref props)
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :inputs-outputs (get-parsed-response))
+                    (swap! state assoc :error (get-parsed-response false))))}))})
+
+
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id on-delete]} props
         workflow? (= "Workflow" (:entityType entity))
@@ -92,6 +115,12 @@
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
+      (when config?
+        (let [{:keys [method payloadObject]} entity]
+          [IOView {:method-ref {:methodNamespace (:namespace method)
+                                :methodName (:name method)
+                                :methodVersion (:snapshotId method)}
+                   :values (select-keys payloadObject [:inputs :outputs])}]))
       [:div {:style {:border style/standard-line
                      :backgroundColor (:background-light style/colors)
                      :borderRadius 8 :padding "1em" :marginTop "1em"}}
@@ -194,10 +223,8 @@
                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                       (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-configuration
-                  (get-in props [:id :namespace])
-                  (get-in props [:id :name])
-                  (get-in props [:id :snapshot-id]))
+      {:endpoint (let [{:keys [namespace name snapshot-id]} (:id props)]
+                   (endpoints/get-configuration namespace name snapshot-id true))
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?

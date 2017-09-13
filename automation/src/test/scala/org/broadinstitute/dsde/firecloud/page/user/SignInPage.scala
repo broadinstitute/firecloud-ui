@@ -68,6 +68,12 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
 
     await enabled id("passwordNext")
     await enabled name("password")
+    /*
+     * The log-in pane animation is sometimes delayed or takes while during which the password field flips between
+     * enabled and disabled. While it's not great to sleep for a fixed amount of time, we have very little ability to
+     * do anything better. From experimentation, 300ms isn't quite enough but 500ms seems to do it.
+     */
+    Thread sleep 500
     pwdField(name("password")).value = password
     pressKeys("\n")
 

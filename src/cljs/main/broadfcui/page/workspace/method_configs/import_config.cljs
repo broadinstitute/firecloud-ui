@@ -38,7 +38,11 @@
                [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
                 "Referenced Method:"]
                (cond loaded-method [comps/EntityDetails {:entity loaded-method}]
-                     method-load-error (style/create-server-error-message method-load-error)
+                     method-load-error (style/create-server-error-message
+                                        (if (= method-load-error "Not Found")
+                                          "The referenced method snapshot could not be found.
+                                          It may have been redacted, or you may not have access to it."
+                                          method-load-error))
                      :else [comps/Spinner {:text "Loading method details..."}])
                [:div {:style {:fontSize "120%" :margin "1rem 0 0.5rem"}}
                 "Import as:"]
