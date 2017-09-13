@@ -36,14 +36,15 @@
        [:div {:style {:position "relative"}}
         (when loading-snapshot?
           (comps/render-blocker "Loading..."))
-        [:div {:style {:marginTop "1.5rem" :padding "0 1.5rem" :display "flex"}}
+        [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
          (tab-bar/render-title
           "METHOD"
           [:span {}
            [:span {:data-test-id "header-namespace"} (:namespace method-id)]
            "/"
            [:span {:data-test-id "header-name"} (:name method-id)]])
-         [:div {:style {:paddingLeft "2rem"}} (this :-render-snapshot-selector)]]
+         [:div {:style {:paddingLeft "2rem" :marginTop -3}}
+          (this :-render-snapshot-selector)]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
@@ -76,7 +77,7 @@
    :-render-snapshot-selector
    (fn [{:keys [state this props]}]
      (let [{:keys [method]} @state
-           {:keys [snapshot-id]} props
+           snapshot-id (some :snapshot-id [props @state])
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))]
        (common/render-dropdown-menu
         {:label (tab-bar/render-title
@@ -114,7 +115,9 @@
        (when (not= old-snapshot-id snapshot-id)
          (if old-snapshot-id
            (nav/go-to-path tab-key context-id)
-           (nav/replace-history-state tab-key context-id)))
+           ;; also stick new snapshot into state--otherwise page doesn't rerender
+           (do (swap! state assoc :snapshot-id snapshot-id)
+               (nav/replace-history-state tab-key context-id))))
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response
