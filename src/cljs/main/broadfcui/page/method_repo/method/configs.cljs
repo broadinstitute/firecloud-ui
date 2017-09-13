@@ -9,6 +9,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
@@ -128,11 +129,11 @@
                          :data-anchor body-id}
           :contents
           [:div {:style {:width 270}}
-           [comps/SidebarButton
+           [SidebarButton
             {:style :light :color :button-primary
              :text "Permissions..." :icon :settings :margin :bottom
              :onClick #(swap! state assoc :sharing? true)}]
-           [comps/SidebarButton
+           [SidebarButton
             {:style :light :color :exception-state
              :text "Redact" :icon :delete :margin :bottom
              :onClick #(swap! state assoc :deleting? true)}]]}]]))
