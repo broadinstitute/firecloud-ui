@@ -251,7 +251,7 @@
                                :disabled? (cond isLocked
                                                 "This workspace is locked."
                                                 (not published-and-publisher?)
-                                                {:type :error :header "Alert"
+                                                {:type :error :header "Alert" :icon-color :warning-state
                                                  :text [:div {}
                                                         [:p {:style {:margin 0}}
                                                          "This workspace is published in the Data Library and cannot be deleted. "
