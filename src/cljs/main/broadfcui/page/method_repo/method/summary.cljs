@@ -89,14 +89,16 @@
          (style/create-summary-block (str "Method Owner" (when (> (count managers) 1) "s"))
                                      (string/join ", " managers))
          (style/create-summary-block "Created" (common/format-date createDate))]
-
-        [Collapse
-         {:style {:marginBottom "2rem"}
-          :title (style/create-subsection-header "Documentation")
-          :contents
-          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
-           (if (not-empty documentation)
-             [MarkdownView {:text documentation}]
-             [:em {} "No documentation provided"])]}]]))
+        [:div {:style {:display "flex"}}
+         (style/create-summary-block "Documentation"
+           [Collapse
+            {:style {:marginBottom "2rem"}
+             :title (style/create-textfield-hint "click to expand")
+             :show-title-when-expanded? false
+             :contents
+             [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+              (if (not-empty documentation)
+                [MarkdownView {:text documentation}]
+                [:em {} "No documentation provided"])]}])]]))
    :refresh
    (constantly nil)})
