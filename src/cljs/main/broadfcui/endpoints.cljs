@@ -64,10 +64,6 @@
     :createdBy name
     :createdDate (.toISOString (js/Date.))}})
 
-(defn get-method-snapshots [{:keys [namespace name]}]
-  {:path (str "/methods?namespace=" namespace "&name=" name)
-   :method :get})
-
 (defn get-workspace [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id))
    :method :get

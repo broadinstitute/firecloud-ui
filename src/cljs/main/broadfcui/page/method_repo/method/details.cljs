@@ -95,9 +95,9 @@
                       method))})))
    :-refresh-method
    (fn [{:keys [props state this]}]
-     (let [{:keys [snapshot-id]} props]
+     (let [{:keys [snapshot-id method-id]} props]
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-method-snapshots (:method-id props))
+        {:endpoint (endpoints/list-method-snapshots (:namespace method-id) (:name method-id))
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
