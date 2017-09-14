@@ -243,14 +243,13 @@
                              :onClick #(this :-lock-or-unlock isLocked)}])
            (when (and owner? (not editing?))
              (let [published? (:library:published library-attributes)
-                   publisher? (and curator? (or catalog-with-read? owner?))
-                   published-and-publisher? (and published? publisher?)]
+                   publisher? (and curator? (or catalog-with-read? owner?))]
                [SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete" :icon :delete
                                :data-test-id "delete-workspace-button"
                                :disabled? (cond isLocked
                                                 "This workspace is locked."
-                                                (not published-and-publisher?)
+                                                (and published? (not publisher?))
                                                 {:type :error :header "Alert" :icon-color :warning-state
                                                  :text [:div {}
                                                         [:p {:style {:margin 0}}
