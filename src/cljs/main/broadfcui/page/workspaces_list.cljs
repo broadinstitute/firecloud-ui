@@ -226,7 +226,10 @@
                                 (or (not public)
                                     (common/access-greater-than-equal-to? accessLevel "WRITER")))}
                   {:label "Public Workspaces"
-                   :predicate :public}]}
+                   :predicate :public}
+                  {:label "Featured Workspaces"
+                   :predicate (fn [{:keys [workspace]}]
+                                (= (:internal:featured (:attributes workspace)) true))}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
