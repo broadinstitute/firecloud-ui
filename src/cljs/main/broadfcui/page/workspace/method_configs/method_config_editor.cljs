@@ -179,6 +179,9 @@
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+           can-compute (get-in props [:workspace :canCompute])]
+       [:div {:style {:flex "1 1 auto" :overflow "auto"} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
@@ -190,7 +193,9 @@
                                                    (str "You do not currently have access"
                                                         " to the Google Bucket associated with this workspace.")
                                                    redacted?
-                                                   "The method snapshot this config references has been redacted.")
+                                                   "The method snapshot this config references has been redacted."
+                                                   (not can-compute)
+                                                   "You do not have access to run analysis")
                                   :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section

@@ -14,7 +14,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.common :as common]))
 
 (defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
@@ -51,19 +51,22 @@
            [flex/spring
             [buttons/Button
              {:text "Import Configuration..."
-              :disabled? (case locked?
-                           nil "Looking up workspace status..."
-                           true "This workspace is locked."
-                           false)
-              :data-test-id "import-config-button"
-              :onClick #(modal/push-modal
-                         [import-config/ConfigImporter
-                          {:workspace-id (:workspace-id props)
-                           :data-test-id "import-method-configuration-modal"
-                           :after-import (fn [{:keys [config-id]}]
-                                           (modal/pop-modal)
-                                           (mc-sync/flag-synchronization)
-                                           ((:on-config-imported props) config-id))}])}]]})
+              :disabled? (cond
+                           (locked? == nil)
+                           "Looking up workspace status..."
+                           locked?
+                           "This workspace is locked."
+                           (not (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER"))
+                           "You do not have access to Import Configurations.")
+                           :data-test-id "import-config-button"
+                           :onClick #(modal/push-modal
+                                      [import-config/ConfigImporter
+                                       {:workspace-id (:workspace-id props)
+                                        :data-test-id "import-method-configuration-modal"
+                                        :after-import (fn [{:keys [config-id]}]
+                                                        (modal/pop-modal)
+                                                        (mc-sync/flag-synchronization)
+                                                        ((:on-config-imported props) config-id))}])}]]})
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading configurations..."}]])))
    :component-did-mount
