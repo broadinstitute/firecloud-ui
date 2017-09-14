@@ -140,15 +140,13 @@
    :-render-main
    (fn [{:keys [state locals this]}]
      (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
-           {:keys [managers method entityType payloadObject]} config
+           {:keys [managers method payloadObject]} config
            {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
         [:div {:style {:display "flex"}}
          (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
                                      (string/join ", " managers))
          (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
-
-        (style/create-summary-block "Entity Type" entityType)
 
         (style/create-section-header "Connections")
         [IOView {:method-ref {:methodNamespace (:namespace method)
