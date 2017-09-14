@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
@@ -33,14 +32,14 @@
            {:keys [managers]} selected-snapshot
            owner? (contains? (set managers) (utils/get-user-email))
            {:keys [body-id]} @locals
-           on-method-created (fn [_ id]
-                               (nav/go-to-path :method id)
+           on-method-created (fn [_ method-id]
+                               (nav/go-to-path :method-summary method-id)
                                (common/scroll-to-top))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (modals/show-modals
          state
          {:deleting?
-          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo)}]
+          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo2)}]
           :sharing?
           [mca/AgoraPermsEditor
            {:save-endpoint (endpoints/persist-agora-entity-acl false selected-snapshot)
