@@ -103,8 +103,8 @@
            [comps/Spinner {:text "Loading config..."}]]
           :else
           [:div {:style {:display "flex"}}
+           [mr-sync/SyncContainer {:ref "sync-container" :config config}]
            (when owner?
-             [mr-sync/SyncContainer (merge {:ref "sync-container"} config)]
              (this :-render-sidebar))
            (this :-render-main)])]))
    :-render-sidebar
