@@ -173,7 +173,8 @@
            {:keys [methodRepoMethod rootEntityType]} config
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id]} @locals
-           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+           can-compute (get-in props [:workspace :canCompute])]
        [:div {:style {:flex "1 1 auto"} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
@@ -186,7 +187,9 @@
                                                    (str "You do not currently have access"
                                                         " to the Google Bucket associated with this workspace.")
                                                    redacted?
-                                                   "The method snapshot this config references has been redacted.")
+                                                   "The method snapshot this config references has been redacted."
+                                                   (not can-compute)
+                                                   "You do not have access to run analysis")
                                   :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
