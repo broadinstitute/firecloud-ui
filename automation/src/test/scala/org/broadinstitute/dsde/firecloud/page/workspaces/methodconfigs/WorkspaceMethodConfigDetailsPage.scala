@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
@@ -20,6 +20,8 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def editMethodConfig(newName: Option[String] = None, newSnapshotId: Option[Int] = None, newRootEntityType: Option[String] = None,
                        inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None) = {
     ui.openEditMode()
+    await spinner "Loading attributes..."
+
     if (newName != None) { ui.changeMethodConfigName(newName.get) }
     if (newSnapshotId != None) { ui.changeSnapshotId(newSnapshotId.get) }
     if (newRootEntityType != None) { ui.changeRootEntityType(newRootEntityType.get)}
@@ -89,15 +91,16 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
     def changeInputsOutputs(fields: Map[String, String]) = {
       for ((field, expression) <- fields) {
-        val fieldInputQuery: Query = testId(field + "-text-input")
-        click on(await writable fieldInputQuery)
-        enter(expression)
+        val fieldInputQuery: Query = xpath(s"//*[@data-test-id='$field-text-input']/..//input")
+        searchField(fieldInputQuery).value = expression
       }
     }
 
     def saveEdits(state: String = "enabled") = {
       val button = await enabled saveEdittedMethodConfigButtonQuery
       await forState(button, state)
+      // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
+      webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", button.underlying)
       click on button
     }
 
