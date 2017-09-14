@@ -74,6 +74,10 @@
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
+   :component-did-update
+   (fn [{:keys [props prev-props this]}]
+     (when (not= (:snapshot-id props) (:snapshot-id prev-props))
+       (this :-refresh-method true)))
    :-render-snapshot-selector
    (fn [{:keys [state this props]}]
      (let [{:keys [method]} @state
@@ -94,7 +98,7 @@
                          :dismiss #(this :-refresh-snapshot snapshotId)})
                       method))})))
    :-refresh-method
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this]} & [force-update?]]
      (let [{:keys [snapshot-id method-id]} props]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/list-method-snapshots (:namespace method-id) (:name method-id))
@@ -102,7 +106,7 @@
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
                        (do (swap! state assoc :method parsed-response)
-                           (when-not (:selected-snapshot @state)
+                           (when (or force-update? (not (:selected-snapshot @state)))
                              (this :-refresh-snapshot (or snapshot-id (:snapshotId (last parsed-response))))))
                        (swap! state assoc :method-error (:message parsed-response)))))})))
    :-refresh-snapshot
