@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+
 sbt test -Djsse.enableSNIExtension=false -Dheadless=true | tee testout.txt
 TEST_EXIT_CODE=$?
 sbt clean
