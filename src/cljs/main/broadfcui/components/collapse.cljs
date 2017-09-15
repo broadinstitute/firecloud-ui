@@ -17,10 +17,9 @@
         [:div {:style {:display "flex"}}
          [:div {:style {:display "flex" :cursor "pointer" :alignItems "baseline"}
                 :onClick #(swap! state update :visible? not)}
-          (icons/icon {:className "fa-fw" :style {:flexShrink 0}}
-                      (if visible? :disclosure-opened :disclosure-closed))
-          title]
+          title
+          (icons/icon {:className "fa-fw" :style {:flexShrink 0 :marginLeft "0.25rem"}}
+                      (if visible? :collapse :expand))]
          (when visible? title-expand)]
-        [:div {:style {:display (when-not visible? "none")
-                       :marginLeft "1.25rem"}} ; to match the disclosure triangle
+        [:div {:style {:display (when-not visible? "none")}}
          contents]]))})

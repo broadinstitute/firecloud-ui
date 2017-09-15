@@ -7,7 +7,6 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
-   [broadfcui.common.method.config-io :as config-io]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sidebar-button :refer [SidebarButton]]
@@ -19,7 +18,7 @@
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
-   [broadfcui.page.method-repo.redact :refer [Redactor]]
+   [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.utils :as utils]
    ))
 
@@ -80,29 +79,82 @@
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
 
 
-(react/defc IOView
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [error inputs-outputs]} @state]
-       (cond error [comps/ErrorViewer (:error error)]
-             inputs-outputs [config-io/IOTables {:default-hidden? true
-                                                 :style {:marginTop "1rem"}
-                                                 :inputs-outputs inputs-outputs
-                                                 :values (:values props)}]
-             :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint endpoints/get-inputs-outputs
-       :payload (:method-ref props)
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (swap! state assoc :inputs-outputs (get-parsed-response))
-                    (swap! state assoc :error (get-parsed-response false))))}))})
+(react/defc ConfigExporter
+  {:component-will-mount
+   (fn [{:keys [state props]}]
+     (when-not (:workspace-id props)
+       (endpoints/call-ajax-orch
+        {:endpoint endpoints/list-workspaces
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (let [ws-list (get-parsed-response)]
+                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                      (swap! state assoc :error status-text)))})))
+   :render
+   (fn [{:keys [props state locals refs]}]
+     (let [{:keys [workspace-id entity perform-copy]} props
+           {:keys [workspaces-list]} @state]
+       [:div {:style {:border style/standard-line
+                      :backgroundColor (:background-light style/colors)
+                      :borderRadius 8 :padding "1em" :marginTop "1em"}}
+        [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
+         (if workspace-id "Import as:" "Export to Workspace as:")]
+        (map
+         (fn [field]
+           (let [field-key (:key field)
+                 field-name (name field-key)
+                 entity-val (or (field-key entity) "")]
+             [:div {:style {:float "left" :marginRight "0.5em"}}
+              (style/create-form-label (:label field))
+              (if (= (:type field) "identity-select")
+                (style/create-identity-select {:ref field-name
+                                               :data-test-id "import-root-entity-type-select"
+                                               :defaultValue entity-val}
+                                              (:options field))
+                [input/TextField {:ref field-name
+                                  :defaultValue entity-val
+                                  :data-test-id (str "method-config-import-" field-name "-input")
+                                  :placeholder "Required"
+                                  :predicates [(input/nonempty "Fields")]}])]))
+         (filterv some?
+                  [{:label "Configuration Namespace" :key :namespace}
+                   {:label "Configuration Name" :key :name}
+                   (when-not (= "Configuration" (:entityType entity))
+                     {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options common/root-entity-types})]))
+        (common/clear-both)
+        (when-not workspace-id
+          (let [sorted-ws-list (sort-by (comp (partial mapv string/lower-case)
+                                              (juxt :namespace :name)
+                                              :workspace)
+                                        workspaces-list)]
+            [:div {:style {:marginBottom "1em"}}
+             [:div {:style {:fontSize "120%" :margin "1em 0"}}
+              "Destination Workspace:"]
+             (if-not workspaces-list
+               [comps/Spinner {:text "Loading workspaces..."}]
+               (style/create-select
+                {:defaultValue ""
+                 :ref (common/create-element-ref-handler
+                       {:store locals
+                        :element-key :workspace-select
+                        :did-mount
+                        #(.on (.select2 (js/$ %)) "select2:select"
+                              (fn [event]
+                                (swap! state assoc :selected-workspace
+                                       (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
+                        :will-unmount
+                        #(.off (js/$ %))})
+                 :style {:width 500}}
+                (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
+                     sorted-ws-list)))]))
+        (style/create-validation-error-message (:validation-error @state))
+        [comps/ErrorViewer {:error (:server-error @state)}]
+        [comps/Button {:text (if workspace-id "Import" "Export")
+                       :disabled? (not (or workspace-id workspaces-list))
+                       :data-test-id (if workspace-id "import-button" "export-button")
+                       :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
 
-
-(defn- create-import-form [state props this locals entity config? fields]
+(defn- create-import-form [state props entity config? perform-copy]
   (let [{:keys [workspace-id on-delete]} props
         workflow? (= "Workflow" (:entityType entity))
         owner? (contains? (set (:managers entity)) (utils/get-user-email))
@@ -115,85 +167,25 @@
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
-      (when config?
-        (let [{:keys [method payloadObject]} entity]
-          [IOView {:method-ref {:methodNamespace (:namespace method)
-                                :methodName (:name method)
-                                :methodVersion (:snapshotId method)}
-                   :values (select-keys payloadObject [:inputs :outputs])}]))
-      [:div {:style {:border style/standard-line
-                     :backgroundColor (:background-light style/colors)
-                     :borderRadius 8 :padding "1em" :marginTop "1em"}}
-       [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
-        (if workspace-id "Import as:" "Export to Workspace as:")]
-       (map
-        (fn [field]
-          (let [field-key (:key field)
-                field-name (name field-key)
-                entity-val (or (field-key entity) "")]
-            [:div {:style {:float "left" :marginRight "0.5em"}}
-             (style/create-form-label (:label field))
-             (if (= (:type field) "identity-select")
-               (style/create-identity-select {:ref field-name
-                                              :data-test-id "import-root-entity-type-select"
-                                              :defaultValue entity-val}
-                                             (:options field))
-               [input/TextField {:ref field-name
-                                 :defaultValue entity-val
-                                 :data-test-id (str "method-config-import-" field-name "-input")
-                                 :placeholder "Required"
-                                 :predicates [(input/nonempty "Fields")]}])]))
-        fields)
-       (common/clear-both)
-       (when-not workspace-id
-         (let [sorted-ws-list (sort-by (comp (partial mapv string/lower-case)
-                                             (juxt :namespace :name)
-                                             :workspace)
-                                       (:workspaces-list @state))]
-           [:div {:style {:marginBottom "1em"}}
-            [:div {:style {:fontSize "120%" :margin "1em 0"}}
-             "Destination Workspace:"]
-            (style/create-select
-             {:defaultValue ""
-              :ref (common/create-element-ref-handler
-                    {:store locals
-                     :element-key :workspace-select
-                     :did-mount
-                     #(.on (.select2 (js/$ %)) "select2:select"
-                           (fn [event]
-                             (swap! state assoc :selected-workspace
-                                    (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
-                     :will-unmount
-                     #(.off (js/$ %))})
-              :style {:width 500}}
-             (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
-                  sorted-ws-list))]))
-       (style/create-validation-error-message (:validation-error @state))
-       [comps/ErrorViewer {:error (:server-error @state)}]
-       [comps/Button {:text (if workspace-id "Import" "Export")
-                      :data-test-id (if workspace-id "import-button" "export-button")
-                      :onClick #(this :perform-copy)}]]]]))
+      [ConfigExporter (utils/restructure workspace-id entity perform-copy)]]]))
 
 
 (react/defc- ConfigImportForm
   {:render
-   (fn [{:keys [props state this locals]}]
+   (fn [{:keys [props state this]}]
      (cond
-       (and
-        (:loaded-config @state)
-        (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this locals (:loaded-config @state) true
-                           [{:label "Configuration Namespace" :key :namespace}
-                            {:label "Configuration Name" :key :name}])
+       (:loaded-config @state)
+       (create-import-form state props (:loaded-config @state) true
+                           (partial this :perform-copy))
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id after-import]} props
            {:keys [loaded-config]} @state
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
-                            (select-keys (-> @state :selected-workspace :workspace) [:namespace :name]))]
+                            (select-keys (:workspace selected-workspace) [:namespace :name]))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
@@ -214,14 +206,6 @@
                           (swap! state assoc :server-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
-     (when-not (:workspace-id props)
-       (endpoints/call-ajax-orch
-        {:endpoint endpoints/list-workspaces
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (let [ws-list (get-parsed-response)]
-                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                      (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
       {:endpoint (let [{:keys [namespace name snapshot-id]} (:id props)]
                    (endpoints/get-configuration namespace name snapshot-id true))
@@ -234,25 +218,21 @@
 
 (react/defc- MethodImportForm
   {:render
-   (fn [{:keys [props state this locals]}]
+   (fn [{:keys [props state this]}]
      (cond
-       (and
-        (:loaded-method @state)
-        (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this locals (:loaded-method @state) false
-                           [{:label "Configuration Namespace" :key :namespace}
-                            {:label "Configuration Name" :key :name}
-                            {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options common/root-entity-types}])
+       (:loaded-method @state)
+       (create-import-form state props (:loaded-method @state) false
+                           (partial this :perform-copy))
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id after-import]} props
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            rootEntityType (.-value (@refs "rootEntityType"))
            workspace-id (or workspace-id
-                            (select-keys (-> @state :selected-workspace :workspace) [:namespace :name]))]
+                            (select-keys (:workspace selected-workspace) [:namespace :name]))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
@@ -286,14 +266,6 @@
                                            (swap! state assoc :server-error (get-parsed-response false))))}))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
-     (when-not (:workspace-id props)
-       (endpoints/call-ajax-orch
-        {:endpoint endpoints/list-workspaces
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (let [ws-list (get-parsed-response)]
-                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                      (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-agora-method
                   (get-in props [:id :namespace])

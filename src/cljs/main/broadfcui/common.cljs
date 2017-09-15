@@ -356,7 +356,6 @@
 (defn render-dropdown-menu [{:keys [label items width button-style]}]
   [FoundationDropdown
    {:button-contents label
-    :button-class "float-right"
     :button-style (merge {:fontSize "unset" :lineHeight "unset" :padding 0 :textAlign "center"}
                          button-style)
     :close-on-click true

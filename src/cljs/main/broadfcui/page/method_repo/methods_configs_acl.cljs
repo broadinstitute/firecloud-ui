@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
@@ -14,7 +15,7 @@
 
 
 (defn get-ordered-name [entity]
-  (clojure.string/join ":" (replace entity [:namespace :name :snapshotId])))
+  (string/join "/" (replace entity [:namespace :name :snapshotId])))
 
 (def ^:private reader-level "READER")
 (def ^:private owner-level "OWNER")
@@ -130,8 +131,9 @@
       (range (count (:acl-vec @state)))))
    :-post-update
    (fn [{:keys [props locals]} new-users]
-     (when (= "Configuration" (:entityType props))
-       (let [diff (set/difference new-users (:initial-users @locals))]
-         (when (seq diff)
-           ((:on-users-added props) diff))))
-     ((:dismiss props)))})
+     (let [{:keys [entityType on-users-added dismiss]} props]
+       (when (= "Configuration" entityType)
+         (let [diff (set/difference new-users (:initial-users @locals))]
+           (when (and (seq diff) on-users-added)
+             (on-users-added diff))))
+       (dismiss)))})

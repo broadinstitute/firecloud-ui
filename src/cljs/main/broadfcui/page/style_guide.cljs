@@ -194,8 +194,7 @@
          ".menu .active {background-color: #457fd2; color: white !important;}
          .menu {padding: 0;}
          .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
-         p {margin: 0.5rem 0;}
-         .CodeMirror {height: auto; font-family: Menlo, monospace; font-size: 12px;}"]
+         p {margin: 0.5rem 0;}"]
         [:h1 {} "Style Guide"]
         section-break
         (style-nav body-id)
