@@ -82,6 +82,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
+    -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
     ${TEST_CONTAINER}:latest
