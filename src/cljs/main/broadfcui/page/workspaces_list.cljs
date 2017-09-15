@@ -19,7 +19,7 @@
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.page.workspace.workspace-common :as ws-common]))
 
 
 (def row-height-px 56)
@@ -228,10 +228,8 @@
                   {:label "Public Workspaces"
                    :predicate :public}
                   {:label "Featured Workspaces"
-                   :predicate (fn [{:keys [workspace]}]
-                                (= (count (filterv (fn [featured-workspace]
-                                  (and (= (:name workspace) (:name featured-workspace))
-                                        (= (:namespace workspace) (:namespace featured-workspace)))) (:featured-workspaces props))) 1))}]}
+                   :predicate (fn [workspace]
+                                (contains? (:featured-workspaces props) (ws-common/workspace->id workspace)))}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
@@ -412,11 +410,7 @@
         (:workspaces-response server-response)
         (fn []
           [WorkspaceTable
-           (assoc props
-             :workspaces workspaces
-             :billing-projects billing-projects
-             :disabled-reason disabled-reason
-             :featured-workspaces featured-workspaces)])
+           (merge props (utils/restructure workspaces billing-projects disabled-reason featured-workspaces))])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -435,7 +429,8 @@
                  :disabled-reason (if (empty? projects) :no-billing nil)))))
      (utils/ajax
       {:url (config/featured-json-url)
-       :on-done (fn [{:keys [get-parsed-response]}] (swap! state update :server-response assoc :featured-workspaces (get-parsed-response)))}))})
+       :on-done (fn [{:keys [get-parsed-response]}]
+                  (swap! state update :server-response assoc :featured-workspaces (set (get-parsed-response))))}))})
 
 
 (defn add-nav-paths []
