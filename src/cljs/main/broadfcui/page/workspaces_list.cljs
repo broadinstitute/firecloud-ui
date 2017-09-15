@@ -229,7 +229,9 @@
                    :predicate :public}
                   {:label "Featured Workspaces"
                    :predicate (fn [{:keys [workspace]}]
-                                (= (:internal:featured (:attributes workspace)) true))}]}
+                                (= (count (filterv (fn [featured-workspace]
+                                  (and (= (:name workspace) (:name featured-workspace))
+                                        (= (:namespace workspace) (:namespace featured-workspace)))) (:featured-workspaces props))) 1))}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
@@ -405,7 +407,7 @@
            workspaces (map
                        (fn [ws] (assoc ws :status (common/compute-status ws)))
                        (get-in server-response [:workspaces-response :parsed-response]))
-           {:keys [billing-projects disabled-reason]} server-response]
+           {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
@@ -413,7 +415,8 @@
            (assoc props
              :workspaces workspaces
              :billing-projects billing-projects
-             :disabled-reason disabled-reason)])
+             :disabled-reason disabled-reason
+             :featured-workspaces featured-workspaces)])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -429,7 +432,10 @@
                  :error-message err-text :disabled-reason :error)
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
-                 :disabled-reason (if (empty? projects) :no-billing nil))))))})
+                 :disabled-reason (if (empty? projects) :no-billing nil)))))
+     (utils/ajax
+      {:url (config/featured-json-url);"http://storage.googleapis.com/firecloud-alerts-dev/featured.json" ; TODO: load from config
+       :on-done (fn [{:keys [get-parsed-response]}] (swap! state update :server-response assoc :featured-workspaces (get-parsed-response)))}))})
 
 
 (defn add-nav-paths []
