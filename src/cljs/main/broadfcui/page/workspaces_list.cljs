@@ -434,7 +434,7 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil)))))
      (utils/ajax
-      {:url (config/featured-json-url);"http://storage.googleapis.com/firecloud-alerts-dev/featured.json" ; TODO: load from config
+      {:url (config/featured-json-url)
        :on-done (fn [{:keys [get-parsed-response]}] (swap! state update :server-response assoc :featured-workspaces (get-parsed-response)))}))})
 
 
