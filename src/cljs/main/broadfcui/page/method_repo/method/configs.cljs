@@ -148,7 +148,9 @@
                                      (string/join ", " managers))
          (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
 
-        (style/create-section-header "Connections")
+        (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
+
+        (style/create-subsection-header "Connections")
         [IOView {:method-ref {:methodNamespace (:namespace method)
                               :methodName (:name method)
                               :methodVersion (:snapshotId method)}
