@@ -95,8 +95,8 @@
           :title (style/create-subsection-header "Documentation")
           :contents
           [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
-           (if (not-empty documentation)
-             [MarkdownView {:text documentation}]
-             [:em {} "No documentation provided"])]}]]))
+           (if (string/blank? documentation)
+             [:em {} "No documentation provided"]
+             [MarkdownView {:text documentation}])]}]]))
    :refresh
    (constantly nil)})
