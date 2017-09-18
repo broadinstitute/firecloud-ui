@@ -203,7 +203,7 @@
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (ajax (assoc arg-map
-            :url (str "https://leonardo.dsde-dev.broadinstitute.org/" service-prefix path)
+            :url (str "https://leonardo.dsde-dev.broadinstitute.org" service-prefix path)
             :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
