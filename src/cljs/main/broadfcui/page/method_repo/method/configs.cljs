@@ -51,7 +51,7 @@
   [Table
    {:data configs
     :body {:empty-message "You don't have access to any published configurations for this method."
-           :style table-style/table-light
+           :style (utils/deep-merge table-style/table-light {:table {:backgroundColor "white"}})
            :behavior {:reorderable-columns? false}
            :columns [{:header "Configuration" :initial-width 400
                       :as-text (fn [{:keys [name namespace snapshotId]}]
@@ -64,7 +64,8 @@
                      {:header "Method Snapshot" :initial-width 135 :filterable? false
                       :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
                      {:header "Synopsis" :initial-width :auto
-                      :column-data :synopsis}]}}])
+                      :column-data :synopsis}]}
+    :toolbar {:filter-bar {:inner {:width 300}}}}])
 
 (react/defc ConfigViewer
   {:component-will-mount
