@@ -9,7 +9,7 @@ services:
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
     environment:
       # Prevent nodes from giving up after 30 seconds of inactivity (yes, this is configured on the hub rather than the nodes)
-      SE_OPTS: -timeout 300
+      SE_OPTS: -timeout 360
     logging:
       driver: syslog
       options:
@@ -37,6 +37,9 @@ services:
       driver: syslog
       options:
         syslog-address: udp://localhost:515/
+    volumes:
+      # Prevent page crash: https://github.com/elgalu/docker-selenium/issues/20
+      - /dev/shm:/dev/shm
 
   logs:
     image: bobrik/syslog-ng
