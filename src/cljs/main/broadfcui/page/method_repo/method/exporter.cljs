@@ -115,7 +115,8 @@
                                           method-name
                                           (:name selected-config))}]
         (style/create-form-label "Destination Workspace")
-        [WorkspaceSelector {:filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
+        [WorkspaceSelector {:style {:width "100%"}
+                            :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
                             :on-select #(swap! state assoc :selected-workspace %)}]]))
    :-render-button-bar-2
    (fn [{:keys [state]}]
@@ -123,8 +124,9 @@
       {:style {:alignItems "center"}}
       (links/create-internal
         {:onClick #(swap! state dissoc :selected-config)}
-        [:div {:style {:display "flex" :alignItems "center"}}
+        (flex/box
+         {:style {:alignItems "center"}}
          (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-         "Choose Another Configuration"])
+         "Choose Another Configuration"))
       flex/spring
       [buttons/Button {:text "Export to Workspace"}]))})

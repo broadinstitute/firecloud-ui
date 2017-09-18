@@ -64,7 +64,8 @@
                       :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
                      {:header "Synopsis" :initial-width :auto
                       :column-data :synopsis}]}
-    :toolbar {:filter-bar {:inner {:width 300}}}}])
+    :toolbar {:style {:padding 2} ;; gives room for highlight around filter field
+              :filter-bar {:inner {:width 300}}}}])
 
 
 (defn render-config-details [{:keys [managers method payloadObject]}]

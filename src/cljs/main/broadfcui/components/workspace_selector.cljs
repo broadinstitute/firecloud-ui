@@ -20,7 +20,7 @@
    :render
    (fn [{:keys [props state locals]}]
      (let [{:keys [workspaces-list]} @state
-           {:keys [on-select]} props]
+           {:keys [on-select style]} props]
        (assert on-select ":on-select is required for WorkspaceSelector")
        (if-not workspaces-list
          [comps/Spinner {:text "Loading workspaces..."}]
@@ -36,7 +36,7 @@
                             (on-select selected))))
                   :will-unmount
                   #(.select2 (js/$ %) "destroy")})
-           :style {:width 500}}
+           :style (merge {:width 500} style)}
           (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
                workspaces-list)))))
    :component-did-mount
