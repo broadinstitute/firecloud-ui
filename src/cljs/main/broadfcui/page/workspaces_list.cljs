@@ -429,8 +429,10 @@
                  :disabled-reason (if (empty? projects) :no-billing nil)))))
      (utils/ajax
       {:url (config/featured-json-url)
-       :on-done (fn [{:keys [get-parsed-response]}]
-                  (swap! state update :server-response assoc :featured-workspaces (set (get-parsed-response))))}))})
+       :on-done (fn [{:keys [raw-response]}]
+                  (swap! state update :server-response assoc
+                         :featured-workspaces (set (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                                     parsed))))}))}) ; Just do nothing if file is absent or contains invalid JSON
 
 
 (defn add-nav-paths []
