@@ -9,7 +9,10 @@
 (react/defc Page
   {:render
    (fn []
-     [MethodRepoTable {}])})
+     [MethodRepoTable
+      {:make-method-clicked-props (fn [method-id]
+                                    {:href (nav/get-link :method-loader method-id)})
+       :allow-modals? true}])})
 
 
 (defn add-nav-paths []

@@ -72,10 +72,11 @@
        (init this)))
    :display-code
    (fn [{:keys [refs props locals]}]
-     (let [{:keys [mode line-numbers read-only?]} props]
+     (let [{:keys [mode line-numbers? read-only?]} props]
        (swap! locals assoc :code-mirror-component
               (js-invoke CodeMirror-js "fromTextArea" (@refs "code-text")
-                         #js{:mode mode :lineNumbers line-numbers :readOnly read-only?}))))
+                         #js{:mode mode :lineNumbers line-numbers? :readOnly read-only?
+                             :viewportMargin js/Infinity}))))
    :component-will-receive-props
    (fn [{:keys [props next-props locals]}]
      (when (:read-only? props)

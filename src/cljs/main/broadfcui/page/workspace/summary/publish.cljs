@@ -2,7 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
-   [broadfcui.config :as config]
+   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -14,7 +14,7 @@
      [:div {}
       (when (:publishing? @state)
         [comps/Blocker {:banner "Publishing..."}])
-      [comps/SidebarButton
+      [SidebarButton
        {:style :light :color :button-primary :margin :top
         :data-test-id "publish-button"
         :icon :library :text "Publish in Library"
@@ -39,7 +39,7 @@
      [:div {}
       (when (:unpublishing? @state)
         [comps/Blocker {:banner "Unpublishing..."}])
-      [comps/SidebarButton
+      [SidebarButton
        {:style :light :color :exception-state :margin :top
         :data-test-id "unpublish-button"
         :icon :library :text "Unpublish"

@@ -114,7 +114,8 @@
                                          ;; (ab)using TagAutocomplete instead of Typeahead because it
                                          ;; plays nicer with tables
                                          [comps/TagAutocomplete
-                                          {:show-counts? false :allow-clear? true
+                                          {:data-test-id (str name "-text-input")
+                                           :show-counts? false :allow-clear? true
                                            :minimum-input-length 0
                                            :tags [value] :maximum-selection-length 1
                                            :language {:maximumSelected (fn [] "")}

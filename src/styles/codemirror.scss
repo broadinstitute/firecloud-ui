@@ -1,0 +1,9 @@
+.CodeMirror {
+  height: auto;
+  font-family: Menlo, monospace;
+  font-size: 12px;
+
+  .CodeMirror-scroll {
+    max-height: 500px;
+  }
+}

@@ -31,8 +31,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
           val page = new WorkspaceSummaryPage(namespace, wsName)
           page.open
           page.ui.clickPublishButton()
-          val errorModal = ErrorModal()
-          assert(errorModal.validateLocation)
+          val messageModal = MessageModal()
+          assert(messageModal.validateLocation)
         }
       }
       "with required library attributes" - {

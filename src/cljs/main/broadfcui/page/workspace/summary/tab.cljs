@@ -10,8 +10,8 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.create :as create]
@@ -29,7 +29,7 @@
 
 (react/defc- DeleteDialog
   {:render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      [comps/OKCancelForm
       {:header "Confirm Delete"
        :content
@@ -37,7 +37,9 @@
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting..."}])
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
-        [:p {} "Bucket data will be deleted too."]
+        [:p {} (str "Deleting it will delete the associated bucket data"
+                    (when (:published? props) " and unpublish the workspace from the Data Library")
+                    ".")]
         [comps/ErrorViewer {:error (:server-error @state)}]]
        :ok-button {:text "Delete" :onClick #(this :delete)
                    :data-test-id "confirm-delete-workspace-button"}}])
@@ -176,13 +178,13 @@
            (when-not (and library-schema billing-projects (some? curator?))
              (comps/render-blocker "Loading..."))
            (when (and can-share? (not editing?))
-             [comps/SidebarButton
+             [SidebarButton
               {:style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
                :data-test-id "share-workspace-button"
                :onClick #(swap! state assoc :sharing? true)}])
            (when (not editing?)
-             [comps/SidebarButton
+             [SidebarButton
               {:style :light :color :button-primary :margin :top
                :icon :catalog :text "Catalog Dataset..."
                :data-test-id "catalog-button"
@@ -208,12 +210,12 @@
 
            (when (or owner? writer?)
              (if (not editing?)
-               [comps/SidebarButton
+               [SidebarButton
                 {:style :light :color :button-primary :margin :top
                  :text "Edit" :icon :edit
                  :onClick #(swap! state assoc :editing? true)}]
                [:div {}
-                [comps/SidebarButton
+                [SidebarButton
                  {:style :light :color :button-primary :margin :top
                   :text "Save" :icon :done
                   :onClick (fn [_]
@@ -223,29 +225,40 @@
                                (if error
                                  (comps/push-error error)
                                  (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
-                [comps/SidebarButton
+                [SidebarButton
                  {:style :light :color :exception-state :margin :top
                   :text "Cancel Editing" :icon :cancel
                   :onClick #(swap! state dissoc :editing?)}]]))
            (when-not editing?
-             [comps/SidebarButton
+             [SidebarButton
               {:style :light :margin :top :color :button-primary
                :text "Clone..." :icon :clone
                :data-test-id "open-clone-workspace-modal-button"
                :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                :onClick #(swap! state assoc :cloning? true)}])
            (when (and owner? (not editing?))
-             [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                                   :text (if isLocked "Unlock" "Lock")
-                                   :icon (if isLocked :unlock :lock)
-                                   :onClick #(this :-lock-or-unlock isLocked)}])
+             [SidebarButton {:style :light :margin :top :color :button-primary
+                             :text (if isLocked "Unlock" "Lock")
+                             :icon (if isLocked :unlock :lock)
+                             :onClick #(this :-lock-or-unlock isLocked)}])
            (when (and owner? (not editing?))
-             [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                                   :text "Delete" :icon :delete
-                                   :data-test-id "delete-workspace-button"
-                                   :disabled? (when isLocked "This workspace is locked.")
-                                   :onClick #(modal/push-modal
-                                              [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
+             (let [published? (:library:published library-attributes)
+                   publisher? (and curator? (or catalog-with-read? owner?))]
+               [SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                               :text "Delete" :icon :delete
+                               :data-test-id "delete-workspace-button"
+                               :disabled? (cond isLocked
+                                                "This workspace is locked."
+                                                (and published? (not publisher?))
+                                                {:type :error :header "Alert" :icon-color :warning-state
+                                                 :text [:div {}
+                                                        [:p {:style {:margin 0}}
+                                                         "This workspace is published in the Data Library and cannot be deleted. "
+                                                         "Contact a library curator to ask them to first unpublish the workspace."]
+                                                        [:p {}
+                                                         "If you are unable to contact a curator, contact help@firecloud.org."]]})
+                               :onClick #(modal/push-modal
+                                          [DeleteDialog (utils/restructure workspace-id published?)])}]))]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
@@ -256,15 +269,14 @@
            {:keys [owners]
             {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
            render-detail-box (fn [title & children]
-                               [:div
-                                {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
+                               [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
                                 [:div {:style {:paddingBottom "0.5rem"}}
                                  (style/create-section-header title)]
                                 (map-indexed
                                  (fn [i child]
                                    (if (even? i)
-                                     [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
-                                     [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
+                                     (style/create-subsection-label child)
+                                     (style/create-subsection-contents child)))
                                  children)])
            processed-tags (flatten (map :items (vals tags)))]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}

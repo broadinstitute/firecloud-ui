@@ -75,3 +75,6 @@
       (let [{:keys [make-path]} handler]
         (js-invoke (aget js/window "location") "replace" (str "#" (make-path)))
         true))))
+
+(defn replace-history-state [k & args]
+  (js/window.history.replaceState nil "" (apply get-link k args)))

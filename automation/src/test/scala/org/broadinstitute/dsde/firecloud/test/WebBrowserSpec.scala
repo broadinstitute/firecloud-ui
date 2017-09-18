@@ -116,6 +116,10 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
         val fileName = s"failure_screenshots/${date}_$suiteName.png"
         val htmlSourceFileName = s"failure_screenshots/${date}_$suiteName.html"
         try {
+          val directory = new File("failure_screenshots")
+          if (!directory.exists()) {
+            directory.mkdir()
+          }
           val tmpFile = new Augmenter().augment(driver).asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
           logger.error(s"Failure screenshot saved to $fileName")
           new FileOutputStream(new File(fileName)).getChannel.transferFrom(

@@ -43,6 +43,21 @@
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
+(defn create-subsection-header [text]
+  [:div {:style {:fontSize "112.5%" :fontWeight 500}} text])
+
+(defn create-subsection-label [text]
+  [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} text])
+
+(defn create-subsection-contents [text]
+  [:div {:style {:fontSize "90%" :lineHeight 1.5}} text])
+
+(defn create-summary-block [title body]
+  [:div {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
+   [:div {:style {:paddingBottom "0.5rem"}}
+    (create-subsection-header title)]
+   (create-subsection-contents body)])
+
 (defn create-paragraph [& children]
   [:div {:style {:margin "1rem 0 2rem"
                  :fontSize "90%" :lineHeight 1.5}}

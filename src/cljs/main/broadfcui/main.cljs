@@ -23,6 +23,7 @@
    [broadfcui.page.billing.billing-management :as billing-management]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
+   [broadfcui.page.method-repo.method.details :as method-details]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
    [broadfcui.page.method-repo-NEW.method-repo-page :as method-repo2]
    [broadfcui.page.notifications :as billing-notifications]
@@ -40,6 +41,7 @@
   (billing-management/add-nav-paths)
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
+  (method-details/add-nav-paths)
   (method-repo/add-nav-paths)
   (method-repo2/add-nav-paths)
   (billing-notifications/add-nav-paths)
@@ -80,15 +82,15 @@
                                            (string/starts-with? path "methods2/"))}]))}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
-          [:div {:style {:marginBottom "0.4rem"}}
-           (header/create-account-dropdown)
+          [:div {:style {:display "flex" :justifyContent "flex-end"}}
            (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
                                          :width 150
-                                         :button-style {:height 32 :marginRight "0.5rem"}
+                                         :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
                                          :items [{:href (config/user-guide-url) :target "_blank"
                                                   :text [:span {} "User Guide" icons/external-link-icon]}
                                                  {:href (config/forum-url) :target "_blank"
-                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
+                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
+           (header/create-account-dropdown)]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (let [original-destination (aget js/window "location" "hash")

@@ -37,7 +37,7 @@
 (defn create-account-dropdown []
   (let [auth2 @utils/auth2-atom]
     (common/render-dropdown-menu
-     {:label [:div {:style {:borderRadius 2
+     {:label [:div {:style {:borderRadius 2 :display "inline-block"
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
                             :padding "0.5rem" :border style/standard-line}

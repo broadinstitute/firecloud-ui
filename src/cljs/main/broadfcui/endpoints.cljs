@@ -477,6 +477,10 @@
     :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
     :entityType (rand-nth ["Task" "Workflow"])}})
 
+(defn get-agora-method-configs [{:keys [namespace name]}]
+  {:path (str "/methods/" namespace "/" name "/configurations")
+   :method :get})
+
 (defn create-new-method-snapshot [namespace name snapshot-id & [redact?]]
   {:path (str "/methods/" namespace "/" name "/" snapshot-id "?redact=" (boolean redact?))
    :method :post})

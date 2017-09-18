@@ -115,6 +115,7 @@
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
+           [:style {} ".CodeMirror {height: 300px}"]
            [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false
                         :initialize (fn [self]
                                       (self :add-listener "change"
