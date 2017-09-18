@@ -8,6 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
@@ -45,40 +46,6 @@
      (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
 
 
-(react/defc Button
-  {:get-default-props
-   (fn []
-     {:type :primary
-      :color (:button-primary style/colors)})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [type color icon href disabled? onClick text style class-name data-test-id]} props
-           color (if disabled? (:disabled-state style/colors) color)]
-       [:a {:className (or class-name "button")
-            :style (merge
-                    (case type
-                      :primary {:backgroundColor color :color "white"}
-                      :secondary {:backgroundColor "white" :color color
-                                  :border (str "1px solid " color)})
-                    {:display "inline-flex" :alignItems "center" :justifyContent "center"
-                     :flexShrink 0
-                     :cursor (when disabled? "default")
-                     :fontWeight 500
-                     :minHeight 19 :minWidth 19
-                     :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
-                     :textDecoration "none"}
-                    (if (map? style) style {}))
-            :data-test-id data-test-id
-            :href (or href "javascript:;")
-            :onClick (if disabled? (create-error-message disabled?) onClick)
-            :onKeyDown (when (and onClick (not disabled?))
-                         (common/create-key-handler [:space] onClick))}
-        text
-        (some->> icon (icons/icon {:style (if text
-                                            {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
-                                            {:fontSize 18})}))]))})
-
-
 (react/defc Checkbox
   {:checked?
    (fn [{:keys [refs]}]
@@ -101,17 +68,6 @@
                  :disabled disabled? :data-test-id data-test-id
                  :style {:cursor (when-not disabled? "pointer")}}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
-
-
-(react/defc XButton
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
-      [:a {:style {:color (:text-light style/colors)}
-           :href "javascript:;"
-           :onClick (:dismiss props)
-           :id (:id props) :data-test-id "x-button"}
-       (icons/icon {:style {:fontSize "80%"}} :close)]])})
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
@@ -358,7 +314,7 @@
           :placeholder (or placeholder "Filter") :defaultValue initial-text
           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
           :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
-        [Button {:icon :search :onClick #(react/call :apply-filter this)
+        [buttons/Button {:icon :search :onClick #(react/call :apply-filter this)
                  :data-test-id (str data-test-id "-button")
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
@@ -520,7 +476,7 @@
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}
                :data-test-id data-test-id}
          header
-         (when show-close? [XButton {:dismiss modal/pop-modal}])]
+         (when show-close? [buttons/XButton {:dismiss modal/pop-modal}])]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)
@@ -537,9 +493,9 @@
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
             (when ok-button
-              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
-                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
+              (cond (string? ok-button) [buttons/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
+                    (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                    (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]

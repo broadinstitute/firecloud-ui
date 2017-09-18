@@ -7,6 +7,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
@@ -90,10 +91,10 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 [[comps/Button {:style {:marginLeft "auto"}
-                                                 :text "Create New Method..."
-                                                 :icon :add-new
-                                                 :onClick #(swap! state assoc :creating? true)}]])}}])]))
+                                 [[buttons/Button {:style {:marginLeft "auto"}
+                                                   :text "Create New Method..."
+                                                   :icon :add-new
+                                                   :onClick #(swap! state assoc :creating? true)}]])}}])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))

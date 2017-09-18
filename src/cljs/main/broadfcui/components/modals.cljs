@@ -6,7 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
    ))
 
@@ -35,7 +35,7 @@
                          :fontSize "140%" :fontWeight 400 :lineHeight 1}
                  :data-test-id data-test-id}
            header
-           (when show-close? [comps/XButton {:dismiss dismiss}])]
+           (when show-close? [buttons/XButton {:dismiss dismiss}])]
           [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)}}
            content
@@ -57,9 +57,9 @@
                 (when ok-button
                   (cond
                     (string? ok-button)
-                    [comps/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
-                    (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
+                    [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                    (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                    (map? ok-button) [buttons/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))]))]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))

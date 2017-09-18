@@ -2,11 +2,11 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.overlay :as overlay]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
    ))
 
@@ -63,8 +63,8 @@
          "Show:"
          (let [style {:width "4rem" :padding "4px 8px" :marginRight "0.5rem" :borderRadius 5}]
            [:div {:style {:padding "0.5em 0"}}
-            [comps/Button {:style style :onClick #(set-all props true) :text "All"}]
-            [comps/Button {:style style :onClick #(set-all props false) :text "None"}]])
+            [buttons/Button {:style style :onClick #(set-all props true) :text "All"}]
+            [buttons/Button {:style style :onClick #(set-all props false) :text "None"}]])
          (map (fn [column]
                 (render-row column (merge props {:fixed? true :dragging? drag-index})))
               fixed-columns)
@@ -131,7 +131,7 @@
    :render
    (fn [{:keys [props state refs]}]
      [:div {}
-      [comps/Button (merge
+      [buttons/Button (merge
                      {:ref "col-edit-button" :onClick #(swap! state assoc :reordering-columns? true)}
                      (:button props))]
       (when (:reordering-columns? @state)

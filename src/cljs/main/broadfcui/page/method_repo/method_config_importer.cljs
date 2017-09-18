@@ -9,7 +9,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.components.sidebar-button :refer [SidebarButton]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -58,22 +58,22 @@
           :contents
           [:div {:style {:width 270}}
            (when workflow?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :button-primary
                :text "Clone..." :icon :clone :margin :bottom
                :onClick #(swap! state assoc :cloning? true)}])
            (when owner?
              (list
               (when workflow?
-                [SidebarButton
+                [buttons/SidebarButton
                  {:style :light :color :button-primary
                   :text "Edit..." :icon :edit :margin :bottom
                   :onClick #(swap! state assoc :editing-method? true)}])
-              [SidebarButton
+              [buttons/SidebarButton
                {:style :light :color :button-primary
                 :text "Permissions..." :icon :settings :margin :bottom
                 :onClick #(swap! state assoc :editing-acl? true)}]
-              [SidebarButton
+              [buttons/SidebarButton
                {:style :light :color :exception-state
                 :text "Redact" :icon :delete :margin :bottom
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
@@ -149,10 +149,10 @@
                      sorted-ws-list)))]))
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]
-        [comps/Button {:text (if workspace-id "Import" "Export")
-                       :disabled? (not (or workspace-id workspaces-list))
-                       :data-test-id (if workspace-id "import-button" "export-button")
-                       :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
+        [buttons/Button {:text (if workspace-id "Import" "Export")
+                         :disabled? (not (or workspace-id workspaces-list))
+                         :data-test-id (if workspace-id "import-button" "export-button")
+                         :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
 
 (defn- create-import-form [state props entity config? perform-copy]
   (let [{:keys [workspace-id on-delete]} props
@@ -340,6 +340,6 @@
                   namespace)))
             :toolbar-items
             [flex/spring
-             [comps/Button
+             [buttons/Button
               {:text "Create new method..."
                :onClick #(swap! state assoc :creating? true)}]]}])]))})

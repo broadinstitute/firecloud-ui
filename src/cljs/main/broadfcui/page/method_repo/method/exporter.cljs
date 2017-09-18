@@ -5,6 +5,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.endpoints :as endpoints]
@@ -69,10 +70,10 @@
          :button-bar (flex/box
                       {}
                       flex/spring
-                      [comps/Button {:type :secondary :text "Use Blank Configuration"}]
+                      [buttons/Button {:type :secondary :text "Use Blank Configuration"}]
                       (flex/strut "1rem")
-                      [comps/Button {:text "Use Selected Configuration"
-                                     :disabled? (when-not preview-config "Select a configuration first")}])
+                      [buttons/Button {:text "Use Selected Configuration"
+                                       :disabled? (when-not preview-config "Select a configuration first")}])
          :dismiss dismiss}]))
    :component-did-mount
    (fn [{:keys [props state]}]

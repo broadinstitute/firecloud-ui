@@ -6,6 +6,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
    [broadfcui.utils :as utils]
@@ -31,11 +32,11 @@
            [:div {:style {:marginTop "0.5em"}}
             "Please select at least one entity to copy"])
          [:div {:style {:marginTop "1em"}}
-          [comps/Button {:text "Import"
-                         :onClick #(let [selected ((@refs "EntitySelector") :get-selected-entities)]
-                                     (if (empty? selected)
-                                       (swap! state assoc :selection-error true)
-                                       (this :perform-copy selected)))}]]]]))
+          [buttons/Button {:text "Import"
+                           :onClick #(let [selected ((@refs "EntitySelector") :get-selected-entities)]
+                                       (if (empty? selected)
+                                         (swap! state assoc :selection-error true)
+                                         (this :perform-copy selected)))}]]]]))
    :perform-copy
    (fn [{:keys [props state this]} selected re-link?]
      (swap! state assoc :selection-error nil :server-error nil :copying? true)
@@ -170,8 +171,8 @@
            (map
             (fn [[type {:strs [count]}]]
               [:div {:style {:display "inline-block" :margin "0px 1em"}}
-               [comps/Button {:text (str type " (" count ")")
-                              :onClick #((:add-crumb props) {:text type})}]])
+               [buttons/Button {:text (str type " (" count ")")
+                                :onClick #((:add-crumb props) {:text type})}]])
             (:entity-types @state))]]
 
          (:server-error @state)

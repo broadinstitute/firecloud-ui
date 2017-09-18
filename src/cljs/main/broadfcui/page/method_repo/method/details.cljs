@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.configs :refer [Configs]]
@@ -50,9 +51,9 @@
            [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:paddingLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
-         [comps/Button {:style {:marginLeft "auto"}
-                        :text "Export to Workspace..."
-                        :onClick #(swap! state assoc :exporting? true)}]]
+         [buttons/Button {:style {:marginLeft "auto"}
+                          :text "Export to Workspace..."
+                          :onClick #(swap! state assoc :exporting? true)}]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
