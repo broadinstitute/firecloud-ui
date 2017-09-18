@@ -631,7 +631,7 @@
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "push-error"}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
