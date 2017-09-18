@@ -172,7 +172,7 @@
        (keep #(some-> % :workspace :attributes :tag:tags :items set))
        (apply clojure.set/union)))
 
-(defn- attach-table-data [{:keys [accessLevel workspace status] :as ws}]
+(defn- attach-table-data [featured-workspaces {:keys [accessLevel workspace status] :as ws}]
   (let [workspace-id (select-keys workspace [:namespace :name])
         no-access? (= accessLevel "NO ACCESS")
         auth-domain (:authorizationDomain workspace)
@@ -189,7 +189,8 @@
                     (if (contains? domain-groups config/tcga-authorization-domain)
                       tcga-disabled-text
                       non-dbGap-disabled-text))
-      :restricted? (seq auth-domain))))
+      :restricted? (seq auth-domain)
+      :featured?  (contains? featured-workspaces (select-keys workspace [:namespace :name])))))
 
 
 (react/defc- WorkspaceTable
@@ -228,8 +229,7 @@
                   {:label "Public Workspaces"
                    :predicate :public}
                   {:label "Featured Workspaces"
-                   :predicate (fn [workspace]
-                                (contains? (:featured-workspaces props) (ws-common/workspace->id workspace)))}]}
+                   :predicate :featured?}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
@@ -392,7 +392,7 @@
                             (every? (partial contains? ws-tags) selected-tags))))]
        (->> workspaces
             (filter (apply every-pred tag-filter checkbox-filters))
-            (map attach-table-data))))})
+            (map (partial attach-table-data (:featured-workspaces props))))))})
 
 
 (react/defc- WorkspaceList
