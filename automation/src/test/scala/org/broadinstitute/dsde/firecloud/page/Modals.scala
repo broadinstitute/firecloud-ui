@@ -26,12 +26,12 @@ abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudVie
 
 case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation(implicit webDriver: WebDriver): Boolean = {
-    testId("push-error").element != null
+    testId("error-modal").element != null
   }
 }
 
 case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
-    testId("push-message").element != null
+    testId("message-modal").element != null
   }
 }
