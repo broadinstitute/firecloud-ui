@@ -17,32 +17,32 @@
 (def ^:private tracks-cache (atom {}))
 
 (react/defc- ConfigImporter
-             {
-              :render
-              (fn [{:keys [state]}]
-                [:div {}
-                 [modals/OKCancelForm
-                  {:header "Create Cluster"
-                   :ok-button {:text "Create"
-                               :onClick #(this :-create-cluster)}
-                   :content
-                   {(react/create-element
-                     [:div {:style {:marginBottom -20}}
-                      (style/create-form-label "Name")
-                      [input/TextField {:ref "clName" :autoFocus true :style {:width "100%"}
-                                        :predicates [(input/nonempty "Cluster name")
-                                                     (input/alphanumeric_- "Cluster name")]}]])}}]])
-              :-create-cluster
-              (fn [{:keys [state]}]
-                (endpoints/call-ajax-leo
-                 {:endpoint (endpoints/create-cluster "broad-dsde-dev" "cluster219-anu")
-                  :payload {:bucketPath "" :serviceAccount "" :labels {}}
-                  :headers utils/content-type=json
-                  :on-done (fn [{:keys [success? get-parsed-response]}]
-                             (swap! state dissoc :creating?)
-                             (if success?
-                               (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
-                               (swap! state assoc :launch-server-error (get-parsed-response false))))}))})
+   {
+    :render
+    (fn [{:keys [state]}]
+      [:div {}
+       [modals/OKCancelForm
+        {:header "Create Cluster"
+         :ok-button {:text "Create"
+                     :onClick #(this :-create-cluster)}
+         :content
+         (react/create-element
+           [:div {:style {:marginBottom -20}}
+            (style/create-form-label "Name")
+            [input/TextField {:ref "clName" :autoFocus true :style {:width "100%"}
+                              :predicates [(input/nonempty "Cluster name")
+                                           (input/alphanumeric_- "Cluster name")]}]])}]])
+    :-create-cluster
+    (fn [{:keys [state]}]
+      (endpoints/call-ajax-leo
+       {:endpoint (endpoints/create-cluster "broad-dsde-dev" "cluster219-anu")
+        :payload {:bucketPath "" :serviceAccount "" :labels {}}
+        :headers utils/content-type=json
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state dissoc :creating?)
+                   (if success?
+                     (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
+                     (swap! state assoc :launch-server-error (get-parsed-response false))))}))})
 
 
 (react/defc Page
