@@ -345,7 +345,7 @@
 
 
 (defn create-cluster [google-project cluster-name]
-  {:path (str "/api/cluster/" google-project "/" cluster-name)
+  {:path (str "api/cluster/" google-project "/" cluster-name)
    :method :post})
 
 (defn create-submission [workspace-id]
