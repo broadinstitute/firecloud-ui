@@ -21,9 +21,11 @@
   :render
   (fn [{:keys [state]}]
     [:div {}
+     [:div {} (style/create-section-header "Notebooks")]
+     [:div {}
      [modals/OKCancelForm
       {:header "Create Cluster"
-       :dismiss true
+       :dismiss (modal/pop-modal)
        :ok-button {:text "Create"
                    :onClick #(this :-create-cluster)}
        :content
@@ -32,7 +34,7 @@
           (style/create-form-label "Name")
           [input/TextField {:ref "clName" :autoFocus true :style {:width "100%"}
                             :predicates [(input/nonempty "Cluster name")
-                                         (input/alphanumeric_- "Cluster name")]}]])}]])
+                                         (input/alphanumeric_- "Cluster name")]}]])}]]])
   :-create-cluster
   (fn [{:keys [this state]}]
     (endpoints/call-ajax-leo
