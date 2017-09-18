@@ -23,9 +23,10 @@
                    [:div {:style {:width "80vw"}}
                     [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}} "Select Method Configuration"]
                     [SplitPane
-                     {:initial-slider-position 850
-                      :left (this :-render-config-table)
-                      :right (this :-render-preview)}]])
+                     {:left (this :-render-config-table)
+                      :right (this :-render-preview)
+                      :initial-slider-position 850
+                      :slider-padding "0.5rem"}]])
          :dismiss dismiss}]))
    :component-did-mount
    (fn [{:keys [props state]}]

@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
    ))
@@ -17,8 +18,7 @@
       {:slider-position (or (:initial-slider-position props) 100)})
     :render
     (fn [{:keys [props state]}]
-      (let [{:keys [left right top bottom]} props
-            grab-bar [:div {:style {:flex "0 0 2px" :borderRadius 1 :backgroundColor "#d0d0d0"}}]]
+      (let [{:keys [left right top bottom]} props]
         (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
         [:div {:style {:display "flex" :flexDirection (if left "row" "column")}}
          [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state) :overflow (:overflow-left props)}}
@@ -32,9 +32,10 @@
                                       :dragging? true
                                       :mouse-pos (if left (.-clientX e) (.-clientY e))
                                       :text-selection (common/disable-text-selection)))}
-          [:div {:style {:flex "0 0 10px" :padding 1
-                         :display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
-           grab-bar grab-bar grab-bar]]
+          [:div {:style {:display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
+           (icons/icon {:className (when left "fa-rotate-90")
+                        :style {:padding (:slider-padding props)
+                                :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
    (utils/with-window-listeners
