@@ -48,17 +48,21 @@
 (react/defc Button
   {:get-default-props
    (fn []
-     {:color (:button-primary style/colors)})
+     {:type :primary
+      :color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name data-test-id]} props]
+     (let [{:keys [type color icon href disabled? onClick text style class-name data-test-id]} props
+           color (if disabled? (:disabled-state style/colors) color)]
        [:a {:className (or class-name "button")
             :style (merge
+                    (case type
+                      :primary {:backgroundColor color :color "white"}
+                      :secondary {:backgroundColor "white" :color color
+                                  :border (str "1px solid " color)})
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
                      :flexShrink 0
-                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
-                     :color (if disabled? (:text-light style/colors) "white")
                      :fontWeight 500
                      :minHeight 19 :minWidth 19
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")

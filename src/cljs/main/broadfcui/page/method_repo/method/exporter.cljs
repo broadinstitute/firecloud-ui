@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.modals :as modals]
@@ -65,6 +66,13 @@
                            :initial-slider-position 800
                            :slider-padding "0.5rem"}]]
                 :else [comps/Spinner {:text "Loading Method Configurations..."}]))
+         :button-bar (flex/box
+                      {}
+                      flex/spring
+                      [comps/Button {:type :secondary :text "Use Blank Configuration"}]
+                      (flex/strut "1rem")
+                      [comps/Button {:text "Use Selected Configuration"
+                                     :disabled? (when-not preview-config "Select a configuration first")}])
          :dismiss dismiss}]))
    :component-did-mount
    (fn [{:keys [props state]}]

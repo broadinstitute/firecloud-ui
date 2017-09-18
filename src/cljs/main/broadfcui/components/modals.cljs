@@ -26,7 +26,7 @@
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
-     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close? data-test-id]} props]
+     (let [{:keys [header content dismiss button-bar ok-button show-cancel? cancel-text show-close? data-test-id]} props]
        (modal/render
         {:content
          [:div {}
@@ -39,26 +39,28 @@
           [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)}}
            content
-           (when (or show-cancel? ok-button)
-             [:div {:style {:marginTop (if ok-button "2rem" "1rem") :textAlign "center"}}
-              (when show-cancel?
-                [:a {:className "cancel"
-                     :style {:marginRight (when ok-button "2rem") :marginTop 2
-                             :display "inline-block"
-                             :fontWeight 500 :textDecoration "none"
-                             :color (:button-primary style/colors)}
-                     :href "javascript:;"
-                     :data-test-id "cancel-button"
-                     :onClick dismiss
-                     :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
-                 cancel-text])
-              (when ok-button
-                (cond
-                  (string? ok-button)
-                  [comps/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
-                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
-                  :else ok-button))])]]
+           (if button-bar
+             [:div {:style {:marginTop "1rem"}} button-bar]
+             (when (or show-cancel? ok-button)
+               [:div {:style {:marginTop (if ok-button "2rem" "1rem") :textAlign "center"}}
+                (when show-cancel?
+                  [:a {:className "cancel"
+                       :style {:marginRight (when ok-button "2rem") :marginTop 2
+                               :display "inline-block"
+                               :fontWeight 500 :textDecoration "none"
+                               :color (:button-primary style/colors)}
+                       :href "javascript:;"
+                       :data-test-id "cancel-button"
+                       :onClick dismiss
+                       :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
+                   cancel-text])
+                (when ok-button
+                  (cond
+                    (string? ok-button)
+                    [comps/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                    (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                    (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
+                    :else ok-button))]))]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))
    :-modal-did-mount
