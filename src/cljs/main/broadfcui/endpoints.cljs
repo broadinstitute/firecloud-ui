@@ -23,6 +23,21 @@
                                         (utils/->json-string mock-data))})
     :endpoint :raw-data :payload)))
 
+(defn call-ajax-leo [{:keys [endpoint :as arg-map]}]
+  (utils/ajax-leo
+   (:path endpoint)
+   (dissoc
+    (assoc arg-map
+      :method (:method endpoint)
+      :data (if-let [raw-data (:raw-data arg-map)]
+              raw-data
+              (if-let [payload (:payload arg-map)]
+                (utils/->json-string payload)))
+      :canned-response {:status 200 :delay-ms (rand-int 2000)
+                        :responseText (if-let [mock-data (:mock-data endpoint)]
+                                        (utils/->json-string mock-data))})
+    :endpoint :raw-data :payload)))
+
 
 (defn- id-path [id]
   (str (:namespace id) "/" (:name id)))
@@ -327,6 +342,11 @@
      :Submitted (rand-int 10)
      :Aborted (rand-int 10)
      :Aborting (rand-int 10)}]})
+
+
+(defn create-cluster [google-project cluster-name]
+  {:path (str "/api/cluster/" google-project "/" cluster-name)
+   :method :post})
 
 (defn create-submission [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions")
