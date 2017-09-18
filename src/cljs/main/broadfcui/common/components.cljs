@@ -684,7 +684,8 @@
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
                                     :defaultValue (:tags props)
-                                    :multiple true}
+                                    :multiple true
+                                    :data-test-id (:data-test-id props)}
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
