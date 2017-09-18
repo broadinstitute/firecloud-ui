@@ -5,6 +5,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.configs :as configs]
    [broadfcui.net :as net]
@@ -21,7 +22,7 @@
          :content (react/create-element
                    [:div {:style {:width "80vw"}}
                     [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}} "Select Method Configuration"]
-                    [comps/SplitPane
+                    [SplitPane
                      {:initial-slider-position 850
                       :left (this :-render-config-table)
                       :right (this :-render-preview)}]])
