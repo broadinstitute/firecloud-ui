@@ -4,7 +4,7 @@ import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
-import org.broadinstitute.dsde.firecloud.page.ErrorModal
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, MessageModal}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
@@ -243,9 +243,9 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
           methodConfigDetailsPage.ui.openEditMode()
           methodConfigDetailsPage.ui.saveEdits("disabled")
-          val errorModal = ErrorModal()
-          assert(errorModal.validateLocation)
-          errorModal.clickOk()
+          val messageModal = MessageModal()
+          assert(messageModal.validateLocation)
+          messageModal.clickCancel()
 
           methodConfigDetailsPage.ui.changeSnapshotId(2)
           methodConfigDetailsPage.ui.saveEdits()
@@ -275,9 +275,9 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
 
           methodConfigDetailsPage.ui.openEditMode()
-          val errorModal = ErrorModal()
-          assert(errorModal.validateLocation)
-          errorModal.clickOk()
+          val messageModal = MessageModal()
+          assert(messageModal.validateLocation)
+          messageModal.clickCancel()
 
           methodConfigDetailsPage.ui.deleteMethodConfig()
           val list = new WorkspaceMethodConfigListPage(billingProject, workspaceName)
