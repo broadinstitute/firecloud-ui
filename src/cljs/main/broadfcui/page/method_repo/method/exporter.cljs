@@ -13,6 +13,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.split-pane :refer [SplitPane]]
+   [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.configs :as configs]
    [broadfcui.net :as net]
@@ -104,10 +105,9 @@
                          :disabled? (when-not preview-config "Select a configuration first")
                          :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-page-2
-   (fn [{:keys [props state locals this]}]
-     (this :-load-workspaces)
+   (fn [{:keys [props state]}]
      (let [{:keys [method-name]} props
-           {:keys [selected-config workspaces-list]} @state]
+           {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
         (style/create-form-label "Name")
         [input/TextField {:style {:width "100%"}
@@ -115,23 +115,8 @@
                                           method-name
                                           (:name selected-config))}]
         (style/create-form-label "Destination Workspace")
-        (if-not workspaces-list
-          [comps/Spinner {:text "Loading workspaces..."}]
-          (style/create-select
-           {:defaultValue ""
-            :ref (common/create-element-ref-handler
-                  {:store locals
-                   :element-key :workspace-select
-                   :did-mount
-                   #(.on (.select2 (js/$ %)) "select2:select"
-                         (fn [event]
-                           (swap! state assoc :selected-workspace
-                                  (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
-                   :will-unmount
-                   #(.off (js/$ %))})
-            :style {:width 500}}
-           (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
-                workspaces-list)))]))
+        [WorkspaceSelector {:filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
+                            :on-select #(swap! state assoc :selected-workspace %)}]]))
    :-render-button-bar-2
    (fn [{:keys [state]}]
      (flex/box
@@ -142,19 +127,4 @@
          (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
          "Choose Another Configuration"])
       flex/spring
-      [buttons/Button {:text "Export to Workspace"}]))
-   :-load-workspaces
-   (fn [{:keys [locals state]}]
-     (when-not (:workspaces-loaded? @locals)
-       (swap! locals assoc :workspaces-loaded? true)
-       (endpoints/call-ajax-orch
-        {:endpoint endpoints/list-workspaces
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (let [ws-list (->> (get-parsed-response)
-                                         (filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER"))
-                                         (sort-by (comp (partial mapv string/lower-case)
-                                                        (juxt :namespace :name)
-                                                        :workspace)))]
-                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                      (swap! state assoc :error status-text)))})))})
+      [buttons/Button {:text "Export to Workspace"}]))})
