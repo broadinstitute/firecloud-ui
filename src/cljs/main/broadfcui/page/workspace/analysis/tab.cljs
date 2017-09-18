@@ -19,7 +19,7 @@
 (react/defc- ConfigImporter
  {
   :render
-  (fn [{:keys [state]}]
+  (fn [{:keys [state this]}]
     [:div {:style {:paddingBottom "0.5rem"}} (style/create-section-header "Notebooks")]
     [modals/OKCancelForm
       {:header "Create Cluster"
