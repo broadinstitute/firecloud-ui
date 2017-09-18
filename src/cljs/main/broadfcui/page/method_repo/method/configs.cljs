@@ -30,8 +30,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [error inputs-outputs]} @state]
        (cond error [comps/ErrorViewer (:error error)]
-             inputs-outputs [config-io/IOTables {:default-hidden? true
-                                                 :style {:marginTop "1rem"}
+             inputs-outputs [config-io/IOTables {:style {:marginTop "1rem"}
                                                  :inputs-outputs inputs-outputs
                                                  :values (:values props)}]
              :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
@@ -66,6 +65,23 @@
                      {:header "Synopsis" :initial-width :auto
                       :column-data :synopsis}]}
     :toolbar {:filter-bar {:inner {:width 300}}}}])
+
+
+(defn render-config-details [{:keys [managers method payloadObject]}]
+  [:div {:style {:backgroundColor "white" :padding "0.5rem 1rem"}}
+   [:div {:style {:display "flex"}}
+    (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
+                                (string/join ", " managers))
+    (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
+
+   (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
+
+   (style/create-subsection-header "Connections")
+   [IOView {:method-ref {:methodNamespace (:namespace method)
+                         :methodName (:name method)
+                         :methodVersion (:snapshotId method)}
+            :values (select-keys payloadObject [:inputs :outputs])}]])
+
 
 (react/defc ConfigViewer
   {:component-will-mount
@@ -141,22 +157,9 @@
    :-render-main
    (fn [{:keys [state locals this]}]
      (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
-           {:keys [managers method payloadObject]} config
            {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-        [:div {:style {:display "flex"}}
-         (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
-                                     (string/join ", " managers))
-         (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
-
-        (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
-
-        (style/create-subsection-header "Connections")
-        [IOView {:method-ref {:methodNamespace (:namespace method)
-                              :methodName (:name method)
-                              :methodVersion (:snapshotId method)}
-                 :values (select-keys payloadObject [:inputs :outputs])}]
-
+        (render-config-details config)
         (cond
           blocking-text
           [comps/Blocker {:banner blocking-text}]
