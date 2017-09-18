@@ -18,8 +18,7 @@
    [broadfcui.net :as net]
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
-   [broadfcui.utils :as utils]
-   [broadfcui.page.workspace.workspace-common :as ws-common]))
+   [broadfcui.utils :as utils]))
 
 
 (def row-height-px 56)
@@ -190,7 +189,7 @@
                       tcga-disabled-text
                       non-dbGap-disabled-text))
       :restricted? (seq auth-domain)
-      :featured?  (contains? featured-workspaces (select-keys workspace [:namespace :name])))))
+      :featured?  (contains? featured-workspaces workspace-id))))
 
 
 (react/defc- WorkspaceTable
