@@ -39,10 +39,11 @@
       :payload {:bucketPath "" :serviceAccount "" :labels {}}
       :headers utils/content-type=json
       :on-done (fn [{:keys [success? get-parsed-response]}]
-                 (swap! state dissoc :creating?)
-                 (if success?
-                   (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
-                   (swap! state assoc :launch-server-error (get-parsed-response false))))}))})
+                 ;(swap! state dissoc :creating?)
+                 ;(if success?
+                 ;  (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
+                 ;  (swap! state assoc :launch-server-error (get-parsed-response false)))
+                 )}))})
 
 
 (react/defc Page
