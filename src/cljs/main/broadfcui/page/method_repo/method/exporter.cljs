@@ -1,8 +1,13 @@
 (ns broadfcui.page.method-repo.method.exporter
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.buttons :as buttons]
@@ -44,36 +49,20 @@
 
 (react/defc MethodExporter
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
-           {:keys [configs configs-error preview-config]} @state]
+           {:keys [configs configs-error selected-config]} @state]
        [modals/OKCancelForm
         {:header (str "Export " method-name " to Workspace")
          :content
          (react/create-element
           (cond configs-error (style/create-server-error-message configs-error)
-                configs [:div {:style {:width "80vw" :maxHeight 600}}
-                         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
-                          "Select Method Configuration"]
-                         [SplitPane
-                          {:left (configs/render-config-table
-                                  {:configs configs
-                                   :make-config-link-props (fn [config]
-                                                             {:onClick #(swap! state assoc :preview-config config)})})
-                           :right (if preview-config
-                                    [Preview {:preview-config preview-config}]
-                                    [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
-                                     (style/center {:style {:textAlign "center"}} "Select a Configuration to Preview")])
-                           :initial-slider-position 800
-                           :slider-padding "0.5rem"}]]
+                selected-config (this :-render-page-2)
+                configs (this :-render-page-1)
                 :else [comps/Spinner {:text "Loading Method Configurations..."}]))
-         :button-bar (flex/box
-                      {}
-                      flex/spring
-                      [buttons/Button {:type :secondary :text "Use Blank Configuration"}]
-                      (flex/strut "1rem")
-                      [buttons/Button {:text "Use Selected Configuration"
-                                       :disabled? (when-not preview-config "Select a configuration first")}])
+         :button-bar (cond selected-config (this :-render-button-bar-2)
+                           configs (this :-render-button-bar-1))
+         :show-cancel? false
          :dismiss dismiss}]))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -84,4 +73,88 @@
                    (if success?
                      (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
                        (swap! state assoc :configs configs))
-                     (swap! state assoc :configs-error (:message parsed-response)))))}))})
+                     (swap! state assoc :configs-error (:message parsed-response)))))}))
+   :-render-page-1
+   (fn [{:keys [state]}]
+     (let [{:keys [configs preview-config]} @state]
+       [:div {:style {:width "80vw" :maxHeight 600}}
+        [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
+         "Select Method Configuration"]
+        [SplitPane
+         {:left (configs/render-config-table
+                 {:configs configs
+                  :make-config-link-props (fn [config]
+                                            {:onClick #(swap! state assoc :preview-config config)})})
+          :right (if preview-config
+                   [Preview {:preview-config preview-config}]
+                   [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
+                    (style/center {:style {:textAlign "center"}} "Select a Configuration to Preview")])
+          :initial-slider-position 800
+          :slider-padding "0.5rem"}]]))
+   :-render-button-bar-1
+   (fn [{:keys [state]}]
+     (let [{:keys [preview-config]} @state]
+       (flex/box
+        {}
+        flex/spring
+        [buttons/Button {:type :secondary :text "Use Blank Configuration"
+                         :onClick #(swap! state assoc :selected-config :blank)}]
+        (flex/strut "1rem")
+        [buttons/Button {:text "Use Selected Configuration"
+                         :disabled? (when-not preview-config "Select a configuration first")
+                         :onClick #(swap! state assoc :selected-config preview-config)}])))
+   :-render-page-2
+   (fn [{:keys [props state locals this]}]
+     (this :-load-workspaces)
+     (let [{:keys [method-name]} props
+           {:keys [selected-config workspaces-list]} @state]
+       [:div {:style {:width 550}}
+        (style/create-form-label "Name")
+        [input/TextField {:style {:width "100%"}
+                          :defaultValue (if (= selected-config :blank)
+                                          method-name
+                                          (:name selected-config))}]
+        (style/create-form-label "Destination Workspace")
+        (if-not workspaces-list
+          [comps/Spinner {:text "Loading workspaces..."}]
+          (style/create-select
+           {:defaultValue ""
+            :ref (common/create-element-ref-handler
+                  {:store locals
+                   :element-key :workspace-select
+                   :did-mount
+                   #(.on (.select2 (js/$ %)) "select2:select"
+                         (fn [event]
+                           (swap! state assoc :selected-workspace
+                                  (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
+                   :will-unmount
+                   #(.off (js/$ %))})
+            :style {:width 500}}
+           (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
+                workspaces-list)))]))
+   :-render-button-bar-2
+   (fn [{:keys [state]}]
+     (flex/box
+      {:style {:alignItems "center"}}
+      (links/create-internal
+        {:onClick #(swap! state dissoc :selected-config)}
+        [:div {:style {:display "flex" :alignItems "center"}}
+         (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+         "Choose Another Configuration"])
+      flex/spring
+      [buttons/Button {:text "Export to Workspace"}]))
+   :-load-workspaces
+   (fn [{:keys [locals state]}]
+     (when-not (:workspaces-loaded? @locals)
+       (swap! locals assoc :workspaces-loaded? true)
+       (endpoints/call-ajax-orch
+        {:endpoint endpoints/list-workspaces
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (let [ws-list (->> (get-parsed-response)
+                                         (filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER"))
+                                         (sort-by (comp (partial mapv string/lower-case)
+                                                        (juxt :namespace :name)
+                                                        :workspace)))]
+                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                      (swap! state assoc :error status-text)))})))})
