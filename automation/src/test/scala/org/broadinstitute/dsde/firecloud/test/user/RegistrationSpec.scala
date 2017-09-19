@@ -20,14 +20,14 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
   // Clean-up anything left over from any previous failures.
   before {
-    if (Rawls.admin.doesUserExist(subjectId).getOrElse(false)) {
-      try { Rawls.admin.deleteUser(subjectId) } catch nonFatalAndLog("Error deleting user before test but will try running the test anyway")
+    if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
+      try { Sam.admin.deleteUser(subjectId) } catch nonFatalAndLog("Error deleting user before test but will try running the test anyway")
     }
     Thurloe.keyValuePairs.deleteAll(subjectId)
   }
 
   private def registerCleanUpForDeleteUser(subjectId: String): Unit = {
-    register cleanUp Rawls.admin.deleteUser(subjectId)
+    register cleanUp Sam.admin.deleteUser(subjectId)
     register cleanUp Thurloe.keyValuePairs.deleteAll(subjectId)
   }
 
