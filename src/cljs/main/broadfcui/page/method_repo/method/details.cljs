@@ -41,7 +41,11 @@
         (when (and method exporting?)
           [MethodExporter {:dismiss #(swap! state dissoc :exporting?)
                            :method-name (:name (last method))
-                           :method-id method-id}])
+                           :method-id method-id
+                           :selected-snapshot-id selected-snapshot-id
+                           :on-export
+                           (fn [workspace-id config-id]
+                             (utils/log "exported to" workspace-id "as" config-id))}])
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
          (tab-bar/render-title
           "METHOD"

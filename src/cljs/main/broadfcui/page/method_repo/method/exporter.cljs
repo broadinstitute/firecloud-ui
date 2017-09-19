@@ -1,7 +1,6 @@
 (ns broadfcui.page.method-repo.method.exporter
   (:require
    [dmohs.react :as react]
-   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
@@ -16,6 +15,7 @@
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.configs :as configs]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
    ))
@@ -105,21 +105,38 @@
                          :disabled? (when-not preview-config "Select a configuration first")
                          :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-page-2
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (let [{:keys [method-name]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
-        (style/create-form-label "Name")
-        [input/TextField {:style {:width "100%"}
-                          :defaultValue (if (= selected-config :blank)
-                                          method-name
-                                          (:name selected-config))}]
+        [:div {:style {:display "flex"}}
+         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
+          (style/create-form-label "Namespace")
+          [input/TextField {:ref "namespace-field"
+                            :style {:width "100%"}
+                            :predicates [(input/nonempty "Namespace")]}]]
+         [:div {:style {:flex "1 1 50%"}}
+          (style/create-form-label "Name")
+          [input/TextField {:ref "name-field"
+                            :style {:width "100%"}
+                            :defaultValue (if (= selected-config :blank)
+                                            method-name
+                                            (:name selected-config))
+                            :predicates [(input/nonempty "Name")]}]]]
+        (when (= selected-config :blank)
+          (list
+           (style/create-form-label "Root Entity Type")
+           (style/create-identity-select {:ref "root-entity-type"}
+                                         common/root-entity-types)))
         (style/create-form-label "Destination Workspace")
         [WorkspaceSelector {:style {:width "100%"}
                             :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
-                            :on-select #(swap! state assoc :selected-workspace %)}]]))
+                            :on-select #(swap! locals assoc :selected-workspace-id (ws-common/workspace->id %))}]
+        [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
+        (style/create-validation-error-message (:validation-errors @state))
+        [comps/ErrorViewer {:error (:server-error @state)}]]))
    :-render-button-bar-2
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (flex/box
       {:style {:alignItems "center"}}
       (links/create-internal
@@ -129,4 +146,40 @@
          (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
          "Choose Another Configuration"))
       flex/spring
-      [buttons/Button {:text "Export to Workspace"}]))})
+      [buttons/Button {:text "Export to Workspace"
+                       :onClick #(this :-export)}]))
+   :-export
+   (fn [{:keys [state refs this]}]
+     (swap! state dissoc :validation-errors)
+     (let [[namespace name & errors] (input/get-and-validate refs "namespace-field" "name-field")
+           new-id (utils/restructure namespace name)
+           {:keys [selected-config]} @state]
+       (cond errors (swap! state assoc :validation-errors errors)
+             (= :blank selected-config) (this :-create-template new-id)
+             :else (this :-export-loaded-config (merge (:payloadObject selected-config) new-id)))))
+   :-create-template
+   (fn [{:keys [props state refs this]} new-id]
+     (let [{:keys [method-id selected-snapshot-id]} props
+           dest-ret (.-value (@refs "root-entity-type"))]
+       (endpoints/call-ajax-orch
+        {:endpoint endpoints/create-template
+         :payload {:methodNamespace (:namespace method-id)
+                   :methodName (:name method-id)
+                   :methodVersion (int selected-snapshot-id)}
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-export-loaded-config
+                            (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
+                      (swap! state assoc :server-error (get-parsed-response false))))})))
+   :-export-loaded-config
+   (fn [{:keys [props state locals]} config]
+     (let [{:keys [selected-workspace-id]} @locals]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/post-workspace-method-config selected-workspace-id)
+         :payload config
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      ((:on-export props) selected-workspace-id (ws-common/config->id config))
+                      (swap! state assoc :server-error (get-parsed-response false))))})))})

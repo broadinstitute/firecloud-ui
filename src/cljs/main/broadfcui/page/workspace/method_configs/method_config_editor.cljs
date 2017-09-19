@@ -329,7 +329,7 @@
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/create-template method-ref)
+        {:endpoint endpoints/create-template
          :payload method-ref
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]

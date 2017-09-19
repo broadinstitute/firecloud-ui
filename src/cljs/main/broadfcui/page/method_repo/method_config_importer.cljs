@@ -238,7 +238,7 @@
          (do
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
-            {:endpoint (endpoints/create-template (:loaded-method @state))
+            {:endpoint endpoints/create-template
              :payload (assoc (:loaded-method @state)
                         "methodNamespace" (get-in @state [:loaded-method :namespace])
                         "methodName" (get-in @state [:loaded-method :name])

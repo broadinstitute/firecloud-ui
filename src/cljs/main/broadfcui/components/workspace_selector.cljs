@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
@@ -26,16 +25,15 @@
          [comps/Spinner {:text "Loading workspaces..."}]
          (style/create-select
           {:defaultValue ""
-           :ref (common/create-element-ref-handler
-                 {:store locals
-                  :element-key :workspace-select
-                  :did-mount
-                  #(.on (.select2 (js/$ %)) "select2:select"
-                        (fn [event]
-                          (let [selected (nth workspaces (js/parseInt (.-value (.-target event))))]
-                            (on-select selected))))
-                  :will-unmount
-                  #(.select2 (js/$ %) "destroy")})
+           :ref (fn [elem]
+                  ;; doing this manually because the ref handler thingy calls :did-mount overzealously
+                  (when (and elem (not (:select @locals)))
+                    (swap! locals assoc :select elem)
+                    (.on (.select2 (js/$ elem)) "select2:select"
+                         (fn [event]
+                           (let [selected (nth workspaces (js/parseInt (.-value (.-target event))))]
+                             (on-select selected))))
+                    (on-select (first workspaces))))
            :style (merge {:width 500} style)}
           (map (fn [ws] (string/join "/" (replace (:workspace ws) [:namespace :name])))
                workspaces)))))
@@ -48,4 +46,7 @@
                     (swap! state assoc :workspaces (->> (get-parsed-response)
                                                         (filter (:filter props))
                                                         (sort-by (:sort-by props))))
-                    (swap! state assoc :error status-text)))}))})
+                    (swap! state assoc :error status-text)))}))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.select2 (js/$ (:select @locals)) "destroy"))})
