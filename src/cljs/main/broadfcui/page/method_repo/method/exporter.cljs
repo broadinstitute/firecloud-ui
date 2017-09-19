@@ -26,7 +26,9 @@
    (fn [{:keys [state]}]
      (let [{:keys [config config-error]} @state]
        (cond config-error (style/create-server-error-message config-error)
-             config [:div {:style {:maxHeight "-webkit-fill-available"}} (method-common/render-config-details config)]
+             config [:div {:style {:padding "0.5rem 1rem" :background-color "white"
+                                   :maxHeight "-webkit-fill-available"}}
+                     (method-common/render-config-details config)]
              :else [comps/Spinner {:text "Loading Configuration Details..."}])))
    :component-did-mount
    (fn [{:keys [props this]}]
@@ -48,8 +50,15 @@
                        (swap! state assoc :config-error (:message parsed-response)))))})))})
 
 
+(defn- config->id+snapshot [config]
+  (assoc (select-keys config [:namespace :name]) :snapshotId (int (:snapshotId config))))
+
+
 (react/defc MethodExporter
-  {:render
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:preview-config (some-> (:initial-config props) config->id+snapshot)})
+   :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
            {:keys [configs configs-error selected-config banner]} @state]
@@ -87,8 +96,13 @@
         [SplitPane
          {:left (method-common/render-config-table
                  {:configs configs
-                  :make-config-link-props (fn [config]
-                                            {:onClick #(swap! state assoc :preview-config config)})})
+                  :style {:body-row (fn [{:keys [row]}]
+                                      {:borderTop style/standard-line :alignItems "baseline"
+                                       :background-color (when (= preview-config (config->id+snapshot row))
+                                                           (:tag-background style/colors))})}
+                  :make-config-link-props
+                  (fn [config]
+                    {:onClick #(swap! state assoc :preview-config (config->id+snapshot config))})})
           :right (if preview-config
                    [Preview {:preview-config preview-config}]
                    [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}

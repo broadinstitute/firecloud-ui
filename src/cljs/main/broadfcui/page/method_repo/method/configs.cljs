@@ -93,45 +93,11 @@
              :text "Redact" :icon :delete :margin :bottom
              :onClick #(swap! state assoc :deleting? true)}]]}]]))
    :-render-main
-   (fn [{:keys [state locals this]}]
-     (let [{:keys [config exported-config-id exported-workspace-id blocking-text]} @state
+   (fn [{:keys [state locals]}]
+     (let [{:keys [config]} @state
            {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-        (method-common/render-config-details config)
-        (cond
-          blocking-text
-          [comps/Blocker {:banner blocking-text}]
-          exported-config-id
-          (method-common/render-post-export-dialog
-           {:workspace-id exported-workspace-id :config-id exported-config-id
-            :dismiss #(swap! state dissoc :exported-workspace-id :exported-config-id)}))
-
-        [mci/ConfigExporter {:entity config :perform-copy (partial this :-perform-copy)}]]))
-   :-perform-copy
-   (fn [{:keys [props state]} selected-workspace refs]
-     (let [{:keys [workspace-id]} props
-           {:keys [config]} @state
-           [namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           workspace-id (or workspace-id
-                            (select-keys (:workspace selected-workspace) [:namespace :name]))]
-       (if fails
-         (swap! state assoc :validation-error fails)
-         (do
-           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
-           (endpoints/call-ajax-orch
-            {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-             :payload {"configurationNamespace" (:namespace config)
-                       "configurationName" (:name config)
-                       "configurationSnapshotId" (:snapshotId config)
-                       "destinationNamespace" namespace
-                       "destinationName" name}
-             :headers utils/content-type=json
-             :on-done (fn [{:keys [success? get-parsed-response]}]
-                        (swap! state dissoc :blocking-text)
-                        (if success?
-                          (swap! state assoc :exported-config-id {:namespace namespace :name name}
-                                 :exported-workspace-id workspace-id)
-                          (swap! state assoc :server-error (get-parsed-response false))))})))))})
+        (method-common/render-config-details config)]))})
 
 (react/defc Configs
   {:render

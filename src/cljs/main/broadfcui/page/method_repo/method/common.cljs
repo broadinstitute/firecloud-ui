@@ -37,11 +37,13 @@
                     (swap! state assoc :error (get-parsed-response false))))}))})
 
 
-(defn render-config-table [{:keys [make-config-link-props configs]}]
+(defn render-config-table [{:keys [make-config-link-props configs style]}]
   [Table
    {:data configs
     :body {:empty-message "You don't have access to any published configurations for this method."
-           :style (utils/deep-merge table-style/table-light {:table {:backgroundColor "white"}})
+           :style (utils/deep-merge table-style/table-light
+                                    {:table {:backgroundColor "white"}}
+                                    style)
            :behavior {:reorderable-columns? false}
            :columns [{:header "Configuration" :initial-width 400
                       :as-text (fn [{:keys [name namespace snapshotId]}]
@@ -72,7 +74,7 @@
 
 
 (defn render-config-details [{:keys [managers method payloadObject]}]
-  [:div {:style {:backgroundColor "white" :padding "0.5rem 1rem"}}
+  [:div {}
    [:div {:style {:display "flex"}}
     (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
                                 (string/join ", " managers))

@@ -44,6 +44,7 @@
                            :method-name (:name (last method))
                            :method-id method-id
                            :selected-snapshot-id selected-snapshot-id
+                           :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
                            :on-export
                            (fn [workspace-id config-id]
                              (swap! state assoc
