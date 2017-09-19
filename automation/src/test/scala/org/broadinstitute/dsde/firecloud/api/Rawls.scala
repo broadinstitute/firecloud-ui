@@ -18,18 +18,5 @@ object Rawls extends FireCloudClient with LazyLogging {
       logger.info(s"Deleting billing project: $projectName")
       deleteRequest(url + s"api/admin/billing/$projectName")
     }
-
-    def deleteUser(subjectId: String)(implicit token: AuthToken): Unit = {
-      logger.info(s"Deleting user: $subjectId")
-      deleteRequest(url + s"api/admin/user/$subjectId")
-    }
-
-    def doesUserExist(subjectId: String)(implicit token: AuthToken): Option[Boolean] = {
-      getRequest(url + s"api/admin/user/$subjectId").status match {
-        case StatusCodes.OK => Option(true)
-        case StatusCodes.NotFound => Option(false)
-        case _ => None
-      }
-    }
   }
 }
