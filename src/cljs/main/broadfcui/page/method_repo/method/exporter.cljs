@@ -52,15 +52,18 @@
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
-           {:keys [configs configs-error selected-config]} @state]
+           {:keys [configs configs-error selected-config banner]} @state]
        [modals/OKCancelForm
         {:header (str "Export " method-name " to Workspace")
          :content
          (react/create-element
-          (cond configs-error (style/create-server-error-message configs-error)
-                selected-config (this :-render-page-2)
-                configs (this :-render-page-1)
-                :else [comps/Spinner {:text "Loading Method Configurations..."}]))
+          [:div {}
+           (when banner
+             [comps/Blocker {:banner banner}])
+           (cond configs-error (style/create-server-error-message configs-error)
+                 selected-config (this :-render-page-2)
+                 configs (this :-render-page-1)
+                 :else [comps/Spinner {:text "Loading Method Configurations..."}])])
          :button-bar (cond selected-config (this :-render-button-bar-2)
                            configs (this :-render-button-bar-1))
          :show-cancel? false
@@ -150,7 +153,7 @@
                        :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [state refs this]}]
-     (swap! state dissoc :validation-errors)
+     (swap! state assoc :validation-errors nil :banner "Resolving...")
      (let [[namespace name & errors] (input/get-and-validate refs "namespace-field" "name-field")
            new-id (utils/restructure namespace name)
            {:keys [selected-config]} @state]
@@ -159,6 +162,7 @@
              :else (this :-export-loaded-config (merge (:payloadObject selected-config) new-id)))))
    :-create-template
    (fn [{:keys [props state refs this]} new-id]
+     (swap! state assoc :banner "Creating template...")
      (let [{:keys [method-id selected-snapshot-id]} props
            dest-ret (.-value (@refs "root-entity-type"))]
        (endpoints/call-ajax-orch
@@ -171,9 +175,10 @@
                     (if success?
                       (this :-export-loaded-config
                             (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
-                      (swap! state assoc :server-error (get-parsed-response false))))})))
+                      (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
+     (swap! state assoc :banner "Exporting...")
      (let [{:keys [selected-workspace-id]} @locals]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config selected-workspace-id)
@@ -182,4 +187,4 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       ((:on-export props) selected-workspace-id (ws-common/config->id config))
-                      (swap! state assoc :server-error (get-parsed-response false))))})))})
+                      (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))})
