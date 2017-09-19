@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
   * not provide a required endpoint. This should primarily be used for admin
   * functions.
   */
-object Rawls extends FireCloudClient with LazyLogging {
+object Sam extends FireCloudClient with LazyLogging {
 
   private val url = Config.FireCloud.samApiUrl
 

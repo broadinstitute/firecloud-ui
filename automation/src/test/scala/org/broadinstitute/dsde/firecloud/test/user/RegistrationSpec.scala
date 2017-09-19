@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.firecloud.api.{Rawls, Thurloe}
+import org.broadinstitute.dsde.firecloud.api.{Rawls, Sam, Thurloe}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
