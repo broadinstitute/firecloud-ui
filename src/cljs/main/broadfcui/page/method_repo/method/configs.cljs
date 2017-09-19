@@ -68,6 +68,18 @@
               :filter-bar {:inner {:width 300}}}}])
 
 
+(defn render-post-export-dialog [{:keys [workspace-id config-id dismiss]}]
+  [modals/OKCancelForm
+   {:header "Export successful"
+    :content "Would you like to go to the edit page now?"
+    :cancel-text "No, stay here"
+    :dismiss dismiss
+    :ok-button
+    {:text "Yes"
+     :onClick #(mc-sync/flag-synchronization)
+     :href (nav/get-link :workspace-method-config workspace-id config-id)}}])
+
+
 (defn render-config-details [{:keys [managers method payloadObject]}]
   [:div {:style {:backgroundColor "white" :padding "0.5rem 1rem"}}
    [:div {:style {:display "flex"}}
@@ -165,15 +177,9 @@
           blocking-text
           [comps/Blocker {:banner blocking-text}]
           exported-config-id
-          [modals/OKCancelForm
-           {:header "Export successful"
-            :content "Would you like to go to the edit page now?"
-            :cancel-text "No, stay here"
-            :dismiss #(swap! state dissoc :exported-workspace-id :exported-config-id)
-            :ok-button
-            {:text "Yes"
-             :onClick #(mc-sync/flag-synchronization)
-             :href (nav/get-link :workspace-method-config exported-workspace-id exported-config-id)}}])
+          (render-post-export-dialog
+           {:workspace-id exported-workspace-id :config-id exported-config-id
+            :dismiss #(swap! state dissoc :exported-workspace-id :exported-config-id)}))
 
         [mci/ConfigExporter {:entity config :perform-copy (partial this :-perform-copy)}]]))
    :-perform-copy
