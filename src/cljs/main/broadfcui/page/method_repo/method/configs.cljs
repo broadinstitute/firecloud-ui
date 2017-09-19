@@ -128,6 +128,5 @@
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
-                     (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
-                       (swap! state assoc :configs configs))
+                     (swap! state assoc :configs parsed-response)
                      (swap! state assoc :configs-error (:message parsed-response)))))}))})
