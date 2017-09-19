@@ -75,6 +75,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --net=docker_default \
     -e ENV=$ENV \
     -e SLACK_API_TOKEN=$SLACK_API_TOKEN \
+    -e BUILD_NUMBER=$BUILD_NUMBER \
     --add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
