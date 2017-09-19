@@ -7,6 +7,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.method-repo.method.common :as method-common]
    [broadfcui.page.method-repo.method.configs :as configs]
    [broadfcui.page.method-repo.method.exporter :refer [MethodExporter]]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
@@ -51,7 +52,7 @@
                                     :dest-config-id config-id
                                     :post-export? true))}])
         (when post-export?
-          (configs/render-post-export-dialog
+          (method-common/render-post-export-dialog
            {:workspace-id (:dest-workspace-id @state)
             :config-id (:dest-config-id @state)
             :dismiss #(swap! state dissoc :post-export? :dest-workspace-id :dest-config-id)}))

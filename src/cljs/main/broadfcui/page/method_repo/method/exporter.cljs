@@ -14,7 +14,7 @@
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.method-repo.method.configs :as configs]
+   [broadfcui.page.method-repo.method.common :as method-common]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -26,7 +26,7 @@
    (fn [{:keys [state]}]
      (let [{:keys [config config-error]} @state]
        (cond config-error (style/create-server-error-message config-error)
-             config [:div {:style {:maxHeight "-webkit-fill-available"}} (configs/render-config-details config)]
+             config [:div {:style {:maxHeight "-webkit-fill-available"}} (method-common/render-config-details config)]
              :else [comps/Spinner {:text "Loading Configuration Details..."}])))
    :component-did-mount
    (fn [{:keys [props this]}]
@@ -82,7 +82,7 @@
         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
          "Select Method Configuration"]
         [SplitPane
-         {:left (configs/render-config-table
+         {:left (method-common/render-config-table
                  {:configs configs
                   :make-config-link-props (fn [config]
                                             {:onClick #(swap! state assoc :preview-config config)})})
