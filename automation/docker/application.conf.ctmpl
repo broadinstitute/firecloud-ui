@@ -1,15 +1,22 @@
 # To run against a local UI, set baseUrl = "http://local.broadinstitute.org/"
-{{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if eq $env "dev"}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
+{{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if eq $env "dev"}}test.firecloud.org{{else if eq $env "alpha"}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
 {{with $environment := env "ENVIRONMENT"}}
 {{with $dir := env "ROOT_DIR"}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 fireCloud {
+  {{if eq $environment "alpha"}}
+  baseUrl = "https://firecloud.dsde-{{$environment}}.broadinstitute.org/"
+  orchApiUrl = "https://firecloud-orchestration.dsde-{{$environment}}.broadinstitute.org/"
+  rawlsApiUrl = "https://rawls.dsde-{{$environment}}.broadinstitute.org/"
+  thurloeApiUrl = "https://thurloe.dsde-{{$environment}}.broadinstitute.org/"
+  {{else}}
   baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
   orchApiUrl = "https://firecloud-orchestration-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
   rawlsApiUrl = "https://rawls-fiab.dsde-{{$environment}}.broadinstitute.org:24443/"
   samApiUrl = "https://sam-fiab.dsde-{{$environment}}.broadinstitute.org:29443/"
   thurloeApiUrl = "https://thurloe-fiab.dsde-{{$environment}}.broadinstitute.org:25443/"
+  {{end}}
   fireCloudId = "{{$secrets.Data.firecloud_id}}"
 }
 
@@ -17,13 +24,13 @@ gcs {
   serviceProject = "broad-dsde-{{$environment}}"
   qaEmail = "{{$users.Data.service_acct_email}}"
   qaPemFile = "{{$dir}}/src/test/resources/firecloud-account.pem"
-  billingAccount = "{{if eq $environment "dev"}}Broad Institute - 8201528{{else if eq $environment "qa"}}Broad Institute - 4140002{{else}}[undefined]{{end}}"
-  billingAccountId = "{{if eq $environment "dev"}}billingAccounts/00708C-45D19D-27AAFA{{else if eq $environment "qa"}}billingAccounts/0028B7-4F7D57-2D0E40{{else}}[undefined]{{end}}"
+  billingAccount = "Broad Institute - 8201528"
+  billingAccountId = "billingAccounts/00708C-45D19D-27AAFA"
   appsDomain = {{if eq $environment "qa"}}"quality.firecloud.org"{{else}}"{{$environment}}.test.firecloud.org"{{end}}
 }
 
 users {
-  notSoSecretPassword = "{{$users.Data.qa_users_passwd}}"
+  notSoSecretPassword = "{{$users.Data.automation_users_passwd}}"
   dumbledore = "dumbledore.admin@{{template "USER_DOMAIN"}}"
   voldemort = "voldemort.admin@{{template "USER_DOMAIN"}}"
   snape = "snape.curator@{{template "USER_DOMAIN"}}"
@@ -38,7 +45,7 @@ users {
 
   # following users only used to test user creation
   luna = "luna.temp@{{template "USER_DOMAIN"}}"
-  lunaSubjectId = "{{if eq $environment "dev"}}111010567286567716739{{else if eq $environment "qa"}}117891551413045861932{{else}}[undefined]{{end}}"
+  lunaSubjectId = "{{if eq $environment "dev"}}111010567286567716739{{else if eq $environment "alpha"}}111010567286567716739{{else if eq $environment "qa"}}117891551413045861932{{else}}[undefined]{{end}}"
   neville = "neville.temp@{{template "USER_DOMAIN"}}"
 }
 
