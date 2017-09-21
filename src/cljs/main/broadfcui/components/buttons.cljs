@@ -5,15 +5,20 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    ))
-;; Can't import broadfcui.components.modals, because that creates a circular dependency.
-;; Just fully qualify modals to solve this
+
+
+(defonce modal-constructor (atom nil))
 
 
 (defn- show-message [disabled? on-dismiss]
-  (cond (true? disabled?) (broadfcui.components.modals/render-message {:header "Disabled" :text "This action is disabled" :on-dismiss on-dismiss})
-        (string? disabled?) (broadfcui.components.modals/render-message {:header "Disabled" :text disabled? :on-dismiss on-dismiss})
-        (map? disabled?) ((if (= (:type disabled?) :error) broadfcui.components.modals/render-error broadfcui.components.modals/render-message)
-                          (assoc disabled? :on-dismiss on-dismiss))))
+  (cond (true? disabled?)
+        (@modal-constructor :message {:header "Disabled" :text "This action is disabled" :on-dismiss on-dismiss})
+        (string? disabled?)
+        (@modal-constructor :message {:header "Disabled" :text disabled? :on-dismiss on-dismiss})
+        (map? disabled?)
+        (@modal-constructor
+         (if (= (:type disabled?) :error) :error :message)
+         (assoc disabled? :on-dismiss on-dismiss))))
 
 
 (react/defc Button
