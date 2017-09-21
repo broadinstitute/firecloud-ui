@@ -52,7 +52,7 @@
             [buttons/Button
              {:text "Import Configuration..."
               :disabled? (cond
-                           (locked? == nil)
+                           (= locked? nil)
                            "Looking up workspace status..."
                            locked?
                            "This workspace is locked."
