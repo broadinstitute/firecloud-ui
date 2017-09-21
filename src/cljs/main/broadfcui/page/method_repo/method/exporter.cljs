@@ -70,11 +70,11 @@
            (when banner
              [comps/Blocker {:banner banner}])
            (cond configs-error (style/create-server-error-message configs-error)
-                 selected-config (this :-render-page-2)
-                 configs (this :-render-page-1)
+                 selected-config (this :-render-export-page)
+                 configs (this :-render-config-selector)
                  :else [comps/Spinner {:text "Loading Method Configurations..."}])])
-         :button-bar (cond selected-config (this :-render-button-bar-2)
-                           configs (this :-render-button-bar-1))
+         :button-bar (cond selected-config (this :-render-export-page-buttons)
+                           configs (this :-render-config-selector-buttons))
          :show-cancel? false
          :dismiss dismiss}]))
    :component-did-mount
@@ -87,7 +87,7 @@
                      (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
                        (swap! state assoc :configs configs))
                      (swap! state assoc :configs-error (:message parsed-response)))))}))
-   :-render-page-1
+   :-render-config-selector
    (fn [{:keys [state]}]
      (let [{:keys [configs preview-config]} @state]
        [:div {:style {:width "80vw" :maxHeight 600}}
@@ -109,7 +109,7 @@
                     (style/center {:style {:textAlign "center"}} "Select a Configuration to Preview")])
           :initial-slider-position 800
           :slider-padding "0.5rem"}]]))
-   :-render-button-bar-1
+   :-render-config-selector-buttons
    (fn [{:keys [state]}]
      (let [{:keys [preview-config]} @state]
        (flex/box
@@ -121,7 +121,7 @@
         [buttons/Button {:text "Use Selected Configuration"
                          :disabled? (when-not preview-config "Select a configuration first")
                          :onClick #(swap! state assoc :selected-config preview-config)}])))
-   :-render-page-2
+   :-render-export-page
    (fn [{:keys [props state locals]}]
      (let [{:keys [method-name]} props
            {:keys [selected-config]} @state]
@@ -152,7 +152,7 @@
         [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
         (style/create-validation-error-message (:validation-errors @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
-   :-render-button-bar-2
+   :-render-export-page-buttons
    (fn [{:keys [state this]}]
      (flex/box
       {:style {:alignItems "center"}}
