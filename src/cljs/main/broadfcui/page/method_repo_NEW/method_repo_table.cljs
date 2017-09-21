@@ -91,7 +91,8 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 [[buttons/Button {:style {:marginLeft "auto"}
+                                 [[buttons/Button {:data-test-id "create-method-button"
+                                                 :style {:marginLeft "auto"}
                                                    :text "Create New Method..."
                                                    :icon :add-new
                                                    :onClick #(swap! state assoc :creating? true)}]])}}])]))

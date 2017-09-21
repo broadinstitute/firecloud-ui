@@ -13,7 +13,7 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
     private val newMethodButtonQuery = testId("create-method-button")
 
     def clickNewMethodButton(): Unit =
-      click on newMethodButtonQuery
+      click on (await enabled newMethodButtonQuery)
   }
 
   object ui extends UI
@@ -36,7 +36,7 @@ class CreateMethodModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val nameFieldQuery = testId("name-field")
     private val synopsisFieldQuery = testId("synopsis-field")
     private val documentationFieldQuery = testId("documentation-field")
-    private val wdlFieldQuery = testId("wdl-field")
+    private val wdlFieldQuery = cssSelector("[data-test-id='wdl-field'] .CodeMirror")
     private val uploadButtonQuery = testId("upload-button")
 
     def fillNamespaceField(namespace: String): Unit =
@@ -51,8 +51,10 @@ class CreateMethodModal(implicit webDriver: WebDriver) extends FireCloudView {
     def fillDocumentationField(documentation: String): Unit =
       textArea(documentationFieldQuery).value = documentation
 
-    def fillWDLField(wdl: String): Unit =
-      textArea(wdlFieldQuery).value = wdl
+    def fillWDLField(wdl: String): Unit = {
+      val sanitized = wdl.replaceAll("\"" ,"\\\\\"").replaceAll("\n", "\\\\n")
+      executeScript("arguments[0].CodeMirror.setValue(\"" + sanitized + "\");", wdlFieldQuery.webElement)
+    }
 
     def clickUploadButton(): Unit =
       click on uploadButtonQuery
