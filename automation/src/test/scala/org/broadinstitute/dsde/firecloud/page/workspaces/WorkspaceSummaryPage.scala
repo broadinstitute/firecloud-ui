@@ -16,6 +16,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   override def awaitLoaded(): WorkspaceSummaryPage = {
     await condition { enabled(testId("submission-status")) || enabled(testId("workspace-details-error")) }
+    await spinner "Loading..."
     this
   }
 
