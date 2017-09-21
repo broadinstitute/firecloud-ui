@@ -24,7 +24,7 @@
   * Submitter updates documentation as needed
   * Submitter **reassigns to LR** for further feedback
 - [ ] **TL** sign off
-- [ ] **LR** sign off\
+- [ ] **LR** sign off
 - [ ] **Product Owner** sign off
 - [ ] **Submitter**: Verify all tests go green, including CI tests and automated UI tests.
 - [ ] **Submitter**: Squash commits and merge to develop. If adding test code, merge application code and test code at the same time.
