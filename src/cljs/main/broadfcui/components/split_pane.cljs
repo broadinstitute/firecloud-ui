@@ -20,7 +20,8 @@
     (fn [{:keys [props state]}]
       (let [{:keys [left right top bottom]} props]
         (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
-        [:div {:style {:display "flex" :flexDirection (if left "row" "column")}}
+        [:div {:style {:display "flex" :flexDirection (if left "row" "column")
+                       :maxHeight "-webkit-fill-available"}}
          [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state) :overflow (:overflow-left props)}}
           (or left top)]
          [:div {:style {:flex "0 0 10px"

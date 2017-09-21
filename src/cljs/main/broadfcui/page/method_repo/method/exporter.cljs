@@ -26,8 +26,7 @@
    (fn [{:keys [state]}]
      (let [{:keys [config config-error]} @state]
        (cond config-error (style/create-server-error-message config-error)
-             config [:div {:style {:padding "0.5rem 1rem" :background-color "white"
-                                   :maxHeight "-webkit-fill-available"}}
+             config [:div {:style {:padding "0.5rem 1rem" :background-color "white"}}
                      (method-common/render-config-details config)]
              :else [comps/Spinner {:text "Loading Configuration Details..."}])))
    :component-did-mount
