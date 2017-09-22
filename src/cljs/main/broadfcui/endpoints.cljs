@@ -23,7 +23,7 @@
                                         (utils/->json-string mock-data))})
     :endpoint :raw-data :payload)))
 
-(defn call-ajax-leo [{:keys [endpoint :as arg-map]}]
+(defn call-ajax-leo [{:keys [endpoint] :as arg-map}]
   (utils/ajax-leo
    (:path endpoint)
    (dissoc
@@ -345,8 +345,20 @@
 
 
 (defn create-cluster [google-project cluster-name]
-  {:path (str "/api/cluster/" google-project "/" cluster-name)
-   :method :post})
+  {:path (str "/cluster/" google-project "/" cluster-name)
+   :method :put})
+
+(defn delete-cluster [google-project cluster-name]
+  {:path (str "/cluster/" google-project "/" cluster-name)
+   :method :delete})
+
+(defn get-clusters-list [labels]
+  {:path (str "/clusters")
+   :method :get})
+
+
+
+
 
 (defn create-submission [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions")
