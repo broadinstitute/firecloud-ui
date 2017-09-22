@@ -158,7 +158,7 @@
     :predicate (fn [ws option] (= option (boolean (get-in ws [:workspace :attributes :library:published]))))}
    {:title "TCGA Access"
     :options [:open :protected]
-    :render #(if (= % :open) "TCGA Open Access" "TCGA Protected Access")
+    :render #(if (= % :open) "TCGA Open Access" "TCGA Controlled Access")
     :predicate (fn [ws option]
                  (and (= (config/tcga-namespace) (get-in ws [:workspace :namespace]))
                       ((if (= option :open) empty? identity) (get-in ws [:workspace :authorizationDomain]))))}])
