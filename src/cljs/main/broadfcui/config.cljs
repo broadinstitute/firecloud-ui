@@ -18,7 +18,7 @@
   (let [config-keys (set (keys config))
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"isDebug" :boolean "shibbolethUrlRoot" :string
-                  "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string
+                  "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string "featuredJsonUrl" :string
                   "workflowCountWarningThreshold" :integer "billingGuideUrl" :string "dbGapAuthorizationDomain" :string
                   "callCachingGuideUrl" :string "alertsPollInterval" :integer "forumUrl" :string "authDomainGuideUrl" :string}
         all (merge required optional)
@@ -51,4 +51,5 @@
 (defn billing-guide-url [] (get @config "billingGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn alerts-json-url [] (get @config "alertsJsonUrl"))
+(defn featured-json-url [] (get @config "featuredJsonUrl"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")

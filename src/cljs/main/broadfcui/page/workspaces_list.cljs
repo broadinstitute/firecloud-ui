@@ -158,10 +158,10 @@
     :predicate (fn [ws option] (= option (boolean (get-in ws [:workspace :attributes :library:published]))))}
    {:title "TCGA Access"
     :options [:open :protected]
-    :render #(if (= % :open) "TCGA Open Access" "TCGA Protected Access")
+    :render #(if (= % :open) "TCGA Open Access" "TCGA Controlled Access")
     :predicate (fn [ws option]
                  (and (= (config/tcga-namespace) (get-in ws [:workspace :namespace]))
-                      ((if (= option :open) not identity) (get-in ws [:workspace :authorizationDomain]))))}])
+                      ((if (= option :open) empty? seq) (get-in ws [:workspace :authorizationDomain]))))}])
 
 (def ^:private persistence-key "workspace-table-types")
 (def ^:private VERSION 2)
@@ -172,7 +172,7 @@
        (keep #(some-> % :workspace :attributes :tag:tags :items set))
        (apply clojure.set/union)))
 
-(defn- attach-table-data [{:keys [accessLevel workspace status] :as ws}]
+(defn- attach-table-data [featured-workspaces {:keys [accessLevel workspace status] :as ws}]
   (let [workspace-id (select-keys workspace [:namespace :name])
         no-access? (= accessLevel "NO ACCESS")
         auth-domain (:authorizationDomain workspace)
@@ -189,7 +189,8 @@
                     (if (contains? domain-groups config/tcga-authorization-domain)
                       tcga-disabled-text
                       non-dbGap-disabled-text))
-      :restricted? (seq auth-domain))))
+      :restricted? (seq auth-domain)
+      :featured?  (contains? featured-workspaces workspace-id))))
 
 
 (react/defc- WorkspaceTable
@@ -226,7 +227,9 @@
                                 (or (not public)
                                     (common/access-greater-than-equal-to? accessLevel "WRITER")))}
                   {:label "Public Workspaces"
-                   :predicate :public}]}
+                   :predicate :public}
+                  {:label "Featured Workspaces"
+                   :predicate :featured?}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
@@ -389,7 +392,7 @@
                             (every? (partial contains? ws-tags) selected-tags))))]
        (->> workspaces
             (filter (apply every-pred tag-filter checkbox-filters))
-            (map attach-table-data))))})
+            (map (partial attach-table-data (:featured-workspaces props))))))})
 
 
 (react/defc- WorkspaceList
@@ -402,15 +405,12 @@
            workspaces (map
                        (fn [ws] (assoc ws :status (common/compute-status ws)))
                        (get-in server-response [:workspaces-response :parsed-response]))
-           {:keys [billing-projects disabled-reason]} server-response]
+           {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
           [WorkspaceTable
-           (assoc props
-             :workspaces workspaces
-             :billing-projects billing-projects
-             :disabled-reason disabled-reason)])
+           (merge props (utils/restructure workspaces billing-projects disabled-reason featured-workspaces))])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -426,7 +426,13 @@
                  :error-message err-text :disabled-reason :error)
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
-                 :disabled-reason (if (empty? projects) :no-billing nil))))))})
+                 :disabled-reason (if (empty? projects) :no-billing nil)))))
+     (utils/ajax
+      {:url (config/featured-json-url)
+       :on-done (fn [{:keys [raw-response]}]
+                  (swap! state update :server-response assoc
+                         :featured-workspaces (set (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                                     parsed))))}))}) ; Simply show no featured workspaces if file is absent or contains invalid JSON
 
 
 (defn add-nav-paths []

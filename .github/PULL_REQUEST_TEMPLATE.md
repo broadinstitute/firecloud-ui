@@ -14,6 +14,7 @@
   * Encryption
   * Audit trails
 - [ ] **Submitter**: If you're adding new libraries, sign us up to security updates for them
+- [ ] **Submitter**: If you're adding new automated UI tests, review the test plan with QA
 * Review cycle:
   * LR reviews
   * Rest of team may comment on PR at will
@@ -25,8 +26,8 @@
 - [ ] **TL** sign off
 - [ ] **LR** sign off
 - [ ] **Product Owner** sign off
-- [ ] **Submitter**: Verify all tests go green, including CI tests
-- [ ] **Submitter**: Squash commits and merge to develop
+- [ ] **Submitter**: Verify all tests go green, including CI tests and automated UI tests.
+- [ ] **Submitter**: Squash commits and merge to develop. If adding test code, merge application code and test code at the same time.
 - [ ] **Submitter**: Delete branch after merge
 - [ ] **Submitter**: **Test this change works on dev environment after deployment**. YOU own getting it fixed if dev isn't working for ANY reason!
 - [ ] **Submitter**: Mark JIRA issue as resolved once this checklist is completed

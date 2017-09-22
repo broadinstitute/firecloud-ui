@@ -83,7 +83,8 @@
 
 (defn render-error [{:keys [header text on-dismiss icon-color]}]
   [OKCancelForm
-   {:header [:div {:style {:display "inline-flex" :align-items "center"}}
+   {:data-test-id "error-modal"
+    :header [:div {:style {:display "inline-flex" :align-items "center"}}
              (icons/icon {:style {:color ((or icon-color :exception-state) style/colors)
                                   :marginRight "0.5rem"}} :error)
              (or header "Error")]
@@ -93,7 +94,8 @@
 
 (defn render-message [{:keys [header text on-confirm on-dismiss]}]
   [OKCancelForm
-   {:header (or header "Confirm")
+   {:data-test-id "message-modal"
+    :header (or header "Confirm")
     :content [:div {:style {:width 500}} text]
     :ok-button on-confirm
     :dismiss on-dismiss}])

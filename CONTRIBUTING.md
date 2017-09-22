@@ -208,3 +208,4 @@ A list of any "gotchas" that have been found in development. These may be browse
 When doing UI development, Chrome's caching gets in the way. We recommending disabling it when devtools is open (via devtools settings):
 
 ![disable cache image](https://cloud.githubusercontent.com/assets/1545444/21811560/1a1772c4-d71e-11e6-80bf-4ac3ce28e187.png)
+

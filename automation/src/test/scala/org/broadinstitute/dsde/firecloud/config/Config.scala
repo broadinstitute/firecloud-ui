@@ -57,6 +57,7 @@ object Config {
     val fireCloudId: String = fireCloud.getString("fireCloudId")
     val orchApiUrl: String = fireCloud.getString("orchApiUrl")
     val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
+    val samApiUrl: String = fireCloud.getString("samApiUrl")
     val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
   }
 

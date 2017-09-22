@@ -71,7 +71,6 @@
    :-load-service-alerts
    (fn [{:keys [this]} & [first-time?]]
      (utils/ajax {:url (config/alerts-json-url)
-                  :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (partial this :-handle-response first-time?)}))
    :-handle-response
    (fn [{:keys [state]} first-time? {:keys [status-code raw-response]}]

@@ -74,9 +74,13 @@ docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
 docker run -e DOCKERHOST=$DOCKERHOST \
     --net=docker_default \
     -e ENV=$ENV \
+    -e SLACK_API_TOKEN=$SLACK_API_TOKEN \
+    -e BUILD_NUMBER=$BUILD_NUMBER \
+    -e TEST_CHANNEL=dsde-qa \
     --add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
+    --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \

@@ -219,7 +219,7 @@
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
          (when-not redacted?
-           [:div {:style {:flex "1 1 50%"}}
+           [:div {:style {:flex "1 1 50%" :overflow "hidden"}}
             (make-field :createDate "Created" :render common/format-date)
             (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
             (make-field :synopsis "Synopsis")])]
@@ -631,7 +631,7 @@
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "push-error"}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
@@ -684,7 +684,8 @@
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
                                     :defaultValue (:tags props)
-                                    :multiple true}
+                                    :multiple true
+                                    :data-test-id (:data-test-id props)}
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
