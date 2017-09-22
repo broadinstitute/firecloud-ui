@@ -89,7 +89,7 @@
    :-render-config-selector
    (fn [{:keys [state]}]
      (let [{:keys [configs preview-config]} @state]
-       [:div {:style {:width "80vw" :maxHeight 600}}
+       [:div {:style {:width "80vw" :maxHeight 600 :overflow "hidden"}}
         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
          "Select Method Configuration"]
         [SplitPane
