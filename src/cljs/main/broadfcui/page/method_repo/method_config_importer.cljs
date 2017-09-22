@@ -167,6 +167,13 @@
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
+      (when config?
+        (let [{:keys [method payloadObject]} entity]
+          [broadfcui.page.method-repo.method.configs/IOView
+           {:method-ref {:methodNamespace (:namespace method)
+                         :methodName (:name method)
+                         :methodVersion (:snapshotId method)}
+            :values (select-keys payloadObject [:inputs :outputs])}]))
       [ConfigExporter (utils/restructure workspace-id entity perform-copy)]]]))
 
 
