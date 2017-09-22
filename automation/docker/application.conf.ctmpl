@@ -1,3 +1,4 @@
+# To run against a local UI, set baseUrl = "http://local.broadinstitute.org/"
 {{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if eq $env "dev"}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
 {{with $environment := env "ENVIRONMENT"}}
 {{with $dir := env "ROOT_DIR"}}
