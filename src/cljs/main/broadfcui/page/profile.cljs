@@ -64,7 +64,7 @@
                    (common/render-info-box
                     {:text
                      [:div {}
-                      "Your account was linked, but you are not authorized to view this protected dataset. Please go "
+                      "Your account was linked, but you are not authorized to view this controlled dataset. Please go "
                       (links/create-external {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login"} "here")
                       " to check your credentials."]})])]])
             datasets)])]))
