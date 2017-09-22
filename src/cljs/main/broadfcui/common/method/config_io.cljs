@@ -2,11 +2,11 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.utils :as utils]
    ))
@@ -54,7 +54,7 @@
                    :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state locals]} io-key]
+   (fn [{:keys [props state]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -108,28 +108,16 @@
                                   :sort-by :text
                                   :render
                                   (fn [{:keys [name value optional?]}]
-                                    (let [value (when-not (string/blank? value) value)]
-                                      [:div {:style (clip table-style/default-cell-left)}
-                                       (if editing?
-                                         ;; (ab)using TagAutocomplete instead of Typeahead because it
-                                         ;; plays nicer with tables
-                                         [comps/TagAutocomplete
-                                          {:data-test-id (str name "-text-input")
-                                           :show-counts? false :allow-clear? true
-                                           :minimum-input-length 0
-                                           :tags [value] :maximum-selection-length 1
-                                           :language {:maximumSelected (fn [] "")}
-                                           ;; `value` ensures that custom selections are initially selected when going to edit
-                                           ;; `distinct` because having multiple copies of the same screws things up
-                                           :data (distinct (if value (conj data value) data))
-                                           :placeholder (if optional? "Optional" "Select or enter")
-                                           :on-change (fn [value]
-                                                        (swap! locals update io-key assoc (keyword name)
-                                                               (if (empty? value) "" (first value))))}]
-                                         (if value
-                                           [:span {:style (when optional? table-style/table-cell-optional)} value]
-                                           (when optional?
-                                             [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
+                                    [:div {:style (clip table-style/default-cell-left)}
+                                     (if editing?
+                                       [Autosuggest
+                                        {:data data
+                                         :label name
+                                         :placeholder (if optional? "Optional" "Select or enter")}]
+                                       (if value
+                                         [:span {:style (when optional? table-style/table-cell-optional)} value]
+                                         (when optional?
+                                           [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))])}])
                               (when invalid-values
                                 [{:header "Message" :initial-width 400
                                   :as-text :error-message :sort-by :text
