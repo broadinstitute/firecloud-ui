@@ -219,7 +219,7 @@
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
          (when-not redacted?
-           [:div {:style {:flex "1 1 50%"}}
+           [:div {:style {:flex "1 1 50%" :overflow "hidden"}}
             (make-field :createDate "Created" :render common/format-date)
             (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
             (make-field :synopsis "Synopsis")])]
