@@ -551,19 +551,9 @@
               "/method_configs/copyToMethodRepo")
    :method :post})
 
-(defn create-template [method]
+(def create-template
   {:path "/template"
-   :method :post
-   :mock-data
-   {:namespace (method "namespace")
-    :name (method "name")
-    :rootEntityType (method "rootEntityType")
-    :prerequisites {"unused" "Some prereq"}
-    :inputs {"input1" "val1"}
-    :outputs {"output1" "val2"}
-    :methodRepoMethod {:methodNamespace (method "namespace")
-                       :methodName (method "name")
-                       :methodVersion 1}}})
+   :method :post})
 
 (def get-inputs-outputs
   {:path "/inputsOutputs"

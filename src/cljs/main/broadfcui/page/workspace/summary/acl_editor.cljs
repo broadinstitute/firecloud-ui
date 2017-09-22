@@ -6,8 +6,8 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -128,15 +128,15 @@
                 "Pending..."])])
           (:non-project-owner-acl-vec @state))
          [:div {:style {:margin "0.5rem 0"}}
-          [comps/Button {:text "Add new" :icon :add-new
-                         :data-test-id "add-new-acl-button"
-                         :onClick #(swap! state update :non-project-owner-acl-vec
-                                          conj (let [permissions {:email "" :accessLevel "READER"}]
-                                                 ; Only owners can set new canShare permissions, so we only want to include
-                                                 ; those in the default settings when the user is at least an owner
-                                                 (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-                                                   (assoc permissions :canShare false)
-                                                   permissions)))}]]
+          [buttons/Button {:text "Add new" :icon :add-new
+                           :data-test-id "add-new-acl-button"
+                           :onClick #(swap! state update :non-project-owner-acl-vec
+                                            conj (let [permissions {:email "" :accessLevel "READER"}]
+                                                   ; Only owners can set new canShare permissions, so we only want to include
+                                                   ; those in the default settings when the user is at least an owner
+                                                   (if (common/access-greater-than-equal-to? user-access-level "OWNER")
+                                                     (assoc permissions :canShare false)
+                                                     permissions)))}]]
          (style/create-validation-error-message (:validation-error @state))
          [comps/ErrorViewer {:error (:save-error @state)}]])))
    :-render-invite-offer

@@ -9,6 +9,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
@@ -96,11 +97,11 @@
           :get-toolbar-items
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))
-             [comps/Button {:text "Import Metadata..."
-                            :data-test-id "import-metadata-button"
-                            :style {:marginLeft "auto"}
-                            :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                            :onClick #(this :-handle-import-data-click)}]])
+             [buttons/Button {:text "Import Metadata..."
+                              :data-test-id "import-metadata-button"
+                              :style {:marginLeft "auto"}
+                              :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                              :onClick #(this :-handle-import-data-click)}]])
           :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil)
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))

@@ -5,6 +5,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.common.components :as comps]
    [broadfcui.common.method.sync :as sync-common]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.utils :as utils]
    ))
@@ -48,7 +49,7 @@
                              (:managers method))]])
                     unowned-methods)]]])
           [comps/ErrorViewer {:error (:grant-error @state)}]]
-         :ok-button [comps/Button
+         :ok-button [buttons/Button
                      (if owned-methods
                        {:text "Grant Read Permission"
                         :onClick #(this :-grant-permission)}

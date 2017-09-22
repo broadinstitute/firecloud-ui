@@ -17,6 +17,7 @@
    [broadfcui.config.loader :as config-loader]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.footer :as footer]
+   [broadfcui.injections :as injections]
    [broadfcui.header :as header]
    [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
@@ -34,6 +35,10 @@
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.utils :as utils]
    ))
+
+
+(injections/setup)
+
 
 (defn- init-nav-paths []
   (nav/clear-paths)

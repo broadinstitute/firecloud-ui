@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -110,8 +111,8 @@
          [:tbody {}
           (map row notifications)]]
         [:div {:style {:marginTop "1rem" :display "flex" :alignItems "center"}}
-         [comps/Button {:text "Save" :disabled? (zero? (count overridden))
-                        :onClick #(this :-save)}]
+         [buttons/Button {:text "Save" :disabled? (zero? (count overridden))
+                          :onClick #(this :-save)}]
          [:div {:style {:marginLeft "1rem"}}
           (cond
             (:saving? @state) (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)

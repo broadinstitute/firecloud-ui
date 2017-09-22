@@ -10,7 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -116,7 +116,7 @@
             :get-items
             (constantly
              [flex/spring
-              [comps/Button
+              [buttons/Button
                {:text "Create New Billing Project..."
                 :data-test-id "begin-create-billing-project"
                 :onClick

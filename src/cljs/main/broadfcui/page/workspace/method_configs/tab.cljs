@@ -6,7 +6,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.method-configs.import-config :as import-config]
@@ -49,7 +49,7 @@
                            (:name config)))
            :toolbar-items
            [flex/spring
-            [comps/Button
+            [buttons/Button
              {:text "Import Configuration..."
               :disabled? (case locked?
                            nil "Looking up workspace status..."

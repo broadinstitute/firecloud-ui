@@ -8,6 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -218,9 +219,9 @@
            (:in-progress? @state)
            [components/Spinner {:text "Saving..."}]
            :else
-           [components/Button {:text (if new? "Register" "Save Profile")
-                               :data-test-id (if new? "register-button" "save-profile-button")
-                               :onClick #(react/call :save this)}])]]))
+           [buttons/Button {:text (if new? "Register" "Save Profile")
+                            :data-test-id (if new? "register-button" "save-profile-button")
+                            :onClick #(react/call :save this)}])]]))
    :save
    (fn [{:keys [props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error :validation-errors) :in-progress? true)))

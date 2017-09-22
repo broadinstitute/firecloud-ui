@@ -4,11 +4,14 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.method-repo.method.common :as method-common]
+   [broadfcui.page.method-repo.method.configs :as configs]
+   [broadfcui.page.method-repo.method.exporter :refer [MethodExporter]]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
    [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
-   [broadfcui.page.method-repo.method.configs :refer [Configs]]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -28,7 +31,7 @@
   {:render
    (fn [{:keys [props state refs this]}]
      (let [{:keys [method-id snapshot-id config-id config-snapshot-id]} props
-           {:keys [method method-error selected-snapshot loading-snapshot?]} @state
+           {:keys [method method-error selected-snapshot loading-snapshot? exporting? post-export?]} @state
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-method)
@@ -36,6 +39,24 @@
        [:div {:style {:position "relative"}}
         (when loading-snapshot?
           (comps/render-blocker "Loading..."))
+        (when (and method exporting?)
+          [MethodExporter {:dismiss #(swap! state dissoc :exporting?)
+                           :method-name (:name (last method))
+                           :method-id method-id
+                           :selected-snapshot-id selected-snapshot-id
+                           :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
+                           :on-export
+                           (fn [workspace-id config-id]
+                             (swap! state assoc
+                                    :exporting? false
+                                    :dest-workspace-id workspace-id
+                                    :dest-config-id config-id
+                                    :post-export? true))}])
+        (when post-export?
+          (method-common/render-post-export-dialog
+           {:workspace-id (:dest-workspace-id @state)
+            :config-id (:dest-config-id @state)
+            :dismiss #(swap! state dissoc :post-export? :dest-workspace-id :dest-config-id)}))
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
          (tab-bar/render-title
           "METHOD"
@@ -44,7 +65,10 @@
            "/"
            [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:paddingLeft "2rem" :marginTop -3}}
-          (this :-render-snapshot-selector)]]
+          (this :-render-snapshot-selector)]
+         [buttons/Button {:style {:marginLeft "auto"}
+                          :text "Export to Workspace..."
+                          :onClick #(swap! state assoc :exporting? true)}]]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            [CONFIGS :method-configs]]
@@ -68,7 +92,7 @@
                     [WDLViewer
                      {:ref WDL :wdl (:payload selected-snapshot)}])
                CONFIGS (react/create-element
-                        [Configs
+                        [configs/Configs
                          (merge {:ref CONFIGS}
                                 (utils/restructure method-id snapshot-id config-id config-snapshot-id))]))))]]))
    :component-will-mount

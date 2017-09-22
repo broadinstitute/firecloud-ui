@@ -11,6 +11,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -88,10 +89,10 @@
                                         "."]
 
                                        [:div {}
-                                        [comps/Button {:style {:width "125px"}
-                                                       :disabled? (or requested? requesting?)
-                                                       :text (if requested? "Request Sent" "Request Access")
-                                                       :onClick #(this :-request-access name i)}]
+                                        [buttons/Button {:style {:width "125px"}
+                                                         :disabled? (or requested? requesting?)
+                                                         :text (if requested? "Request Sent" "Request Access")
+                                                         :onClick #(this :-request-access name i)}]
                                         (when requesting? [comps/Spinner])
                                         (when requested?
                                           (common/render-info-box

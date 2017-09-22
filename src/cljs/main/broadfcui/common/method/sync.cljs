@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -34,10 +35,10 @@
            (this :-render-permission-detail)
            (links/create-internal {:onClick #(this :-setup-permission-detail)} "Customize Permissions"))
          [comps/ErrorViewer {:error (:grant-error @state)}]])
-       :ok-button [comps/Button {:text (if (:customize? @state)
-                                         "Grant Permission"
-                                         "Grant Read Permission")
-                                 :onClick #(this :-grant-permission)}]}])
+       :ok-button [buttons/Button {:text (if (:customize? @state)
+                                           "Grant Permission"
+                                           "Grant Read Permission")
+                                   :onClick #(this :-grant-permission)}]}])
    :-render-permission-detail
    (fn [{:keys [props locals]}]
      [:div {}
