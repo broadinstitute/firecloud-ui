@@ -49,7 +49,7 @@
                     :suggestionsContainerOpen {:display "block"
                                                :position "absolute"
                                                :width 280
-                                               :border "1px solid #aaa"
+                                               :border style/standard-line
                                                :background-color "#fff"
                                                :borderBottomLeftRadius 4
                                                :borderBottomRightRadius 4
