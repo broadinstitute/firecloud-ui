@@ -1,17 +1,18 @@
 # To run against a local UI, set baseUrl = "http://local.broadinstitute.org/"
-{{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if eq $env "dev"}}test.firecloud.org{{else if eq $env "alpha"}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
+{{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if or (eq $env "dev") (eq $env "alpha")}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
 {{with $environment := env "ENVIRONMENT"}}
 {{with $dir := env "ROOT_DIR"}}
+{{with $local := env "LOCAL"}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 fireCloud {
+  baseUrl = {{if eq $local "true"}}"http://local.broadinstitute.org/"{{else if eq $environment "alpha"}}"https://firecloud.dsde-alpha.broadinstitute.org/"{{else}}"https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"{{end}}
   {{if eq $environment "alpha"}}
-  baseUrl = "https://firecloud.dsde-{{$environment}}.broadinstitute.org/"
-  orchApiUrl = "https://firecloud-orchestration.dsde-{{$environment}}.broadinstitute.org/"
-  rawlsApiUrl = "https://rawls.dsde-{{$environment}}.broadinstitute.org/"
-  thurloeApiUrl = "https://thurloe.dsde-{{$environment}}.broadinstitute.org/"
+  orchApiUrl = "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/"
+  rawlsApiUrl = "https://rawls.dsde-alpha.broadinstitute.org/"
+  samApiUrl = "https://sam.dsde-alpha.broadinstitute.org/"
+  thurloeApiUrl = "https://thurloe.dsde-alpha.broadinstitute.org/"
   {{else}}
-  baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
   orchApiUrl = "https://firecloud-orchestration-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
   rawlsApiUrl = "https://rawls-fiab.dsde-{{$environment}}.broadinstitute.org:24443/"
   samApiUrl = "https://sam-fiab.dsde-{{$environment}}.broadinstitute.org:29443/"
@@ -45,7 +46,7 @@ users {
 
   # following users only used to test user creation
   luna = "luna.temp@{{template "USER_DOMAIN"}}"
-  lunaSubjectId = "{{if eq $environment "dev"}}111010567286567716739{{else if eq $environment "alpha"}}111010567286567716739{{else if eq $environment "qa"}}117891551413045861932{{else}}[undefined]{{end}}"
+  lunaSubjectId = "{{if or (eq $environment "dev") (eq $environment "alpha")}}111010567286567716739{{else if eq $environment "qa"}}117891551413045861932{{else}}[undefined]{{end}}"
   neville = "neville.temp@{{template "USER_DOMAIN"}}"
 }
 
@@ -53,6 +54,7 @@ chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
   chromedriverPath = "/usr/local/bin/chromedriver"
 }
+{{end}}
 {{end}}
 {{end}}
 {{end}}

@@ -4,7 +4,7 @@
 NUM_NODES="${1:-4}"  # default to 4
 ENV="${2:-dev}"  # default to dev
 export ENV=$ENV
-HUB_COMPOSE=hub-compose-fiab.yml
+HUB_COMPOSE=hub-compose.yml
 
 #if test runs against a remote FIAB on a GCE node, put IP in param 3
 #if test runs against a local FIAB on a Dokcer, put "local" in param 3
@@ -74,11 +74,11 @@ docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
 docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     -e ENVIRONMENT=${ENV} -e ROOT_DIR=/app -v ${WORKING_DIR}:/working \
-    -e OUT_PATH=/working/target -e INPUT_PATH=/working \
+    -e OUT_PATH=/working/target -e INPUT_PATH=/working -e LOCAL=false \
     broadinstitute/dsde-toolbox:dev render-templates.sh
 
 if [ "$DOCKERHOST" != "" ]; then
-    HOST_MAPPING= "--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e TEST_CHANNEL=dsde-qa"
+    HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e TEST_CHANNEL=dsde-qa"
 fi
 
 # run tests
