@@ -21,6 +21,5 @@
                       (if visible? :disclosure-opened :disclosure-closed))
           title]
          (when visible? title-expand)]
-        ;; Padding to match fa-fw
-        [:div {:style {:display (when-not visible? "none") :paddingLeft "1.28571429rem"}}
+        [:div {:style {:display (when-not visible? "none") :paddingLeft icons/fw-icon-width}}
          contents]]))})
