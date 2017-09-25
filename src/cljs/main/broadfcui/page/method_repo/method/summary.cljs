@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
@@ -83,9 +84,7 @@
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
            {:keys [body-id]} @locals]
-       [:div {:style {:flex "1 1 auto" :overflow "hidden"
-                      ;; Padding to match fa-fw
-                      :paddingLeft "1.28571429rem"}
+       [:div {:style {:flex "1 1 auto" :overflow "hidden" :paddingLeft icons/fw-icon-width}
               :id body-id}
         (style/create-summary-block "Synopsis" synopsis)
         [:div {:style {:display "flex"}}

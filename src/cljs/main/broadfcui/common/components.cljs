@@ -294,8 +294,7 @@
                (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
                                       (icons/icon {:className "fa-fw"} :disclosure-opened)
                                       "Hide Details")
-               ;; Padding to match fa-fw
-               [:div {:style {:overflowX "auto" :paddingLeft "1.28571429rem"}}
+               [:div {:style {:overflowX "auto" :paddingLeft icons/fw-icon-width}}
                 [:div {} (str "Code: " status-code)]
                 (when timestamp [:div {} "Occurred: "
                                  (common/format-date timestamp
