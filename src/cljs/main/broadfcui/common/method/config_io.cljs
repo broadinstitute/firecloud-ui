@@ -32,20 +32,9 @@
      (swap! state dissoc :editing?)
      @locals)
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props this]}]
      (let [id (gensym "io-table-")]
        [:div {:id id :style (:style props)}
-        (when (:editing? @state)
-          [:style {} (str ".select2-results__option" ;; TODO - just make this global?
-                          "{font-size: 80%; word-break: break-all;}"
-                          "#" id " .select2-container--default .select2-selection--multiple .select2-selection__choice__remove"
-                          "{display: none}"
-                          "#" id " .select2-container .selection li.select2-selection__choice"
-                          "{background: none; color: black; margin-right: 0; padding: 0}"
-                          "#" id " .select2-selection__rendered"
-                          "{padding-top: 0.1rem}"
-                          "#" id " .select2-selection__rendered > li+li"
-                          "{width: 10px}")])
         [Collapse {:title "Inputs"
                    :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :inputs)}]
