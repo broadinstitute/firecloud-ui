@@ -37,6 +37,9 @@
   {:component-will-mount
    (fn [{:keys [props locals]}]
      (swap! locals assoc :info (build-info props)))
+   :get-initial-state
+   (fn []
+     {:file-input-key (gensym "wdl-uploader-")})
    :render
    (fn [{:keys [props state refs locals this]}]
      (let [{:keys [info]} @locals]
@@ -79,15 +82,23 @@
                                     :defaultValue (:documentation info)
                                     :style {:width "100%"}
                                     :rows 5})
-
-           [:input {:type "file" :ref "wdl-uploader" :style {:display "none"}
+           ;; This key is changed every time a file is selected causing React to completely replace the
+           ;; element. Otherwise, if a user selects the same file (even after having modified it), the
+           ;; browser will not fire the onChange event.
+           [:input {:key (:file-input-key @state)
+                    :type "file"
+                    :ref "wdl-uploader"
+                    :style {:display "none"}
                     :onChange (fn [e]
                                 (let [file (-> e .-target .-files (aget 0))
                                       reader (js/FileReader.)]
                                   (when file
                                     (set! (.-onload reader)
                                           #(let [text (.-result reader)]
-                                             (swap! state assoc :file-name (.-name file) :file-contents text)
+                                             (swap! state assoc
+                                                    :file-name (.-name file)
+                                                    :file-contents text
+                                                    :file-input-key (gensym "wdl-uploader-"))
                                              (this :-set-wdl-text text)))
                                     (.readAsText reader file))))}]
            (style/create-form-label
