@@ -5,7 +5,7 @@ VAULT_TOKEN=$2
 ENV=$3
 LOCAL=false
 LOCAL_PARAM=$4
-if [ "$LOCAL_PARAM" = "local" ]; then
+if [ "$LOCAL_PARAM" = "local_ui" ]; then
   LOCAL=true 
 fi
 
