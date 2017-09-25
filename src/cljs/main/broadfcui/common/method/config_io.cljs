@@ -43,7 +43,7 @@
                    :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state]} io-key]
+   (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -100,9 +100,13 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:data data
+                                        {:initial-value value
+                                         :data data
                                          :label name
-                                         :placeholder (if optional? "Optional" "Select or enter")}]
+                                         :placeholder (if optional? "Optional" "Select or enter")
+                                         :on-change (fn [value]
+                                                      (swap! locals update io-key assoc (keyword name)
+                                                             (if (empty? value) "" value)))}]
                                        (if value
                                          [:span {:style (when optional? table-style/table-cell-optional)} value]
                                          (when optional?
