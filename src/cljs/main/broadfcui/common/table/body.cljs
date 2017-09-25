@@ -21,7 +21,7 @@
 
 (defn- header [{:keys [joined-columns sort-column sort-order set-sort style
                        start-column-drag column-reset allow-no-sort?]}]
-  [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
+  [:div {:style (merge {:display "flex" :width "fit-content"} (:row style) (:header-row style))}
    (map-indexed
     (fn [index {:keys [id width initial-width header visible? resizable? sortable?]}]
       (when visible?
@@ -60,7 +60,7 @@
       [:div (merge (when (and (some? data-props)
                               (some? (:row data-props)))
                      ((:row data-props) row))
-                   {:style (merge {:display "flex"}
+                   {:style (merge {:display "flex" :width "fit-content"}
                                   (:row style)
                                   (when-let [f (:body-row style)]
                                     (f (utils/restructure index row))))
@@ -117,7 +117,7 @@
               (update-column-display (assoc-in column-display [index :width] initial-width)))
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style {:overflowX "auto"}}
-         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
+         [:div {:style (:table style)}
           (header properties)
           (body properties)]]))
     :-on-mouse-move
