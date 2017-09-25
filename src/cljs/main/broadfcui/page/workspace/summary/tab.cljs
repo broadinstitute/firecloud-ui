@@ -280,7 +280,8 @@
                                  children)])
            processed-tags (flatten (map :items (vals tags)))]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-        [:div {:style {:display "flex"}}
+        ;; Padding to match fa-fw
+        [:div {:style {:display "flex" :paddingLeft "1.28571429rem"}}
          (render-detail-box
           "Workspace Access"
 
