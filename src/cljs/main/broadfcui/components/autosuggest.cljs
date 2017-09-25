@@ -14,11 +14,8 @@
      (swap! locals assoc :id (gensym "autosuggest")))
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data placeholder label]} props
+     (let [{:keys [initial-value data placeholder label on-change]} props
            {:keys [suggestions value]} @state
-           on-change (fn [_ value]
-                       (let [value (.-newValue value)]
-                         (swap! state assoc :value (or value ""))))
            get-suggestions (fn [value]
                              (filterv
                               #(string/includes? (string/lower-case %)
@@ -34,9 +31,12 @@
                                        (react/create-element [:div {} suggestion]))
                    :inputProps
                    {:data-test-id (str label "-text-input")
-                    :value (or value "")
+                    :value (or value initial-value "")
                     :placeholder placeholder
-                    :onChange on-change}
+                    :onChange (fn [_ value]
+                                (let [value (.-newValue value)]
+                                  (swap! state assoc :value value)
+                                  (on-change value)))}
                    :highlightFirstSuggestion true
                    :id (:id @locals)
                    :theme
@@ -50,7 +50,7 @@
                                                :position "absolute"
                                                :width 280
                                                :border style/standard-line
-                                               :background-color "#fff"
+                                               :backgroundColor "#fff"
                                                :borderBottomLeftRadius 4
                                                :borderBottomRightRadius 4
                                                :zIndex 2}
@@ -64,4 +64,4 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :data :placeholder :label)))]))})
+                  (dissoc props :data :placeholder :label :on-change)))]))})
