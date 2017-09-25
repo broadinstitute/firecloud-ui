@@ -48,6 +48,7 @@ trait FireCloudClient {
         throw APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
+  
 
   def parseResponse(response: HttpResponse): String = {
     response.status.isSuccess() match {
