@@ -15,6 +15,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :as create]
+   [broadfcui.page.method-repo.method.common :as method-common]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
@@ -167,6 +168,14 @@
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
+      (when config?
+        (let [{:keys [method payloadObject]} entity]
+          [method-common/IOView
+           {:default-hidden? true
+            :method-ref {:methodNamespace (:namespace method)
+                         :methodName (:name method)
+                         :methodVersion (:snapshotId method)}
+            :values (select-keys payloadObject [:inputs :outputs])}]))
       [ConfigExporter (utils/restructure workspace-id entity perform-copy)]]]))
 
 
