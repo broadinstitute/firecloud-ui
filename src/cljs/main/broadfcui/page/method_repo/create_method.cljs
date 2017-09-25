@@ -8,6 +8,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -130,9 +131,9 @@
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
          :ok-button (react/create-element
-                     [comps/Button {:ref "ok-button"
-                                    :text (:ok-text info)
-                                    :onClick #(this :-create-method)}])}]))
+                     [buttons/Button {:ref "ok-button"
+                                      :text (:ok-text info)
+                                      :onClick #(this :-create-method)}])}]))
    :-set-wdl-text
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))

@@ -10,7 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :as table]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -103,7 +103,7 @@
                 :toolbar {:get-items
                           (constantly
                            [flex/spring
-                            [comps/Button
+                            [buttons/Button
                              {:text "Add User..." :icon :add-new
                               :data-test-id "billing-project-add-user-button"
                               :onClick (fn [_]

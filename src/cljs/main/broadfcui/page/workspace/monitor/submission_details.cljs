@@ -11,7 +11,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.components.sidebar-button :refer [SidebarButton]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -119,16 +119,17 @@
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission..."}])
-             [SidebarButton {:color :exception-state :style :light :margin :top
-                             :text "Abort" :icon :warning
-                             :data-test-id "submission-abort-button"
-                             :onClick (fn [_]
-                                        (comps/push-confirm
-                                         {:text "Are you sure you want to abort this submission?"
-                                          :on-confirm
-                                          [comps/Button {:text "Abort Submission"
-                                                         :data-test-id "submission-abort-modal-confirm-button"
-                                                         :onClick #(this :abort-submission)}]}))}])
+             [buttons/SidebarButton
+              {:color :exception-state :style :light :margin :top
+               :text "Abort" :icon :warning
+               :data-test-id "submission-abort-button"
+               :onClick (fn [_]
+                          (comps/push-confirm
+                           {:text "Are you sure you want to abort this submission?"
+                            :on-confirm
+                            [buttons/Button {:text "Abort Submission"
+                                             :data-test-id "submission-abort-modal-confirm-button"
+                                             :onClick #(this :abort-submission)}]}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)

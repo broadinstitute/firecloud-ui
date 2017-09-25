@@ -9,6 +9,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.import-data :as import-data]
@@ -121,24 +122,24 @@
                   :target "_blank"}
               (str "Download Attributes")]
              (when writer?
-               [comps/Button {:text "Import Attributes..."
-                              :style {:float "right" :marginTop -7}
-                              :onClick #(modal/push-modal
-                                         [comps/OKCancelForm
-                                          {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
-                                           :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
-                                                     [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                              {:on-data-imported (:request-refresh props)}
-                                                                              {:import-type "workspace-attributes"})]]}])}])])]
+               [buttons/Button {:text "Import Attributes..."
+                                :style {:float "right" :marginTop -7}
+                                :onClick #(modal/push-modal
+                                           [comps/OKCancelForm
+                                            {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
+                                             :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
+                                                       [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                                {:on-data-imported (:request-refresh props)}
+                                                                                {:import-type "workspace-attributes"})]]}])}])])]
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.}}
           (if editing?
             [:div {:style {:marginBottom "0.25em"}}
-             [comps/Button {:icon :add-new :text "Add new"
-                            :onClick (fn [_]
-                                       (swap! state update :attributes conj ["" ""])
-                                       ;; have to do this by ID not ref, since the fields are generated within Table
-                                       (after-update #(.focus (.getElementById js/document "focus"))))}]])
+             [buttons/Button {:icon :add-new :text "Add new"
+                              :onClick (fn [_]
+                                         (swap! state update :attributes conj ["" ""])
+                                         ;; have to do this by ID not ref, since the fields are generated within Table
+                                         (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
            {:key (str editing? (count (:attributes @state)))
             :data (if editing?

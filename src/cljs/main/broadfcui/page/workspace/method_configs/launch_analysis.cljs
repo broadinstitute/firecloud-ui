@@ -10,6 +10,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -157,7 +158,7 @@
 (react/defc- LaunchAnalysisButton
   {:render
    (fn [{:keys [props]}]
-     [comps/Button
+     [buttons/Button
       {:text "Launch Analysis..."
        :data-test-id "open-launch-analysis-modal-button"
        :disabled? (:disabled? props)

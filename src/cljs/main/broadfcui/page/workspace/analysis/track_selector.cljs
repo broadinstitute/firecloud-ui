@@ -9,6 +9,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
    [broadfcui.utils :as utils]
    ))
@@ -135,7 +136,7 @@
        (react/create-element
         [:div {:style {:width "80vw"}}
          [:div {:style {:background "white" :border style/standard-line}}
-          [comps/SplitPane
+          [SplitPane
            {:left [Left {:workspace-id (:workspace-id props)
                          :tracks (:tracks @state)
                          :on-select (fn [track-url]

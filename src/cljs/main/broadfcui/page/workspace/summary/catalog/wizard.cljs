@@ -5,6 +5,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
@@ -125,7 +126,7 @@
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
-         [comps/XButton {:dismiss modal/pop-modal}]]
+         [buttons/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
@@ -165,28 +166,28 @@
           {:style {:marginTop 40}}
           (flex/strut 80)
           flex/spring
-          [comps/Button {:text "Previous"
-                         :onClick (fn [_]
-                                    (if-let [prev-page (peek (:pages-stack @state))]
-                                      (swap! state #(-> %
-                                                        (assoc :page-num prev-page)
-                                                        (update :pages-stack pop)
-                                                        (dissoc :validation-error)))))
-                         :style {:width 80}
-                         :disabled? (zero? page-num)}]
+          [buttons/Button {:text "Previous"
+                           :onClick (fn [_]
+                                      (if-let [prev-page (peek (:pages-stack @state))]
+                                        (swap! state #(-> %
+                                                          (assoc :page-num prev-page)
+                                                          (update :pages-stack pop)
+                                                          (dissoc :validation-error)))))
+                           :style {:width 80}
+                           :disabled? (zero? page-num)}]
           (flex/strut 27)
-          [comps/Button {:text "Next"
-                         :onClick #(react/call :next-page this)
-                         :disabled? (> page-num (-> library-schema :wizard count))
-                         :style {:width 80}}]
+          [buttons/Button {:text "Next"
+                           :onClick #(react/call :next-page this)
+                           :disabled? (> page-num (-> library-schema :wizard count))
+                           :style {:width 80}}]
           flex/spring
           (let [save-permissions (or editable? set-discoverable?)
                 last-page (> page-num (-> library-schema :wizard count))]
-            [comps/Button {:text (if published? "Republish" "Submit")
-                           :onClick #(react/call :submit this editable? set-discoverable?)
-                           :disabled? (or (and published? (not-empty invalid-properties))
-                                          (not (and save-permissions last-page)))
-                           :style {:width 80}}]))]]))
+            [buttons/Button {:text (if published? "Republish" "Submit")
+                             :onClick #(react/call :submit this editable? set-discoverable?)
+                             :disabled? (or (and published? (not-empty invalid-properties))
+                                            (not (and save-permissions last-page)))
+                             :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups

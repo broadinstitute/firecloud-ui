@@ -7,6 +7,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
@@ -90,10 +91,10 @@
                access-levels))
             (common/clear-both)])
          acl-vec)
-        [comps/Button {:text "Add new" :icon :add-new
-                       :onClick #(swap! state assoc :acl-vec
-                                        (conj (this :-capture-ui-state)
-                                              {:user "" :role reader-level}))}]
+        [buttons/Button {:text "Add new" :icon :add-new
+                         :onClick #(swap! state assoc :acl-vec
+                                          (conj (this :-capture-ui-state)
+                                                {:user "" :role reader-level}))}]
         [:label {:style {:cursor "pointer"}}
          [:input {:type "checkbox"
                   :style {:marginLeft "2em" :verticalAlign "middle"}

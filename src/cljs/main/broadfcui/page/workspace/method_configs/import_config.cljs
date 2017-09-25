@@ -6,7 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
@@ -62,8 +62,8 @@
                (style/create-validation-error-message (:validation-error @state))
                [comps/ErrorViewer {:error import-error}]
                (when (and loaded-config loaded-method)
-                 [comps/Button {:text "Import"
-                                :onClick #(this :-import)}])]))))
+                 [buttons/Button {:text "Import"
+                                  :onClick #(this :-import)}])]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -178,15 +178,15 @@
 
 (defn- source-chooser [{:keys [push-page] :as props}]
   [:div {}
-   [comps/Button {:text "Import from Method Repository"
-                  :data-test-id "import-from-repo-button"
-                  :onClick #(push-page {:breadcrumb-text "Method Repository"
-                                        :component (wrap (method-chooser props))})
-                  :style {:marginRight "1rem"}}]
-   [comps/Button {:text "Copy from another Workspace"
-                  :data-test-id "copy-from-workspace-button"
-                  :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                        :component [WorkspaceChooser props]})}]])
+   [buttons/Button {:text "Import from Method Repository"
+                    :data-test-id "import-from-repo-button"
+                    :onClick #(push-page {:breadcrumb-text "Method Repository"
+                                          :component (wrap (method-chooser props))})
+                    :style {:marginRight "1rem"}}]
+   [buttons/Button {:text "Copy from another Workspace"
+                    :data-test-id "copy-from-workspace-button"
+                    :onClick #(push-page {:breadcrumb-text "Choose Workspace"
+                                          :component [WorkspaceChooser props]})}]])
 
 
 (defn- filter-workspaces [workspaces]

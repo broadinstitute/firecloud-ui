@@ -38,6 +38,7 @@
    :publish "fa-upload"
    :remove "fa-minus-circle"
    :reorder "fa-reorder"
+   :resize "fa-bars"
    :reset "fa-undo"
    :search "fa-search"
    :settings "fa-cog"

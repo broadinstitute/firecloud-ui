@@ -6,9 +6,9 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.modals :as modals]
-   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -62,21 +62,21 @@
           :contents
           [:div {:style {:width 270}}
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :button-primary
                :text "Permissions..." :icon :settings :margin :bottom
                :onClick #(swap! state assoc :sharing? true)}])
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :button-primary
                :text "Edit..." :icon :edit :margin :bottom
                :onClick #(swap! state assoc :editing? true)}])
-           [SidebarButton
+           [buttons/SidebarButton
             {:style :light :color :button-primary
              :text "Clone..." :icon :clone :margin :bottom
              :onClick #(swap! state assoc :cloning? true)}]
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :exception-state
                :text "Redact" :icon :delete :margin :bottom
                :onClick #(swap! state assoc :deleting? true)}])]}]]))
