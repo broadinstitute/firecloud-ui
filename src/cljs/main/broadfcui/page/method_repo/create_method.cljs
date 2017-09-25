@@ -123,7 +123,7 @@
                                                (js->clj (self :call-method "historySize")))))}]
 
            (when (:edit-mode? info)
-             [:div {:style {:margin "1rem 0 -1rem"}}
+             [:div {:style {:marginTop "1rem"}}
               [comps/Checkbox {:ref "redact-checkbox"
                                :label (str "Redact Snapshot " (:snapshotId info))}]])
 
