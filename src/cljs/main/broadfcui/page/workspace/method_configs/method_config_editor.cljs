@@ -173,7 +173,7 @@
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
-       [:div {:style {:flex "1 1 auto" :width "calc(100% - 270px)"} :id body-id}
+       [:div {:style {:flex 1 :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
