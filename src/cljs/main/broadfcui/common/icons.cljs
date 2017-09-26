@@ -55,6 +55,8 @@
 (defn icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa " (:className attributes)))])
 
+(def fw-icon-width "1.28571429rem")
+
 (def external-link-icon
   (icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
 

@@ -282,7 +282,7 @@
                                  children)])
            processed-tags (flatten (map :items (vals tags)))]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-        [:div {:style {:display "flex"}}
+        [:div {:style {:display "flex" :paddingLeft icons/fw-icon-width}}
          (render-detail-box
           "Workspace Access"
 
