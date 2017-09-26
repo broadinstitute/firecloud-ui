@@ -12,9 +12,12 @@
   {:component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :id (gensym "autosuggest")))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     {:value (:initial-value props)})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [initial-value data placeholder label on-change]} props
+     (let [{:keys [data placeholder label on-change]} props
            {:keys [suggestions value]} @state
            get-suggestions (fn [value]
                              (filterv
@@ -31,7 +34,7 @@
                                        (react/create-element [:div {} suggestion]))
                    :inputProps
                    {:data-test-id (str label "-text-input")
-                    :value (or value initial-value "")
+                    :value (or value "")
                     :placeholder placeholder
                     :onChange (fn [_ value]
                                 (let [value (.-newValue value)]
