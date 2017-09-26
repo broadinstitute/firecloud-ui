@@ -4,8 +4,9 @@ import org.broadinstitute.dsde.firecloud.config.SmoketestConfig
 import org.broadinstitute.dsde.firecloud.fixture.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.scalatest._
 
-class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures {
+class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with Matchers {
   // todo: add with cleanup; we want to cleanup workspace and any objects created by test
 
   val billingProject: String = SmoketestConfig.Projects.default
@@ -14,16 +15,16 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     // login
     var listPageAsUser = signIn(SmoketestConfig.Users.testuser)
-    assert(listPageAsUser.readUserEmail().equals(Config.Users.testuser))
+    assert(listPageAsUser.readUserEmail().equals(SmoketestConfig.Users.testuser.email))
 
     // create workspace
     val workspaceName = "Smoketests_create_" + randomUuid
-    val detailPage = listPage.createWorkspace(billingProject, workspaceName).awaitLoaded()
+    val detailPage = listPageAsUser.createWorkspace(billingProject, workspaceName).awaitLoaded()
 
     detailPage.ui.readWorkspaceName shouldEqual workspaceName
-    listPage.open
-    listPage.filter(workspaceName)
-    listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe true
+    listPageAsUser.open
+    listPageAsUser.filter(workspaceName)
+    listPageAsUser.ui.hasWorkspace(billingProject, workspaceName) shouldBe true
 
     // go to library
 
@@ -40,6 +41,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     // wait for job to complete
 
     // delete workspace
+    detailPage.deleteWorkspace()
 
     // logout
 
