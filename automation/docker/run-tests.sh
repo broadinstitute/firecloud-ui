@@ -4,7 +4,7 @@
 NUM_NODES="${1:-4}"  # default to 4
 ENV="${2:-dev}"  # default to dev
 export ENV=$ENV
-HUB_COMPOSE=hub-compose.yml
+HUB_COMPOSE=hub-compose-fiab.yml
 
 #if test runs against a remote FIAB on a GCE node, put IP in param 3
 #if test runs against a local FIAB on a Docker, put "local" in param 3
