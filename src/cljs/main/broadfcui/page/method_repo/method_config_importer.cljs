@@ -88,7 +88,11 @@
         {:endpoint endpoints/list-workspaces
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
-                      (let [ws-list (get-parsed-response)]
+                      (let [ws-list (->> (get-parsed-response)
+                                         (filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER"))
+                                         (sort-by (comp (partial mapv string/lower-case)
+                                                        (juxt :namespace :name)
+                                                        :workspace)))]
                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                       (swap! state assoc :error status-text)))})))
    :render
@@ -124,30 +128,26 @@
                      {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options common/root-entity-types})]))
         (common/clear-both)
         (when-not workspace-id
-          (let [sorted-ws-list (sort-by (comp (partial mapv string/lower-case)
-                                              (juxt :namespace :name)
-                                              :workspace)
-                                        workspaces-list)]
-            [:div {:style {:marginBottom "1em"}}
-             [:div {:style {:fontSize "120%" :margin "1em 0"}}
-              "Destination Workspace:"]
-             (if-not workspaces-list
-               [comps/Spinner {:text "Loading workspaces..."}]
-               (style/create-select
-                {:defaultValue ""
-                 :ref (common/create-element-ref-handler
-                       {:store locals
-                        :element-key :workspace-select
-                        :did-mount
-                        #(.on (.select2 (js/$ %)) "select2:select"
-                              (fn [event]
-                                (swap! state assoc :selected-workspace
-                                       (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
-                        :will-unmount
-                        #(.off (js/$ %))})
-                 :style {:width 500}}
-                (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
-                     sorted-ws-list)))]))
+          [:div {:style {:marginBottom "1em"}}
+           [:div {:style {:fontSize "120%" :margin "1em 0"}}
+            "Destination Workspace:"]
+           (if-not workspaces-list
+             [comps/Spinner {:text "Loading workspaces..."}]
+             (style/create-select
+              {:defaultValue ""
+               :ref (common/create-element-ref-handler
+                     {:store locals
+                      :element-key :workspace-select
+                      :did-mount
+                      #(.on (.select2 (js/$ %)) "select2:select"
+                            (fn [event]
+                              (swap! state assoc :selected-workspace
+                                     (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
+                      :will-unmount
+                      #(.off (js/$ %))})
+               :style {:width 500}}
+              (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
+                   workspaces-list)))])
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]
         [buttons/Button {:text (if workspace-id "Import" "Export")
