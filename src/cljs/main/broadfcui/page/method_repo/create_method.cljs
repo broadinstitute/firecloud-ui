@@ -37,9 +37,6 @@
   {:component-will-mount
    (fn [{:keys [props locals]}]
      (swap! locals assoc :info (build-info props)))
-   :get-initial-state
-   (fn []
-     {:file-input-key (gensym "wdl-uploader-")})
    :render
    (fn [{:keys [props state refs locals this]}]
      (let [{:keys [info]} @locals]
