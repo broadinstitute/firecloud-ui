@@ -9,6 +9,12 @@
 
 
 (react/defc Autosuggest
+  ":data -  string suggestion possibilities
+  :on-change - called with new value
+
+  :initial-value (optional)
+  :placeholder (optional)
+  :label (optional) - used to generate data-test-id"
   {:component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :id (gensym "autosuggest")))
@@ -21,6 +27,8 @@
                               #(string/includes? (string/lower-case %)
                                                  (string/lower-case (.-value value)))
                               data))]
+       (assert (fn? on-change) "Must provide :on-change callback")
+       (assert (seq? data) "Must provide seq-able :data")
        [js/Autosuggest
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
