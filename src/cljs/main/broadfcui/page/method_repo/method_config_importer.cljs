@@ -1,7 +1,6 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
    [dmohs.react :as react]
-   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
@@ -83,7 +82,7 @@
 
 (react/defc ConfigExporter
   {:render
-   (fn [{:keys [props state locals refs]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id entity perform-copy]} props
            {:keys [selected-workspace]} @state]
        [:div {:style {:border style/standard-line
