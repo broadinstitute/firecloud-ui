@@ -4,8 +4,8 @@ object MethodData {
 
   /* METHODS */
   object SimpleMethod {
-    val methodName = "test_method"
-    val methodNamespace = "qamethods"
+    val methodName = "DO_NOT_CHANGE_test_method"
+    val methodNamespace = "automationmethods"
     val snapshotId = 1
     val rootEntityType = "participant"
     val creationAttributes = Map(
@@ -19,8 +19,8 @@ object MethodData {
   }
 
   object InputRequiredMethod {
-    val methodName = "test_method_input_required"
-    val methodNamespace = "qamethods"
+    val methodName = "DO_NOT_CHANGE_test_method_input_required"
+    val methodNamespace = "automationmethods"
     val snapshotId = 1
     val rootEntityType = "participant"
     val creationAttributes = Map(
@@ -33,8 +33,8 @@ object MethodData {
 
   /* CONFIGS */
   object SimpleMethodConfig {
-    val configName = "test1_config"
-    val configNamespace = "qamethods"
+    val configName = "DO_NOT_CHANGE_test1_config"
+    val configNamespace = "automationmethods"
     val snapshotId = 1
     val rootEntityType = "participant"
     val inputs = Map("test.hello.name" -> "\"a\"") // shouldn't be needed for config
