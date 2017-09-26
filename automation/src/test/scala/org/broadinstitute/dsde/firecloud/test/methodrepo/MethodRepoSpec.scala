@@ -2,25 +2,42 @@ package org.broadinstitute.dsde.firecloud.test.methodrepo
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData
+import org.broadinstitute.dsde.firecloud.page.Table
 import org.broadinstitute.dsde.firecloud.page.methodrepo.{CreateMethodModal, MethodRepoPage}
 import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
-import org.scalatest.FreeSpec
+import org.scalatest._
 
-class MethodRepoSpec extends FreeSpec with WebBrowserSpec {
+class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
 
   implicit val authToken: AuthToken = AuthTokens.harry
 
   "A user" - {
-    "should be able to create a method" in withWebDriver { implicit driver =>
-      signIn(Config.Users.harry)
-      val page = new MethodRepoPage()
-      page.open
-      page.ui.clickNewMethodButton()
+    "should be able to create a method, see it, and then redact it" in withWebDriver { implicit driver =>
+      signIn(Config.Users.hermione)
+      val methodRepoPage = new MethodRepoPage()
+      methodRepoPage.open
+      methodRepoPage.ui.clickNewMethodButton()
 
+      // create it
       val createDialog = new CreateMethodModal()
-      createDialog.createMethod(MethodData.SimpleMethod.creationAttributes)
+      val name = "TEST-METHOD-REPO-" + randomUuid
+      val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
+      val namespace = attributes("namespace")
+      createDialog.createMethod(attributes)
 
-      // TODO: verify it worked, clean up
+      // wait for it to finish, then go back to the method repo page
+      createDialog.awaitDismissed()
+      methodRepoPage.open
+
+      // verify that it's in the table
+      val methodsTable = new Table("methods-table")
+      methodsTable.goToTab("My Methods")
+      methodsTable.filter(name)
+
+      methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
+
+      // go back into it
+      methodRepoPage.ui.enterMethod(namespace, name)
     }
   }
 }

@@ -9,11 +9,27 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
 
   override val url: String = s"${Config.FireCloud.baseUrl}#methods2"
 
-  trait UI extends super.UI {
-    private val newMethodButtonQuery = testId("create-method-button")
+  override def awaitLoaded(): MethodRepoPage = {
+    await enabled ui.newMethodButtonQuery
+    this
+  }
 
-    def clickNewMethodButton(): Unit =
-      click on (await enabled newMethodButtonQuery)
+  trait UI extends super.UI {
+    private[MethodRepoPage] val newMethodButtonQuery = testId("create-method-button")
+
+    private val tableQuery = testId("methods-table")
+
+    def clickNewMethodButton(): Unit = {
+      click on newMethodButtonQuery
+    }
+
+    def hasMethod(namespace: String, name: String): Boolean = {
+      find(testId(s"method-link-$namespace-$name") inside tableQuery).isDefined
+    }
+
+    def enterMethod(namespace: String, name: String): Unit = {
+      click on (testId(s"method-link-$namespace-$name") inside tableQuery)
+    }
   }
 
   object ui extends UI
@@ -31,13 +47,16 @@ class CreateMethodModal(implicit webDriver: WebDriver) extends FireCloudView {
     ui.clickUploadButton()
   }
 
+  def awaitDismissed(): Unit =
+    await notVisible ui.uploadButtonQuery
+
   object ui {
     private val namespaceFieldQuery = testId("namespace-field")
     private val nameFieldQuery = testId("name-field")
     private val synopsisFieldQuery = testId("synopsis-field")
     private val documentationFieldQuery = testId("documentation-field")
     private val wdlFieldQuery = cssSelector("[data-test-id='wdl-field'] .CodeMirror")
-    private val uploadButtonQuery = testId("upload-button")
+    private[CreateMethodModal] val uploadButtonQuery = testId("upload-button")
 
     def fillNamespaceField(namespace: String): Unit =
       textField(namespaceFieldQuery).value = namespace
