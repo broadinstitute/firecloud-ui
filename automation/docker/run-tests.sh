@@ -7,7 +7,7 @@ export ENV=$ENV
 HUB_COMPOSE=hub-compose.yml
 
 #if test runs against a remote FIAB on a GCE node, put IP in param 3
-#if test runs against a local FIAB on a Dokcer, put "local" in param 3
+#if test runs against a local FIAB on a Docker, put "local" in param 3
 #else leave blank (test runs against a non FIAB host, such as real dev)
 DOCKERHOST="127.0.0.1"
 DOCKERHOST=${3:-$DOCKERHOST}

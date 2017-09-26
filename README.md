@@ -147,11 +147,10 @@ brew install chromedriver
 If your version of Chrome is 61 or later, check `chromedriver --version` to make sure you're up to
 at least 2.32. If not, use `brew upgrade chromedriver` to update.
  
-Also run the config render script. This will render the necessary `application.conf` and
-`firecloud-account.pem` for the tests. From the `automation` directory:
+Also run the config render script. If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
 
 ```bash
-./render-local-env.sh $PWD $(cat ~/.vault-token) <dev or qa>
+./render-local-env.sh $PWD $(cat ~/.vault-token) <dev or qa> <local_ui>
 ```
 
 #### Running tests
@@ -197,15 +196,7 @@ For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+F
 
 ##### Against a local UI
 
-To run tests against firecloud-ui running on your local workstation, you will need to edit the
-`baseURL` config parameter in the `automation/src/test/resources/application.conf` produced by
-`render-local-env.sh`:
-
-```
-baseUrl = "http://local.broadinstitute.org/"
-```
-
-When starting your UI, run:
+Be sure you used the "local_ui" param when you rendered your configs (see above). When starting your UI, run:
 
 ```bash
 FIAB=true ENV=<dev or qa> ./config/docker-rsync-local-ui.sh

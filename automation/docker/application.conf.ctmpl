@@ -2,11 +2,11 @@
 {{define "USER_DOMAIN"}}{{with $env := env "ENVIRONMENT"}}{{if or (eq $env "dev") (eq $env "alpha")}}test.firecloud.org{{else if eq $env "qa"}}quality.firecloud.org{{else}}firecloud.org{{end}}{{end}}{{end}}
 {{with $environment := env "ENVIRONMENT"}}
 {{with $dir := env "ROOT_DIR"}}
-{{with $local := env "LOCAL"}}
+{{with $local_ui := env "LOCAL_UI"}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 fireCloud {
-  baseUrl = {{if eq $local "true"}}"http://local.broadinstitute.org/"{{else if eq $environment "alpha"}}"https://firecloud.dsde-alpha.broadinstitute.org/"{{else}}"https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"{{end}}
+  baseUrl = {{if eq $local_ui "true"}}"http://local.broadinstitute.org/"{{else if eq $environment "alpha"}}"https://firecloud.dsde-alpha.broadinstitute.org/"{{else}}"https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"{{end}}
   {{if eq $environment "alpha"}}
   orchApiUrl = "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/"
   rawlsApiUrl = "https://rawls.dsde-alpha.broadinstitute.org/"
