@@ -42,6 +42,10 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
       new ImportMethodChooseSourceModel()
     }
 
+    def importConfigButtonEnabled(): Boolean = {
+      enabled(openImportConfigModalButtonQuery)
+    }
+
     def filter(searchText: String) = {
       await enabled filterInput
       searchField(filterInput).value = searchText

@@ -28,6 +28,11 @@ case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation(implicit webDriver: WebDriver): Boolean = {
     testId("error-modal").element != null
   }
+
+  def getErrorText(): String = {
+    readText(testId("error-text"))
+  }
+
 }
 
 case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
@@ -35,3 +40,4 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
     testId("message-modal").element != null
   }
 }
+

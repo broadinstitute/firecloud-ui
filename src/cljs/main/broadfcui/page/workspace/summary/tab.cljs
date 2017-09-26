@@ -116,6 +116,7 @@
           (let [user-access-level (:accessLevel workspace)
                 auth-domain (get-in workspace [:workspace :authorizationDomain])
                 derived (merge {:can-share? (:canShare workspace)
+                                :can-compute? (:canCompute workspace)
                                 :owner? (common/access-greater-than-equal-to? user-access-level "OWNER")
                                 :writer? (common/access-greater-than-equal-to? user-access-level "WRITER")
                                 :catalog-with-read? (and (common/access-greater-than-equal-to? user-access-level "READER") (:catalog workspace))}

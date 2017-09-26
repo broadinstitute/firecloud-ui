@@ -1,14 +1,21 @@
 package org.broadinstitute.dsde.firecloud.test.workspace
 
+import java.util.UUID
+
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.fixture.WorkspaceFixtures
+import org.broadinstitute.dsde.firecloud.fixture.MethodData.{SimpleMethod, SimpleMethodConfig}
+import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures
+class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with MethodFixtures
   with CleanUp with Matchers {
 
+  val methodConfigName: String = MethodData.SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
   implicit val authToken: AuthToken = AuthTokens.harry
   val billingProject: String = Config.Projects.default
 
@@ -51,13 +58,127 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures
 
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
           detailPage.deleteWorkspace().awaitLoaded()
-
           listPage.validateLocation()
           listPage.filter(workspaceName)
           listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe false
         }
       }
+
+      "should be able to share the workspace" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          val listPage = signIn(Config.Users.harry)
+
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          detailPage.share(Config.Users.ron.email, "READER")
+          detailPage.signOut()
+          val listPage2 = signIn(Config.Users.ron)
+          val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          detailPage2.ui.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader
+        }
+      }
+
+      "should be able to set can share permissions for other (non-owner) users" in withWebDriver {implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
+          val listPage = signIn(Config.Users.harry)
+
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          detailPage.share(Config.Users.ron.email, "READER", true)
+          detailPage.signOut()
+          val listPage2 = signIn(Config.Users.ron)
+          val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          detailPage2.ui.hasShareButton shouldBe true
+        }
+      }
+
+      "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
+            api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            detailPage.share(Config.Users.ron.email, "WRITER", false, true)
+            detailPage.signOut()
+            val listPage2 = signIn(Config.Users.ron)
+            val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+            val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
+            val laModal = methodConfigDetailsPage.ui.openLaunchAnalysisModal()
+            laModal.validateLocation shouldBe true
+          }
+        }
+      }
+
+      "should not be able to set/change can compute permissions for other owners" in withWebDriver {implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          val aclEditor = detailPage.startShare(Config.Users.ron.email, "OWNER")
+          aclEditor.ui.canComputeEnabled() shouldBe false
+          aclEditor.ui.canComputeChecked() shouldBe true
+        }
+      }
+      //reader permissions should always be false
+      "should not be able to set/change compute permissions for readers" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          val aclEditor = detailPage.startShare(Config.Users.ron.email, "READER")
+          aclEditor.ui.canComputeEnabled() shouldBe false
+          aclEditor.ui.canComputeChecked() shouldBe false
+        }
+      }
     }
+    "who has reader access to workspace" - {
+
+      "should see launch analysis button disabled" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
+            val listPage = signIn(Config.Users.ron)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            val methodConfigTab = detailPage.ui.clickMethodConfigTab(billingProject, workspaceName)
+            val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
+            val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
+            errorModal.getErrorText() shouldBe "You do not have access to run analysis."
+
+          }
+        }
+      }
+
+      "should see import config button disabled" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+          methodConfigListPage.ui.importConfigButtonEnabled() shouldBe false
+        }
+      }
+    }
+
+    "who has writer access but not compute permission" - {
+
+      "should see launch analysis button disabled" in withWebDriver{ implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
+          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
+            api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            detailPage.share(Config.Users.ron.email, "WRITER", false, false)
+            detailPage.signOut()
+            val listPage2 = signIn(Config.Users.ron)
+            val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+            val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
+            val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
+            errorModal.getErrorText() shouldBe "You do not have access to run analysis."
+          }
+        }
+      }
+    }
+
   }
 
   // Experimental

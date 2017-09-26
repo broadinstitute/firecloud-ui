@@ -42,7 +42,8 @@
          :ok-button (case status
                       :main {:text "Save" :onClick #(this :-persist-acl false)}
                       :offering-invites {:text "Invite" :onClick #(this :-persist-acl true)}
-                      nil)}]))
+                      nil)
+         :data-test-id "acl-editor"}]))
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (endpoints/call-ajax-orch
@@ -60,6 +61,7 @@
                                        :accessLevel (:accessLevel v)
                                        :pending? (:pending v)
                                        :canShare (:canShare v)
+                                       :canCompute (:canCompute v)
                                        :read-only? true}))
                        {:project-owner-acl-vec []
                         :non-project-owner-acl-vec []}
@@ -106,6 +108,7 @@
                  :style {:display "inline-block" :width 400 :marginBottom 0}
                  :spellCheck false
                  :value (:email acl-entry)
+                 :data-test-id "acl-add-email"
                  :list "groups-datalist"
                  :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
              (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
@@ -115,6 +118,7 @@
                 {:ref (str "acl-value" i)
                  :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
                  :disabled disabled?
+                 :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
                  :value (:accessLevel acl-entry)
                  :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel] (.. % -target -value))}
                 (if disabled? access-levels available-access-levels)))
@@ -122,6 +126,7 @@
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
                 [:input {:type "checkbox"
                          :style {:verticalAlign "middle" :float "none"}
+                         :data-test-id (str "acl-share-" (not (:read-only? acl-entry)))
                          :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
                          :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
                          :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
@@ -129,9 +134,10 @@
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
                 [:input {:type "checkbox"
                          :style {:verticalAlign "middle" :float "none"}
+                         :data-test-id (str "acl-compute-" (not (:read-only? acl-entry)))
                          :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canCompute] (.. % -target -checked))
                          :disabled (or (common/access-equal-to? (:accessLevel acl-entry) "READER") (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER"))
-                         :checked (:canCompute acl-entry)}]])
+                         :checked (or (:canCompute acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
              (when (:pending? acl-entry)
                [:span {:style {:fontStyle "italic" :color (:text-light style/colors) :marginLeft "1rem"}}
                 "Pending..."])])
