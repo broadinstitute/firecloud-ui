@@ -21,7 +21,6 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
-   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -86,7 +85,7 @@
   {:render
    (fn [{:keys [props state locals refs]}]
      (let [{:keys [workspace-id entity perform-copy]} props
-           {:keys [workspaces]} @state]
+           {:keys [selected-workspace]} @state]
        [:div {:style {:border style/standard-line
                       :backgroundColor (:background-light style/colors)
                       :borderRadius 8 :padding "1em" :marginTop "1em"}}
@@ -125,9 +124,9 @@
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]
         [buttons/Button {:text (if workspace-id "Import" "Export")
-                         :disabled? (not (or workspace-id (:selected-workspace @state)))
+                         :disabled? (not (or workspace-id selected-workspace))
                          :data-test-id (if workspace-id "import-button" "export-button")
-                         :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
+                         :onClick #(perform-copy selected-workspace refs)}]]))})
 
 (defn- create-import-form [state props entity config? perform-copy]
   (let [{:keys [workspace-id on-delete]} props
