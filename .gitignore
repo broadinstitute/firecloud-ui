@@ -12,6 +12,7 @@ bower_components/
 target/
 
 automation/failure_screenshots/
+automation/docker/failure_screenshots/
 automation/docker/output/
 
 ### JetBrains template

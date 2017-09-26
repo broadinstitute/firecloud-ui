@@ -19,12 +19,13 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
   private val perPageSelector = findInner("per-page")
 
   def filter(text: String): Unit = {
+    await enabled filterField
     searchField(filterField).value = text
     click on filterButton
   }
 
   def goToTab(tabName: String): Unit = {
-    click on tab(tabName)
+    click on (await enabled tab(tabName))
   }
 
   def goToPreviousPage(): Unit = click on prevPageButton

@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil, Table}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -34,7 +34,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
-    private val filterInput = testId("-input")
+    private val methodConfigsTable = new Table("method-configs-table")
     private val methodConfigLinkId = "method-config-%s-link"
 
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
@@ -46,13 +46,11 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
       enabled(openImportConfigModalButtonQuery)
     }
 
-    def filter(searchText: String) = {
-      await enabled filterInput
-      searchField(filterInput).value = searchText
-      pressKeys("\n")
+    def filter(searchText: String): Unit = {
+      methodConfigsTable.filter(searchText)
     }
 
-    def openMethodConfig(methodName: String) = {
+    def openMethodConfig(methodName: String): Unit = {
       val linkId = methodConfigLinkId.format(methodName)
       val link = testId(linkId)
       click on (await enabled link)
@@ -97,23 +95,21 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     ui.selectMethodOrConfig(methodName, snapshotId)
     ui.fillNamespace(methodNamespace)
     ui.fillMethodConfigName(methodConfigName)
-    if (rootEntityType != None) { ui.chooseRootEntityType(rootEntityType.get) }
+    if (rootEntityType.isDefined) { ui.chooseRootEntityType(rootEntityType.get) }
     ui.clickImportMethodConfigButton()
     await spinner "Importing..."
   }
 
   object ui {
+    private val methodTable = new Table("method-repo-table")
 
-    private val methodSearchInputQuery: Query = testId("method-repo-table-input")
     private val methodNamespaceInputQuery: Query = testId("method-config-import-namespace-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")
     private val importMethodConfigButtonQuery: Query = testId("import-button")
     private val rootEntityTypeSelectQuery: Query = testId("import-root-entity-type-select")
 
     def searchMethodOrConfig(searchQuery: String): Unit = {
-      await enabled methodSearchInputQuery
-        searchField(methodSearchInputQuery).value = searchQuery
-      pressKeys("\n")
+      methodTable.filter(searchQuery)
     }
 
     def selectMethodOrConfig(methodName: String, snapshotId: Int): Unit = {
@@ -131,7 +127,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
       textField(methodConfigNameInputQuery).value = methodConfigName
     }
 
-    def chooseRootEntityType(rootEntityType: String) = {
+    def chooseRootEntityType(rootEntityType: String): Unit = {
       await enabled rootEntityTypeSelectQuery
       singleSel(rootEntityTypeSelectQuery).value = rootEntityType
     }
