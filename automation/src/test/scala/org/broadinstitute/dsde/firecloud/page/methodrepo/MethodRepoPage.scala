@@ -27,8 +27,9 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
       find(testId(s"method-link-$namespace-$name") inside tableQuery).isDefined
     }
 
-    def enterMethod(namespace: String, name: String): Unit = {
+    def enterMethod(namespace: String, name: String): MethodDetailPage = {
       click on (testId(s"method-link-$namespace-$name") inside tableQuery)
+      new MethodDetailPage(namespace, name)
     }
   }
 

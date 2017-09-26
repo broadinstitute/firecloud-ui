@@ -36,8 +36,13 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
 
       methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
 
-      // go back into it
-      methodRepoPage.ui.enterMethod(namespace, name)
+      // go back into it and redact
+      val methodDetailPage = methodRepoPage.ui.enterMethod(namespace, name)
+      methodDetailPage.awaitLoaded()
+      methodDetailPage.ui.redact()
+
+      methodRepoPage.open
+      methodRepoPage.ui.hasMethod(namespace, name) shouldBe false
     }
   }
 }

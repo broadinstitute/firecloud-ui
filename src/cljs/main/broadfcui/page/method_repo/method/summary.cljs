@@ -77,7 +77,8 @@
              :onClick #(swap! state assoc :cloning? true)}]
            (when owner?
              [buttons/SidebarButton
-              {:style :light :color :exception-state
+              {:data-test-id "redact-button"
+               :style :light :color :exception-state
                :text "Redact" :icon :delete :margin :bottom
                :onClick #(swap! state assoc :deleting? true)}])]}]]))
    :-render-main
