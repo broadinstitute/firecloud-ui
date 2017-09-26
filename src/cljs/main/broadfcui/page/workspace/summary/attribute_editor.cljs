@@ -68,7 +68,10 @@
   (gensym "edit-attribute-table-key-"))
 
 (react/defc WorkspaceAttributeViewerEditor
-  {:get-attributes
+  {:get-initial-state
+   (fn []
+     {:edit-attribute-table-key (edit-attribute-table-key)})
+   :get-attributes
    (fn [{:keys [state]}]
      (let [{:keys [attributes]} @state
            listified-attributes (map (fn [[key value type]]
@@ -146,7 +149,7 @@
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
-           {:key (or (:edit-attribute-table-key @state) (edit-attribute-table-key))
+           {:key (:edit-attribute-table-key @state)
             :data (if editing?
                     (map-indexed (fn [index [key value type]]
                                    (utils/restructure index key value type))
@@ -211,7 +214,7 @@
             :paginator :none}]]}]))
    :component-will-receive-props
    (fn [{:keys [state props next-props]}]
-     (when (not= (:editing? next-props) (:editing? props))
+     (when-not (= (:editing? next-props) (:editing? props))
        (swap! state assoc
               :edit-attribute-table-key (edit-attribute-table-key))))
    :component-did-update
