@@ -74,7 +74,7 @@ docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
 docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     -e ENVIRONMENT=${ENV} -e ROOT_DIR=/app -v ${WORKING_DIR}:/working \
-    -e OUT_PATH=/working/target -e INPUT_PATH=/working -e LOCAL=false \
+    -e OUT_PATH=/working/target -e INPUT_PATH=/working -e LOCAL_UI=false \
     broadinstitute/dsde-toolbox:dev render-templates.sh
 
 if [ "$DOCKERHOST" != "" ]; then
