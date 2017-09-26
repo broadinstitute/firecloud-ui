@@ -64,8 +64,14 @@
 (defn- header [text]
   [:span {:style {:fontSize "120%"}} text])
 
+(defn- edit-attribute-table-key []
+  (gensym "edit-attribute-table-key-"))
+
 (react/defc WorkspaceAttributeViewerEditor
-  {:get-attributes
+  {:get-initial-state
+   (fn []
+     {:edit-attribute-table-key (edit-attribute-table-key)})
+   :get-attributes
    (fn [{:keys [state]}]
      (let [{:keys [attributes]} @state
            listified-attributes (map (fn [[key value type]]
@@ -137,11 +143,13 @@
             [:div {:style {:marginBottom "0.25em"}}
              [buttons/Button {:icon :add-new :text "Add new"
                               :onClick (fn [_]
-                                         (swap! state update :attributes conj ["" ""])
+                                         (swap! state #(-> %
+                                                           (assoc :edit-attribute-table-key (edit-attribute-table-key))
+                                                           (update :attributes conj ["" ""])))
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
-           {:key (str editing? (count (:attributes @state)))
+           {:key (:edit-attribute-table-key @state)
             :data (if editing?
                     (map-indexed (fn [index [key value type]]
                                    (utils/restructure index key value type))
@@ -162,7 +170,10 @@
                                   (icons/icon {:style {:color (:text-lightest style/colors)
                                                        :verticalAlign "middle" :fontSize 22
                                                        :cursor "pointer"}
-                                               :onClick #(swap! state update :attributes utils/delete index)}
+                                               :onClick (fn [_]
+                                                          (swap! state #(-> %
+                                                                            (assoc :edit-attribute-table-key (edit-attribute-table-key))
+                                                                            (update :attributes utils/delete index))))}
                                               :remove))}
                                {:id "key" :header (header "Key") :initial-width 300
                                 :as-text (constantly nil)
@@ -200,10 +211,12 @@
                                 :column-data val
                                 :as-text process-attribute-value
                                 :render (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])}
-            :paginator :none
-            :->row (if editing?
-                     (juxt :index identity identity identity)
-                     identity)}]]}]))
+            :paginator :none}]]}]))
+   :component-will-receive-props
+   (fn [{:keys [state props next-props]}]
+     (when-not (= (:editing? next-props) (:editing? props))
+       (swap! state assoc
+              :edit-attribute-table-key (edit-attribute-table-key))))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
