@@ -12,6 +12,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :as create]
@@ -20,6 +21,7 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -81,24 +83,10 @@
 
 
 (react/defc ConfigExporter
-  {:component-will-mount
-   (fn [{:keys [state props]}]
-     (when-not (:workspace-id props)
-       (endpoints/call-ajax-orch
-        {:endpoint endpoints/list-workspaces
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (let [ws-list (->> (get-parsed-response)
-                                         (filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER"))
-                                         (sort-by (comp (partial mapv string/lower-case)
-                                                        (juxt :namespace :name)
-                                                        :workspace)))]
-                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                      (swap! state assoc :error status-text)))})))
-   :render
+  {:render
    (fn [{:keys [props state locals refs]}]
      (let [{:keys [workspace-id entity perform-copy]} props
-           {:keys [workspaces-list]} @state]
+           {:keys [workspaces]} @state]
        [:div {:style {:border style/standard-line
                       :backgroundColor (:background-light style/colors)
                       :borderRadius 8 :padding "1em" :marginTop "1em"}}
@@ -131,27 +119,13 @@
           [:div {:style {:marginBottom "1em"}}
            [:div {:style {:fontSize "120%" :margin "1em 0"}}
             "Destination Workspace:"]
-           (if-not workspaces-list
-             [comps/Spinner {:text "Loading workspaces..."}]
-             (style/create-select
-              {:defaultValue ""
-               :ref (common/create-element-ref-handler
-                     {:store locals
-                      :element-key :workspace-select
-                      :did-mount
-                      #(.on (.select2 (js/$ %)) "select2:select"
-                            (fn [event]
-                              (swap! state assoc :selected-workspace
-                                     (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
-                      :will-unmount
-                      #(.off (js/$ %))})
-               :style {:width 500}}
-              (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
-                   workspaces-list)))])
+           [WorkspaceSelector {:style {:width "50%"}
+                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
+                               :on-select #(swap! state assoc :selected-workspace %)}]])
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]
         [buttons/Button {:text (if workspace-id "Import" "Export")
-                         :disabled? (not (or workspace-id workspaces-list))
+                         :disabled? (not (or workspace-id (:selected-workspace @state)))
                          :data-test-id (if workspace-id "import-button" "export-button")
                          :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
 
