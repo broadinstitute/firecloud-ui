@@ -45,6 +45,7 @@
                                 (let [value (.-newValue value)]
                                   (swap! state assoc :value value)
                                   (on-change value)))}
+                   :shouldRenderSuggestions (constantly true)
                    :highlightFirstSuggestion true
                    :id (:id @locals)
                    :theme
