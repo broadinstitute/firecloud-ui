@@ -28,6 +28,12 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
     click on (await enabled tab(tabName))
   }
 
+  def readDisplayedTabCount(tabName: String): Int = {
+    val tabQuery = tab(tabName)
+    await enabled tabQuery
+    readText(tabQuery).replaceAll("\\D+","").toInt
+  }
+
   def goToPreviousPage(): Unit = click on prevPageButton
 
   def goToNextPage(): Unit = click on nextPageButton
