@@ -1,19 +1,19 @@
 package org.broadinstitute.dsde.firecloud.test.e2e
 
 import java.util.UUID
-
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
+import org.broadinstitute.dsde.firecloud.test.Tags
 
 class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with Matchers {
 
   val billingProject: String = Config.Projects.default
 
-  "Smoketest 1" in withWebDriver { implicit driver =>
+  "Smoketest 1:  Log in, create workspace, import data, import method config, run method config, delete workspace" taggedAs Tags.ProdTest in withWebDriver { implicit driver =>
 
     // login
     var listPageAsUser = signIn(Config.Users.smoketestuser)

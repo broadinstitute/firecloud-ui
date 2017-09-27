@@ -11,8 +11,7 @@ HUB_COMPOSE=hub-compose-fiab.yml
 #else leave blank (test runs against a non FIAB host, such as real dev)
 DOCKERHOST="127.0.0.1"
 DOCKERHOST=${3:-$DOCKERHOST}
-#if [ $DOCKERHOST = "alpha" -o $DOCKERHOST = "dev" ]; then
-if [ $DOCKERHOST = "alpha" ]
+if [ $DOCKERHOST = "alpha" -o $DOCKERHOST = "prod" ]; then
   then
     DOCKERHOST=
     HUB_COMPOSE=hub-compose.yml
