@@ -75,7 +75,7 @@
    :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
 
-(def ^:private select-style
+(def select-style
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 2
