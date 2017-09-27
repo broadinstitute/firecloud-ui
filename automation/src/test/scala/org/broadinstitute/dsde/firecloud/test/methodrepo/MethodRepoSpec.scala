@@ -9,10 +9,10 @@ import org.scalatest._
 
 class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
 
-  implicit val authToken: AuthToken = AuthTokens.harry
+  implicit val authToken: AuthToken = AuthTokens.hermione
 
   "A user" - {
-    "should be able to create a method, see it, and then redact it" in withWebDriver { implicit driver =>
+    "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
       signIn(Config.Users.hermione)
       val methodRepoPage = new MethodRepoPage()
       methodRepoPage.open
@@ -20,7 +20,7 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
 
       // create it
       val createDialog = new CreateMethodModal()
-      val name = "TEST-METHOD-REPO-" + randomUuid
+      val name = "TEST-CREATE-" + randomUuid
       val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
       val namespace = attributes("namespace")
       createDialog.createMethod(attributes)
@@ -36,11 +36,32 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
 
       methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
 
-      // go back into it and redact
+      api.methods.redact(namespace, name, 1)
+    }
+
+    "should be able to redact a method that they own" in withWebDriver { implicit driver =>
+      val name = "TEST-REDACT-" + randomUuid
+      val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
+      val namespace = attributes("namespace")
+      api.methods.createMethod(attributes)
+
+      signIn(Config.Users.hermione)
+      val methodRepoPage = new MethodRepoPage()
+      methodRepoPage.open
+
+      // verify that it's in the table
+      val methodsTable = new Table("methods-table")
+      methodsTable.goToTab("My Methods")
+      methodsTable.filter(name)
+
+      methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
+
+      // go in and redact it
       val methodDetailPage = methodRepoPage.ui.enterMethod(namespace, name)
       methodDetailPage.awaitLoaded()
       methodDetailPage.ui.redact()
 
+      // and verify that it's gone
       methodRepoPage.open
       methodRepoPage.ui.hasMethod(namespace, name) shouldBe false
     }
