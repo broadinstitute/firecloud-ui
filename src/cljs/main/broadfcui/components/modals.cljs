@@ -34,7 +34,7 @@
                          :fontSize "140%" :fontWeight 400 :lineHeight 1}
                  :data-test-id data-test-id}
            header
-           (when show-close? [buttons/XButton {:dismiss dismiss}])]
+           (when show-close? (buttons/x-button dismiss))]
           [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)} :data-test-id (str data-test-id "-content")}
            content

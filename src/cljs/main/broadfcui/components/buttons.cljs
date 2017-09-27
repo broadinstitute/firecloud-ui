@@ -1,6 +1,7 @@
 (ns broadfcui.components.buttons
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
@@ -21,6 +22,16 @@
          (assoc disabled? :on-dismiss on-dismiss))))
 
 
+(defn- make-default-test-id [{:keys [text icon]}]
+  (if text
+    (-> text
+        string/lower-case
+        (string/replace-all #"\s+" "-")
+        (string/replace-all #"[^a-z\-]" "")
+        (str "-button"))
+    (str (name icon) "-button")))
+
+
 (react/defc Button
   {:get-default-props
    (fn []
@@ -30,7 +41,10 @@
    (fn [{:keys [props state]}]
      (let [{:keys [type color icon href disabled? onClick text style class-name data-test-id]} props
            color (if disabled? (:disabled-state style/colors) color)]
-       [:a {:className (or class-name "button")
+       (assert (or text icon) "Button must have text and/or icon")
+       [:a {:data-test-id (or data-test-id (make-default-test-id props))
+            :data-test-state (if disabled? "disabled" "enabled")
+            :className (or class-name "button")
             :style (merge
                     (case type
                       :primary {:backgroundColor color :color "white"}
@@ -44,7 +58,6 @@
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                      :textDecoration "none"}
                     (if (map? style) style {}))
-            :data-test-id data-test-id
             :href (or href "javascript:;")
             :onClick (if disabled? #(swap! state assoc :show-message? true) onClick)
             :onKeyDown (when (and onClick (not disabled?))
@@ -66,7 +79,10 @@
      (let [{:keys [text icon onClick style disabled? margin color data-test-id]} props
            heavy? (= :heavy style)
            color (if (keyword? color) (get style/colors color) color)]
-       [:div {:style {:display "flex" :flexWrap "nowrap" :alignItems "center"
+       (assert (and text icon) "Button must have text and icon")
+       [:div {:data-test-id (or data-test-id (make-default-test-id props))
+              :data-test-state (if disabled? "disabled" "enabled")
+              :style {:display "flex" :flexWrap "nowrap" :alignItems "center"
                       :marginTop (when (= margin :top) "1rem")
                       :marginBottom (when (= margin :bottom) "1rem")
                       :border (when-not heavy? style/standard-line)
@@ -76,8 +92,6 @@
                       :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :fontSize "106%"}
-              :data-test-id data-test-id
-              :data-test-state (if disabled? "disabled" "enabled")
               :onClick (if disabled?
                          #(swap! state assoc :show-message? true)
                          onClick)}
@@ -88,12 +102,10 @@
          text]]))})
 
 
-(react/defc XButton
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
-      [:a {:style {:color (:text-light style/colors)}
-           :href "javascript:;"
-           :onClick (:dismiss props)
-           :id (:id props) :data-test-id "x-button"}
-       (icons/icon {:style {:fontSize "80%"}} :close)]])})
+(defn- x-button [dismiss]
+  [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
+   [:a {:data-test-id "x-button"
+        :style {:color (:text-light style/colors)}
+        :href "javascript:;"
+        :onClick dismiss}
+    (icons/icon {:style {:fontSize "80%"}} :close)]])

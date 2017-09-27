@@ -117,8 +117,8 @@
             (constantly
              [flex/spring
               [buttons/Button
-               {:text "Create New Billing Project..."
-                :data-test-id "begin-create-billing-project"
+               {:data-test-id "begin-create-billing-project"
+                :text "Create New Billing Project..."
                 :onClick
                 (fn []
                   (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")

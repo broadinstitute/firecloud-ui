@@ -132,8 +132,8 @@
    (fn [{:keys [props state refs]}]
      [:div {}
       [buttons/Button (merge
-                     {:ref "col-edit-button" :onClick #(swap! state assoc :reordering-columns? true)}
-                     (:button props))]
+                       {:ref "col-edit-button" :onClick #(swap! state assoc :reordering-columns? true)}
+                       (:button props))]
       (when (:reordering-columns? @state)
         (let [dismiss #(swap! state assoc :reordering-columns? false)]
           [overlay/Overlay

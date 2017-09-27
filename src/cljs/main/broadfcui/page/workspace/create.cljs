@@ -180,11 +180,11 @@
         [CreateDialog (merge (select-keys props [:billing-projects])
                              {:dismiss #(swap! state dissoc :modal?)})])
       [buttons/Button
-       {:text (case (:disabled-reason props)
+       {:data-test-id "open-create-workspace-modal-button"
+        :text (case (:disabled-reason props)
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
                 "Create New Workspace...")
         :icon :add-new
-        :data-test-id "open-create-workspace-modal-button"
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."

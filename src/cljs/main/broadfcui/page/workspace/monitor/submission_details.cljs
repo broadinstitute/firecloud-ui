@@ -120,15 +120,15 @@
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission..."}])
              [buttons/SidebarButton
-              {:color :exception-state :style :light :margin :top
+              {:data-test-id "submission-abort-button"
+               :color :exception-state :style :light :margin :top
                :text "Abort" :icon :warning
-               :data-test-id "submission-abort-button"
                :onClick (fn [_]
                           (comps/push-confirm
                            {:text "Are you sure you want to abort this submission?"
                             :on-confirm
-                            [buttons/Button {:text "Abort Submission"
-                                             :data-test-id "submission-abort-modal-confirm-button"
+                            [buttons/Button {:data-test-id "submission-abort-modal-confirm-button"
+                                             :text "Abort Submission"
                                              :onClick #(this :abort-submission)}]}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
