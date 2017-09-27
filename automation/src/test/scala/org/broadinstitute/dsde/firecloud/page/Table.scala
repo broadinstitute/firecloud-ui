@@ -18,12 +18,9 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
   private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
 
-  def getState: String = {
-    tableElement.webElement.getAttribute("data-test-state")
-  }
-
   def awaitReady(): Unit = {
-    await condition { getState == "ready" }
+    await enabled tableElement
+    await condition { tableElement.element.attribute("data-test-state").getOrElse("unknown") == "ready" }
   }
 
   def filter(text: String): Unit = {
