@@ -64,6 +64,7 @@
        different?))
    :refresh-rows
    (fn [{:keys [props state refs]} & [reset-page-number?]]
+     (swap! state assoc :data-test-state "loading")
      ((@refs "blocker") :show)
      (let [{:keys [data fetch-data]} props
            data-source (if data (table-utils/local data) fetch-data)
@@ -76,7 +77,8 @@
                      :on-done (fn [{:keys [total-count tab-count filtered-rows results]}]
                                 ((@refs "blocker") :hide)
                                 (swap! state merge
-                                       {:rows results
+                                       {:data-test-state "ready"
+                                        :rows results
                                         :tab-count (or tab-count total-count)}
                                        (utils/restructure total-count filtered-rows query-params)))})))
    :get-default-props
@@ -84,11 +86,13 @@
      {:load-on-mount true})
    :get-initial-state
    (fn [{:keys [this]}]
-     (assoc (this :-fetch-initial-state) :rows []))
+     (assoc (this :-fetch-initial-state)
+       :rows []
+       :data-test-state "initializing"))
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
+           {:keys [data-test-state rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
            {:keys [data-test-id toolbar sidebar tabs body paginator style]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
@@ -98,6 +102,7 @@
                                    (when on-column-change (on-column-change columns))
                                    (swap! state assoc :column-display columns))]
        [:div {:data-test-id data-test-id
+              :data-test-state data-test-state
               :style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."
                                :delay-time-ms (:blocker-delay-time-ms props)}]

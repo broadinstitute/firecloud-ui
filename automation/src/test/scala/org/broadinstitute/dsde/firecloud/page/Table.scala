@@ -18,27 +18,47 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
   private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
 
+  def getState: String = {
+    tableElement.webElement.getAttribute("data-test-state")
+  }
+
+  def awaitReady(): Unit = {
+    await condition { getState == "ready" }
+  }
+
   def filter(text: String): Unit = {
-    await enabled filterField
+    awaitReady()
     searchField(filterField).value = text
     click on filterButton
   }
 
   def goToTab(tabName: String): Unit = {
-    click on (await enabled tab(tabName))
+    awaitReady()
+    click on tab(tabName)
   }
 
   def readDisplayedTabCount(tabName: String): Int = {
-    val tabQuery = tab(tabName)
-    await enabled tabQuery
-    readText(tabQuery).replaceAll("\\D+","").toInt
+    awaitReady()
+    readText(tab(tabName)).replaceAll("\\D+","").toInt
   }
 
-  def goToPreviousPage(): Unit = click on prevPageButton
+  def goToPreviousPage(): Unit = {
+    awaitReady()
+    click on prevPageButton
+  }
 
-  def goToNextPage(): Unit = click on nextPageButton
+  def goToNextPage(): Unit = {
+    awaitReady()
+    click on nextPageButton
+  }
 
-  def goToPage(page: Int): Unit = click on pageButton(page)
+  def goToPage(page: Int): Unit = {
+    awaitReady()
+    click on pageButton(page)
+  }
 
-  def selectPerPage(perPage: Int): Unit = singleSel(perPageSelector).value = perPage.toString
+  def selectPerPage(perPage: Int): Unit = {
+    awaitReady()
+    singleSel(perPageSelector).value = perPage.toString
+  }
 }
