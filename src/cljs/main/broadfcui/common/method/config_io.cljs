@@ -100,7 +100,8 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:initial-value value
+                                        {:default-value value
+                                         :caching? true
                                          :data data
                                          :label name
                                          :placeholder (if optional? "Optional" "Select or enter")

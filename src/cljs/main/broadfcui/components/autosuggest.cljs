@@ -9,10 +9,16 @@
 
 
 (react/defc Autosuggest
-  ":data -  string suggestion possibilities
-  :on-change - called with new value
+  "One of
+  :data - string suggestion possibilities
+  :get-suggestions - function accepting value and returning suggestions
 
-  :initial-value (optional)
+  :on-change (required)
+
+  :caching? (optional) - set true to have re-renders managed internally
+  :default-value (optional when caching)
+  :value (required when not caching)
+
   :placeholder (optional)
   :label (optional) - used to generate data-test-id"
   {:component-will-mount
@@ -20,18 +26,23 @@
      (swap! locals assoc :id (gensym "autosuggest")))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:value (:initial-value props)})
+     {:value (:default-value props)})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data placeholder label on-change]} props
-           {:keys [suggestions value]} @state
-           get-suggestions (fn [value]
-                             (filterv
-                              #(string/includes? (string/lower-case %)
-                                                 (string/lower-case (.-value value)))
-                              data))]
+     (let [{:keys [data placeholder label on-change get-suggestions caching?]} props
+           {:keys [suggestions]} @state
+           value (:value (if caching? @state props))
+           get-suggestions (or get-suggestions
+                               (fn [value]
+                                 (filterv
+                                  #(string/includes? (string/lower-case %)
+                                                     (string/lower-case (.-value value)))
+                                  data)))]
+
+       (assert (or (fn? get-suggestions) (seq? data)) "Must provide either seq-able :data or :get-suggestions function")
        (assert (fn? on-change) "Must provide :on-change callback")
-       (assert (seq? data) "Must provide seq-able :data")
+       (assert (or caching? (:value props)) "Must provide value when not using cached mode")
+
        [js/Autosuggest
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
@@ -46,7 +57,8 @@
                     :placeholder placeholder
                     :onChange (fn [_ value]
                                 (let [value (.-newValue value)]
-                                  (swap! state assoc :value value)
+                                  (when caching?
+                                    (swap! state assoc :value value))
                                   (on-change value)))}
                    :shouldRenderSuggestions (constantly true)
                    :highlightFirstSuggestion true
@@ -76,4 +88,4 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :data :placeholder :label :on-change)))]))})
+                  (dissoc props :data :placeholder :label :on-change :get-suggestions)))]))})
