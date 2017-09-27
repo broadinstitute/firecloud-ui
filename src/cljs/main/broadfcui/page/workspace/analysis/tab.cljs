@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.page.workspace.analysis.igv :refer [IGVContainer]]
    [broadfcui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
    [broadfcui.utils :as utils]
@@ -29,9 +29,9 @@
    (fn [{:keys [state this]}]
      [:div {}
       [IGVContainer {:tracks (:tracks @state)}]
-      [comps/Button {:text "Select Tracks..."
-                     :style {:float "right" :marginTop "1rem"}
-                     :onClick #(this :show-track-selection-dialog)}]
+      [buttons/Button {:text "Select Tracks..."
+                       :style {:float "right" :marginTop "1rem"}
+                       :onClick #(this :show-track-selection-dialog)}]
       (common/clear-both)])
    :component-will-unmount
    (fn [{:keys [props state]}]

@@ -6,7 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
-   [broadfcui.components.sidebar-button :refer [SidebarButton]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
@@ -90,33 +90,38 @@
           [:div {:style {:width 270}}
            (if editing?
              (list
-              [SidebarButton {:color :success-state
-                              :text "Save" :icon :done
-                              :disabled? (when redacted? "Choose an available snapshot")
-                              :data-test-id "save-editted-method-config-button"
-                              :onClick #(parent :-commit)}]
-              [SidebarButton {:color :exception-state :margin :top
-                              :text "Cancel Editing" :icon :cancel
-                              :data-test-id "cancel-edit-method-config-button"
-                              :onClick #(parent :-cancel-editing)}])
+              [buttons/SidebarButton
+               {:color :success-state
+                :text "Save" :icon :done
+                :disabled? (when redacted? "Choose an available snapshot")
+                :data-test-id "save-editted-method-config-button"
+                :onClick #(parent :-commit)}]
+              [buttons/SidebarButton
+               {:color :exception-state :margin :top
+                :text "Cancel Editing" :icon :cancel
+                :data-test-id "cancel-edit-method-config-button"
+                :onClick #(parent :-cancel-editing)}])
              (list
               (when can-edit?
-                [SidebarButton {:style :light :color :button-primary
-                                :text "Edit Configuration" :icon :edit
-                                :disabled? (cond locked? "The workspace is locked"
-                                                 (and redacted? (empty? snapshots)) "There are no available method snapshots.")
-                                :data-test-id "edit-method-config-button"
-                                :onClick #(parent :-begin-editing snapshots)}])
+                [buttons/SidebarButton
+                 {:style :light :color :button-primary
+                  :text "Edit Configuration" :icon :edit
+                  :disabled? (cond locked? "The workspace is locked"
+                                   (and redacted? (empty? snapshots)) "There are no available method snapshots.")
+                  :data-test-id "edit-method-config-button"
+                  :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
-                [SidebarButton {:style :light :color :exception-state :margin :top
-                                :text "Delete" :icon :delete
-                                :disabled? (when locked? "The workspace is locked")
-                                :data-test-id "delete-method-config-button"
-                                :onClick #(swap! state assoc :show-delete-dialog? true)}])
+                [buttons/SidebarButton
+                 {:style :light :color :exception-state :margin :top
+                  :text "Delete" :icon :delete
+                  :disabled? (when locked? "The workspace is locked")
+                  :data-test-id "delete-method-config-button"
+                  :onClick #(swap! state assoc :show-delete-dialog? true)}])
               (when-not redacted?
-                [SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                :text "Publish..." :icon :share
-                                :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
+                [buttons/SidebarButton
+                 {:style :light :color :button-primary :margin (when can-edit? :top)
+                  :text "Publish..." :icon :share
+                  :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
 
 (react/defc MethodConfigEditor
@@ -164,8 +169,7 @@
                          (select-keys @state [:editing? :loaded-config :redacted?])
                          (select-keys @locals [:body-id])
                          {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
-         (this :-render-main locked?)
-         (common/clear-both)]]))
+         (this :-render-main locked?)]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
@@ -174,7 +178,7 @@
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
-       [:div {:style {:flex "1 1 auto"} :id body-id}
+       [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
@@ -191,7 +195,7 @@
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
-           (style/create-text-field {:ref "confname" :style {:width 500}
+           (style/create-text-field {:ref "confname" :style {:maxWidth 500}
                                      :data-test-id "edit-method-config-name-input"
                                      :defaultValue (:name config)})
            [:div {:style {:padding "0.5em 0 1em 0"}
@@ -215,7 +219,7 @@
            (style/create-identity-select {:ref "rootentitytype"
                                           :data-test-id "edit-method-config-root-entity-type-select"
                                           :defaultValue rootEntityType
-                                          :style {:width 500}
+                                          :style {:maxWidth 500}
                                           :onChange #(swap! state assoc :autocomplete-list
                                                             (build-autocomplete-list
                                                              {:workspace-attributes workspace-attributes
@@ -324,7 +328,7 @@
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/create-template method-ref)
+        {:endpoint endpoints/create-template
          :payload method-ref
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]

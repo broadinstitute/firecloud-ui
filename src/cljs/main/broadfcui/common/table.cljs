@@ -121,7 +121,7 @@
            (list* (get-items {:columns column-display})))]
         [:div {:style (merge {:display "flex"} (:content+sidebar style))}
          sidebar
-         [:div {:style (merge {:flex "1 1 0" :overflow "hidden"} (:content style))}
+         [:div {:style (merge {:flex "1 1 0" :minWidth 0} (:content style))}
           (when tabs
             (let [tab-counts (table-utils/compute-tab-counts {:tabs tabs :rows filtered-rows})]
               [:div {:style (merge {:marginBottom "0.3rem"}

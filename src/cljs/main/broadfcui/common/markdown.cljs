@@ -1,8 +1,8 @@
 (ns broadfcui.common.markdown
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
    ))
 
@@ -46,7 +46,7 @@
         (case mode
           :edit text-area
           :preview [:div {:style {:paddingTop "0.5rem"}} markdown-view]
-          :side-by-side [comps/SplitPane
+          :side-by-side [SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
                           :initial-slider-position (:or (:initial-slider-position props) 500)}])]))})

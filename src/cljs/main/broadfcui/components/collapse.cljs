@@ -17,9 +17,9 @@
         [:div {:style {:display "flex"}}
          [:div {:style {:display "flex" :cursor "pointer" :alignItems "baseline"}
                 :onClick #(swap! state update :visible? not)}
-          title
-          (icons/icon {:className "fa-fw" :style {:flexShrink 0 :marginLeft "0.25rem"}}
-                      (if visible? :collapse :expand))]
+          (icons/icon {:className "fa-fw" :style {:flexShrink 0}}
+                      (if visible? :disclosure-opened :disclosure-closed))
+          title]
          (when visible? title-expand)]
-        [:div {:style {:display (when-not visible? "none")}}
+        [:div {:style {:display (when-not visible? "none") :paddingLeft icons/fw-icon-width}}
          contents]]))})

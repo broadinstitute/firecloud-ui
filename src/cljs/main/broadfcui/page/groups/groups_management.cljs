@@ -1,7 +1,6 @@
 (ns broadfcui.page.groups.groups-management
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
@@ -10,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -82,7 +82,7 @@
        {:get-items
         (constantly
          [flex/spring
-          [comps/Button
+          [buttons/Button
            {:text "Create New Group..."
             :onClick
             (fn []

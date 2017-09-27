@@ -11,6 +11,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -88,10 +89,10 @@
                                         "."]
 
                                        [:div {}
-                                        [comps/Button {:style {:width "125px"}
-                                                       :disabled? (or requested? requesting?)
-                                                       :text (if requested? "Request Sent" "Request Access")
-                                                       :onClick #(this :-request-access name i)}]
+                                        [buttons/Button {:style {:width "125px"}
+                                                         :disabled? (or requested? requesting?)
+                                                         :text (if requested? "Request Sent" "Request Access")
+                                                         :onClick #(this :-request-access name i)}]
                                         (when requesting? [comps/Spinner])
                                         (when requested?
                                           (common/render-info-box
@@ -158,10 +159,10 @@
     :predicate (fn [ws option] (= option (boolean (get-in ws [:workspace :attributes :library:published]))))}
    {:title "TCGA Access"
     :options [:open :protected]
-    :render #(if (= % :open) "TCGA Open Access" "TCGA Protected Access")
+    :render #(if (= % :open) "TCGA Open Access" "TCGA Controlled Access")
     :predicate (fn [ws option]
                  (and (= (config/tcga-namespace) (get-in ws [:workspace :namespace]))
-                      ((if (= option :open) not identity) (get-in ws [:workspace :authorizationDomain]))))}])
+                      ((if (= option :open) empty? seq) (get-in ws [:workspace :authorizationDomain]))))}])
 
 (def ^:private persistence-key "workspace-table-types")
 (def ^:private VERSION 2)

@@ -3,11 +3,12 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.modals :as modals]
-   [broadfcui.components.sidebar-button :refer [SidebarButton]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -61,21 +62,21 @@
           :contents
           [:div {:style {:width 270}}
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :button-primary
                :text "Permissions..." :icon :settings :margin :bottom
                :onClick #(swap! state assoc :sharing? true)}])
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :button-primary
                :text "Edit..." :icon :edit :margin :bottom
                :onClick #(swap! state assoc :editing? true)}])
-           [SidebarButton
+           [buttons/SidebarButton
             {:style :light :color :button-primary
              :text "Clone..." :icon :clone :margin :bottom
              :onClick #(swap! state assoc :cloning? true)}]
            (when owner?
-             [SidebarButton
+             [buttons/SidebarButton
               {:style :light :color :exception-state
                :text "Redact" :icon :delete :margin :bottom
                :onClick #(swap! state assoc :deleting? true)}])]}]]))
@@ -83,7 +84,8 @@
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
            {:keys [body-id]} @locals]
-       [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
+       [:div {:style {:flex "1 1 auto" :overflow "hidden" :paddingLeft icons/fw-icon-width}
+              :id body-id}
         (style/create-summary-block "Synopsis" synopsis)
         [:div {:style {:display "flex"}}
          (style/create-summary-block (str "Method Owner" (when (> (count managers) 1) "s"))

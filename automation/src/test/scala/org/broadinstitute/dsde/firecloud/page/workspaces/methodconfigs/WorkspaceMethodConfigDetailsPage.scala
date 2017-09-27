@@ -62,7 +62,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     private val deleteMethodConfigButtonQuery: Query = testId("delete-method-config-button")
     private val modalConfirmDeleteButtonQuery: Query = testId("modal-confirm-delete-button")
     private val snapshotRedactedTitleQuery: Query = testId("snapshot-redacted-title")
-    private val snapshotIdLabelQuery: Query = testId("method-lable-Snapshot ID")
+    private val snapshotIdLabelQuery: Query = testId("method-label-Snapshot ID")
 
     def openLaunchAnalysisModal(): LaunchAnalysisModal = {
       await enabled methodConfigNameTextQuery
@@ -122,7 +122,8 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
 
     def isSnapshotRedacted() = {
-      find(snapshotRedactedTitleQuery).size == 1
+      await enabled snapshotIdLabelQuery
+      find(snapshotRedactedTitleQuery).isDefined
     }
 
     def deleteMethodConfig() = {

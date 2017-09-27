@@ -9,8 +9,8 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -179,7 +179,7 @@
       (when (:modal? @state)
         [CreateDialog (merge (select-keys props [:billing-projects])
                              {:dismiss #(swap! state dissoc :modal?)})])
-      [comps/Button
+      [buttons/Button
        {:text (case (:disabled-reason props)
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
                 "Create New Workspace...")

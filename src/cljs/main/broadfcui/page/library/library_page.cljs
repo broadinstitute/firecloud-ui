@@ -21,7 +21,7 @@
 
 (def ^:private tcga-access-instructions
   [:span {}
-   [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+   [:p {} "For access to TCGA controlled data please apply for access via dbGaP [instructions can be found "
     (links/create-external {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"} "here")
     "]."]])
 
