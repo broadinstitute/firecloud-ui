@@ -94,7 +94,7 @@
                                 :get-items
                                 (constantly
                                  [[buttons/Button {:data-test-id "create-method-button"
-                                                 :style {:marginLeft "auto"}
+                                                   :style {:marginLeft "auto"}
                                                    :text "Create New Method..."
                                                    :icon :add-new
                                                    :onClick #(swap! state assoc :creating? true)}]])}}])]))
