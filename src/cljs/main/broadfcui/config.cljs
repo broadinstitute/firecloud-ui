@@ -38,7 +38,7 @@
 
 (def config (atom nil))
 
-(defn api-url-root [] (get @config "apiUrlRoot"))
+(defn api-url-root [] "https://firecloud-orchestration.dsde-dev.broadinstitute.org")
 (defn debug? [] (get @config "isDebug"))
 (defn google-client-id [] (get @config "googleClientId"))
 (defn tcga-namespace [] (get @config "tcgaNamespace"))
