@@ -4,10 +4,10 @@ import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData
 import org.broadinstitute.dsde.firecloud.page.Table
 import org.broadinstitute.dsde.firecloud.page.methodrepo.{CreateMethodModal, MethodRepoPage}
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
+class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with CleanUp {
 
   implicit val authToken: AuthToken = AuthTokens.hermione
 
@@ -24,6 +24,7 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
       val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
       val namespace = attributes("namespace")
       createDialog.createMethod(attributes)
+      register cleanUp api.methods.redact(namespace, name, 1)
 
       // wait for it to finish, then go back to the method repo page
       createDialog.awaitDismissed()
@@ -35,8 +36,6 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers {
       methodsTable.filter(name)
 
       methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
-
-      api.methods.redact(namespace, name, 1)
     }
 
     "should be able to redact a method that they own" in withWebDriver { implicit driver =>
