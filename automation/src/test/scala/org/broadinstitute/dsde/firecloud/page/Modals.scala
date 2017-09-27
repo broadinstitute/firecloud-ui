@@ -30,7 +30,7 @@ case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
   }
 
   def getErrorText(): String = {
-    readText(testId("error-text"))
+    readText(testId("message-modal-content"))
   }
 
 }

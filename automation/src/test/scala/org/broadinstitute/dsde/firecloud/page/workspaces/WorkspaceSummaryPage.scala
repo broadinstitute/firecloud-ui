@@ -98,10 +98,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     new WorkspaceSummaryPage(namespace, name)
   }
 
-  def startShare(email: String, accessLevel: String): AclEditor = {
+  def openShareDialog(email: String, accessLevel: String): AclEditor = {
     await notVisible spinner
     val aclEditor = ui.clickShareWorkspaceButton()
-    aclEditor.emailAccessEnter(email, WorkspaceAccessLevel.withName(accessLevel))
+    aclEditor.fillEmailAndAccess(email, WorkspaceAccessLevel.withName(accessLevel))
     aclEditor
   }
 
@@ -297,7 +297,7 @@ class AclEditor(implicit webDriver: WebDriver) extends FireCloudView  {
     * @param compute if the Can Compute checkbox should be clicked
     */
   def shareWorkspace(email: String, accessLevel: WorkspaceAccessLevel, share: Boolean, compute: Boolean): Unit = {
-    emailAccessEnter(email, accessLevel)
+    fillEmailAndAccess(email, accessLevel)
     if (share) {
       ui.clickCanShare()
     }
@@ -308,7 +308,7 @@ class AclEditor(implicit webDriver: WebDriver) extends FireCloudView  {
     await notVisible spinner
   }
 
-  def emailAccessEnter(email: String, accessLevel: WorkspaceAccessLevel): Unit = {
+  def fillEmailAndAccess(email: String, accessLevel: WorkspaceAccessLevel): Unit = {
     ui.clickAddNewAclButton()
     ui.fillNewAclEmailField(email)
     ui.clickRoleDropdown()

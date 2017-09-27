@@ -177,7 +177,8 @@
            {:keys [methodRepoMethod rootEntityType]} config
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id]} @locals
-           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+           can-compute (get-in props [:workspace :canCompute])]
        [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
