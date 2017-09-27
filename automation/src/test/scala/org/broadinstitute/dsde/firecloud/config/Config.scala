@@ -8,6 +8,7 @@ object Config {
   private val users = config.getConfig("users")
   private val chromeSettings = config.getConfig("chromeSettings")
   private val gcsConfig = config.getConfig("gcs")
+  private val methodsConfig = config.getConfig("methods")
 
   object GCS {
     val pathToQAPem = gcsConfig.getString("qaPemFile")
@@ -50,6 +51,16 @@ object Config {
     val testUser = harry
     val dominique = harry
     val elvin = fred
+
+    val smoketestpassword = users.getString("smoketestpassword")
+    val smoketestuser = Credentials(users.getString("smoketestuser"), smoketestpassword)
+  }
+
+  object Methods {
+    val testMethod = methodsConfig.getString("testMethod")
+    val testMethodConfig = methodsConfig.getString("testMethodConfig")
+    val methodConfigNamespace = methodsConfig.getString("methodConfigNamespace")
+    val snapshotID: Int = methodsConfig.getString("snapshotID").toInt
   }
 
   object FireCloud {
