@@ -102,7 +102,7 @@
          text]]))})
 
 
-(defn- x-button [dismiss]
+(defn x-button [dismiss]
   [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
    [:a {:data-test-id "x-button"
         :style {:color (:text-light style/colors)}
