@@ -103,11 +103,12 @@
                                         {:default-value value
                                          :caching? true
                                          :data data
-                                         :label name
-                                         :placeholder (if optional? "Optional" "Select or enter")
+                                         :inputProps {:data-test-id (str name "-text-input")
+                                                      :placeholder (if optional? "Optional" "Select or enter")}
                                          :on-change (fn [value]
                                                       (swap! locals update io-key assoc (keyword name)
-                                                             (if (empty? value) "" value)))}]
+                                                             (if (empty? value) "" value)))
+                                         :theme {:input {:width "calc(100% - 16px)"}}}]
                                        (if value
                                          [:span {:style (when optional? table-style/table-cell-optional)} value]
                                          (when optional?

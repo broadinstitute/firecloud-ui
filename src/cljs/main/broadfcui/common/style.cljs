@@ -70,7 +70,8 @@
 (def input-text-style
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
-   :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 3
+   :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors)
+   :borderTopLeftRadius 3 :borderBottomLeftRadius 3 :borderBottomRightRadius 3 :borderTopRightRadius 3
    :boxSizing "border-box"
    :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
