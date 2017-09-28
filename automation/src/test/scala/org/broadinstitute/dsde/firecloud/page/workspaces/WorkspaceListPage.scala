@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil, Table}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -33,8 +33,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     * @param text the text to filter by
     */
   def filter(text: String): Unit = {
-    ui.fillFilterText(text)
-    ui.clickFilterButton()
+    ui.filterTable(text)
   }
 
   /**
@@ -53,23 +52,18 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   }
 
   def validateLocation(): Unit = {
-    assert(ui.filterInputIsPresent())
-  }
-
-  def isLoaded: Boolean = {
-    ui.filterInputIsPresent()
+    assert(ui.validateLocation())
   }
 
   override def awaitLoaded(): WorkspaceListPage = {
-    await condition isLoaded
+    ui.awaitReady()
     this
   }
 
 
   trait UI extends super.UI {
+    private val workspacesTable = new Table("workspace-list")
     private val createWorkspaceButton = testId("open-create-workspace-modal-button")
-    private val filterButton = testId("workspace-list-filter-button")
-    private val filterInput = testId("workspace-list-filter-input")
     private val requestAccessModal = testId("request-access-modal")
     private def restrictedWorkspaceTestId(ns: String, n: String) = { s"restricted-$ns-$n" }
 
@@ -78,21 +72,20 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
       new CreateWorkspaceModal
     }
 
-    def clickFilterButton(): Unit = {
-      click on (await enabled filterButton)
-    }
-
     def clickWorkspaceInList(namespace: String, name: String): Unit = {
       click on title(s"$namespace/$name")
     }
 
-    def fillFilterText(text: String): Unit = {
-      await enabled filterInput
-      searchField(filterInput).value = text
+    def filterTable(text: String): Unit = {
+      workspacesTable.filter(text)
     }
 
-    def filterInputIsPresent(): Boolean = {
-      find(filterInput).isDefined
+    def awaitReady(): Unit = {
+      workspacesTable.awaitReady()
+    }
+
+    def validateLocation(): Boolean = {
+      find(createWorkspaceButton).isDefined
     }
 
     def hasWorkspace(namespace: String, name: String): Boolean = {

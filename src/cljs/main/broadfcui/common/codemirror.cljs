@@ -63,7 +63,8 @@
       :mode "wdl"})
    :render
    (fn [{:keys [props]}]
-     [:div {:style {:border style/standard-line}}
+     [:div {:data-test-id (:data-test-id props)
+            :style {:border style/standard-line}}
       [:textarea {:ref "code-text" :defaultValue (:text props)}]])
    :component-did-mount
    (fn [{:keys [props this]}]

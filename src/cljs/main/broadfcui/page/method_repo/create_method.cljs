@@ -54,7 +54,8 @@
            [:div {:style {:display "flex" :justifyContent "space-between"}}
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
              (style/create-form-label "Namespace")
-             [input/TextField {:ref "namespace" :style {:width "100%"}
+             [input/TextField {:data-test-id "namespace-field"
+                               :ref "namespace" :style {:width "100%"}
                                :defaultValue (:namespace info)
                                :disabled (contains? (:locked info) :namespace)
                                :predicates [(input/nonempty "Method namespace")
@@ -62,7 +63,8 @@
              (style/create-textfield-hint input/hint-alphanumeric_-period)]
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
-             [input/TextField {:ref "name" :style {:autoFocus true :width "100%"}
+             [input/TextField {:data-test-id "name-field"
+                               :ref "name" :style {:autoFocus true :width "100%"}
                                :defaultValue (:name info)
                                :disabled (contains? (:locked info) :name)
                                :predicates [(input/nonempty "Method name")
@@ -70,12 +72,14 @@
              (style/create-textfield-hint input/hint-alphanumeric_-period)]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
            (style/create-form-label "Synopsis (optional, 80 characters max)")
-           (style/create-text-field {:ref "synopsis"
+           (style/create-text-field {:data-test-id "synopsis-field"
+                                     :ref "synopsis"
                                      :defaultValue (:synopsis info)
                                      :maxLength 80
                                      :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
-           (style/create-text-area {:ref "documentation"
+           (style/create-text-area {:data-test-id "documentation-field"
+                                    :ref "documentation"
                                     :defaultValue (:documentation info)
                                     :style {:width "100%"}
                                     :rows 5})
@@ -125,7 +129,8 @@
                (link "undo" undo?)
                (link "redo" redo?)]))
            [:style {} ".CodeMirror {height: 300px}"]
-           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false
+           [CodeMirror {:data-test-id "wdl-field"
+                        :ref "wdl-editor" :text (:payload info) :read-only? false
                         :initialize (fn [self]
                                       (self :add-listener "change"
                                        #(swap! state assoc :undo-history
@@ -139,7 +144,8 @@
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
          :ok-button (react/create-element
-                     [buttons/Button {:ref "ok-button"
+                     [buttons/Button {:data-test-id "upload-button"
+                                    :ref "ok-button"
                                       :text (:ok-text info)
                                       :onClick #(this :-create-method)}])}]))
    :-set-wdl-text

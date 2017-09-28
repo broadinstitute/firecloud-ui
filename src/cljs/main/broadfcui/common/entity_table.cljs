@@ -69,8 +69,8 @@
           (let [attributes (map keyword (get-in entity-metadata [(keyword selected-entity-type) :attributeNames]))
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
-             {:ref "table" :key selected-entity-type
-              :data-test-id "entity-table"
+             {:data-test-id "entity-table"
+              :ref "table" :key selected-entity-type
               :persistence-key (when selected-entity-type
                                  (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2

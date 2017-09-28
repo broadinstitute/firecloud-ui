@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil, Table}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
@@ -202,9 +202,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 
   object ui {
-    private val participantRootEntityFilterButtonQuery: Query = testId("participant-filter-button")
-    private val participantSetRootEntityFilterButtonQuery: Query = testId("participant_set-filter-button")
-    private val entitySearchInputQuery: Query = testId("entity-table-input")
+    private val entityTable = new Table("entity-table")
     private val expressionInputQuery: Query = testId("define-expression-input")
     private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
     private val launchAnalysisButtonQuery: Query = testId("launch-button")
@@ -215,17 +213,15 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val emptyDefaultMessage = "There are no entities to display."
 
     def filterRootEntityType(rootEntityType: String) = {
-      click on (await enabled testId(rootEntityType + "-filter-button"))
+      entityTable.goToTab(rootEntityType)
     }
 
     def filterParticipantSetType() = {
-      click on (await enabled participantSetRootEntityFilterButtonQuery)
+      entityTable.goToTab("participant_set")
     }
 
     def searchEntity(entityId: String) = {
-      await enabled entitySearchInputQuery
-      searchField(entitySearchInputQuery).value = entityId
-      pressKeys("\n")
+      entityTable.filter(entityId)
     }
 
     def selectEntity(entityId: String) = {

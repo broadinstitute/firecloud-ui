@@ -40,7 +40,7 @@
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
 (defn- render-form [state props]
-  [:div {:style {:width 1000}}
+  [:div {}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
    (style/create-form-label "Select Entity")
