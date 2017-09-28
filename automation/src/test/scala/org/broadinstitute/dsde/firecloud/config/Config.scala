@@ -21,6 +21,7 @@ object Config {
     val common = default
     val billingAccount = gcsConfig.getString("billingAccount")
     val billingAccountId = gcsConfig.getString("billingAccountId")
+    val smoketestBillingProject = gcsConfig.getString("smoketestsProject")
   }
 
   object Users {

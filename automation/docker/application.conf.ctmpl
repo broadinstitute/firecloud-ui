@@ -37,6 +37,7 @@ gcs {
   {{if eq $environment "prod"}}appsDomain = "firecloud.org"{{else}}appsDomain = {{if eq $environment "qa"}}"quality.firecloud.org"{{else}}"{{$environment}}.test.firecloud.org"{{end}}{{end}}
   qaEmail = "{{$users.Data.service_acct_email}}"
   serviceProject = "broad-dsde-{{$environment}}"
+  smoketestsProject = "broad-dsde-{{$environment}}-smoketests"
   qaPemFile = "{{$dir}}/src/test/resources/firecloud-account.pem"
   billingAccount = "Broad Institute - 8201528"
   billingAccountId = "billingAccounts/00708C-45D19D-27AAFA"

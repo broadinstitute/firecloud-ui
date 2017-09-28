@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 
 class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with Matchers {
 
-  val billingProject: String = Config.Projects.default
+  val billingProject: String = Config.Projects.smoketestBillingProject
 
   "Smoketest 1:  Log in, create workspace, import data, import method config, run method config, delete workspace" taggedAs Tags.ProdTest in withWebDriver { implicit driver =>
 
@@ -43,7 +43,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     assert(methodConfigDetailsPage.isLoaded)
 
     // launch method config with call caching off
-    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false)
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false).awaitLoaded()
     submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
     assert(submissionDetailsPage.verifyWorkflowSucceeded())
 
