@@ -25,6 +25,5 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.getNumberOfParticipants shouldBe 1
       }
     }
-    //more checks should be added here
   }
 }
