@@ -149,7 +149,7 @@
        :shouldRenderSuggestions #(not (string/blank? %))
        :on-change set-property
        :theme {:input (colorize {:width "100%" :marginBottom 0})
-               :suggestionsContainerOpen {:marginTop 0 :width "100%"}}}]
+               :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
 
      (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
        (when (not-any? clojure.string/blank? [related-id related-label])
@@ -163,28 +163,23 @@
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
-   [comps/AutocompleteFilter
-    {:ref "text-filter"
-     :width "100%"
-     :field-attributes {:placeholder inputHint
-                        :defaultValue value-nullsafe
-                        :style (colorize {})
-                        :data-test-id property ;; Dataset attribute, looks like "library:datasetOwner"
-                        :onChange update-property}
-     :disabled disabled
-     :typeahead-events ["typeahead:select" "typeahead:change"]
-     :on-filter set-property
-     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
-                      :cache false
-                      :prepare (fn [query settings]
-                                 (clj->js
-                                  (assoc (js->clj settings)
-                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                    :type "GET"
-                                    :url (str (aget settings "url") "?q=" query))))}
-     :typeaheadSuggestionTemplate (fn [result]
-                                    (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
-                                        (.text result)))}]])
+   [Autosuggest
+    {:value value-nullsafe
+     :inputProps {:placeholder inputHint
+                  :defaultValue value-nullsafe
+                  :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
+     :get-suggestions (fn [query callback]
+                        (utils/ajax-orch
+                         (str "/library/populate/suggest/" (name property) "?q=" query)
+                         {:on-done (fn [{:keys [success? get-parsed-response]}]
+                                     (callback (if success?
+                                                 (get-parsed-response)
+                                                 ["Error fetching results"])))})
+                        ["Loading..."])
+     :shouldRenderSuggestions #(not (string/blank? %))
+     :on-change set-property
+     :theme {:input (colorize {:width "100%" :marginBottom 0})
+             :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]])
 
 (defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled property]}]
   (style/create-text-field {:style (colorize {:width "100%"})

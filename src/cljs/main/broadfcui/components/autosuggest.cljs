@@ -78,6 +78,7 @@
                     :suggestionsContainerOpen {:display "block"
                                                :position "absolute"
                                                :width 280
+                                               :boxSizing "border-box"
                                                :marginTop "-0.25rem"
                                                :borderWidth 1
                                                :borderStyle "solid"
