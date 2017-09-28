@@ -110,7 +110,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
     private val cloneButton = testId("open-clone-workspace-modal-button")
     private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
-    private val nameHeader = testId("header-name")
     private val publishButtonQuery = testId("publish-button")
     private val unpublishButtonQuery = testId("unpublish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
@@ -167,10 +166,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def readError(): String = {
       readText(workspaceError)
-    }
-
-    def readWorkspaceName: String = {
-      readText(nameHeader)
     }
 
     def readAccessLevel(): WorkspaceAccessLevel = {
