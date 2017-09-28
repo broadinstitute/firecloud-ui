@@ -102,6 +102,9 @@
              with-spaces {:error (str "Keys cannot have spaces: " (string/join ", " with-spaces))}
              invalid-numbers {:error (str "Invalid number for key(s): " (string/join ", " invalid-numbers))}
              :else {:success typed})))
+   :get-initial-state
+   (fn []
+     {:table-key (gensym)})
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing? writer?]} props]
@@ -137,11 +140,13 @@
             [:div {:style {:marginBottom "0.25em"}}
              [buttons/Button {:icon :add-new :text "Add new"
                               :onClick (fn [_]
-                                         (swap! state update :attributes conj ["" ""])
+                                         (swap! state #(-> %
+                                                           (assoc :table-key (gensym))
+                                                           (update :attributes conj ["" ""])))
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
-           {:key (str editing? (count (:attributes @state)))
+           {:key (:table-key @state)
             :data (if editing?
                     (map-indexed (fn [index [key value type]]
                                    (utils/restructure index key value type))
@@ -162,7 +167,10 @@
                                   (icons/icon {:style {:color (:text-lightest style/colors)
                                                        :verticalAlign "middle" :fontSize 22
                                                        :cursor "pointer"}
-                                               :onClick #(swap! state update :attributes utils/delete index)}
+                                               :onClick (fn [_]
+                                                          (swap! state #(-> %
+                                                                            (assoc :table-key (gensym))
+                                                                            (update :attributes utils/delete index))))}
                                               :remove))}
                                {:id "key" :header (header "Key") :initial-width 300
                                 :as-text (constantly nil)
@@ -200,15 +208,17 @@
                                 :column-data val
                                 :as-text process-attribute-value
                                 :render (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])}
-            :paginator :none
-            :->row (if editing?
-                     (juxt :index identity identity identity)
-                     identity)}]]}]))
+            :paginator :none}]]}]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
-       (swap! state assoc :attributes
-              (mapv (fn [[k v]]
-                      (let [[type str-value] (get-type-and-string-rep v)]
-                        [(name k) str-value type]))
-                    (:workspace-attributes props)))))})
+       (swap! state assoc
+              :table-key (gensym)
+              :attributes (mapv (fn [[k v]]
+                                  (let [[type str-value] (get-type-and-string-rep v)]
+                                    [(name k) str-value type]))
+                                (:workspace-attributes props)))))
+   :component-will-receive-props
+   (fn [{:keys [props next-props state]}]
+     (when (not= (:editing? props) (:editing? next-props))
+       (swap! state assoc :table-key (gensym))))})
