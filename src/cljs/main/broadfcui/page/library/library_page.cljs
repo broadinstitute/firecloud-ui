@@ -12,6 +12,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -196,47 +197,73 @@
     (string/replace (utils/encode suggestion) (utils/encode highlight) (str "<strong>" (utils/encode highlight) "</strong>"))
     (utils/encode suggestion)))
 
-(react/defc- SearchSection
-  {:get-filters
-   (fn [{:keys [props]}]
-     (utils/map-keys name (:facet-filters props)))
-   :render
-   (fn [{:keys [props this]}]
-     [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
-      [comps/AutocompleteFilter
-       {:ref "text-filter"
-        :on-filter (:on-filter props)
-        :typeahead-events ["typeahead:select"]
-        :width "100%"
-        :field-attributes {:defaultValue (:search-text props)
-                           :placeholder "Search"}
-        :facet-filters (:facet-filters props)
-        :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
-                         :transform (fn [response]
-                                      (clj->js
-                                       (mapv (partial hash-map :value) (aget response "results"))))
-                         :cache false
-                         :prepare (fn [query settings]
-                                    (clj->js
-                                     (assoc (js->clj settings)
-                                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                       :type "POST"
-                                       :contentType "application/json; charset=UTF-8"
-                                       :data (utils/->json-string
-                                              {:searchString query
-                                               :filters (this :get-filters)
-                                               :from 0
-                                               :size 10}))))}
-        :typeaheadDisplay (fn [result]
-                            ;; underlying typeahead library uses the result of this function
-                            ;; via $input.val(x), which is safe from xss. So we explicitly
-                            ;; do not want to encode anything here.
-                            (aget result "value" "suggestion"))
-        :typeaheadSuggestionTemplate (fn [result]
-                                       (let [suggestion (aget result "value" "suggestion")
-                                             highlight (aget result "value" "highlight")
-                                             display (highlight-suggestion suggestion highlight)]
-                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
+(defn- create-search-section [{:keys [search-text facet-filters on-input on-filter]}]
+  [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
+   [Autosuggest
+    {:value search-text
+     :inputProps {:placeholder "Search"}
+     :get-suggestions (fn [query callback]
+                        (utils/ajax-orch
+                         "/library/suggest/"
+                         {:data (utils/->json-string
+                                 {:searchString query
+                                  :filters (utils/map-keys name facet-filters)
+                                  :from 0
+                                  :size 10})
+                          :method "POST"
+                          :headers utils/content-type=json
+                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                     (callback (if success?
+                                                 (:results (get-parsed-response))
+                                                 [{:suggestion "Error fetching results"}])))})
+                        ["Loading..."])
+     :getSuggestionValue #(.-suggestion %)
+     :renderSuggestion (fn [suggestion]
+                         (react/create-element [:div {:style {:textOverflow "ellipsis"
+                                                              :overflow "hidden"}}
+                                                (.-suggestion suggestion)]))
+     :shouldRenderSuggestions #(not (string/blank? %))
+     :onSuggestionSelected (fn [_ suggestion]
+                             (on-filter (.-suggestionValue suggestion)))
+     :on-change on-input
+     :on-clear #(on-filter "")
+     :theme {:input {:width "100%" :marginBottom 0}
+             :suggestionsContainerOpen {:marginTop -1}}}]
+
+  #_ [comps/AutocompleteFilter
+    {:ref "text-filter"
+     :on-filter (:on-filter props)
+     :typeahead-events ["typeahead:select"]
+     :width "100%"
+     :field-attributes {:defaultValue (:search-text props)
+                        :placeholder "Search"}
+     :facet-filters (:facet-filters props)
+     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
+                      :transform (fn [response]
+                                   (clj->js
+                                    (mapv (partial hash-map :value) (aget response "results"))))
+                      :cache false
+                      :prepare (fn [query settings]
+                                 (clj->js
+                                  (assoc (js->clj settings)
+                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                    :type "POST"
+                                    :contentType "application/json; charset=UTF-8"
+                                    :data (utils/->json-string
+                                           {:searchString query
+                                            :filters (this :get-filters)
+                                            :from 0
+                                            :size 10}))))}
+     :typeaheadDisplay (fn [result]
+                         ;; underlying typeahead library uses the result of this function
+                         ;; via $input.val(x), which is safe from xss. So we explicitly
+                         ;; do not want to encode anything here.
+                         (aget result "value" "suggestion"))
+     :typeaheadSuggestionTemplate (fn [result]
+                                    (let [suggestion (aget result "value" "suggestion")
+                                          highlight (aget result "value" "highlight")
+                                          display (highlight-suggestion suggestion highlight)]
+                                      (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])
 
 (react/defc- FacetCheckboxes
   {:render
@@ -354,11 +381,12 @@
       [:div {:style {:display "flex"}}
        (apply
         filter/area {:style {:width 260 :boxSizing "border-box"}}
-        [SearchSection {:search-text (:search-text @state)
-                        :facet-filters (:facet-filters @state)
-                        :on-filter (fn [text]
-                                     (swap! state assoc :search-text text)
-                                     (after-update #((@refs "dataset-table") :execute-search true)))}]
+        (create-search-section {:search-text (:search-text @state)
+                                :facet-filters (:facet-filters @state)
+                                :on-input #(swap! state assoc :search-text %)
+                                :on-filter (fn [text]
+                                             (swap! state assoc :search-text text)
+                                             (after-update #((@refs "dataset-table") :execute-search true)))})
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)

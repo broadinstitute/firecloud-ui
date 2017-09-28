@@ -14,7 +14,7 @@
   :get-suggestions - function accepting value and returning suggestions
 
   :on-change (required)
-  :on-search (optional) - fires on submit and clear
+  :on-clear (optional)
 
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
@@ -22,8 +22,10 @@
 
   Other props to pass through to input element go in :inputProps."
   {:component-will-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :id (gensym "autosuggest")))
+   (fn [{:keys [locals props]}]
+     (swap! locals assoc
+            :id (gensym "autosuggest")
+            :on-search #(when (= (.. % -target -value -length) 0) ((:on-clear props)))))
    :get-initial-state
    (fn [{:keys [props]}]
      {:value (:default-value props)})
@@ -99,10 +101,10 @@
                     :sectionTitle {}}}
                   (dissoc props :data :on-change :get-suggestions :clear-suggestions :caching? :on-search)))]))
    :component-did-mount
-   (fn [{:keys [props this]}]
-     (when-let [{:keys [on-search]} props]
+   (fn [{:keys [locals this]}]
+     (when-let [{:keys [on-search]} @locals]
        (.addEventListener (react/find-dom-node this) "search" on-search)))
    :component-will-unmount
-   (fn [{:keys [props this]}]
-     (when-let [{:keys [on-search]} props]
+   (fn [{:keys [locals this]}]
+     (when-let [{:keys [on-search]} @locals]
        (.removeEventListener (react/find-dom-node this) "search" on-search)))})

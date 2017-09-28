@@ -3,9 +3,9 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
-   [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
@@ -127,7 +127,7 @@
                                                    [{:label "Error fetching results"}])))}
                            :service-prefix "/duos")
                           [{:label "Loading..."}])
-       :on-search #(when (= (.. % -target -value -length) 0) (clear))
+       :on-clear clear
        :getSuggestionValue #(.-label %)
        :renderSuggestion (fn [suggestion]
                            (react/create-element
@@ -166,7 +166,6 @@
    [Autosuggest
     {:value value-nullsafe
      :inputProps {:placeholder inputHint
-                  :defaultValue value-nullsafe
                   :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
      :get-suggestions (fn [query callback]
                         (utils/ajax-orch
