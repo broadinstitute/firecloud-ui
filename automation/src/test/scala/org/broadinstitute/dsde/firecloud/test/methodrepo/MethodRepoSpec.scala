@@ -15,6 +15,7 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with Cle
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
       signIn(Config.Users.hermione)
       val methodRepoPage = new MethodRepoPage()
+      val methodRepoTable = methodRepoPage.ui.MethodRepoTable
       methodRepoPage.open
       methodRepoPage.ui.clickNewMethodButton()
 
@@ -31,11 +32,10 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with Cle
       methodRepoPage.open
 
       // verify that it's in the table
-      val methodsTable = new Table("methods-table")
-      methodsTable.goToTab("My Methods")
-      methodsTable.filter(name)
+      methodRepoTable.goToTab("My Methods")
+      methodRepoTable.filter(name)
 
-      methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
+      methodRepoTable.hasMethod(namespace, name) shouldBe true
     }
 
     "should be able to redact a method that they own" in withWebDriver { implicit driver =>
@@ -46,23 +46,23 @@ class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with Cle
 
       signIn(Config.Users.hermione)
       val methodRepoPage = new MethodRepoPage()
+      val methodRepoTable = methodRepoPage.ui.MethodRepoTable
       methodRepoPage.open
 
       // verify that it's in the table
-      val methodsTable = new Table("methods-table")
-      methodsTable.goToTab("My Methods")
-      methodsTable.filter(name)
+      methodRepoTable.goToTab("My Methods")
+      methodRepoTable.filter(name)
 
-      methodRepoPage.ui.hasMethod(namespace, name) shouldBe true
+      methodRepoTable.hasMethod(namespace, name) shouldBe true
 
       // go in and redact it
-      val methodDetailPage = methodRepoPage.ui.enterMethod(namespace, name)
+      val methodDetailPage = methodRepoTable.enterMethod(namespace, name)
       methodDetailPage.awaitLoaded()
       methodDetailPage.ui.redact()
 
       // and verify that it's gone
       methodRepoPage.open
-      methodRepoPage.ui.hasMethod(namespace, name) shouldBe false
+      methodRepoTable.hasMethod(namespace, name) shouldBe false
     }
   }
 }

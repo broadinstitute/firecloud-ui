@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil, Table}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -10,26 +10,28 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
   override val url: String = s"${Config.FireCloud.baseUrl}#methods2"
 
   override def awaitLoaded(): MethodRepoPage = {
-    await enabled ui.newMethodButtonQuery
+    ui.MethodRepoTable.awaitReady()
     this
   }
 
   trait UI extends super.UI {
-    private[MethodRepoPage] val newMethodButtonQuery = testId("create-method-button")
-
-    private val tableQuery = testId("methods-table")
+    private val newMethodButtonQuery = testId("create-method-button")
 
     def clickNewMethodButton(): Unit = {
       click on newMethodButtonQuery
     }
 
-    def hasMethod(namespace: String, name: String): Boolean = {
-      find(testId(s"method-link-$namespace-$name") inside tableQuery).isDefined
-    }
+    object MethodRepoTable extends Table("methods-table") {
+      private def methodLink(namespace: String, name: String) = findInner(s"method-link-$namespace-$name")
 
-    def enterMethod(namespace: String, name: String): MethodDetailPage = {
-      click on (testId(s"method-link-$namespace-$name") inside tableQuery)
-      new MethodDetailPage(namespace, name)
+      def hasMethod(namespace: String, name: String): Boolean = {
+        find(methodLink(namespace, name)).isDefined
+      }
+
+      def enterMethod(namespace: String, name: String): MethodDetailPage = {
+        click on methodLink(namespace, name)
+        new MethodDetailPage(namespace, name)
+      }
     }
   }
 
