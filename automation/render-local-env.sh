@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 WORKING_DIR=${1-$(pwd)}
-ENV=$2
-VAULT_TOKEN=$3
+VAULT_TOKEN=$
+ENV=$3
 LOCAL_UI=false
 LOCAL_UI_PARAM=$4
 if [ "$LOCAL_UI_PARAM" = "local_ui" ]; then
