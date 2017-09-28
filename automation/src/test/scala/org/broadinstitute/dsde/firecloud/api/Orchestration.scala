@@ -175,17 +175,34 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       logger.info(s"Adding a method config")
       postRequest(apiUrl(s"api/configurations"), methodConfigData)
     }
+
+    def getMethodConfigPermission(configNamespace: String)(implicit token: AuthToken): String = {
+      logger.info(s"Getting permissions for method config: $configNamespace")
+      parseResponse(getRequest(apiUrl(s"api/configurations/$configNamespace/permissions")))
+    }
+    def setMethodConfigPermission(configNamespace: String, configName: String, configSnapshotId: Int, user: String, role: String)(implicit token: AuthToken): String = {
+      logger.info(s"Setting permissions for method config: $configNamespace/$configName/$configSnapshotId and user: $user to role: $role")
+      postRequest(apiUrl(s"api/configurations/$configNamespace/$configName/$configSnapshotId/permissions"),
+        Seq(Map("user" -> user,
+        "role" -> role))
+      )
+    }
   }
 
   object methods {
     def createMethod(methodData: Map[String,Any])(implicit token: AuthToken): Unit = {
-      logger.info(s"Adding a method")
+      logger.info(s"Adding a method.")
       postRequest(apiUrl(s"api/methods"), methodData)
     }
 
     def redact(ns: String, name: String, snapshotId: Int)(implicit token: AuthToken): Unit = {
       logger.info(s"Redacting method: $ns/$name:$snapshotId")
       deleteRequest(apiUrl(s"api/methods/$ns/$name/$snapshotId"))
+    }
+
+    def getMethodPermissions(ns: String, name: String, snapshotId: Int)(implicit token: AuthToken): String = {
+      logger.info(s"Getting method permissions for $ns / $name")
+      parseResponse(getRequest(apiUrl(s"api/methods/$ns/$name/$snapshotId/permissions")))
     }
   }
 
