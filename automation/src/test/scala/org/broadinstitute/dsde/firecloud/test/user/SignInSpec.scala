@@ -6,7 +6,7 @@ import org.scalatest._
 
 class SignInSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
-  implicit val authToken: AuthToken = AuthTokens.harry
+  implicit lazy val authToken: AuthToken = AuthTokens.harry
 
   "A user" - {
     "with a registered account" - {

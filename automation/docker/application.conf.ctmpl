@@ -6,12 +6,13 @@
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 
 {{if eq $environment "prod"}}
-firecloud {
+fireCloud {
   baseUrl = "https://portal.firecloud.org"
   orchApiUrl = "https://firecloud-orchestration.dsde-prod.broadinstitute.org/"
   rawlsApiUrl = "https://rawls.dsde-prod.broadinstitute.org"
   samApiUrl = "https://sam.dsde-prod.broadinstitute.org/"
   thurloeApiUrl = "https://thurloe.dsde-prod.broadinstitute.org/"
+  fireCloudId = "none"
 }
 {{else}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
@@ -33,13 +34,8 @@ fireCloud {
 {{end}}{{end}}
 
 gcs {
-  {{if eq $environment "prod"}}
-  qaEmail = "none"
-  appsDomain = "firecloud.org"
-  {{else}}
+  {{if eq $environment "prod"}}appsDomain = "firecloud.org"{{else}}appsDomain = {{if eq $environment "qa"}}"quality.firecloud.org"{{else}}"{{$environment}}.test.firecloud.org"{{end}}{{end}}
   qaEmail = "{{$users.Data.service_acct_email}}"
-  appsDomain = {{if eq $environment "qa"}}"quality.firecloud.org"{{else}}"{{$environment}}.test.firecloud.org"{{end}}
-  {{end}}
   serviceProject = "broad-dsde-{{$environment}}"
   qaPemFile = "{{$dir}}/src/test/resources/firecloud-account.pem"
   billingAccount = "Broad Institute - 8201528"
@@ -71,8 +67,8 @@ users {
 }
 
 methods {
-  testMethod = "test_method"
-  testMethodConfig = "test1_config"
+  testMethod = "DO_NOT_CHANGE_test_method"
+  testMethodConfig = "DO_NOT_CHANGE_test1_config"
   methodConfigNamespace = "automationmethods"
   snapshotID = 1
 }

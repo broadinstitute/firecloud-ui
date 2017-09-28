@@ -9,7 +9,7 @@ import org.scalatest._
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures
   with CleanUp with Matchers {
 
-  implicit val authToken: AuthToken = AuthTokens.harry
+  implicit lazy val authToken: AuthToken = AuthTokens.harry
   val billingProject: String = Config.Projects.default
 
   "A user" - {

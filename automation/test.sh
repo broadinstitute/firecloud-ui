@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+SBT_CMD=${1-"testOnly -- -l ProdTest"}
+
 set -o pipefail
 
-sbt -Djsse.enableSNIExtension=false -Dheadless=true "testOnly -- -l ProdTest" | tee testout.txt
+sbt -Djsse.enableSNIExtension=false -Dheadless=true "${SBT_CMD}" | tee testout.txt
 TEST_EXIT_CODE=$?
 sbt clean
 
