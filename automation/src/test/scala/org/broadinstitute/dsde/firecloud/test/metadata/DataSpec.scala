@@ -1,29 +1,33 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.fixture.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 
-class DataSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecution with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
+class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
+  with ShouldMatchers with WorkspaceFixtures with CleanUp {
 
-  behavior of "Data"
+  "A workspace owner should be able to import a participants file" in withWebDriver { implicit driver =>
+    implicit val authToken: AuthToken = AuthTokens.harry
+    withWorkspace(Config.Projects.default, "DataSpec_import_participants_file") { workspaceName =>
+      val filename = "src/test/resources/participants.txt"
 
-  it should "import a participants file" in withWebDriver { implicit driver =>
-    val filename = "src/test/resources/participants.txt"
+      signIn(Config.Users.harry)
+      val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+      workspaceDataTab.importFile(filename)
+      assert(workspaceDataTab.getNumberOfParticipants() == 1)
 
-    val billingProject = Config.Projects.default
-    val wsName = "TestSpec_FireCloud_import_participants_file_" + randomUuid
-    implicit val authToken = AuthTokens.testUser
-    api.workspaces.create(billingProject, wsName)
-    register cleanUp api.workspaces.delete(billingProject, wsName)
+      //more checks should be added here
+    }
+  }
 
-    val workspaceListPage = signIn(Config.Users.testUser.email, Config.Users.testUser.password)
-    val workspaceDataTab = new WorkspaceDataPage(billingProject, wsName).open
-    workspaceDataTab.importFile(filename)
-    assert(workspaceDataTab.getNumberOfParticipants() == 1)
+  "A user's column display preferences should persist across sessions" in withWebDriver { implicit driver =>
+    implicit val authToken: AuthToken = AuthTokens.ron
+    withWorkspace(Config.Projects.default, "DataSpec_column_display_prefs") { workspaceName =>
+      signIn(Config.Users.ron)
 
-    //more checks should be added here
+    }
   }
 }
