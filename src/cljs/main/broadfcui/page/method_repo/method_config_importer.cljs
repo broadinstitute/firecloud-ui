@@ -152,7 +152,6 @@
         [comps/ErrorViewer {:error (:server-error @state)}]
         [buttons/Button {:text (if workspace-id "Import" "Export")
                          :disabled? (not (or workspace-id workspaces-list))
-                         :data-test-id (if workspace-id "import-button" "export-button")
                          :onClick #(perform-copy (:selected-workspace @state) refs)}]]))})
 
 (defn- create-import-form [state props entity config? perform-copy]

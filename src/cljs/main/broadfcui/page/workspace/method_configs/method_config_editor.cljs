@@ -91,31 +91,31 @@
            (if editing?
              (list
               [buttons/SidebarButton
-               {:color :success-state
+               {:data-test-id "save-edited-method-config-button"
+                :color :success-state
                 :text "Save" :icon :done
                 :disabled? (when redacted? "Choose an available snapshot")
-                :data-test-id "save-editted-method-config-button"
                 :onClick #(parent :-commit)}]
               [buttons/SidebarButton
-               {:color :exception-state :margin :top
+               {:data-test-id "cancel-edit-method-config-button"
+                :color :exception-state :margin :top
                 :text "Cancel Editing" :icon :cancel
-                :data-test-id "cancel-edit-method-config-button"
                 :onClick #(parent :-cancel-editing)}])
              (list
               (when can-edit?
                 [buttons/SidebarButton
-                 {:style :light :color :button-primary
+                 {:data-test-id "edit-method-config-button"
+                  :style :light :color :button-primary
                   :text "Edit Configuration" :icon :edit
                   :disabled? (cond locked? "The workspace is locked"
                                    (and redacted? (empty? snapshots)) "There are no available method snapshots.")
-                  :data-test-id "edit-method-config-button"
                   :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
                 [buttons/SidebarButton
-                 {:style :light :color :exception-state :margin :top
+                 {:data-test-id "delete-method-config-button"
+                  :style :light :color :exception-state :margin :top
                   :text "Delete" :icon :delete
                   :disabled? (when locked? "The workspace is locked")
-                  :data-test-id "delete-method-config-button"
                   :onClick #(swap! state assoc :show-delete-dialog? true)}])
               (when-not redacted?
                 [buttons/SidebarButton

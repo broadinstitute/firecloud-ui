@@ -180,15 +180,15 @@
              (comps/render-blocker "Loading..."))
            (when (and can-share? (not editing?))
              [buttons/SidebarButton
-              {:style :light :margin :top :color :button-primary
+              {:data-test-id "share-workspace-button"
+               :style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
-               :data-test-id "share-workspace-button"
                :onClick #(swap! state assoc :sharing? true)}])
            (when (not editing?)
              [buttons/SidebarButton
-              {:style :light :color :button-primary :margin :top
+              {:data-test-id "catalog-button"
+               :style :light :color :button-primary :margin :top
                :icon :catalog :text "Catalog Dataset..."
-               :data-test-id "catalog-button"
                :onClick #(modal/push-modal
                           [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
                                                             owner? curator? writer? catalog-with-read? request-refresh)])}])
@@ -232,9 +232,9 @@
                   :onClick #(swap! state dissoc :editing?)}]]))
            (when-not editing?
              [buttons/SidebarButton
-              {:style :light :margin :top :color :button-primary
+              {:data-test-id "open-clone-workspace-modal-button"
+               :style :light :margin :top :color :button-primary
                :text "Clone..." :icon :clone
-               :data-test-id "open-clone-workspace-modal-button"
                :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                :onClick #(swap! state assoc :cloning? true)}])
            (when (and owner? (not editing?))
@@ -247,9 +247,9 @@
              (let [published? (:library:published library-attributes)
                    publisher? (and curator? (or catalog-with-read? owner?))]
                [buttons/SidebarButton
-                {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                {:data-test-id "delete-workspace-button"
+                 :style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                  :text "Delete" :icon :delete
-                 :data-test-id "delete-workspace-button"
                  :disabled? (cond isLocked
                                   "This workspace is locked."
                                   (and published? (not publisher?))

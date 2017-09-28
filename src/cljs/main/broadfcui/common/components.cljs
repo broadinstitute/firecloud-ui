@@ -475,7 +475,7 @@
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}
                :data-test-id data-test-id}
          header
-         (when show-close? [buttons/XButton {:dismiss modal/pop-modal}])]
+         (when show-close? (buttons/x-button modal/pop-modal))]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)

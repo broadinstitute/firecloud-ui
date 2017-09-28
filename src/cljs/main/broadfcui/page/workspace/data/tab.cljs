@@ -98,7 +98,6 @@
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))
              [buttons/Button {:text "Import Metadata..."
-                              :data-test-id "import-metadata-button"
                               :style {:marginLeft "auto"}
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                               :onClick #(this :-handle-import-data-click)}]])
