@@ -35,4 +35,15 @@ trait MethodFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
       } catch nonFatalAndLog(s"Error redacting method in withConfigForRedactedMethodInWorkspace clean-up: ${SimpleMethod.methodNamespace}/$methodName")
     }
   }
+
+  def withConfigForMethodInWorkspace(testNamespace: String, wsnamespace: String, wsname: String)
+                                    (testCode: (String) => Any)
+                                    (implicit token: AuthToken): Unit = {
+    val configName = testNamespace + "Config_" + makeUuid
+
+    api.methods.createMethod(SimpleMethod.creationAttributes + ("namespace"->testNamespace))
+    api.methodConfigurations.createMethodConfigInWorkspace(wsnamespace, wsname, 1, testNamespace, SimpleMethod.methodName, SimpleMethod.snapshotId, testNamespace, testNamespace, SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+    testCode(configName)
+
+  }
 }

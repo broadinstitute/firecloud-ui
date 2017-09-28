@@ -60,7 +60,8 @@
            allow-next (< page-number num-pages)]
        (style/create-unselectable
         :div {:style {:display "inline-flex" :alignItems "baseline"}}
-        [:div {:style {:display "inline-flex" :alignItems "baseline"
+        [:div {:data-test-id "prev-page"
+               :style {:display "inline-flex" :alignItems "baseline"
                        :padding "0 0.75rem"
                        :color (if allow-prev
                                 (:button-primary style/colors)
@@ -72,7 +73,8 @@
         [:span {:style {:whiteSpace "nowrap"}}
          (map (fn [n]
                 (let [selected? (= n page-number)]
-                  [:div {:style {:textAlign "center"
+                  [:div {:data-test-id (str "page-" n)
+                         :style {:textAlign "center"
                                  ;; FIXME: find a better way to make this div square
                                  :paddingTop 5 :display "inline-block" :width 29 :height 24
                                  :backgroundColor (when selected? (:button-primary style/colors))
@@ -82,7 +84,8 @@
                          :onClick (when-not selected? #(page-selected n))}
                    n]))
               (create-page-range page-number num-pages))]
-        [:div {:style {:display "inline-flex" :alignItems "baseline"
+        [:div {:data-test-id "next-page"
+               :style {:display "inline-flex" :alignItems "baseline"
                        :padding "0 0.75rem"
                        :color (if allow-next
                                 (:button-primary style/colors)
@@ -96,7 +99,8 @@
      (let [{:keys [rows-per-page per-page-options per-page-selected]} props]
        [:div {:style {:display "inline-flex" :alignItems "baseline"}}
         (style/create-identity-select
-         {:value rows-per-page
+         {:data-test-id "per-page"
+          :value rows-per-page
           :style {:width 60 :marginRight "0.75rem"}
           :onChange #(per-page-selected (-> % .-target .-value int))}
          per-page-options)

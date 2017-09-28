@@ -40,7 +40,7 @@
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
 (defn- render-form [state props]
-  [:div {:style {:width 1000}}
+  [:div {}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
    (style/create-form-label "Select Entity")
@@ -117,7 +117,8 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props))
-       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id "launch-button"}}])
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id "launch-button"}
+       :data-test-id "launch-analysis-modal"}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch

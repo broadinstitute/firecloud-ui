@@ -36,7 +36,7 @@
            header
            (when show-close? [buttons/XButton {:dismiss dismiss}])]
           [:div {:style {:padding "2rem 3rem"
-                         :backgroundColor (:background-light style/colors)}}
+                         :backgroundColor (:background-light style/colors)} :data-test-id (str data-test-id "-content")}
            content
            (if button-bar
              [:div {:style {:marginTop "1rem"}} button-bar]

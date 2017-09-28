@@ -218,7 +218,8 @@
             [RequestAuthDomainAccessDialog
              (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
-         {:persistence-key "workspace-table" :v 3
+         {:data-test-id "workspace-list"
+          :persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
           :tabs {:style {:backgroundColor (:background-light style/colors)
                          :margin "-0.6rem -1rem 0.3rem" :paddingLeft "1rem"}
@@ -283,7 +284,7 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:filter-bar {:inner {:width 300 :data-test-id "workspace-list-filter"}}
+          :toolbar {:filter-bar {:inner {:width 300}}
                     :style {:padding "1rem" :margin 0
                             :backgroundColor (:background-light style/colors)}
                     :get-items

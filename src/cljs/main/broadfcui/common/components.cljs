@@ -543,7 +543,7 @@
                                   :marginRight "0.5em"}} :error)
              "Error"]
     :data-test-id "push-error"
-    :content [:div {:style {:maxWidth "50vw"}} content]
+    :content [:div {:style {:maxWidth "50vw"} :data-test-id "error-text"} content]
     :show-cancel? false :ok-button "OK"}))
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals

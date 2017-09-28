@@ -37,7 +37,8 @@
         (cond error [comps/ErrorViewer {:error error}]
               (not methods) [comps/Spinner {:text "Loading..."}]
               :else
-              [Table {:persistence-key "method-repo-table2" :v 1
+              [Table {:data-test-id "methods-table"
+                      :persistence-key "method-repo-table2" :v 1
                       :data methods
                       :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
                       :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
@@ -64,7 +65,8 @@
                                (fn [[namespace name]]
                                  (links/create-internal
                                   (utils/deep-merge
-                                   {:style {:display "block" :marginTop -4}}
+                                   {:data-test-id (str "method-link-" namespace "-" name)
+                                    :style {:display "block" :marginTop -4}}
                                    (make-method-clicked-props (utils/restructure namespace name)))
                                   [:span
                                    {:className (when allow-modals? "underline-on-hover")
@@ -91,7 +93,8 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 [[buttons/Button {:style {:marginLeft "auto"}
+                                 [[buttons/Button {:data-test-id "create-method-button"
+                                                   :style {:marginLeft "auto"}
                                                    :text "Create New Method..."
                                                    :icon :add-new
                                                    :onClick #(swap! state assoc :creating? true)}]])}}])]))

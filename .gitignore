@@ -11,6 +11,10 @@ bower_components/
 .lein-repl-history
 target/
 
+automation/failure_screenshots/
+automation/docker/failure_screenshots/
+automation/docker/output/
+
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
 
