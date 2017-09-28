@@ -10,4 +10,3 @@ COPY build.sbt /app
 WORKDIR /app
 
 ENTRYPOINT ["bash", "test.sh"]
-#CMD bash test.sh
