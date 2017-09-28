@@ -40,7 +40,7 @@
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
 (defn- render-form [state props]
-  [:div {}
+  [:div {:style {:width "80vw"}}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
    (style/create-form-label "Select Entity")
@@ -54,21 +54,27 @@
             "None"))]
     (queue-status-table state)
     (common/clear-both)
-    [EntityTable
-     {:workspace-id (:workspace-id props)
-      :initial-entity-type (:root-entity-type props)
-      :style {:body-row (fn [{:keys [index row]}]
-                          {:backgroundColor
-                           (cond (= (entity->id row) (:selected-entity @state)) "yellow"
-                                 (even? index) (:background-light style/colors)
-                                 :else "#fff")
-                           :cursor "pointer"})}
-      :on-row-click (fn [_ entity]
-                      (let [entity-id (entity->id entity)]
-                        (swap! state assoc
-                               :selected-entity entity-id
-                               :workflow-count (common/count-workflows
-                                                entity (:root-entity-type props)))))}]]
+    (let [set-entity (fn [entity]
+                       (swap! state assoc
+                              :selected-entity (entity->id entity)
+                              :workflow-count (common/count-workflows
+                                               entity (:root-entity-type props))))]
+      [EntityTable
+       {:workspace-id (:workspace-id props)
+        :initial-entity-type (:root-entity-type props)
+        :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
+                                (let [entity-name (or name entityName)]
+                                  (links/create-internal
+                                    {:data-test-id (str entity-name "-link")
+                                     :onClick #(set-entity entity)}
+                                    entity-name)))
+        :style {:body-row (fn [{:keys [index row]}]
+                            {:backgroundColor
+                             (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
+                                   (even? index) (:background-light style/colors)
+                                   :else "#fff")
+                             :cursor "pointer"})}
+        :on-row-click (fn [_ entity] (set-entity entity))}])]
    (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"

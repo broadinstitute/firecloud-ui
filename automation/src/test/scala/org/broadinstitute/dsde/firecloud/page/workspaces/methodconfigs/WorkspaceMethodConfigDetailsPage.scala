@@ -225,8 +225,8 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
     def selectEntity(entityId: String) = {
-      await enabled launchAnalysisButtonQuery
-      click on (await enabled text(entityId))
+      entityTable.awaitReady()
+      click on testId(entityId + "-link")
     }
 
     def fillExpression(expression: String) = {
