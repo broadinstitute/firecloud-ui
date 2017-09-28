@@ -1,6 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool, Credentials}
+import java.io.{File, PrintWriter}
+
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+>>>>>>> in progress
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
