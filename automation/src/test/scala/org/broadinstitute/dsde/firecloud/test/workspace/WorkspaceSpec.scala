@@ -187,6 +187,34 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
           }
         }
+
+        "after adding them" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.addWorkspaceAttribute("a", "a")
+            detailPage.ui.addWorkspaceAttribute("b", "b")
+            detailPage.ui.addWorkspaceAttribute("c", "c")
+            detailPage.ui.save()
+
+            // TODO: better way to tell the page is ready
+            Thread sleep 1000
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.addWorkspaceAttribute("d", "d")
+            detailPage.ui.save()
+
+            Thread sleep 1000
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("c")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("d", "d"))
+          }
+        }
       }
     }
     "who has reader access to workspace" - {
