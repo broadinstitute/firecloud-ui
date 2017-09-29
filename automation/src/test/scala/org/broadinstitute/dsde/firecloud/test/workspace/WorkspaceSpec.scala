@@ -153,7 +153,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
             val listPage = signIn(Config.Users.ron)
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-            val methodConfigTab = detailPage.ui.clickMethodConfigTab(billingProject, workspaceName)
+            val methodConfigTab = detailPage.ui.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
             val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
             errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
@@ -181,8 +181,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               detailPage.share(Config.Users.ron.email, "WRITER", false, false)
               detailPage.signOut()
               val listPage2 = signIn(Config.Users.ron)
-              val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+              val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
               val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
               val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
               errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
@@ -200,8 +200,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               detailPage.share(Config.Users.ron.email, "WRITER", false, true)
               detailPage.signOut()
               val listPage2 = signIn(Config.Users.ron)
-              val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+              val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
               val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
               val launchAnalysisModal = methodConfigDetailsPage.ui.openLaunchAnalysisModal()
               launchAnalysisModal.validateLocation shouldBe true

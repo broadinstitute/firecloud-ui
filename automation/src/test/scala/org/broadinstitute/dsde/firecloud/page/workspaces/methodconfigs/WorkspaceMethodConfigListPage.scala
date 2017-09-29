@@ -8,7 +8,8 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 
-class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigListPage] {
+class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigListPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 

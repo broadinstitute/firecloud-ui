@@ -12,7 +12,8 @@ import org.scalatest.selenium.Page
 /**
   * Page class for the Workspace Detail page.
   */
-class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceSummaryPage] {
+class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
@@ -121,7 +122,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val shareWorkspaceButton = testId("share-workspace-button")
     private val workspaceError = testId("workspace-details-error")
     private val accessLevel = testId("workspace-access-level")
-    private val methodConfigTab = testId("Method Configurations-tab")
 
     private class WorkspaceAttributesArea extends FireCloudView {
       def clickNewButton(): Unit = {
@@ -194,11 +194,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def readAccessLevel(): WorkspaceAccessLevel = {
       WorkspaceAccessLevel.withName(readText(accessLevel).toUpperCase)
-    }
-
-    def clickMethodConfigTab(namespace: String, name: String): WorkspaceMethodConfigListPage = {
-      click on (await enabled methodConfigTab)
-      new WorkspaceMethodConfigListPage(namespace, name)
     }
 
     def isEditing: Boolean = {

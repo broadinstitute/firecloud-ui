@@ -7,7 +7,8 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 
-class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceDataPage] {
+class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 

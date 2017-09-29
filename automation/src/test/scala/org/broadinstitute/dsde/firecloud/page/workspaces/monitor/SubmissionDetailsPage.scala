@@ -6,7 +6,8 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[SubmissionDetailsPage] {
+class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
   private val submissionId = getSubmissionId()
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
