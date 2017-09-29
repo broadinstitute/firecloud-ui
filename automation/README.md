@@ -11,3 +11,5 @@
 * The test should cleanup after itself.
 * Keep in mind that this test will be required to pass for every subsequent build. If the test is flaky, investigate and fix the flakiness before merging.
 * New tests should be kept under 5 minutes.
+
+For more documentation on writing and running tests, see the [Confluence page](https://broadinstitute.atlassian.net/wiki/spaces/GAWB/pages/116428999/Creating+and+running+Automated+Tests). 
