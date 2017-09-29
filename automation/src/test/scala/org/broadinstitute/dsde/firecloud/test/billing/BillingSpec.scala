@@ -73,7 +73,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
           register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
           val detailPage = listPage.createWorkspace(billingProjectName, workspaceName).awaitLoaded()
 
-          detailPage.readWorkspace shouldEqual (billingProjectName, workspaceName)
+          detailPage.validateWorkspace shouldEqual true
         }
 
         "should be able to run a method in a new workspace in the billing project" in withWebDriver { implicit driver =>

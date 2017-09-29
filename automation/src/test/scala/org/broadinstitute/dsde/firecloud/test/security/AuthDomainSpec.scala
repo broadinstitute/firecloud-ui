@@ -63,7 +63,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               summaryPage.cloneWorkspaceWait()
 
               val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-              cloneSummaryPage.readWorkspace should be((projectName, cloneWorkspaceName))
+              cloneSummaryPage.validateWorkspace shouldEqual true
               cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
             }
           }
@@ -199,7 +199,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 summaryPage.cloneWorkspaceWait()
 
                 val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-                cloneSummaryPage.readWorkspace should be((projectName, cloneWorkspaceName))
+                cloneSummaryPage.validateWorkspace shouldEqual true
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
               }

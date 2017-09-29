@@ -30,7 +30,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         register cleanUp api.workspaces.delete(billingProject, workspaceName)
         val detailPage = listPage.createWorkspace(billingProject, workspaceName).awaitLoaded()
 
-        detailPage.readWorkspace shouldEqual (billingProject, workspaceName)
+        detailPage.validateWorkspace shouldEqual true
 
         listPage.open
         listPage.filter(workspaceName)
