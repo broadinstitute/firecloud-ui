@@ -38,7 +38,8 @@
                                   (= sort-order :asc) (set-sort id :desc)
                                   allow-no-sort? (set-sort nil nil)
                                   :else (set-sort id :asc)))}
-          [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"}}
+          [:div {:data-test-id "column-header"
+                 :style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"}}
            header]
           flex/spring
           (when (= id sort-column)

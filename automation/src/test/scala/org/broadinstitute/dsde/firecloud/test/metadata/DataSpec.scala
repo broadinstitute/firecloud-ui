@@ -31,4 +31,17 @@ class DataSpec extends FlatSpec with WebBrowserSpec
       }
     }
   }
+
+  def makeTempMetadataFile(filePrefix: String, headers: List[String], rows: List[List[String]]): File = {
+    val metadataFile = File.createTempFile(filePrefix, "txt")
+    val writer = new PrintWriter(metadataFile)
+    val rowStrings = rows map { _.mkString(s"\t") }
+    val fileContent = s"""entity:${headers.mkString(s"\t")}\n${rowStrings.mkString(s"\n")}"""
+    writer.write(fileContent)
+    writer.close()
+    metadataFile
+  }
+
+    }
+  }
 }
