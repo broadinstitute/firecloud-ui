@@ -128,6 +128,23 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           aclEditor.ui.canComputeChecked() shouldBe false
         }
       }
+
+      "should be able to enter workspace attributes" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+          detailPage.ui.beginEditing()
+          detailPage.ui.addWorkspaceAttribute("a", "a")
+          detailPage.ui.addWorkspaceAttribute("b", "b")
+          detailPage.ui.addWorkspaceAttribute("c", "c")
+          detailPage.ui.save()
+          detailPage.awaitLoaded()
+
+          // TODO: ensure sort, for now it's default sorted by key, ascending
+          detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("c", "c"))
+        }
+      }
     }
     "who has reader access to workspace" - {
 

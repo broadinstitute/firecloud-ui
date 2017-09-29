@@ -109,7 +109,8 @@
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing? writer?]} props]
        [Collapse
-        {:style {:marginBottom "2rem"}
+        {:data-test-id "attribute-editor"
+         :style {:marginBottom "2rem"}
          :default-hidden? true
          :title
          [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
@@ -146,7 +147,8 @@
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
-           {:key (:table-key @state)
+           {:data-test-id "workspace-attributes"
+            :key (:table-key @state)
             :data (if editing?
                     (map-indexed (fn [index [key value type]]
                                    (utils/restructure index key value type))
@@ -163,8 +165,9 @@
                               [{:id "delete" :initial-width 40 :resizable? false
                                 :column-data :index :as-text (constantly "Delete")
                                 :render
-                                (fn [index]
-                                  (icons/icon {:style {:color (:text-lightest style/colors)
+                                (fn [key index]
+                                  (icons/icon {:data-test-id (str key "-delete")
+                                               :style {:color (:text-lightest style/colors)
                                                        :verticalAlign "middle" :fontSize 22
                                                        :cursor "pointer"}
                                                :onClick (fn [_]
@@ -177,7 +180,8 @@
                                 :render
                                 (fn [{:keys [key index]}]
                                   (style/create-text-field (merge
-                                                            {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                            {:data-test-id (str key "-key")
+                                                             :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                              :defaultValue key
                                                              :onChange #(swap! state update-in [:attributes index]
                                                                                assoc 0 (-> % .-target .-value))}
@@ -187,7 +191,8 @@
                                 :as-text (constantly nil)
                                 :render
                                 (fn [{:keys [value index]}]
-                                  (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                  (style/create-text-field {:data-test-id (str key "-value")
+                                                            :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                             :defaultValue value
                                                             :onChange #(swap! state update-in [:attributes index]
                                                                               assoc 1 (-> % .-target .-value))}))}
@@ -196,7 +201,8 @@
                                 :render
                                 (fn [{:keys [type index]}]
                                   (style/create-identity-select
-                                   {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                   {:data-test-id (str key "-type")
+                                    :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                     :defaultValue type
                                     :onChange #(swap! state update-in [:attributes index]
                                                       assoc 2 (-> % .-target .-value))}

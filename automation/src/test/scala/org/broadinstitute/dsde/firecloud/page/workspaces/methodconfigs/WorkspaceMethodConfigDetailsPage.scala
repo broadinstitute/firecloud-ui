@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.components.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil, Table}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
@@ -202,7 +203,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 
   object ui {
-    private val entityTable = new Table("entity-table")
+    private val entityTable = Table("entity-table")
     private val expressionInputQuery: Query = testId("define-expression-input")
     private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
     private val launchAnalysisButtonQuery: Query = testId("launch-button")

@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.components.{Collapse, Table}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
 import org.openqa.selenium.WebDriver
@@ -108,6 +109,11 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   trait UI extends super.UI {
     private val authDomainGroups = testId("auth-domain-groups")
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
+
+    private val editButton = testId("edit-button")
+    private val saveButton = testId("save-button")
+    private val cancelButton = testId("cancel-editing-button")
+
     private val cloneButton = testId("open-clone-workspace-modal-button")
     private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
     private val publishButtonQuery = testId("publish-button")
@@ -116,6 +122,24 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val workspaceError = testId("workspace-details-error")
     private val accessLevel = testId("workspace-access-level")
     private val methodConfigTab = testId("Method Configurations-tab")
+
+    private class WorkspaceAttributesArea extends FireCloudView {
+      def clickNewButton(): Unit = {
+        click on (await enabled ui.newButton)
+      }
+
+      def table: Table = {
+        ui.table
+      }
+
+      trait UI {
+        val newButton: Query = testId("add-new-button")
+        val table = Table("workspace-attributes")
+      }
+      object ui extends UI
+    }
+
+    private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea)
 
     def clickCloneButton(): CloneWorkspaceModal = {
       click on (await enabled cloneButton)
@@ -175,6 +199,47 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     def clickMethodConfigTab(namespace: String, name: String): WorkspaceMethodConfigListPage = {
       click on (await enabled methodConfigTab)
       new WorkspaceMethodConfigListPage(namespace, name)
+    }
+
+    def isEditing: Boolean = {
+      find(editButton).isEmpty
+    }
+
+    def beginEditing(): Unit = {
+      if (!isEditing)
+        click on editButton
+      else
+        throw new IllegalStateException("Already editing")
+    }
+
+    def save(): Unit = {
+      if (isEditing)
+        click on saveButton
+      else
+        throw new IllegalStateException("Tried to click on 'save' while not editing")
+    }
+
+    def cancelEdit(): Unit = {
+      if (isEditing)
+        click on cancelButton
+      else
+        throw new IllegalStateException("Tried to click on 'cancel' while not editing")
+    }
+
+    def addWorkspaceAttribute(key: String, value: String): Unit = {
+      if (isEditing) {
+        workspaceAttributesArea.getInner.clickNewButton()
+        // focus should take us to the field
+        pressKeys(key)
+        pressKeys("\t")
+        pressKeys(value)
+      } else {
+        throw new IllegalArgumentException("Tried to add workspace attribute while not editing")
+      }
+    }
+
+    def readWorkspaceTable: List[List[String]] = {
+      workspaceAttributesArea.getInner.table.getData
     }
   }
   object ui extends UI

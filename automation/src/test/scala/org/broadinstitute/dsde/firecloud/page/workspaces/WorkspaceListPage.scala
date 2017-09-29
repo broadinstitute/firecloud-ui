@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil, Table}
+import org.broadinstitute.dsde.firecloud.page.components.Table
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -62,7 +63,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
 
 
   trait UI extends super.UI {
-    private val workspacesTable = new Table("workspace-list")
+    private val workspacesTable = Table("workspace-list")
     private val createWorkspaceButton = testId("open-create-workspace-modal-button")
     private val requestAccessModal = testId("request-access-modal")
     private def restrictedWorkspaceTestId(ns: String, n: String) = { s"restricted-$ns-$n" }
