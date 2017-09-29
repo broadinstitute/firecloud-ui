@@ -169,8 +169,7 @@
                          (select-keys @state [:editing? :loaded-config :redacted?])
                          (select-keys @locals [:body-id])
                          {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
-         (this :-render-main locked?)
-         (common/clear-both)]]))
+         (this :-render-main locked?)]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
@@ -178,8 +177,9 @@
            {:keys [methodRepoMethod rootEntityType]} config
            {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
            {:keys [body-id]} @locals
-           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
-       [:div {:style {:flex "1 1 auto" :overflow "auto"} :id body-id}
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+           can-compute (get-in props [:workspace :canCompute])]
+       [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
@@ -187,6 +187,8 @@
                                   :root-entity-type rootEntityType
                                   :disabled? (cond locked?
                                                    "This workspace is locked."
+                                                   (not can-compute)
+                                                   "You do not have access to run analysis."
                                                    (not (:bucket-access? props))
                                                    (str "You do not currently have access"
                                                         " to the Google Bucket associated with this workspace.")
@@ -196,7 +198,7 @@
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
-           (style/create-text-field {:ref "confname" :style {:width 500}
+           (style/create-text-field {:ref "confname" :style {:maxWidth 500}
                                      :data-test-id "edit-method-config-name-input"
                                      :defaultValue (:name config)})
            [:div {:style {:padding "0.5em 0 1em 0"}
@@ -220,7 +222,7 @@
            (style/create-identity-select {:ref "rootentitytype"
                                           :data-test-id "edit-method-config-root-entity-type-select"
                                           :defaultValue rootEntityType
-                                          :style {:width 500}
+                                          :style {:maxWidth 500}
                                           :onChange #(swap! state assoc :autocomplete-list
                                                             (build-autocomplete-list
                                                              {:workspace-attributes workspace-attributes

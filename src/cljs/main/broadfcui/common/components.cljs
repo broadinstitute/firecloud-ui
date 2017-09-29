@@ -254,8 +254,7 @@
                (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
                                       (icons/icon {:className "fa-fw"} :disclosure-opened)
                                       "Hide Details")
-               ;; Padding is specifically em rather than rem to match fa-fw
-               [:div {:style {:overflowX "auto" :paddingLeft "1.3em"}}
+               [:div {:style {:overflowX "auto" :paddingLeft icons/fw-icon-width}}
                 [:div {} (str "Code: " status-code)]
                 (when timestamp [:div {} "Occurred: "
                                  (common/format-date timestamp
@@ -544,7 +543,7 @@
                                   :marginRight "0.5em"}} :error)
              "Error"]
     :data-test-id "push-error"
-    :content [:div {:style {:maxWidth "50vw"}} content]
+    :content [:div {:style {:maxWidth "50vw"} :data-test-id "error-text"} content]
     :show-cancel? false :ok-button "OK"}))
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals

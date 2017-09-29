@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
@@ -113,6 +113,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       find(openLaunchAnalysisModalButtonQuery).size == 1
     }
 
+    def clickLaunchAnalysisButtonError(): ErrorModal = {
+      click on (await enabled openLaunchAnalysisModalButtonQuery)
+      new ErrorModal
+    }
+
     def verifyMethodConfigurationName(methodConfigName: String) = {
       await enabled methodConfigNameTextQuery
 
@@ -153,6 +158,10 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     if (!expression.isEmpty()) { ui.fillExpression(expression) }
     if (!enableCallCaching) { ui.clickCallCachingCheckbox() }
     ui.clickLaunchButton()
+  }
+
+  def validateLocation(implicit webDriver: WebDriver): Boolean = {
+    testId("launch-analysis-modal").element != null
   }
 
   def filterRootEntityType(rootEntityType: String) = {

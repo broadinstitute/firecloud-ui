@@ -116,6 +116,7 @@
           (let [user-access-level (:accessLevel workspace)
                 auth-domain (get-in workspace [:workspace :authorizationDomain])
                 derived (merge {:can-share? (:canShare workspace)
+                                :can-compute? (:canCompute workspace)
                                 :owner? (common/access-greater-than-equal-to? user-access-level "OWNER")
                                 :writer? (common/access-greater-than-equal-to? user-access-level "WRITER")
                                 :catalog-with-read? (and (common/access-greater-than-equal-to? user-access-level "READER") (:catalog workspace))}
@@ -282,7 +283,7 @@
                                  children)])
            processed-tags (flatten (map :items (vals tags)))]
        [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-        [:div {:style {:display "flex"}}
+        [:div {:style {:display "flex" :paddingLeft icons/fw-icon-width}}
          (render-detail-box
           "Workspace Access"
 

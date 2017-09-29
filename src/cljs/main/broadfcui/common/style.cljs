@@ -67,7 +67,7 @@
   [:div {:style {:fontSize "80%" :fontStyle "italic" :margin "-1.3ex 0 1ex 0"}} text])
 
 
-(def ^:private input-text-style
+(def input-text-style
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 3

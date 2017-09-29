@@ -54,6 +54,7 @@
                me (utils/get-user-email)
                method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
                can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
+               can-compute? (get-in parsed-perms-report [:workspaceACL (keyword me) :canCompute])
                method-users (when method-owner? (->> method-report :acls (map :user) set))
                unauthed-users (set/difference workspace-users method-users)]
            (cond (and method-owner? can-share? (seq unauthed-users))

@@ -261,9 +261,9 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           assert(methodConfigDetailsPage.ui.isSnapshotRedacted())
 
           methodConfigDetailsPage.ui.openLaunchAnalysisModal()
-          val errorModal = ErrorModal()
-          assert(errorModal.validateLocation)
-          errorModal.clickOk()
+          val messageModalModal = MessageModal()
+          assert(messageModalModal.validateLocation)
+          messageModalModal.clickCancel()
         }
       }
     }

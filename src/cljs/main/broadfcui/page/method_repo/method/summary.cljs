@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.markdown :refer [MarkdownView]]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -83,7 +84,8 @@
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
            {:keys [body-id]} @locals]
-       [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
+       [:div {:style {:flex "1 1 auto" :overflow "hidden" :paddingLeft icons/fw-icon-width}
+              :id body-id}
         (style/create-summary-block "Synopsis" synopsis)
         [:div {:style {:display "flex"}}
          (style/create-summary-block (str "Method Owner" (when (> (count managers) 1) "s"))
