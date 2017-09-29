@@ -228,42 +228,7 @@
      :on-change on-input
      :on-clear #(on-filter "")
      :theme {:input {:width "100%" :marginBottom 0}
-             :suggestionsContainerOpen {:marginTop -1}}}]
-
-  #_ [comps/AutocompleteFilter
-    {:ref "text-filter"
-     :on-filter (:on-filter props)
-     :typeahead-events ["typeahead:select"]
-     :width "100%"
-     :field-attributes {:defaultValue (:search-text props)
-                        :placeholder "Search"}
-     :facet-filters (:facet-filters props)
-     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
-                      :transform (fn [response]
-                                   (clj->js
-                                    (mapv (partial hash-map :value) (aget response "results"))))
-                      :cache false
-                      :prepare (fn [query settings]
-                                 (clj->js
-                                  (assoc (js->clj settings)
-                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                    :type "POST"
-                                    :contentType "application/json; charset=UTF-8"
-                                    :data (utils/->json-string
-                                           {:searchString query
-                                            :filters (this :get-filters)
-                                            :from 0
-                                            :size 10}))))}
-     :typeaheadDisplay (fn [result]
-                         ;; underlying typeahead library uses the result of this function
-                         ;; via $input.val(x), which is safe from xss. So we explicitly
-                         ;; do not want to encode anything here.
-                         (aget result "value" "suggestion"))
-     :typeaheadSuggestionTemplate (fn [result]
-                                    (let [suggestion (aget result "value" "suggestion")
-                                          highlight (aget result "value" "highlight")
-                                          display (highlight-suggestion suggestion highlight)]
-                                      (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])
+             :suggestionsContainerOpen {:marginTop -1}}}]])
 
 (react/defc- FacetCheckboxes
   {:render
