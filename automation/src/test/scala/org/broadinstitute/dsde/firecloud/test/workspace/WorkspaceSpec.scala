@@ -19,6 +19,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   implicit val authToken: AuthToken = AuthTokens.harry
   val billingProject: String = Config.Projects.default
 
+  val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
+
   "A user" - {
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
@@ -139,10 +141,51 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           detailPage.ui.addWorkspaceAttribute("b", "b")
           detailPage.ui.addWorkspaceAttribute("c", "c")
           detailPage.ui.save()
-          detailPage.awaitLoaded()
 
           // TODO: ensure sort, for now it's default sorted by key, ascending
           detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("c", "c"))
+        }
+      }
+
+      // This table is notorious for getting out of sync
+      "should be able to correctly delete workspace attributes" - {
+        "from the top" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("A-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
+          }
+        }
+
+        "from the middle" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("B-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
+          }
+        }
+
+        "from the bottom" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("C-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
+          }
         }
       }
     }

@@ -208,8 +208,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
 
     def save(): Unit = {
-      if (isEditing)
+      if (isEditing) {
         click on saveButton
+        awaitLoaded()
+      }
       else
         throw new IllegalStateException("Tried to click on 'save' while not editing")
     }
@@ -230,6 +232,16 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
         pressKeys(value)
       } else {
         throw new IllegalArgumentException("Tried to add workspace attribute while not editing")
+      }
+    }
+
+    def deleteWorkspaceAttribute(key: String): Unit = {
+      if (isEditing) {
+        // TODO: should do through table
+        workspaceAttributesArea.ensureExpanded()
+        click on testId(s"$key-delete")
+      } else {
+        throw new IllegalArgumentException("Tried to delete a row while not editing")
       }
     }
 

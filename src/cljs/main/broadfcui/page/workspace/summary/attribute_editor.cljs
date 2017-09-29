@@ -163,9 +163,9 @@
                               :sortable-columns? (not editing?) :allow-no-sort? editing?}
                    :columns (if editing?
                               [{:id "delete" :initial-width 40 :resizable? false
-                                :column-data :index :as-text (constantly "Delete")
+                                :as-text (constantly "Delete")
                                 :render
-                                (fn [key index]
+                                (fn [{:keys [key index]}]
                                   (icons/icon {:data-test-id (str key "-delete")
                                                :style {:color (:text-lightest style/colors)
                                                        :verticalAlign "middle" :fontSize 22
