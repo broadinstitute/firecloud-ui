@@ -213,6 +213,14 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.ui.save()
 
             detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("d", "d"))
+
+            Thread sleep 1000
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("b")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("d", "d"))
           }
         }
       }
