@@ -137,13 +137,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
 
           detailPage.ui.beginEditing()
-          detailPage.ui.addWorkspaceAttribute("a", "a")
-          detailPage.ui.addWorkspaceAttribute("b", "b")
-          detailPage.ui.addWorkspaceAttribute("c", "c")
+          detailPage.ui.addWorkspaceAttribute("a", "X")
+          detailPage.ui.addWorkspaceAttribute("b", "Y")
+          detailPage.ui.addWorkspaceAttribute("c", "Z")
           detailPage.ui.save()
 
           // TODO: ensure sort, for now it's default sorted by key, ascending
-          detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("c", "c"))
+          detailPage.ui.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
         }
       }
 
@@ -194,16 +194,16 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
 
             detailPage.ui.beginEditing()
-            detailPage.ui.addWorkspaceAttribute("a", "a")
-            detailPage.ui.addWorkspaceAttribute("b", "b")
-            detailPage.ui.addWorkspaceAttribute("c", "c")
+            detailPage.ui.addWorkspaceAttribute("a", "W")
+            detailPage.ui.addWorkspaceAttribute("b", "X")
+            detailPage.ui.addWorkspaceAttribute("c", "Y")
             detailPage.ui.save()
 
             // TODO: better way to tell the page is ready
             Thread sleep 1000
 
             detailPage.ui.beginEditing()
-            detailPage.ui.addWorkspaceAttribute("d", "d")
+            detailPage.ui.addWorkspaceAttribute("d", "Z")
             detailPage.ui.save()
 
             Thread sleep 1000
@@ -212,7 +212,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.ui.deleteWorkspaceAttribute("c")
             detailPage.ui.save()
 
-            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("b", "b"), List("d", "d"))
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
 
             Thread sleep 1000
 
@@ -220,7 +220,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.ui.deleteWorkspaceAttribute("b")
             detailPage.ui.save()
 
-            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "a"), List("d", "d"))
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
           }
         }
       }
