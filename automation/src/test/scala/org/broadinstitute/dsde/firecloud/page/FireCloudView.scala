@@ -17,4 +17,9 @@ abstract class FireCloudView(implicit webDriver: WebDriver)
   def readText(q: Query): String = {
     find(q) map { _.text } getOrElse ""
   }
+
+  def readAllText(q: Query): List[String] = {
+    val allText = findAll(q) map { _.text }
+    allText.toList
+  }
 }

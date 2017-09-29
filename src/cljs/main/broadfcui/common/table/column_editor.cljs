@@ -33,7 +33,8 @@
                     :onMouseDown on-drag-mouse-down}
                    :reorder)
        [:label {:style {:cursor (when-not (or dragging? fixed?) "pointer")}}
-        [:input {:type "checkbox" :checked (or fixed? visible?)
+        [:input {:data-test-id (str text "-column-toggle")
+                 :type "checkbox" :checked (or fixed? visible?)
                  :disabled fixed?
                  :onChange on-visibility-change}]
         [:span {:style {:paddingLeft "0.5em"} :title text} text]]])))
