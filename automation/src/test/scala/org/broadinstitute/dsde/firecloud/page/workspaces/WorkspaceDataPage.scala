@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil, Table}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -25,9 +25,9 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   }
 
   trait UI extends super.UI {
+    private val dataTable = new Table("entity-table")
 
     private val importMetadataButtonQuery = testId("import-metadata-button")
-    private val participantFilterButtonQuery = testId("participant-filter-button")
 
     def hasimportMetadataButton(): Boolean = {
       find(importMetadataButtonQuery).isDefined
@@ -39,9 +39,8 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     }
 
     def getNumberOfParticipants(): Int = {
-      await enabled participantFilterButtonQuery
-      val filterString = readText(participantFilterButtonQuery)
-      filterString.replaceAll("\\D+","").toInt
+      // TODO: click on the tab and read the actual table size
+      dataTable.readDisplayedTabCount("participant")
     }
   }
   object ui extends UI

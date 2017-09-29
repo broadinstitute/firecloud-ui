@@ -126,7 +126,7 @@
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
-         [buttons/XButton {:dismiss modal/pop-modal}]]
+         (buttons/x-button modal/pop-modal)]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})

@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil, Table}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
@@ -55,7 +55,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     private val openLaunchAnalysisModalButtonQuery: Query = testId("open-launch-analysis-modal-button")
     private val openEditModeQuery: Query = testId("edit-method-config-button")
     private val editMethodConfigNameInputQuery: Query = testId("edit-method-config-name-input")
-    private val saveEdittedMethodConfigButtonQuery: Query = testId("save-editted-method-config-button")
+    private val saveEditedMethodConfigButtonQuery: Query = testId("save-edited-method-config-button")
     private val cancelEditMethodConfigModeButtonQuery: Query = testId("cancel-edit-method-config-button")
     private val editMethodConfigSnapshotIdSelectQuery: Query = testId("edit-method-config-snapshot-id-select")
     private val editMethodConfigRootEntityTypeInputQuery: Query = testId("edit-method-config-root-entity-type-select")
@@ -97,7 +97,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
 
     def saveEdits(state: String = "enabled") = {
-      val button = await enabled saveEdittedMethodConfigButtonQuery
+      val button = await enabled saveEditedMethodConfigButtonQuery
       await forState(button, state)
       // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
       webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", button.underlying)
@@ -202,9 +202,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 
   object ui {
-    private val participantRootEntityFilterButtonQuery: Query = testId("participant-filter-button")
-    private val participantSetRootEntityFilterButtonQuery: Query = testId("participant_set-filter-button")
-    private val entitySearchInputQuery: Query = testId("entity-table-input")
+    private val entityTable = new Table("entity-table")
     private val expressionInputQuery: Query = testId("define-expression-input")
     private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
     private val launchAnalysisButtonQuery: Query = testId("launch-button")
@@ -215,22 +213,20 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val emptyDefaultMessage = "There are no entities to display."
 
     def filterRootEntityType(rootEntityType: String) = {
-      click on (await enabled testId(rootEntityType + "-filter-button"))
+      entityTable.goToTab(rootEntityType)
     }
 
     def filterParticipantSetType() = {
-      click on (await enabled participantSetRootEntityFilterButtonQuery)
+      entityTable.goToTab("participant_set")
     }
 
     def searchEntity(entityId: String) = {
-      await enabled entitySearchInputQuery
-      searchField(entitySearchInputQuery).value = entityId
-      pressKeys("\n")
+      entityTable.filter(entityId)
     }
 
     def selectEntity(entityId: String) = {
-      await enabled launchAnalysisButtonQuery
-      click on (await enabled text(entityId))
+      entityTable.awaitReady()
+      click on testId(entityId + "-link")
     }
 
     def fillExpression(expression: String) = {

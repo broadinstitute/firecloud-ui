@@ -104,8 +104,8 @@
                           (constantly
                            [flex/spring
                             [buttons/Button
-                             {:text "Add User..." :icon :add-new
-                              :data-test-id "billing-project-add-user-button"
+                             {:data-test-id "billing-project-add-user-button"
+                              :text "Add User..." :icon :add-new
                               :onClick (fn [_]
                                          (modal/push-modal
                                           [AddUserDialog {:endpoint (:add-endpoint props)

@@ -15,8 +15,8 @@
       (when (:publishing? @state)
         [comps/Blocker {:banner "Publishing..."}])
       [buttons/SidebarButton
-       {:style :light :color :button-primary :margin :top
-        :data-test-id "publish-button"
+       {:data-test-id "publish-button"
+        :style :light :color :button-primary :margin :top
         :icon :library :text "Publish in Library"
         :disabled? (:disabled? props)
         :onClick (fn [_]
@@ -41,7 +41,6 @@
         [comps/Blocker {:banner "Unpublishing..."}])
       [buttons/SidebarButton
        {:style :light :color :exception-state :margin :top
-        :data-test-id "unpublish-button"
         :icon :library :text "Unpublish"
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)

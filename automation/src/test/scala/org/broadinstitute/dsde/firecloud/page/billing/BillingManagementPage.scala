@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil, Table}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -39,8 +39,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     * @param text the text to filter by
     */
   def filter(text: String): Unit = {
-    ui.fillFilterText(text)
-    ui.clickFilterButton()
+    ui.filter(text)
   }
 
   /**
@@ -81,9 +80,9 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
 
 
   trait UI extends super.UI {
+    private val billingProjectTable = new Table("billing-project-table")
+
     private val createBillingProjectButton: Query = testId("begin-create-billing-project")
-    private val filterButton = testId("billing-project-list-filter-button")
-    private val filterInput = testId("billing-project-list-filter-input")
     private val addUserButton = testId("billing-project-add-user-button")
 
     def clickCreateBillingProjectButton(): CreateBillingProjectModal = {
@@ -91,13 +90,8 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
       new CreateBillingProjectModal
     }
 
-    def clickFilterButton(): Unit = {
-      click on (await enabled filterButton)
-    }
-
-    def fillFilterText(text: String): Unit = {
-      await enabled filterInput
-      searchField(filterInput).value = text
+    def filter(text: String): Unit = {
+      billingProjectTable.filter(text)
     }
 
     def hasCreateBillingProjectButton: Boolean = {

@@ -50,7 +50,8 @@
   (assert configs "No configs given")
   (assert render-name "No name renderer given")
   [Table
-   {:data configs
+   {:data-test-id "method-configs-table"
+    :data configs
     :body {:empty-message "There are no method configurations to display."
            :style table-style/table-heavy
            :columns [{:id "redacted" :hidden? true :resizable? false :sortable? false :filterable? false :initial-width 30
