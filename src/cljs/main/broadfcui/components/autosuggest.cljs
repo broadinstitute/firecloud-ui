@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [cljsjs.react-autosuggest]
    [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
    ))
@@ -14,7 +15,7 @@
   :get-suggestions - function accepting value and returning suggestions
 
   :on-change (required)
-  :on-clear (optional)
+  :on-submit (optional) - fires when hitting return or clear button
 
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
@@ -23,9 +24,15 @@
   Other props to pass through to input element go in :inputProps."
   {:component-will-mount
    (fn [{:keys [locals props]}]
-     (swap! locals assoc
-            :id (gensym "autosuggest")
-            :on-search #(when (= (.. % -target -value -length) 0) ((:on-clear props)))))
+     (let [{:keys [on-submit]} props
+           wrapped-on-submit (fn [e]
+                               (on-submit (.. e -target -value)))
+           on-clear (fn [e]
+                      (when (zero? (.. e -target -value -length)) (on-submit "")))]
+       (swap! locals assoc
+              :id (gensym "autosuggest")
+              :on-clear (when on-submit on-clear)
+              :on-submit (when on-submit wrapped-on-submit))))
    :get-initial-state
    (fn [{:keys [props]}]
      {:value (:default-value props)})
@@ -59,13 +66,15 @@
                                                               suggestion]))
                    :inputProps
                    {:value (or value "")
+                    :onKeyDown (when-let [on-submit (:on-submit @locals)]
+                                 (common/create-key-handler [:enter] on-submit))
                     :onChange (fn [_ value]
                                 (let [value (.-newValue value)]
                                   (when caching?
                                     (swap! state assoc :value value))
                                   (on-change value)))
                     :type "search"}
-                   :shouldRenderSuggestions (constantly true)
+                   :shouldRenderSuggestions (complement string/blank?)
                    :highlightFirstSuggestion true
                    :id (:id @locals)
                    :theme
@@ -99,12 +108,12 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :data :on-change :get-suggestions :clear-suggestions :caching? :on-search)))]))
+                  (dissoc props :data :on-change :get-suggestions :clear-suggestions :caching? :on-submit)))]))
    :component-did-mount
    (fn [{:keys [locals this]}]
-     (when-let [{:keys [on-search]} @locals]
-       (.addEventListener (react/find-dom-node this) "search" on-search)))
+     (when-let [on-clear (:on-clear @locals)]
+       (.addEventListener (react/find-dom-node this) "search" on-clear)))
    :component-will-unmount
    (fn [{:keys [locals this]}]
-     (when-let [{:keys [on-search]} @locals]
-       (.removeEventListener (react/find-dom-node this) "search" on-search)))})
+     (when-let [on-clear (:on-clear @locals)]
+       (.removeEventListener (react/find-dom-node this) "search" on-clear)))})

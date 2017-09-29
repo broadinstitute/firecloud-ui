@@ -214,7 +214,8 @@
                           :headers utils/content-type=json
                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                      (callback (if success?
-                                                 (:results (get-parsed-response))
+                                                 ; don't bother keywordizing, it's just going to be converted to js
+                                                 (:results (get-parsed-response false))
                                                  [{:suggestion "Error fetching results"}])))})
                         ["Loading..."])
      :getSuggestionValue #(.-suggestion %)
@@ -222,11 +223,11 @@
                          (react/create-element [:div {:style {:textOverflow "ellipsis"
                                                               :overflow "hidden"}}
                                                 (.-suggestion suggestion)]))
-     :shouldRenderSuggestions #(not (string/blank? %))
+     :highlightFirstSuggestion false
      :onSuggestionSelected (fn [_ suggestion]
                              (on-filter (.-suggestionValue suggestion)))
      :on-change on-input
-     :on-clear #(on-filter "")
+     :on-submit on-filter
      :theme {:input {:width "100%" :marginBottom 0}
              :suggestionsContainerOpen {:marginTop -1}}}]])
 

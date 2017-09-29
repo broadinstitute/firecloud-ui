@@ -103,6 +103,7 @@
                                         {:default-value value
                                          :caching? true
                                          :data data
+                                         :shouldRenderSuggestions (constantly true)
                                          :inputProps {:data-test-id (str name "-text-input")
                                                       :placeholder (if optional? "Optional" "Select or enter")}
                                          :on-change (fn [value]

@@ -123,11 +123,11 @@
                            (str "/autocomplete/" query)
                            {:on-done (fn [{:keys [success? get-parsed-response]}]
                                        (callback (if success?
-                                                   (get-parsed-response)
+                                                   ; don't bother keywordizing, it's just going to be converted to js
+                                                   (get-parsed-response false)
                                                    [{:label "Error fetching results"}])))}
                            :service-prefix "/duos")
                           [{:label "Loading..."}])
-       :on-clear clear
        :getSuggestionValue #(.-label %)
        :renderSuggestion (fn [suggestion]
                            (react/create-element
@@ -138,16 +138,16 @@
                              [:small {:style {:fontStyle "italic"}}
                               (.-definition suggestion)]
                              [:div {:style {:clear "both"}}]]))
+       :highlightFirstSuggestion false
        :onSuggestionSelected (fn [_ suggestion]
-                               (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
+                               (let [suggestion (utils/log (js->clj (.-suggestion suggestion) :keywordize-keys true))
                                      {:keys [id label]} suggestion
                                      [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
                                  (swap! state update :attributes assoc
-                                        property label
                                         related-id-prop id
                                         related-label-prop label)))
-       :shouldRenderSuggestions #(not (string/blank? %))
        :on-change set-property
+       :on-submit #(when (zero? (count %)) (clear))
        :theme {:input (colorize {:width "100%" :marginBottom 0})
                :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
 
@@ -161,21 +161,22 @@
              (links/create-internal {:onClick clear}
                                     "Clear Selection"))]]))]))
 
-(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
+(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [Autosuggest
     {:value value-nullsafe
      :inputProps {:placeholder inputHint
+                  :disabled disabled
                   :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
      :get-suggestions (fn [query callback]
                         (utils/ajax-orch
                          (str "/library/populate/suggest/" (name property) "?q=" query)
                          {:on-done (fn [{:keys [success? get-parsed-response]}]
                                      (callback (if success?
-                                                 (get-parsed-response)
+                                                 ; don't bother keywordizing, it's just going to be converted to js
+                                                 (get-parsed-response false)
                                                  ["Error fetching results"])))})
                         ["Loading..."])
-     :shouldRenderSuggestions #(not (string/blank? %))
      :on-change set-property
      :theme {:input (colorize {:width "100%" :marginBottom 0})
              :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]])
