@@ -84,15 +84,15 @@
                                                     (swap! state assoc :editing-namespace namespace)))}
                                       namespace]
                                      [:div {:style {:fontWeight 600}} name])))}
-                              {:header "Synopsis" :initial-width 700
+                              {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}
-                              {:header "Owners" :initial-width 175
+                              {:header "Owners" :initial-width 225
                                :column-data :managers
                                :as-text (partial string/join ", ")}
                               {:header "Snapshots" :initial-width 94 :filterable? false
                                :column-data :numSnapshots}
-                              {:header "Configurations" :initial-width 117 :filterable? false
+                              {:header "Configurations" :initial-width :auto :filterable? false
                                :column-data :numConfigurations}]}
                       :toolbar {:filter-bar {:inner {:width 300}}
                                 :style {:alignItems "flex-start"
