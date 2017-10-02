@@ -80,7 +80,7 @@ if [ "$DOCKERHOST" != "" ]; then
     HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e TEST_CHANNEL=dsde-qa"
 fi
 
-TEST_ENTRYPOINT=""
+TEST_ENTRYPOINT="testOnly -- -l ProdTest"
 if [ $ENV = "prod" ]; then
     TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi
