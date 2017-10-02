@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 WORKING_DIR=${1-$(pwd)}
-VAULT_TOKEN=$
+VAULT_TOKEN=$2
 ENV=$3
 LOCAL_UI=false
 LOCAL_UI_PARAM=$4
