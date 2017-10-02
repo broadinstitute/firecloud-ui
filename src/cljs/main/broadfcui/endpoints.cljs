@@ -481,6 +481,10 @@
   {:path (str "/methods/" namespace "/" name "/configurations")
    :method :get})
 
+(defn get-agora-compatible-configs [{:keys [namespace name snapshot-id]}]
+  {:path (str "/methods/" namespace "/" name "/" snapshot-id "/configurations")
+   :method :get})
+
 (defn create-new-method-snapshot [namespace name snapshot-id & [redact?]]
   {:path (str "/methods/" namespace "/" name "/" snapshot-id "?redact=" (boolean redact?))
    :method :post})
