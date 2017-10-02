@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 SBT_CMD=${1-"testOnly -- -l ProdTest"}
+echo $SBT_CMD
 
 set -o pipefail
 
