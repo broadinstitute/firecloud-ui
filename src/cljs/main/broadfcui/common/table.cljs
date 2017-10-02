@@ -64,6 +64,7 @@
        different?))
    :refresh-rows
    (fn [{:keys [props state refs]} & [reset-page-number?]]
+     (swap! state assoc :data-test-state "loading")
      ((@refs "blocker") :show)
      (let [{:keys [data fetch-data]} props
            data-source (if data (table-utils/local data) fetch-data)
@@ -76,7 +77,8 @@
                      :on-done (fn [{:keys [total-count tab-count filtered-rows results]}]
                                 ((@refs "blocker") :hide)
                                 (swap! state merge
-                                       {:rows results
+                                       {:data-test-state "ready"
+                                        :rows results
                                         :tab-count (or tab-count total-count)}
                                        (utils/restructure total-count filtered-rows query-params)))})))
    :get-default-props
@@ -84,12 +86,14 @@
      {:load-on-mount true})
    :get-initial-state
    (fn [{:keys [this]}]
-     (assoc (this :-fetch-initial-state) :rows []))
+     (assoc (this :-fetch-initial-state)
+       :rows []
+       :data-test-state "initializing"))
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
-           {:keys [toolbar sidebar tabs body paginator style]} props
+           {:keys [data-test-state rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
+           {:keys [data-test-id toolbar sidebar tabs body paginator style]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -97,7 +101,9 @@
            update-column-display (fn [columns]
                                    (when on-column-change (on-column-change columns))
                                    (swap! state assoc :column-display columns))]
-       [:div {:style (merge {:position "relative"} (:main style))}
+       [:div {:data-test-id data-test-id
+              :data-test-state data-test-state
+              :style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."
                                :delay-time-ms (:blocker-delay-time-ms props)}]
         [:div {:style (merge {:marginBottom (if tabs "0.3rem" "1rem")}
@@ -113,8 +119,8 @@
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}
               [comps/TextFilter (merge
-                                 {:initial-text (:filter-text query-params)
-                                  :data-test-id (:data-test-id props)
+                                 {:data-test-id "filter"
+                                  :initial-text (:filter-text query-params)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
          (when-let [get-items (:get-items toolbar)]
@@ -129,7 +135,7 @@
                (map-indexed (fn [index {:keys [label size] :as tab}]
                               (let [selected? (= index selected-tab-index)
                                     tab-count (get tab-counts label)]
-                                [:div {:data-test-id (str label "-filter-button")
+                                [:div {:data-test-id (str label "-tab")
                                        :style {:display "inline-block" :textAlign "center"
                                                :padding "0.5rem 1rem" :cursor "pointer"
                                                :fontWeight (when selected? 500)

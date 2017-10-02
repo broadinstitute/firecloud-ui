@@ -14,7 +14,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.common :as common]))
 
 (defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
@@ -50,12 +50,14 @@
            :toolbar-items
            [flex/spring
             [buttons/Button
-             {:text "Import Configuration..."
-              :disabled? (case locked?
-                           nil "Looking up workspace status..."
-                           true "This workspace is locked."
-                           false)
-              :data-test-id "import-config-button"
+             {:data-test-id "import-config-button"
+              :text "Import Configuration..."
+              :disabled? (cond
+                           (nil? locked?) "Looking up workspace status..."
+                           locked? "This workspace is locked."
+                           (not (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER"))
+                           "You do not have access to Import Configurations.")
+
               :onClick #(modal/push-modal
                          [import-config/ConfigImporter
                           {:workspace-id (:workspace-id props)

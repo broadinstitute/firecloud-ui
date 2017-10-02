@@ -201,16 +201,22 @@ trait WebBrowserUtil extends WebBrowser {
     * @param webDriver implicit WebDriver for the WebDriverWait
     * @return a Query for the data-test-id
     */
-  def testId(id: String)(implicit webDriver: WebDriver): Query = {
+  def testId(id: String)(implicit webDriver: WebDriver): CssSelectorQuery = {
     cssSelector(s"[data-test-id='$id']")
   }
 
-  def testState(state: String)(implicit webDriver: WebDriver): Query = {
+  def testState(state: String)(implicit webDriver: WebDriver): CssSelectorQuery = {
     cssSelector(s"[data-test-state='$state']")
   }
 
-  def typeSelector(selector: String)(implicit webDriver: WebDriver): Query = {
+  def typeSelector(selector: String)(implicit webDriver: WebDriver): CssSelectorQuery = {
     cssSelector(s"[type='$selector']")
+  }
+
+  implicit class RichCssSelectorQuery(child: CssSelectorQuery) {
+    def inside(parent: CssSelectorQuery): CssSelectorQuery = {
+      CssSelectorQuery(parent.queryString + " " + child.queryString)
+    }
   }
 
   def withText(text: String)(implicit webDriver: WebDriver): Query = {

@@ -77,7 +77,8 @@
                        (map (fn [[_ v]]
                               (assoc (first v) :roles (sort (map :role v))))))]
          [Table
-          {:data projects
+          {:data-test-id "billing-project-table"
+           :data projects
            :body {:behavior {:reorderable-columns? false}
                   :style table-style/table-light
                   :data-props {:row (fn [project] {:data-test-id (str (:projectName project) "-row")})}
@@ -112,13 +113,12 @@
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
-           {:filter-bar {:inner {:data-test-id "billing-project-list-filter"}}
-            :get-items
+           {:get-items
             (constantly
              [flex/spring
               [buttons/Button
-               {:text "Create New Billing Project..."
-                :data-test-id "begin-create-billing-project"
+               {:data-test-id "begin-create-billing-project"
+                :text "Create New Billing Project..."
                 :onClick
                 (fn []
                   (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
