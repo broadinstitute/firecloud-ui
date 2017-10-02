@@ -1,8 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.components
 
+import org.broadinstitute.dsde.firecloud.page.Stateful
 import org.openqa.selenium.{By, WebDriver}
 
-case class Table(private val id: String)(implicit webDriver: WebDriver) extends Component(id) {
+case class Table(private val id: String)(implicit webDriver: WebDriver)
+  extends Component(id) with Stateful {
+
   private val tableBody = findInner("table-body")
 
   private val filterField = findInner("filter-input")

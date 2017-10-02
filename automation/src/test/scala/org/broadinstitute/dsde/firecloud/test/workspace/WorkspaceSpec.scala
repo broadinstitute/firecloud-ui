@@ -199,22 +199,19 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.ui.addWorkspaceAttribute("c", "Y")
             detailPage.ui.save()
 
-            // TODO: better way to tell the page is ready
-            Thread sleep 1000
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
 
             detailPage.ui.beginEditing()
             detailPage.ui.addWorkspaceAttribute("d", "Z")
             detailPage.ui.save()
 
-            Thread sleep 1000
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
 
             detailPage.ui.beginEditing()
             detailPage.ui.deleteWorkspaceAttribute("c")
             detailPage.ui.save()
 
             detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
-
-            Thread sleep 1000
 
             detailPage.ui.beginEditing()
             detailPage.ui.deleteWorkspaceAttribute("b")

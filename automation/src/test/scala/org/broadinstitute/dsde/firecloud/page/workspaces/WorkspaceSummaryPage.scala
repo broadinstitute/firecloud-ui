@@ -12,12 +12,15 @@ import org.scalatest.selenium.Page
   * Page class for the Workspace Detail page.
   */
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
+  override val element: Query = testId("summary-tab")
+
   override def awaitLoaded(): WorkspaceSummaryPage = {
     await condition { enabled(testId("submission-status")) || enabled(testId("workspace-details-error")) }
+    await condition { getState == "ready" }
     await spinner "Loading..."
     this
   }

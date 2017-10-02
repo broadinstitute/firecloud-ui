@@ -1,9 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.components
 
+import org.broadinstitute.dsde.firecloud.page.Stateful
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 
-case class Collapse[A <: WebBrowser](private val id: String, private val inner: A)(implicit webDriver: WebDriver) extends Component(id) {
+case class Collapse[A <: WebBrowser](private val id: String, private val inner: A)(implicit webDriver: WebDriver)
+  extends Component(id) with Stateful {
   private val toggleComponent = findInner("toggle")
 
   def isExpanded: Boolean = {
