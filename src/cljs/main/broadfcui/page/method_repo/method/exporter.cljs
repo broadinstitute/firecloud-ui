@@ -79,7 +79,7 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-method-configs (:method-id props))
+      {:endpoint (endpoints/get-agora-compatible-configs (assoc (:method-id props) :snapshot-id (:selected-snapshot-id props)))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
