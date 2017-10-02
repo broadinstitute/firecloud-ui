@@ -261,6 +261,8 @@
 (defn changes [keys coll1 coll2]
   (map (fn [key] (not= (key coll1) (key coll2))) keys))
 
+(defn replace-top [coll x]
+  (conj (pop coll) x))
 
 (defn rand-subset [items]
   (take (rand-int (inc (count items))) (shuffle items)))

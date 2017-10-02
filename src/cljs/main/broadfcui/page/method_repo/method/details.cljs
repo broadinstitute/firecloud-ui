@@ -27,10 +27,12 @@
    WDL :method-wdl
    CONFIGS :method-configs})
 
-(react/defc- MethodDetails
+(declare MethodDetails)
+
+(react/defc MethodDetails
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id snapshot-id config-id config-snapshot-id]} props
+     (let [{:keys [method-id snapshot-id config-id config-snapshot-id embedded? nav-method]} props
            {:keys [method method-error selected-snapshot loading-snapshot? exporting? post-export?]} @state
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
@@ -66,12 +68,19 @@
            [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:paddingLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
-         [buttons/Button {:style {:marginLeft "auto"}
-                          :text "Export to Workspace..."
-                          :onClick #(swap! state assoc :exporting? true)}]]
+         (when-not embedded?
+           [buttons/Button {:style {:marginLeft "auto"}
+                            :text "Export to Workspace..."
+                            :onClick #(swap! state assoc :exporting? true)}])]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
-                                           [CONFIGS :method-configs]]
+                                           (when-not embedded? [CONFIGS :method-configs])]
+                                    :on-click (when embedded? #(nav-method {:replace? true
+                                                                            :label (str namespace "/" name)
+                                                                            :component MethodDetails
+                                                                            :props (merge method-id
+                                                                                          {:snapshot-id selected-snapshot-id
+                                                                                           :tab-name %})}))
                                     :context-id (assoc method-id :snapshot-id selected-snapshot-id)
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
@@ -136,16 +145,22 @@
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
      (swap! state assoc :loading-snapshot? true)
-     (let [{:keys [namespace name]} (:method-id props)
+     (let [{:keys [method-id tab-name embedded? nav-method]} props
+           {:keys [namespace name]} method-id
            old-snapshot-id (:snapshot-id props)
-           tab-key (tab-nav-map (:tab-name props))
+           tab-key (tab-nav-map tab-name)
            context-id (utils/restructure namespace name snapshot-id)]
        (when (not= old-snapshot-id snapshot-id)
-         (if old-snapshot-id
-           (nav/go-to-path tab-key context-id)
-           ;; also stick new snapshot into state--otherwise page doesn't rerender
-           (do (swap! state assoc :snapshot-id snapshot-id)
-               (nav/replace-history-state tab-key context-id))))
+         (if embedded?
+           (nav-method {:replace? true
+                        :label (str namespace "/" name)
+                        :component MethodDetails
+                        :props (utils/restructure method-id snapshot-id embedded? nav-method)})
+           (if old-snapshot-id
+             (nav/go-to-path tab-key context-id)
+             ;; also stick new snapshot into state--otherwise page doesn't rerender
+             (do (swap! state assoc :snapshot-id snapshot-id)
+                 (nav/replace-history-state tab-key context-id)))))
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response

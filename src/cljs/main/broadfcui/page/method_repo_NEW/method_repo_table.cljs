@@ -12,6 +12,7 @@
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.method.details :refer [MethodDetails]]
    [broadfcui.utils :as utils]
    ))
 
@@ -20,7 +21,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [methods error editing-namespace]} @state
-           {:keys [allow-modals? make-method-clicked-props]} props]
+           {:keys [embedded? nav-method]} props]
        [:div {}
         (when (:creating? @state)
           [CreateMethodDialog
@@ -63,20 +64,26 @@
                                :sort-by (comp string/lower-case second)
                                :render
                                (fn [[namespace name]]
-                                 (links/create-internal
-                                  (utils/deep-merge
-                                   {:data-test-id (str "method-link-" namespace "-" name)
-                                    :style {:display "block" :marginTop -4}}
-                                   (make-method-clicked-props (utils/restructure namespace name)))
-                                  [:span
-                                   {:className (when allow-modals? "underline-on-hover")
-                                    :style {:fontSize "80%" :color "black"}
-                                    :onClick (when allow-modals?
-                                               (fn [e]
-                                                 (.preventDefault e)
-                                                 (swap! state assoc :editing-namespace namespace)))}
-                                   namespace]
-                                  [:div {:style {:fontWeight 600}} name]))}
+                                 (let [method-id (utils/restructure namespace name)]
+                                   (links/create-internal
+                                     (utils/deep-merge
+                                      {:data-test-id (str "method-link-" namespace "-" name)
+                                       :style {:display "block" :marginTop -4}}
+                                      (if embedded?
+                                        {:onClick #(nav-method
+                                                    {:label (str namespace "/" name)
+                                                     :component MethodDetails
+                                                     :props (utils/restructure method-id nav-method embedded?)})}
+                                        {:href (nav/get-link :method-loader method-id)}))
+                                     [:span
+                                      {:className (when embedded? "underline-on-hover")
+                                       :style {:fontSize "80%" :color "black"}
+                                       :onClick (when embedded?
+                                                  (fn [e]
+                                                    (.preventDefault e)
+                                                    (swap! state assoc :editing-namespace namespace)))}
+                                      namespace]
+                                     [:div {:style {:fontWeight 600}} name])))}
                               {:header "Synopsis" :initial-width 700
                                :column-data :synopsis
                                :sort-by string/lower-case}
@@ -93,11 +100,12 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 [[buttons/Button {:data-test-id "create-method-button"
-                                                   :style {:marginLeft "auto"}
-                                                   :text "Create New Method..."
-                                                   :icon :add-new
-                                                   :onClick #(swap! state assoc :creating? true)}]])}}])]))
+                                 (when-not embedded?
+                                   [[buttons/Button {:data-test-id "create-method-button"
+                                                     :style {:marginLeft "auto"}
+                                                     :text "Create New Method..."
+                                                     :icon :add-new
+                                                     :onClick #(swap! state assoc :creating? true)}]]))}}])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))
