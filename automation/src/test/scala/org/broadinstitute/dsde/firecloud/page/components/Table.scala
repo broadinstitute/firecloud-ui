@@ -1,12 +1,12 @@
-package org.broadinstitute.dsde.firecloud.page
+package org.broadinstitute.dsde.firecloud.page.components
 
-import org.openqa.selenium.WebDriver
+import org.broadinstitute.dsde.firecloud.page.Stateful
+import org.openqa.selenium.{By, WebDriver}
 
-class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView {
+case class Table(private val id: String)(implicit webDriver: WebDriver)
+  extends Component(id) with Stateful {
 
-  private val tableElement = testId(rootId)
-
-  def findInner(id: String): CssSelectorQuery = testId(id) inside tableElement
+  private val tableBody = findInner("table-body")
 
   private val filterField = findInner("filter-input")
   private val filterButton = findInner("filter-button")
@@ -19,8 +19,8 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
   private val perPageSelector = findInner("per-page")
 
   def awaitReady(): Unit = {
-    await enabled tableElement
-    await condition { tableElement.element.attribute("data-test-state").getOrElse("unknown") == "ready" }
+    awaitEnabled()
+    await condition { getState == "ready" }
   }
 
   def filter(text: String): Unit = {
@@ -57,5 +57,13 @@ class Table(rootId: String)(implicit webDriver: WebDriver) extends FireCloudView
   def selectPerPage(perPage: Int): Unit = {
     awaitReady()
     singleSel(perPageSelector).value = perPage.toString
+  }
+
+  def getData: List[List[String]] = {
+    import scala.collection.JavaConversions._
+
+    awaitReady()
+    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
+    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
   }
 }

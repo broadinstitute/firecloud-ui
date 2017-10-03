@@ -109,7 +109,11 @@
      (let [{:keys [server-response]} @state
            {:keys [workspace workspace-id request-refresh]} props
            {:keys [server-error]} server-response]
-       [:div {}
+       [:div {:data-test-id "summary-tab"
+              :data-test-state (cond (or (:updating-attrs? @state) (contains? @state :locking?))
+                                     "updating"
+                                     ;; TODO: "loading" state
+                                     :else "ready")}
         [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
         (if server-error
           (style/create-server-error-message server-error)
