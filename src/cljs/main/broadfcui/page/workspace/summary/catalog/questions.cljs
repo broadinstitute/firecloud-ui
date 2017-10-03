@@ -147,7 +147,7 @@
                                         related-id-prop id
                                         related-label-prop label)))
        :on-change set-property
-       :on-submit #(when (zero? (count %)) (clear))
+       :on-submit #(when (empty? %) (clear))
        :theme {:input (colorize {:width "100%" :marginBottom 0})
                :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
 

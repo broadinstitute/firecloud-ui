@@ -219,7 +219,7 @@
         (create-section-header "Root Entity Type")
         (create-section
          (if editing?
-           (if (not-empty entity-types)
+           (if (seq entity-types)
              (style/create-identity-select {:ref "rootentitytype"
                                             :data-test-id "edit-method-config-root-entity-type-select"
                                             :defaultValue rootEntityType
@@ -278,7 +278,7 @@
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
            name (common/get-text refs "confname")
-           root-entity-type (if (not-empty (:entity-types @state))
+           root-entity-type (if (seq (:entity-types @state))
                               (common/get-text refs "rootentitytype")
                               (:rootEntityType config))
            selected-values ((@refs "IOTables") :save)]
