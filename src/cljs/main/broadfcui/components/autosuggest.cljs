@@ -14,8 +14,10 @@
   "One of
   :data - string suggestion possibilities
   :url - string orch path to append query to and GET from
-  :get-suggestions - function accepting value and returning suggestions
+  :get-suggestions - function accepting value and returning suggestion seq
     Can also return [:loading] or [:error].
+
+  :service-prefix (optional) - passed through to ajax-orch when using :url
 
   :get-value - function to turn suggestion into string value
 
@@ -43,9 +45,9 @@
      {:value (:default-value props)})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data url get-suggestions on-change caching? get-value]} props
+     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
            {:keys [suggestions]} @state
-           value (:value (if caching? @state props))
+           value (or (:value (if caching? @state props)) "")
            get-suggestions (cond
                              get-suggestions (fn [value]
                                                (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
@@ -57,28 +59,30 @@
                                                        (if success?
                                                          ; don't bother keywordizing, it's just going to be converted to js
                                                          (get-parsed-response false)
-                                                         [:error])))})
+                                                         [:error])))}
+                                    (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
                                      (filterv
-                                      #(string/includes? (string/lower-case %)
-                                                         (string/lower-case (.-value value)))
+                                      #(string/includes? (string/lower-case %) (string/lower-case (.-value value)))
                                       data)))]
 
-       (assert (or (fn? (:get-suggestions props)) url (seq? data)) "Must provide either seq-able :data, url, or :get-suggestions function")
-       (assert (fn? on-change) "Must provide :on-change callback")
+       (assert (or (fn? (:get-suggestions props)) url (seq? data))
+               "Must provide either seq-able :data, url, or :get-suggestions function")
+       (assert (fn? on-change)
+               "Must provide :on-change callback")
 
        [js/Autosuggest
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
                    :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
-                   :getSuggestionValue #(if (keyword? %) "" ((or get-value identity) %))
+                   :getSuggestionValue #(if (keyword? %) value ((or get-value identity) %))
                    :renderSuggestion (fn [suggestion]
                                        (react/create-element
                                         [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}} suggestion]))
                    :inputProps
-                   {:value (or value "")
+                   {:value value
                     :onKeyDown (when-let [on-submit (:on-submit @locals)]
                                  (common/create-key-handler [:enter] on-submit))
                     :onChange (fn [_ value]
@@ -131,7 +135,7 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :default-value :value :on-submit :data :url :get-suggestions :on-change :caching? :get-value)))]))
+                  (dissoc props :default-value :value :on-submit :data :url :service-prefix :get-suggestions :on-change :caching? :get-value)))]))
    :component-did-mount
    (fn [{:keys [locals this]}]
      (when-let [on-clear (:on-clear @locals)]

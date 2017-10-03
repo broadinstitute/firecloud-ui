@@ -118,16 +118,8 @@
        :inputProps {:placeholder (:inputHint prop)
                     :data-test-id property
                     :disabled disabled}
-       :get-suggestions (fn [query callback]
-                          (utils/ajax-orch
-                           (str "/autocomplete/" query)
-                           {:on-done (fn [{:keys [success? get-parsed-response]}]
-                                       (callback (if success?
-                                                   ; don't bother keywordizing, it's just going to be converted to js
-                                                   (get-parsed-response false)
-                                                   [:error])))}
-                           :service-prefix "/duos")
-                          [:loading])
+       :url "/autocomplete/"
+       :service-prefix "/duos"
        :get-value #(.-label %)
        :renderSuggestion (fn [suggestion]
                            (react/create-element
