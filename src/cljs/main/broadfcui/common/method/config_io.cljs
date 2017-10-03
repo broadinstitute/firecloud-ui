@@ -22,15 +22,19 @@
 (react/defc IOTables
   {:start-editing
    (fn [{:keys [props state locals]}]
-     (swap! locals merge (:values props))
+     (swap! locals utils/deep-merge (:values props))
      (swap! state assoc :editing? true))
    :cancel-editing
    (fn [{:keys [state]}]
      (swap! state dissoc :editing?))
    :save
-   (fn [{:keys [state locals]}]
+   (fn [{:keys [props state locals]}]
      (swap! state dissoc :editing?)
-     @locals)
+     {:inputs (select-keys (:inputs @locals) (-> props :values :inputs keys))
+      :outputs (select-keys (:outputs @locals) (-> props :values :outputs keys))})
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals utils/deep-merge (:values props)))
    :render
    (fn [{:keys [props this]}]
      (let [id (gensym "io-table-")]
@@ -51,7 +55,7 @@
                                  (let [[task variable] (take-last 2 (string/split name "."))
                                        k-name (keyword name)
                                        error-message (get-in invalid-values [io-key k-name])
-                                       value (get-in values [io-key k-name])]
+                                       value (get-in @locals [io-key k-name])]
                                    (merge (dissoc item :inputType :outputType :optional)
                                           (utils/restructure task variable error-message value)
                                           {:type (some-> (or inputType outputType) process-type)
@@ -100,7 +104,8 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:default-value value
+                                        {:key name
+                                         :default-value value
                                          :caching? true
                                          :data data
                                          :shouldRenderSuggestions (constantly true)
