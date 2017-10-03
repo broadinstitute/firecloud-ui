@@ -97,11 +97,11 @@
                  {:configs configs
                   :style {:body-row (fn [{:keys [row]}]
                                       {:borderTop style/standard-line :alignItems "baseline"
-                                       :background-color (when (= preview-config (config->id+snapshot row))
+                                       :background-color (when (= preview-config row)
                                                            (:tag-background style/colors))})}
                   :make-config-link-props
                   (fn [config]
-                    {:onClick #(swap! state assoc :preview-config (config->id+snapshot config))})})
+                    {:onClick #(swap! state assoc :preview-config config)})})
           :right (if preview-config
                    [Preview {:preview-config preview-config}]
                    [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
