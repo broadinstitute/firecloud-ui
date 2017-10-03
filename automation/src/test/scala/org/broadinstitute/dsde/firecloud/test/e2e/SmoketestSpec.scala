@@ -32,7 +32,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     val filename = "src/test/resources/participants.txt"
     val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
     workspaceDataTab.importFile(filename)
-    assert(workspaceDataTab.getNumberOfParticipants() == 1)
+    workspaceDataTab.getNumberOfParticipants() shouldEqual 1
 
     // import known method config
     val methodConfigName = Config.Methods.testMethodConfig + "_" + UUID.randomUUID().toString
