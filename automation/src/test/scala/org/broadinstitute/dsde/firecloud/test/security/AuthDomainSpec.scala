@@ -184,7 +184,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
                 val listPage = signIn(Config.Users.george)
-                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
 
                 val cloneWorkspaceName = workspaceName + "_clone"
                 val cloneModal = summaryPage.ui.clickCloneButton()
