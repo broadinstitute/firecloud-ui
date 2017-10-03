@@ -52,7 +52,6 @@
 
        (assert (or (fn? (:get-suggestions props)) (seq? data)) "Must provide either seq-able :data or :get-suggestions function")
        (assert (fn? on-change) "Must provide :on-change callback")
-       (assert (or caching? (:value props)) "Must provide value when not using cached mode")
 
        [js/Autosuggest
         (clj->js (utils/deep-merge

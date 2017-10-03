@@ -192,10 +192,12 @@
                    (on-done {:error status-text})))}))))))})
 
 
-(defn- highlight-suggestion [suggestion highlight]
-  (if (not (string/blank? highlight))
-    (string/replace (utils/encode suggestion) (utils/encode highlight) (str "<strong>" (utils/encode highlight) "</strong>"))
-    (utils/encode suggestion)))
+(defn- highlight-suggestion [{:strs [suggestion highlight]}]
+  [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}}
+   (if (not (string/blank? highlight))
+     (let [suggestion-parts (string/split suggestion highlight)]
+       [:span {} (first suggestion-parts) [:strong {} highlight] (last suggestion-parts)])
+     suggestion)])
 
 (defn- create-search-section [{:keys [search-text facet-filters on-input on-filter]}]
   [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
@@ -220,9 +222,7 @@
                         ["Loading..."])
      :getSuggestionValue #(.-suggestion %)
      :renderSuggestion (fn [suggestion]
-                         (react/create-element [:div {:style {:textOverflow "ellipsis"
-                                                              :overflow "hidden"}}
-                                                (.-suggestion suggestion)]))
+                         (react/create-element (highlight-suggestion (js->clj suggestion))))
      :highlightFirstSuggestion false
      :onSuggestionSelected (fn [_ suggestion]
                              (on-filter (.-suggestionValue suggestion)))
