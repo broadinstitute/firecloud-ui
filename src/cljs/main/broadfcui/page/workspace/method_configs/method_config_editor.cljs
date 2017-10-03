@@ -91,7 +91,7 @@
            (if editing?
              (list
               [buttons/SidebarButton
-               {:data-test-id "save-edited-method-config-button"
+               {:data-test-id "save-editted-method-config-button"
                 :color :success-state
                 :text "Save" :icon :done
                 :disabled? (when redacted? "Choose an available snapshot")

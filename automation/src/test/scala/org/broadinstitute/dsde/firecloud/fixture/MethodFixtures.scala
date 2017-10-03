@@ -1,7 +1,6 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 import org.broadinstitute.dsde.firecloud.config.AuthToken
-import org.broadinstitute.dsde.firecloud.fixture.MethodData.{SimpleMethod, SimpleMethodConfig}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.Suite
@@ -9,41 +8,24 @@ import org.scalatest.Suite
 trait MethodFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
 
-  def withConfigForRedactedMethodInWorkspace(testname:String, wsnamespace: String, wsname: String, withUnredactedSnapshots: Boolean)
-                                            (testCode: (String) => Any)
-                                            (implicit token: AuthToken): Unit = {
+  def withMethod(testName:String, method:Method, numSnapshots: Int = 1, cleanUp: Boolean = true)
+                (testCode: (String) => Any)
+                (implicit token: AuthToken): Unit = {
     // create a method
-    val methodName = appendUnderscore(testname) + makeUuid
-    val configName = methodName + "Config"
-    api.methods.createMethod(SimpleMethod.creationAttributes + ("name"->methodName))
-    if (withUnredactedSnapshots)
-      api.methods.createMethod(SimpleMethod.creationAttributes + ("name"->methodName))
-
-    // create a config for workspace
-    api.methodConfigurations.createMethodConfigInWorkspace(wsnamespace, wsname, 1, SimpleMethod.methodNamespace, methodName, 1, SimpleMethodConfig.configNamespace, configName,
-      SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-
-    // redact the method
-    api.methods.redact(SimpleMethod.methodNamespace, methodName, 1)
-
+    val methodName: String = appendUnderscore(testName) + makeUuid
+    for (i <- 1 to numSnapshots)
+      api.methods.createMethod(method.creationAttributes + ("name"->methodName))
     try {
-      testCode(configName)
+      testCode(methodName)
     } finally {
-      try {
-        if (withUnredactedSnapshots)
-          api.methods.redact(SimpleMethod.methodNamespace, methodName, 2)
-      } catch nonFatalAndLog(s"Error redacting method in withConfigForRedactedMethodInWorkspace clean-up: ${SimpleMethod.methodNamespace}/$methodName")
+      if (cleanUp) {
+        try {
+          for (i <- 1 to numSnapshots)
+          api.methods.redact(method.methodNamespace, methodName, i)
+        } catch nonFatalAndLog(s"Error redacting method $method.methodName/$methodName")
+      }
     }
-  }
-
-  def withConfigForMethodInWorkspace(testNamespace: String, wsnamespace: String, wsname: String)
-                                    (testCode: (String) => Any)
-                                    (implicit token: AuthToken): Unit = {
-    val configName = testNamespace + "Config_" + makeUuid
-
-    api.methods.createMethod(SimpleMethod.creationAttributes + ("namespace"->testNamespace))
-    api.methodConfigurations.createMethodConfigInWorkspace(wsnamespace, wsname, 1, testNamespace, SimpleMethod.methodName, SimpleMethod.snapshotId, testNamespace, testNamespace, SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-    testCode(configName)
 
   }
+
 }
