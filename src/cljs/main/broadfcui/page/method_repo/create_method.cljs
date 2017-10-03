@@ -135,7 +135,13 @@
                                       (self :add-listener "change"
                                        #(swap! state assoc :undo-history
                                                (js->clj (self :call-method "historySize")))))}]
-
+           ;; TODO fix formatting
+           (style/create-form-label "Snapshot comment (optional)")
+           (style/create-text-area {:data-test-id "snapshot-comment-field"
+                                    :ref "snapshot-comment"
+                                    :defaultValue (:snapshot-comment info)
+                                    :style {:width "100%"}
+                                    :rows 1})
            (when (:edit-mode? info)
              [:div {:style {:marginTop "1rem"}}
               [comps/Checkbox {:ref "redact-checkbox"
@@ -154,7 +160,7 @@
    :-create-method
    (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           [synopsis documentation] (common/get-text refs "synopsis" "documentation")
+           [synopsis documentation snapshotComment] (common/get-text refs "synopsis" "documentation" "snapshot-comment")
            wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
@@ -165,7 +171,7 @@
                  redact? ((@refs "redact-checkbox") :checked?)]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/create-new-method-snapshot namespace name snapshotId redact?)
-               :payload (assoc (utils/restructure synopsis documentation) :payload wdl)
+               :payload (assoc (utils/restructure synopsis documentation snapshotComment) :payload wdl)
                :headers utils/content-type=json
                :on-done
                (fn [{:keys [success? status-code get-parsed-response]}]
@@ -176,7 +182,7 @@
                    (swap! state assoc :banner nil :upload-error (get-parsed-response false))))}))
            (endpoints/call-ajax-orch
             {:endpoint endpoints/post-method
-             :payload (assoc (utils/restructure namespace name synopsis documentation)
+             :payload (assoc (utils/restructure namespace name synopsis documentation snapshotComment)
                         :payload wdl :entityType "Workflow")
              :headers utils/content-type=json
              :on-done
