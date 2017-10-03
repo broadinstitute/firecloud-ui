@@ -76,9 +76,9 @@
                                                      :props (utils/restructure method-id nav-method embedded?)})}
                                         {:href (nav/get-link :method-loader method-id)}))
                                      [:span
-                                      {:className (when embedded? "underline-on-hover")
+                                      {:className (when-not embedded? "underline-on-hover")
                                        :style {:fontSize "80%" :color "black"}
-                                       :onClick (when embedded?
+                                       :onClick (when-not embedded?
                                                   (fn [e]
                                                     (.preventDefault e)
                                                     (swap! state assoc :editing-namespace namespace)))}

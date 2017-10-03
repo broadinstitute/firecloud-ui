@@ -76,10 +76,11 @@
                                            [WDL :method-wdl]
                                            (when-not embedded? [CONFIGS :method-configs])]
                                     :on-click (when embedded? #(nav-method {:replace? true
-                                                                            :label (str namespace "/" name)
+                                                                            :label (str (:namespace method-id) "/" (:name method-id))
                                                                             :component MethodDetails
-                                                                            :props (merge method-id
-                                                                                          {:snapshot-id selected-snapshot-id
+                                                                            :props (merge (utils/restructure method-id nav-method)
+                                                                                          {:embedded? true
+                                                                                           :snapshot-id selected-snapshot-id
                                                                                            :tab-name %})}))
                                     :context-id (assoc method-id :snapshot-id selected-snapshot-id)
                                     :active-tab (or active-tab SUMMARY)}
@@ -93,17 +94,17 @@
              [:div {:style {:textAlign "center" :padding "1rem"}}
               [comps/Spinner {:text "Loading method..."}]]
              (condp = active-tab
-               nil (react/create-element
-                    [Summary
-                     (merge {:ref SUMMARY}
-                            (utils/restructure selected-snapshot))])
                WDL (react/create-element
                     [WDLViewer
                      {:ref WDL :wdl (:payload selected-snapshot)}])
                CONFIGS (react/create-element
                         [configs/Configs
                          (merge {:ref CONFIGS}
-                                (utils/restructure method-id snapshot-id config-id config-snapshot-id))]))))]]))
+                                (utils/restructure method-id snapshot-id config-id config-snapshot-id))])
+               (react/create-element
+                [Summary
+                 (merge {:ref SUMMARY}
+                        (utils/restructure selected-snapshot))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
@@ -155,7 +156,7 @@
            (nav-method {:replace? true
                         :label (str namespace "/" name)
                         :component MethodDetails
-                        :props (utils/restructure method-id snapshot-id embedded? nav-method)})
+                        :props (utils/restructure method-id snapshot-id embedded? nav-method tab-name)})
            (if old-snapshot-id
              (nav/go-to-path tab-key context-id)
              ;; also stick new snapshot into state--otherwise page doesn't rerender
