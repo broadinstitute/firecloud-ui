@@ -19,7 +19,7 @@
 
   :service-prefix (optional) - passed through to ajax-orch when using :url
 
-  :get-value - function to turn suggestion into string value
+  :get-value (optional) - function to turn suggestion into string value
 
   :on-change (required)
   :on-submit (optional) - fires when hitting return or clear button
@@ -63,9 +63,10 @@
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
-                                     (filterv
-                                      #(string/includes? (string/lower-case %) (string/lower-case (.-value value)))
-                                      data)))]
+                                     (let [value (string/lower-case (.-value value))]
+                                       (filterv
+                                        #(string/includes? (string/lower-case %) value)
+                                        data))))]
 
        (assert (or (fn? (:get-suggestions props)) url (seq? data))
                "Must provide either seq-able :data, url, or :get-suggestions function")
