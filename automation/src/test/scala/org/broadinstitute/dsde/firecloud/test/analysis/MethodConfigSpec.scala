@@ -78,6 +78,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "launch workflow with wrong root entity" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+      api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace,
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
