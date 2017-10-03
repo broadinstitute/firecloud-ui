@@ -19,6 +19,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   implicit val authToken: AuthToken = AuthTokens.harry
   val billingProject: String = Config.Projects.default
 
+  val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
+
   "A user" - {
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
@@ -28,7 +30,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         register cleanUp api.workspaces.delete(billingProject, workspaceName)
         val detailPage = listPage.createWorkspace(billingProject, workspaceName).awaitLoaded()
 
-        detailPage.ui.readWorkspaceName shouldEqual workspaceName
+        detailPage.validateWorkspace shouldEqual true
 
         listPage.open
         listPage.filter(workspaceName)
@@ -128,6 +130,97 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           aclEditor.ui.canComputeChecked() shouldBe false
         }
       }
+
+      "should be able to enter workspace attributes" in withWebDriver { implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+          detailPage.ui.beginEditing()
+          detailPage.ui.addWorkspaceAttribute("a", "X")
+          detailPage.ui.addWorkspaceAttribute("b", "Y")
+          detailPage.ui.addWorkspaceAttribute("c", "Z")
+          detailPage.ui.save()
+
+          // TODO: ensure sort, for now it's default sorted by key, ascending
+          detailPage.ui.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
+        }
+      }
+
+      // This table is notorious for getting out of sync
+      "should be able to correctly delete workspace attributes" - {
+        "from the top" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("A-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
+          }
+        }
+
+        "from the middle" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("B-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
+          }
+        }
+
+        "from the bottom" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("C-key")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
+          }
+        }
+
+        "after adding them" in withWebDriver { implicit driver =>
+          withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.addWorkspaceAttribute("a", "W")
+            detailPage.ui.addWorkspaceAttribute("b", "X")
+            detailPage.ui.addWorkspaceAttribute("c", "Y")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.addWorkspaceAttribute("d", "Z")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("c")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
+
+            detailPage.ui.beginEditing()
+            detailPage.ui.deleteWorkspaceAttribute("b")
+            detailPage.ui.save()
+
+            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
+          }
+        }
+      }
     }
     "who has reader access to workspace" - {
 
@@ -136,7 +229,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
             val listPage = signIn(Config.Users.ron)
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-            val methodConfigTab = detailPage.ui.clickMethodConfigTab(billingProject, workspaceName)
+            val methodConfigTab = detailPage.ui.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
             val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
             errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
@@ -164,8 +257,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               detailPage.share(Config.Users.ron.email, "WRITER", false, false)
               detailPage.signOut()
               val listPage2 = signIn(Config.Users.ron)
-              val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+              val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
               val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
               val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
               errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
@@ -183,8 +276,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               detailPage.share(Config.Users.ron.email, "WRITER", false, true)
               detailPage.signOut()
               val listPage2 = signIn(Config.Users.ron)
-              val detailPage2 = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              val methodConfigTab = detailPage2.ui.clickMethodConfigTab(billingProject, workspaceName)
+              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+              val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
               val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
               val launchAnalysisModal = methodConfigDetailsPage.ui.openLaunchAnalysisModal()
               launchAnalysisModal.validateLocation shouldBe true
