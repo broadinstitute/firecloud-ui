@@ -154,7 +154,7 @@
            make-field
            (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:flex "0 0 100px" :fontWeight 500} } (str label ":")]
+              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex "0 0 150px" :fontWeight 500} } (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
@@ -182,7 +182,8 @@
            [:div {:style {:flex "1 1 50%" :overflow "hidden"}}
             (make-field :createDate "Created" :render common/format-date)
             (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
-            (make-field :synopsis "Synopsis")])]
+            (make-field :synopsis "Synopsis")
+            (make-field :snapshotComment "Snapshot Comment" :wrap? false)])]
         (when-not redacted?
           [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
            "Documentation:"
