@@ -15,7 +15,9 @@
            {:keys [visible?]} @state]
        [:div (dissoc props :title :title-expand :contents :default-hidden?)
         [:div {:style {:display "flex"}}
-         [:div {:style {:display "flex" :cursor "pointer" :alignItems "baseline"}
+         [:div {:data-test-id "toggle"
+                :data-test-state (if visible? "expanded" "collapsed")
+                :style {:display "flex" :cursor "pointer" :alignItems "baseline"}
                 :onClick #(swap! state update :visible? not)}
           (icons/icon {:className "fa-fw" :style {:flexShrink 0}}
                       (if visible? :disclosure-opened :disclosure-closed))

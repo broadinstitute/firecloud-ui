@@ -1,13 +1,15 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.components.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil, Table}
+import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 
-class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceMethodConfigListPage] {
+class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigListPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
@@ -34,7 +36,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
-    private val methodConfigsTable = new Table("method-configs-table")
+    private val methodConfigsTable = Table("method-configs-table")
     private val methodConfigLinkId = "method-config-%s-link"
 
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
@@ -101,7 +103,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
   }
 
   object ui {
-    private val methodTable = new Table("method-repo-table")
+    private val methodTable = Table("method-repo-table")
 
     private val methodNamespaceInputQuery: Query = testId("method-config-import-namespace-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")

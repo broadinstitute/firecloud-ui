@@ -111,6 +111,11 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       patchRequest(apiUrl(s"api/workspaces/$namespace/$name/acl"),
         aclEntries.map(e => Map("email" -> e.email, "accessLevel" -> e.accessLevel.toString)))
     }
+
+    def setAttributes(namespace: String, name: String, attributes: Map[String, String])(implicit token: AuthToken): Unit = {
+      logger.info(s"Setting attributes for workspace: $namespace/$name $attributes")
+      patchRequest(apiUrl(s"api/workspaces/$namespace/$name/setAttributes"), attributes)
+    }
   }
 
 

@@ -125,20 +125,13 @@
      (let [{:keys [method-name]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
-        [:div {:style {:display "flex"}}
-         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
-          (style/create-form-label "Namespace")
-          [input/TextField {:ref "namespace-field"
-                            :style {:width "100%"}
-                            :predicates [(input/nonempty "Namespace")]}]]
-         [:div {:style {:flex "1 1 50%"}}
-          (style/create-form-label "Name")
-          [input/TextField {:ref "name-field"
-                            :style {:width "100%"}
-                            :defaultValue (if (= selected-config :blank)
-                                            method-name
-                                            (:name selected-config))
-                            :predicates [(input/nonempty "Name")]}]]]
+        (style/create-form-label "Name")
+        [input/TextField {:ref "name-field"
+                          :style {:width "100%"}
+                          :defaultValue (if (= selected-config :blank)
+                                          method-name
+                                          (:name selected-config))
+                          :predicates [(input/nonempty "Name")]}]
         (when (= selected-config :blank)
           (list
            (style/create-form-label "Root Entity Type")
@@ -165,10 +158,11 @@
       [buttons/Button {:text "Export to Workspace"
                        :onClick #(this :-export)}]))
    :-export
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [props state refs this]}]
      (swap! state assoc :validation-errors nil :banner "Resolving...")
-     (let [[namespace name & errors] (input/get-and-validate refs "namespace-field" "name-field")
-           new-id (utils/restructure namespace name)
+     (let [[name & errors] (input/get-and-validate refs "name-field")
+           new-id (assoc (select-keys (:method-id props) [:namespace])
+                    :name name)
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
              (= :blank selected-config) (this :-create-template new-id)
