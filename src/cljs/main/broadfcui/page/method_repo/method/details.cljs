@@ -7,13 +7,14 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.net :as net]
    [broadfcui.page.method-repo.method.common :as method-common]
    [broadfcui.page.method-repo.method.configs :as configs]
    [broadfcui.page.method-repo.method.exporter :refer [MethodExporter]]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
    [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
-   [broadfcui.nav :as nav]
-   [broadfcui.net :as net]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -32,7 +33,7 @@
 (react/defc MethodDetails
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [method-id snapshot-id config-id config-snapshot-id embedded? nav-method]} props
+     (let [{:keys [method-id snapshot-id config-id config-snapshot-id workspace-id nav-method]} props
            {:keys [method method-error selected-snapshot loading-snapshot? exporting? post-export?]} @state
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
@@ -68,19 +69,18 @@
            [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:paddingLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
-         (when-not embedded?
+         (when-not workspace-id
            [buttons/Button {:style {:marginLeft "auto"}
                             :text "Export to Workspace..."
                             :onClick #(swap! state assoc :exporting? true)}])]
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
-                                           (when-not embedded? [CONFIGS :method-configs])]
-                                    :on-click (when embedded? #(nav-method {:replace? true
+                                           (when-not workspace-id [CONFIGS :method-configs])]
+                                    :on-click (when workspace-id #(nav-method {:replace? true
                                                                             :label (str (:namespace method-id) "/" (:name method-id))
                                                                             :component MethodDetails
-                                                                            :props (merge (utils/restructure method-id nav-method)
-                                                                                          {:embedded? true
-                                                                                           :snapshot-id selected-snapshot-id
+                                                                            :props (merge (utils/restructure method-id nav-method workspace-id)
+                                                                                          {:snapshot-id selected-snapshot-id
                                                                                            :tab-name %})}))
                                     :context-id (assoc method-id :snapshot-id selected-snapshot-id)
                                     :active-tab (or active-tab SUMMARY)}
@@ -104,7 +104,22 @@
                (react/create-element
                 [Summary
                  (merge {:ref SUMMARY}
-                        (utils/restructure selected-snapshot))]))))]]))
+                        (utils/restructure selected-snapshot workspace-id))]))))]
+        (when workspace-id
+          [buttons/Button {:style {:marginLeft "auto"}
+                           :text "Export to Workspace..."
+                           :onClick #(nav-method {:label "Select Configuration"
+                                                  :component MethodExporter
+                                                  :props {:workspace-id workspace-id
+                                                          :method-name (:name (last method))
+                                                          :method-id method-id
+                                                          :selected-snapshot-id selected-snapshot-id
+                                                          :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
+                                                          :on-export
+                                                          (fn [workspace-id config-id]
+                                                            (nav/go-to-path :workspace-method-config
+                                                                            workspace-id
+                                                                            (ws-common/config->id config-id)))}})}])]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
@@ -146,17 +161,17 @@
    :-refresh-snapshot
    (fn [{:keys [state props]} snapshot-id]
      (swap! state assoc :loading-snapshot? true)
-     (let [{:keys [method-id tab-name embedded? nav-method]} props
+     (let [{:keys [method-id tab-name workspace-id nav-method]} props
            {:keys [namespace name]} method-id
            old-snapshot-id (:snapshot-id props)
            tab-key (tab-nav-map tab-name)
            context-id (utils/restructure namespace name snapshot-id)]
        (when (not= old-snapshot-id snapshot-id)
-         (if embedded?
+         (if workspace-id
            (nav-method {:replace? true
                         :label (str namespace "/" name)
                         :component MethodDetails
-                        :props (utils/restructure method-id snapshot-id embedded? nav-method tab-name)})
+                        :props (utils/restructure method-id snapshot-id workspace-id nav-method tab-name)})
            (if old-snapshot-id
              (nav/go-to-path tab-key context-id)
              ;; also stick new snapshot into state--otherwise page doesn't rerender

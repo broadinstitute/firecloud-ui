@@ -59,23 +59,25 @@
      {:preview-config (some-> (:initial-config props) config->id+snapshot)})
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [method-name dismiss]} props
-           {:keys [configs configs-error selected-config banner]} @state]
-       [modals/OKCancelForm
-        {:header (str "Export " method-name " to Workspace")
-         :content
-         (react/create-element
-          [:div {}
-           (when banner
-             [comps/Blocker {:banner banner}])
-           (cond configs-error (style/create-server-error-message configs-error)
-                 selected-config (this :-render-export-page)
-                 configs (this :-render-config-selector)
-                 :else [comps/Spinner {:text "Loading Method Configurations..."}])])
-         :button-bar (cond selected-config (this :-render-export-page-buttons)
-                           configs (this :-render-config-selector-buttons))
-         :show-cancel? false
-         :dismiss dismiss}]))
+     (let [{:keys [method-name dismiss workspace-id]} props
+           {:keys [configs configs-error selected-config banner]} @state
+           exporter [:div {}
+                     (when banner
+                       [comps/Blocker {:banner banner}])
+                     (cond configs-error (style/create-server-error-message configs-error)
+                           selected-config (this :-render-export-page)
+                           configs (this :-render-config-selector)
+                           :else [comps/Spinner {:text "Loading Method Configurations..."}])]]
+       (if workspace-id
+         [:div {} exporter (cond selected-config (this :-render-export-page-buttons)
+                                 configs (this :-render-config-selector-buttons))]
+         [modals/OKCancelForm
+          {:header (str "Export " method-name " to Workspace")
+           :content (react/create-element exporter)
+           :button-bar (cond selected-config (this :-render-export-page-buttons)
+                             configs (this :-render-config-selector-buttons))
+           :show-cancel? false
+           :dismiss dismiss}])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -122,7 +124,7 @@
                          :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-export-page
    (fn [{:keys [props state locals]}]
-     (let [{:keys [method-name]} props
+     (let [{:keys [method-name workspace-id]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
         (style/create-form-label "Name")
@@ -137,10 +139,12 @@
            (style/create-form-label "Root Entity Type")
            (style/create-identity-select {:ref "root-entity-type"}
                                          common/root-entity-types)))
-        (style/create-form-label "Destination Workspace")
-        [WorkspaceSelector {:style {:width "100%"}
-                            :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
-                            :on-select #(swap! locals assoc :selected-workspace-id (ws-common/workspace->id %))}]
+        (when-not workspace-id
+          (list
+           (style/create-form-label "Destination Workspace")
+           [WorkspaceSelector {:style {:width "100%"}
+                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
+                               :on-select #(swap! locals assoc :selected-workspace-id (ws-common/workspace->id %))}]))
         [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
         (style/create-validation-error-message (:validation-errors @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
@@ -149,11 +153,11 @@
      (flex/box
       {:style {:alignItems "center"}}
       (links/create-internal
-        {:onClick #(swap! state dissoc :selected-config)}
-        (flex/box
-         {:style {:alignItems "center"}}
-         (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-         "Choose Another Configuration"))
+       {:onClick #(swap! state dissoc :selected-config)}
+       (flex/box
+        {:style {:alignItems "center"}}
+        (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+        "Choose Another Configuration"))
       flex/spring
       [buttons/Button {:text "Export to Workspace"
                        :onClick #(this :-export)}]))
@@ -186,12 +190,12 @@
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
      (swap! state assoc :banner "Exporting...")
-     (let [{:keys [selected-workspace-id]} @locals]
+     (let [workspace-id (or (:workspace-id props) (:selected-workspace-id @locals))]
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/post-workspace-method-config selected-workspace-id)
+        {:endpoint (endpoints/post-workspace-method-config workspace-id)
          :payload config
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      ((:on-export props) selected-workspace-id (ws-common/config->id config))
+                      ((:on-export props) workspace-id (ws-common/config->id config))
                       (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))})

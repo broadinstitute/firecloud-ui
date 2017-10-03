@@ -166,7 +166,7 @@
            {:allow-edit false}))))
 
 
-(defn- method-chooser [{:keys [push-page replace-page] :as props}]
+(defn- method-chooser [{:keys [push-page replace-page workspace-id] :as props}]
   (if config/debug?
     (let [nav-method (fn [{:keys [replace? label component props]}]
                        ((if replace? replace-page push-page)
@@ -174,7 +174,7 @@
                          :component [component props]}))]
       [method-table-new/MethodRepoTable
        {:nav-method nav-method
-        :embedded? true}])
+        :workspace-id workspace-id}])
     [MethodRepoTable
      {:render-name
       (fn [{:keys [namespace name snapshotId entityType]}]

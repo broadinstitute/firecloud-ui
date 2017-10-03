@@ -21,7 +21,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [methods error editing-namespace]} @state
-           {:keys [embedded? nav-method]} props]
+           {:keys [workspace-id nav-method]} props]
        [:div {}
         (when (:creating? @state)
           [CreateMethodDialog
@@ -69,16 +69,16 @@
                                      (utils/deep-merge
                                       {:data-test-id (str "method-link-" namespace "-" name)
                                        :style {:display "block" :marginTop -4}}
-                                      (if embedded?
+                                      (if workspace-id
                                         {:onClick #(nav-method
                                                     {:label (str namespace "/" name)
                                                      :component MethodDetails
-                                                     :props (utils/restructure method-id nav-method embedded?)})}
+                                                     :props (utils/restructure method-id nav-method workspace-id)})}
                                         {:href (nav/get-link :method-loader method-id)}))
                                      [:span
-                                      {:className (when-not embedded? "underline-on-hover")
+                                      {:className (when-not workspace-id "underline-on-hover")
                                        :style {:fontSize "80%" :color "black"}
-                                       :onClick (when-not embedded?
+                                       :onClick (when-not workspace-id
                                                   (fn [e]
                                                     (.preventDefault e)
                                                     (swap! state assoc :editing-namespace namespace)))}
@@ -100,7 +100,7 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 (when-not embedded?
+                                 (when-not workspace-id
                                    [[buttons/Button {:data-test-id "create-method-button"
                                                      :style {:marginLeft "auto"}
                                                      :text "Create New Method..."
