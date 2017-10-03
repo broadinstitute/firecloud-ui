@@ -15,8 +15,8 @@
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
-   [broadfcui.utils :as utils]
-   ))
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]))
 
 (react/defc- MetadataImporter
   {:get-initial-state
@@ -93,7 +93,11 @@
          {:ref "entity-table"
           :workspace-id workspace-id
           :column-defaults
-          (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+          (if-let [local-state (persistence/check-saved-state {:key (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state))})]
+            (let [shown (get (group-by :visible? (:column-display local-state)) true)
+                  hidden (get (group-by :visible? (:column-display local-state)) false)]
+              (hash-map (:selected-entity-type @state) (hash-map "shown" shown "hidden" hidden)))
+            (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults])))
           :get-toolbar-items
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))

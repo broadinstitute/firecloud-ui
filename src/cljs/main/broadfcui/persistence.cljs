@@ -22,6 +22,13 @@
       saved-state
       (initial))))
 
+(defn check-saved-state [{:keys [key initial validator]}]
+  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
+    (if (and saved-state
+             (or (not validator) (validator saved-state)))
+      saved-state
+      nil)))
+
 (defn delete [key]
   (utils/local-storage-remove
    (generate-persistence-key key)))
