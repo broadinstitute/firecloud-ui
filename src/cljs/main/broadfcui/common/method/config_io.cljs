@@ -32,6 +32,9 @@
      (swap! state dissoc :editing?)
      {:inputs (select-keys (:inputs @locals) (-> props :values :inputs keys))
       :outputs (select-keys (:outputs @locals) (-> props :values :outputs keys))})
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals utils/deep-merge (:values props)))
    :render
    (fn [{:keys [props this]}]
      (let [id (gensym "io-table-")]
