@@ -215,7 +215,7 @@
                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                      (callback (if success?
                                                  ; don't bother keywordizing, it's just going to be converted to js
-                                                 (:results (get-parsed-response false))
+                                                 ((get-parsed-response false) "results")
                                                  [{:suggestion "Error fetching results"}])))})
                         ["Loading..."])
      :getSuggestionValue #(.-suggestion %)
