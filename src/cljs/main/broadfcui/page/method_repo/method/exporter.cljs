@@ -48,15 +48,10 @@
                        (swap! state assoc :config parsed-response)
                        (swap! state assoc :config-error (:message parsed-response)))))})))})
 
-
-(defn- config->id+snapshot [config]
-  (assoc (select-keys config [:namespace :name]) :snapshotId (int (:snapshotId config))))
-
-
 (react/defc MethodExporter
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:preview-config (some-> (:initial-config props) config->id+snapshot)})
+     {:preview-config (:initial-config props)})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
