@@ -23,7 +23,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     val workspaceName = "Smoketests_create_" + randomUuid
     val detailPage = listPageAsUser.createWorkspace(billingProject, workspaceName).awaitLoaded()
 
-    detailPage.ui.readWorkspaceName shouldEqual workspaceName
+    detailPage.ui.readWorkspace shouldEqual (billingProject, workspaceName)
     listPageAsUser.open
     listPageAsUser.filter(workspaceName)
     listPageAsUser.ui.hasWorkspace(billingProject, workspaceName) shouldBe true
