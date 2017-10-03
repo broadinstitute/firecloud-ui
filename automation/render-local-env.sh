@@ -9,6 +9,7 @@ if [ "$LOCAL_UI_PARAM" = "local_ui" ]; then
   LOCAL_UI=true 
 fi
 
+
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \

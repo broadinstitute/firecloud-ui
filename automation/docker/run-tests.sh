@@ -11,8 +11,7 @@ HUB_COMPOSE=hub-compose-fiab.yml
 #else leave blank (test runs against a non FIAB host, such as real dev)
 DOCKERHOST="127.0.0.1"
 DOCKERHOST=${3:-$DOCKERHOST}
-#if [ $DOCKERHOST = "alpha" -o $DOCKERHOST = "dev" ]; then
-if [ $DOCKERHOST = "alpha" ]
+if [ $DOCKERHOST = "alpha" -o $DOCKERHOST = "prod" ];
   then
     DOCKERHOST=
     HUB_COMPOSE=hub-compose.yml
@@ -81,6 +80,12 @@ if [ "$DOCKERHOST" != "" ]; then
     HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e TEST_CHANNEL=dsde-qa"
 fi
 
+TEST_ENTRYPOINT="testOnly -- -l ProdTest"
+if [ $ENV = "prod" ]; then
+    TEST_ENTRYPOINT="testOnly -- -n ProdTest"
+fi
+echo $TEST_ENTRYPOINT
+
 # run tests
 docker run -e DOCKERHOST=$DOCKERHOST \
     --net=docker_default \
@@ -92,7 +97,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
-    ${TEST_CONTAINER}:latest
+    ${TEST_CONTAINER}:latest "${TEST_ENTRYPOINT}"
 
 
 # Grab exit code of tests

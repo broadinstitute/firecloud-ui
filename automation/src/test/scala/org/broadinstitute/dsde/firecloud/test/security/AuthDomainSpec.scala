@@ -26,7 +26,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val projectName: String = Config.Projects.common
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  implicit val authToken: AuthToken = AuthTokens.fred
+  implicit lazy val authToken: AuthToken = AuthTokens.fred
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {

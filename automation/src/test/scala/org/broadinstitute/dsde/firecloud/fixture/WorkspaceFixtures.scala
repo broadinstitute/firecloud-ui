@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.Suite
 
-/**
+/**WorkspaceFixtures
   * Fixtures for creating and cleaning up test workspaces.
   */
 trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
