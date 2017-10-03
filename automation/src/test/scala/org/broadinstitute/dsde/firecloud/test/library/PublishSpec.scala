@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._

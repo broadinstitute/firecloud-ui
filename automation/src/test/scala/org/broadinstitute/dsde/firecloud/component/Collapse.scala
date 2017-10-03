@@ -1,6 +1,6 @@
-package org.broadinstitute.dsde.firecloud.page.components
+package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.page.Stateful
+import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 

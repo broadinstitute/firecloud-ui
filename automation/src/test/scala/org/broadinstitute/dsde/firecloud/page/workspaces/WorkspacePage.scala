@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
-import org.broadinstitute.dsde.firecloud.page.components.TabBar
+import org.broadinstitute.dsde.firecloud.component.TabBar
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.openqa.selenium.WebDriver
 
 

@@ -1,8 +1,8 @@
-package org.broadinstitute.dsde.firecloud.page
+package org.broadinstitute.dsde.firecloud
 
 import org.openqa.selenium.WebDriver
 
-trait Stateful extends FireCloudView {
+trait Stateful { this: FireCloudView =>
   val element: Query
 
   def getState(implicit webDriver: WebDriver): String = {

@@ -1,10 +1,12 @@
-package org.broadinstitute.dsde.firecloud.page.workspaces
+package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
+import org.broadinstitute.dsde.firecloud.component.{Collapse, Table}
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.components.{Collapse, Table}
+import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
+import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -37,7 +39,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val Reader = Value("READER")
     val Writer = Value("WRITER")
   }
-  import AccessLevel._
 
   /**
     * Clones the workspace currently being viewed. Returns when the clone
@@ -254,191 +255,4 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
   object ui extends UI
-}
-
-
-class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
-
-  /**
-    * Clones a new workspace. Returns immediately after submitting. Call awaitCloneComplete to wait for cloning to be done.
-    *
-    * @param workspaceName the name for the new workspace
-    * @param billingProjectName the billing project for the workspace
-    */
-  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
-    ui.selectBillingProject(billingProjectName)
-    ui.fillWorkspaceName(workspaceName)
-    authDomain foreach { ui.selectAuthDomain(_) }
-
-    ui.clickCloneButton()
-  }
-
-  def cloneWorkspaceWait(): Unit = {
-    // Micro-sleep to make sure the spinner has had a chance to render
-    Thread sleep 200
-    await notVisible spinner
-  }
-
-
-  object ui {
-    private val authDomainSelect = testId("workspace-auth-domain-select")
-    private val billingProjectSelect = testId("billing-project-select")
-    private val cloneButtonQuery: Query = testId("create-workspace-button")
-    private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
-    private val workspaceNameInput: Query = testId("workspace-name-input")
-
-    def clickCloneButton(): Unit = {
-      click on (await enabled cloneButtonQuery)
-    }
-
-    def fillWorkspaceName(name: String): Unit = {
-      textField(workspaceNameInput).value = name
-    }
-
-    def readAuthDomainGroups(): List[(String, Boolean)] = {
-      await visible authDomainGroupsQuery
-
-      findAll(authDomainGroupsQuery).map { element =>
-        (element.attribute("value").get, element.isEnabled)
-      }.toList
-    }
-
-    def readLockedAuthDomainGroups(): List[String] = {
-      readAuthDomainGroups().filterNot{ case (_, isEnabled) => isEnabled }.map { case (name, _) => name }
-    }
-
-    def selectAuthDomain(authDomain: String): Unit = {
-      singleSel(authDomainSelect).value = option value authDomain
-    }
-
-    def selectBillingProject(billingProjectName: String): Unit = {
-      singleSel(billingProjectSelect).value = option value billingProjectName
-    }
-  }
-}
-
-
-/**
-  * Page class for the workspace delete confirmation modal.
-  */
-class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
-
-  /**
-    * Confirms the request to delete a workspace. Returns after the FireCloud
-    * busy spinner disappears.
-    */
-  def confirmDelete(): Unit = {
-    ui.clickConfirmDeleteButton()
-  }
-
-  def confirmDeleteWait(): Unit = {
-    // Micro-sleep to make sure the spinner has had a chance to render
-    Thread sleep 200
-    await notVisible spinner
-  }
-
-
-  object ui {
-    private val confirmDeleteButtonQuery: Query = testId("confirm-delete-workspace-button")
-
-    def clickConfirmDeleteButton(): Unit = {
-      click on (await enabled confirmDeleteButtonQuery)
-    }
-  }
-}
-
-/**
-  * Page class for the Acl Editor modal
-  */
-class AclEditor(implicit webDriver: WebDriver) extends FireCloudView  {
-
-  def clickOk(): Unit = {
-    ui.clickOkButton()
-  }
-
-  def clickCancel(): Unit = {
-    ui.clickCancelButton()
-  }
-
-  /**
-    * Shares workspace being viewed.
-    * @param email email of user to be shared with
-    * @param accessLevel accessLevel to set for user
-    * @param share if the Can Share checkbox should be clicked
-    * @param compute if the Can Compute checkbox should be clicked
-    */
-  def shareWorkspace(email: String, accessLevel: WorkspaceAccessLevel, share: Boolean, compute: Boolean): Unit = {
-    fillEmailAndAccess(email, accessLevel)
-    if (share) {
-      ui.clickCanShare()
-    }
-    if (compute) {
-      ui.clickCanCompute()
-    }
-    ui.clickOkButton()
-    await notVisible spinner
-  }
-
-  def fillEmailAndAccess(email: String, accessLevel: WorkspaceAccessLevel): Unit = {
-    ui.clickAddNewAclButton()
-    ui.fillNewAclEmailField(email)
-    ui.clickRoleDropdown()
-    ui.clickRoleLink(accessLevel)
-  }
-
-  def clickDropdown(): Unit = {
-    ui.clickRoleDropdown()
-  }
-
-  def clickRole(workspaceAccessLevel: WorkspaceAccessLevel): Unit = {
-    ui.clickRoleLink(workspaceAccessLevel)
-  }
-
-  object ui {
-    private val okButton: Query = testId("ok-button")
-    private val cancelButton: Query = testId("cancel-button")
-    private val addNewAclButton: Query = testId("add-new-acl-button")
-    private val newAclEmailField: Query = testId("acl-add-email")
-    private val roleDropdown: Query = testId("role-dropdown-true")
-    private val canShareBox: Query = testId("acl-share-true")
-    private val canComputeBox: Query = testId("acl-compute-true")
-    //TODO: add more here for multiple user save
-    def clickOkButton(): Unit = {
-      click on (await enabled okButton)
-    }
-    def clickCancelButton(): Unit = {
-      click on (await enabled cancelButton)
-    }
-    def clickAddNewAclButton(): Unit = {
-      click on (await enabled addNewAclButton)
-    }
-    def fillNewAclEmailField(email: String): Unit = {
-      emailField(ui.newAclEmailField).value = email
-    }
-
-    def clickRoleDropdown(): Unit = {
-      click on (await enabled roleDropdown)
-    }
-
-    def clickRoleLink(workspaceAccessLevel: WorkspaceAccessLevel): Unit = {
-      val role = workspaceAccessLevel.toString
-      singleSel(roleDropdown).value = option value role
-    }
-
-    def clickCanShare(): Unit = {
-      click on (await enabled canShareBox)
-    }
-
-    def clickCanCompute(): Unit = {
-      click on (await enabled canComputeBox)
-    }
-
-    def canComputeEnabled(): Boolean = {
-      enabled(canComputeBox)
-    }
-
-    def canComputeChecked(): Boolean = {
-      checkbox(canComputeBox).isSelected
-    }
-  }
 }

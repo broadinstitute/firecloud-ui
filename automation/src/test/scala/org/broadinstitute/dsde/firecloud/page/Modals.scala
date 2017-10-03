@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.openqa.selenium.WebDriver
 
 abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudView {

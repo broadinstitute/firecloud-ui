@@ -1,10 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.components.Table
+import org.broadinstitute.dsde.firecloud.component.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, PageUtil}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 

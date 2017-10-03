@@ -1,8 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.components.Table
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

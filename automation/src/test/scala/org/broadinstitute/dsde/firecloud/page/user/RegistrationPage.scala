@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.page.FireCloudView
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.openqa.selenium.WebDriver
 
 /**

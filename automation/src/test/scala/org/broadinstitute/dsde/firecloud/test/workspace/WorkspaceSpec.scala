@@ -7,8 +7,8 @@ import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
