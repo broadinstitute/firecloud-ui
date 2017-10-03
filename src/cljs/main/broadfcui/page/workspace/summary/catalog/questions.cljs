@@ -125,10 +125,10 @@
                                        (callback (if success?
                                                    ; don't bother keywordizing, it's just going to be converted to js
                                                    (get-parsed-response false)
-                                                   [{:label "Error fetching results"}])))}
+                                                   [:error])))}
                            :service-prefix "/duos")
-                          [{:label "Loading..."}])
-       :getSuggestionValue #(.-label %)
+                          [:loading])
+       :get-value #(.-label %)
        :renderSuggestion (fn [suggestion]
                            (react/create-element
                             [:div {}
@@ -168,15 +168,7 @@
      :inputProps {:placeholder inputHint
                   :disabled disabled
                   :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
-     :get-suggestions (fn [query callback]
-                        (utils/ajax-orch
-                         (str "/library/populate/suggest/" (name property) "?q=" query)
-                         {:on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (callback (if success?
-                                                 ; don't bother keywordizing, it's just going to be converted to js
-                                                 (get-parsed-response false)
-                                                 ["Error fetching results"])))})
-                        ["Loading..."])
+     :url (str "/library/populate/suggest/" (name property) "?q=")
      :on-change set-property
      :theme {:input (colorize {:width "100%" :marginBottom 0})
              :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]])

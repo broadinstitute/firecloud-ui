@@ -4,6 +4,7 @@
    [cljsjs.react-autosuggest]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
    ))
@@ -12,7 +13,11 @@
 (react/defc Autosuggest
   "One of
   :data - string suggestion possibilities
+  :url - string orch path to append query to and GET from
   :get-suggestions - function accepting value and returning suggestions
+    Can also return [:loading] or [:error].
+
+  :get-value - function to turn suggestion into string value
 
   :on-change (required)
   :on-submit (optional) - fires when hitting return or clear button
@@ -38,19 +43,29 @@
      {:value (:default-value props)})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data on-change get-suggestions caching?]} props
+     (let [{:keys [data url get-suggestions on-change caching? get-value]} props
            {:keys [suggestions]} @state
            value (:value (if caching? @state props))
-           get-suggestions (if get-suggestions
-                             (fn [value]
-                               (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
-                             (fn [value]
-                               (filterv
-                                #(string/includes? (string/lower-case %)
-                                                   (string/lower-case (.-value value)))
-                                data)))]
+           get-suggestions (cond
+                             get-suggestions (fn [value]
+                                               (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
+                             url (fn [value]
+                                   (utils/ajax-orch
+                                    (str url (.-value value))
+                                    {:on-done (fn [{:keys [success? get-parsed-response]}]
+                                                (swap! state assoc :suggestions
+                                                       (if success?
+                                                         ; don't bother keywordizing, it's just going to be converted to js
+                                                         (get-parsed-response false)
+                                                         [:error])))})
+                                   [:loading])
+                             :else (fn [value]
+                                     (filterv
+                                      #(string/includes? (string/lower-case %)
+                                                         (string/lower-case (.-value value)))
+                                      data)))]
 
-       (assert (or (fn? (:get-suggestions props)) (seq? data)) "Must provide either seq-able :data or :get-suggestions function")
+       (assert (or (fn? (:get-suggestions props)) url (seq? data)) "Must provide either seq-able :data, url, or :get-suggestions function")
        (assert (fn? on-change) "Must provide :on-change callback")
 
        [js/Autosuggest
@@ -58,11 +73,10 @@
                   {:suggestions (or suggestions [])
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
                    :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
-                   :getSuggestionValue identity
+                   :getSuggestionValue #(if (keyword? %) "" ((or get-value identity) %))
                    :renderSuggestion (fn [suggestion]
-                                       (react/create-element [:div {:style {:textOverflow "ellipsis"
-                                                                            :overflow "hidden"}}
-                                                              suggestion]))
+                                       (react/create-element
+                                        [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}} suggestion]))
                    :inputProps
                    {:value (or value "")
                     :onKeyDown (when-let [on-submit (:on-submit @locals)]
@@ -76,6 +90,14 @@
                    :shouldRenderSuggestions (complement string/blank?)
                    :highlightFirstSuggestion true
                    :id (:id @locals)
+                   :renderSuggestionsContainer (fn [arg]
+                                                 (let [{:keys [containerProps]} (js->clj arg :keywordize-keys true)]
+                                                   (react/create-element
+                                                    [:div containerProps
+                                                     (case suggestions
+                                                       [:loading] [comps/Spinner {:text "Loading..."}]
+                                                       [:error] [:div {:style {:margin "1em"}} "Error loading results."]
+                                                       (.-children arg))])))
                    :theme
                    {:container {}
                     :containerOpen {}
@@ -84,19 +106,21 @@
                              :WebkitAppearance "none")
                     :inputOpen {:borderBottomLeftRadius 0 :borderBottomRightRadius 0}
                     :inputFocused {:outline "none"}
-                    :suggestionsContainer {}
+                    :suggestionsContainer {:fontSize "88%"
+                                           :position "absolute"
+                                           :width 280
+                                           :boxSizing "border-box"
+                                           :marginTop "-0.25rem"
+                                           :backgroundColor "#fff"
+                                           :borderBottomLeftRadius 3
+                                           :borderBottomRightRadius 3
+                                           :maxHeight 250
+                                           :overflowY "auto"
+                                           :zIndex 2}
                     :suggestionsContainerOpen {:display "block"
-                                               :position "absolute"
-                                               :width 280
-                                               :boxSizing "border-box"
-                                               :marginTop "-0.25rem"
                                                :borderWidth 1
                                                :borderStyle "solid"
-                                               :borderColor (:border-light style/colors)
-                                               :backgroundColor "#fff"
-                                               :borderBottomLeftRadius 3
-                                               :borderBottomRightRadius 3
-                                               :zIndex 2}
+                                               :borderColor (:border-light style/colors)}
                     :suggestionsList {:margin 0
                                       :padding 0
                                       :listStyle "none"}
@@ -107,7 +131,7 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :data :on-change :get-suggestions :clear-suggestions :caching? :on-submit)))]))
+                  (dissoc props :default-value :value :on-submit :data :url :get-suggestions :on-change :caching? :get-value)))]))
    :component-did-mount
    (fn [{:keys [locals this]}]
      (when-let [on-clear (:on-clear @locals)]

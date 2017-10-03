@@ -218,9 +218,9 @@
                                      (callback (if success?
                                                  ; don't bother keywordizing, it's just going to be converted to js
                                                  ((get-parsed-response false) "results")
-                                                 [{:suggestion "Error fetching results"}])))})
-                        ["Loading..."])
-     :getSuggestionValue #(.-suggestion %)
+                                                 [:error])))})
+                        [:loading])
+     :get-value #(.-suggestion %)
      :renderSuggestion (fn [suggestion]
                          (react/create-element (highlight-suggestion (js->clj suggestion))))
      :highlightFirstSuggestion false
