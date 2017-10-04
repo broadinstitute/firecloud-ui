@@ -18,7 +18,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   "Smoketest 1:  Log in, create workspace, import data, import method config, run method config, delete workspace" taggedAs Tags.ProdTest in withWebDriver { implicit driver =>
 
     // login
-    var listPageAsUser = signIn(Config.Users.smoketestuser)
+    val listPageAsUser = signIn(Config.Users.smoketestuser)
     assert(listPageAsUser.readUserEmail().equals(Config.Users.smoketestuser.email))
 
     // create workspace
@@ -27,8 +27,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     detailPage.readWorkspace shouldEqual (billingProject, workspaceName)
     listPageAsUser.open
-    listPageAsUser.filter(workspaceName)
-    listPageAsUser.ui.hasWorkspace(billingProject, workspaceName) shouldBe true
+    listPageAsUser.hasWorkspace(billingProject, workspaceName) shouldBe true
 
     // upload data set
     val filename = "src/test/resources/participants.txt"

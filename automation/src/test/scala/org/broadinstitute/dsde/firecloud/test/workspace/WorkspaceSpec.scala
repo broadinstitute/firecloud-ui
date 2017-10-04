@@ -33,10 +33,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
           detailPage.validateWorkspace shouldEqual true
 
-          listPage.open
-          listPage.filter(workspaceName)
-          listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe true
-        }
+        listPage.open
+        listPage.hasWorkspace(billingProject, workspaceName) shouldBe true
+      }
 
       }
 
@@ -49,10 +48,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)
             workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned)
 
-            listPage.open
-            listPage.filter(workspaceNameCloned)
-            listPage.ui.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true
-          }
+          listPage.open
+          listPage.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true}
         }
 
       }
@@ -62,13 +59,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to delete the workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
-            detailPage.deleteWorkspace()
-            listPage.validateLocation()
-            listPage.filter(workspaceName)
-            listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe false
-          }
+
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          detailPage.deleteWorkspace()
+          listPage.validateLocation()
+          listPage.hasWorkspace(billingProject, workspaceName) shouldBe false
         }
+      }
 
       }
 
@@ -76,11 +73,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
 
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             detailPage.share(Config.Users.ron.email, "READER")
             detailPage.signOut()
             val listPage2 = signIn(Config.Users.ron)
-            val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
             detailPage2.ui.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader
           }
         }
@@ -91,11 +88,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
 
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             detailPage.share(Config.Users.ron.email, "READER", true)
             detailPage.signOut()
             val listPage2 = signIn(Config.Users.ron)
-            val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
             detailPage2.ui.hasShareButton shouldBe true
           }
         }
@@ -105,7 +102,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
             aclEditor.canComputeEnabled shouldBe true
             aclEditor.canComputeChecked shouldBe false
@@ -120,7 +117,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "OWNER")
             aclEditor.canComputeEnabled shouldBe false
             aclEditor.canComputeChecked shouldBe true
@@ -135,7 +132,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "READER")
             aclEditor.canComputeEnabled shouldBe false
             aclEditor.canComputeChecked shouldBe false
@@ -147,7 +144,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to enter workspace attributes" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
             detailPage.ui.beginEditing()
             detailPage.ui.addWorkspaceAttribute("a", "X")
@@ -167,7 +164,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         "from the top" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
               detailPage.ui.beginEditing()
               detailPage.ui.deleteWorkspaceAttribute("A-key")
@@ -182,7 +179,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         "from the middle" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
               detailPage.ui.beginEditing()
               detailPage.ui.deleteWorkspaceAttribute("B-key")
@@ -197,7 +194,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         "from the bottom" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
               detailPage.ui.beginEditing()
               detailPage.ui.deleteWorkspaceAttribute("C-key")
@@ -212,7 +209,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         "after adding them" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
               detailPage.ui.beginEditing()
               detailPage.ui.addWorkspaceAttribute("a", "W")
@@ -252,7 +249,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           withSignIn(Config.Users.ron) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val methodConfigTab = detailPage.ui.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
             val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
@@ -279,11 +276,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, Config.Users.draco.email, "OWNER")
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
               detailPage.share(Config.Users.draco.email, "WRITER", false, false)
               detailPage.signOut()
               val listPage2 = signIn(Config.Users.draco)
-              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName)
+              val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
               val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
               val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
               val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
@@ -300,11 +297,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, Config.Users.draco.email, "OWNER")
-                val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName)
+                val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 detailPage.share(Config.Users.draco.email, "WRITER", false, true)
                 detailPage.signOut()
                 val listPage2 = signIn(Config.Users.draco)
-                val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName)
+                val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                 val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
                 val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
                 val launchAnalysisModal = methodConfigDetailsPage.ui.openLaunchAnalysisModal()
@@ -323,7 +320,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "should retain the source workspace's authorization domain" ignore withWebDriver { implicit driver =>
       withSignIn(Config.Users.draco) { listPage =>
         withClonedWorkspace(Config.Projects.common, "AuthDomainSpec_share") { cloneWorkspaceName =>
-          val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName)
+          val summaryPage = listPage.enterWorkspace(Config.Projects.common, cloneWorkspaceName)
           // assert that user who cloned the workspace is the owner
         }
       }

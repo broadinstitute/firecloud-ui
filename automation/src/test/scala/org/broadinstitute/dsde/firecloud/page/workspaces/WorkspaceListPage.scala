@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
@@ -15,6 +14,21 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     with Page with PageUtil[WorkspaceListPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces"
 
+  override def awaitReady(): Unit = {
+    workspacesTable.awaitReady()
+  }
+
+  private val workspacesTable = Table("workspace-list")
+  private val createWorkspaceButton = Button("open-create-workspace-modal-button")
+  private val requestAccessModal = testId("request-access-modal")
+  private def workspaceLink(ns: String, n: String) = Link(s"$ns-$n-workspace-link")
+  private def restrictedWorkspaceLabel(ns: String, n: String) = Label(s"restricted-$ns-$n")
+
+  def clickCreateWorkspaceButton(): CreateWorkspaceModal = {
+    createWorkspaceButton.doClick()
+    await ready new CreateWorkspaceModal
+  }
+
   /**
     * Creates a new workspace. Returns a new WorkspaceSummaryPage.
     *
@@ -25,90 +39,53 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
                       authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    ui.clickCreateWorkspaceButton()
-          .createWorkspace(billingProjectName, workspaceName, authDomain)
-    new WorkspaceSummaryPage(billingProjectName, workspaceName)
+    clickCreateWorkspaceButton().createWorkspace(billingProjectName, workspaceName, authDomain)
+    await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
+  }
+
+  private def filter(text: String): Unit = {
+    workspacesTable.filter(text)
+  }
+
+  def hasWorkspace(namespace: String, name: String): Boolean = {
+    filter(name)
+    workspaceLink(namespace, name).isVisible
+  }
+
+  def showsRequestAccessModal(): Boolean = {
+    find(requestAccessModal).isDefined
+  }
+
+  def looksRestricted(namespace: String, name: String): Boolean = {
+    filter(name)
+    restrictedWorkspaceLabel(namespace, name).isVisible
   }
 
   /**
-    * Filters the list of workspaces.
-    *
-    * @param text the text to filter by
-    */
-  def filter(text: String): Unit = {
-    ui.filterTable(text)
-  }
-
-  /**
-    * Opens the workspace details for a workspace. The workspace must be
-    * visible in the workspace list. Therefore, it is recommended to first
-    * filter on the workspace name.
+    * Filter to and select a given workspace
     *
     * @param namespace the workspace namespace
     * @param name the workspace name
     * @return a WorkspaceDetailPage for the selected workspace
     */
-  def openWorkspaceDetails(namespace: String, name: String): WorkspaceSummaryPage = {
+  def enterWorkspace(namespace: String, name: String): WorkspaceSummaryPage = {
     filter(name)
-    ui.clickWorkspaceInList(namespace, name)
+    workspaceLink(namespace, name).doClick()
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 
   def validateLocation(): Unit = {
-    assert(ui.validateLocation())
+    assert(createWorkspaceButton.isVisible)
   }
-
-  override def awaitReady(): Unit = {
-    ui.awaitReady()
-  }
-
-
-  trait UI extends super.UI {
-    private val workspacesTable = Table("workspace-list")
-    private val createWorkspaceButton = testId("open-create-workspace-modal-button")
-    private val requestAccessModal = testId("request-access-modal")
-    private def restrictedWorkspaceTestId(ns: String, n: String) = { s"restricted-$ns-$n" }
-
-    def clickCreateWorkspaceButton(): CreateWorkspaceModal = {
-      click on (await enabled createWorkspaceButton)
-      new CreateWorkspaceModal
-    }
-
-    def clickWorkspaceInList(namespace: String, name: String): Unit = {
-      click on title(s"$namespace/$name")
-    }
-
-    def filterTable(text: String): Unit = {
-      workspacesTable.filter(text)
-    }
-
-    def awaitReady(): Unit = {
-      workspacesTable.awaitReady()
-    }
-
-    def validateLocation(): Boolean = {
-      find(createWorkspaceButton).isDefined
-    }
-
-    def hasWorkspace(namespace: String, name: String): Boolean = {
-      find(title(s"$namespace/$name")).isDefined
-    }
-
-    def looksRestricted(namespace: String, name: String): Boolean = {
-      find(testId(restrictedWorkspaceTestId(namespace, name))).isDefined
-    }
-
-    def showsRequestAccessModal(): Boolean = {
-      find(requestAccessModal).isDefined
-    }
-  }
-  object ui extends UI
 }
 
 /**
   * Page class for the create workspace modal.
   */
 class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  private val authDomainSelect = Select("workspace-auth-domain-select")
+  private val billingProjectSelect = Select("billing-project-select")
+  private val workspaceNameInput = TextField("workspace-name-input")
 
   /**
     * Creates a new workspace. Returns after the FireCloud busy spinner
@@ -118,29 +95,10 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
     * @param billingProjectName the billing project for the workspace
     */
   def createWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
-    ui.selectBillingProject(billingProjectName)
-    ui.fillWorkspaceName(workspaceName)
-    authDomain foreach { ui.selectAuthDomain(_) }
+    billingProjectSelect.select(billingProjectName)
+    workspaceNameInput.setText(workspaceName)
+    authDomain foreach { authDomainSelect.select }
 
     submit()
-  }
-
-
-  object ui {
-    private val authDomainSelect = testId("workspace-auth-domain-select")
-    private val billingProjectSelect = testId("billing-project-select")
-    private val workspaceNameInput: Query = testId("workspace-name-input")
-
-    def fillWorkspaceName(workspaceName: String): Unit = {
-      textField(workspaceNameInput).value = workspaceName
-    }
-
-    def selectAuthDomain(authDomain: String): Unit = {
-      singleSel(authDomainSelect).value = option value authDomain
-    }
-
-    def selectBillingProject(billingProjectName: String): Unit = {
-      singleSel(billingProjectSelect).value = option value billingProjectName
-    }
   }
 }

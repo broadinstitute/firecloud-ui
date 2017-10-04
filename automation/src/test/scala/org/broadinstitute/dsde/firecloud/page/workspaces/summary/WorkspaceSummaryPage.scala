@@ -55,7 +55,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   def unpublishWorkspace(): Unit = {
     ui.clickUnpublishButton()
-    val msgModal = new MessageModal
+    val msgModal = await ready new MessageModal
     msgModal.clickOk()
   }
 
@@ -66,7 +66,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   def deleteWorkspace(): WorkspaceListPage = {
     val workspaceDeleteModal = ui.clickDeleteWorkspaceButton()
     workspaceDeleteModal.confirmDelete()
-    new WorkspaceListPage
+    await ready new WorkspaceListPage
   }
 
   /**
@@ -82,7 +82,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     await notVisible spinner
     val aclEditor = ui.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
-    new WorkspaceSummaryPage(namespace, name)
+    await ready new WorkspaceSummaryPage(namespace, name)
   }
 
   def openShareDialog(email: String, accessLevel: String): AclEditor = {

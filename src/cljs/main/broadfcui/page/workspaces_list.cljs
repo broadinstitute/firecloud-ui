@@ -325,7 +325,8 @@
    (fn [{:keys [this]} {:keys [status restricted? no-access? hover-text workspace-id auth-domain-groups]}]
      (let [{:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
-       [:a {:href (if no-access?
+       [:a {:data-test-id (str namespace "-" name "-workspace-link")
+            :href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domain-groups))

@@ -6,12 +6,10 @@ case class Checkbox(id: String)(implicit webDriver: WebDriver) extends Component
   def isChecked: Boolean = checkbox(element).isSelected
 
   def ensureChecked(): Unit = {
-    if (!isChecked)
-      click on element
+    checkbox(element).select()
   }
 
   def ensureUnchecked(): Unit = {
-    if (isChecked)
-      click on element
+    checkbox(element).clear()
   }
 }

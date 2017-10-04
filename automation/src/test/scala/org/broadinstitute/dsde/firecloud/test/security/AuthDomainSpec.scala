@@ -53,7 +53,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
             withCleanUp {
               withSignIn(Config.Users.george) { listPage =>
-                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
 
                 val cloneWorkspaceName = workspaceName + "_clone"
                 val cloneModal = summaryPage.ui.clickCloneButton()
@@ -78,10 +78,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withSignIn(Config.Users.draco) { workspaceListPage =>
-                  workspaceListPage.filter(workspaceName)
-
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                  workspaceListPage.enterWorkspace(projectName, workspaceName)
+                  workspaceListPage.showsRequestAccessModal shouldEqual true
                   workspaceListPage.validateLocation()
                   // TODO: add assertions for the new "request access" modal
                   // TODO: end test somewhere we can access the sign out button
@@ -95,8 +93,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                 withSignIn(Config.Users.draco) { workspaceListPage =>
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+
+                workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                 val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                 go to workspaceSummaryPage
@@ -115,12 +113,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "can be seen and is accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                withSignIn(Config.Users.george) { listPage =>
-                  listPage.filter(workspaceName)
+                withSignIn(Config.Users.george){ listPage =>
 
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
-                  summaryPage.ui.readAuthDomainGroups should include(authDomainName)
-                }
+
+                val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+                summaryPage.ui.readAuthDomainGroups should include(authDomainName)}
               }
             }
           }
@@ -129,9 +126,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
-                withSignIn(Config.Users.george) { workspaceListPage =>
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+                withSignIn(Config.Users.george){ workspaceListPage =>
+
+                workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                 val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                 go to workspaceSummaryPage
@@ -150,12 +147,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { listPage =>
-                    listPage.filter(workspaceName)
 
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  }
+
+                  val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)}
                 }
               }
             }
@@ -189,7 +185,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
                 withSignIn(Config.Users.george) { listPage =>
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                  val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
 
                   val cloneWorkspaceName = workspaceName + "_clone"
                   val cloneModal = summaryPage.ui.clickCloneButton()
@@ -218,7 +214,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 withCleanUp {
                   withSignIn(Config.Users.george) { listPage =>
                     val cloneWorkspaceName = workspaceName + "_clone"
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                    val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
 
                     summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
 
@@ -241,10 +237,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withGroup("AuthDomain") { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
               withCleanUp {
-                withSignIn(Config.Users.fred) { workspaceListPage =>
-                  workspaceListPage.open.filter(workspaceName)
-                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
-                }
+                withSignIn(Config.Users.fred)
+{ workspaceListPage =>
+                workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true}
               }
             }
           }
@@ -274,10 +269,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-
-                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
@@ -293,8 +286,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+
+                  workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                   go to workspaceSummaryPage
@@ -316,10 +309,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-
-                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
@@ -333,10 +324,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   withSignIn(Config.Users.hermione) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-
-                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: finish this test somewhere we can access the sign out button
                   }
@@ -351,8 +340,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+
+                  workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                   go to workspaceSummaryPage
@@ -369,10 +358,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   withSignIn(Config.Users.hermione) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-
-                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                   }
                 }
@@ -389,12 +376,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { listPage =>
-                    listPage.filter(workspaceName)
 
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  }
+
+                  val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)}
                 }
               }
             }
@@ -406,11 +392,10 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
                     withCleanUp {
                       withSignIn(Config.Users.draco) { workspaceListPage =>
-                        workspaceListPage.filter(workspaceName)
 
-                        val summaryPage = workspaceListPage.openWorkspaceDetails(projectName, workspaceName)
-                        summaryPage.ui.readAccessLevel() should be(WorkspaceAccessLevel.Writer)
-                      }
+
+                      val summaryPage = workspaceListPage.enterWorkspace(projectName, workspaceName)
+                      summaryPage.ui.readAccessLevel() should be(WorkspaceAccessLevel.Writer)}
                     }
                   }
                 }
@@ -422,13 +407,12 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupOneName =>
                 withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupTwoName =>
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
-                    withSignIn(Config.Users.hermione) { listPage =>
-                      listPage.filter(workspaceName)
+                    withSignIn(Config.Users.hermione){ listPage =>
 
-                      val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
-                      summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                      summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                    }
+
+                    val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)}
                   }
                 }
               }
@@ -441,12 +425,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { listPage =>
-                    listPage.filter(workspaceName)
 
-                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  }
+
+                  val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)}
                 }
               }
             }
@@ -456,8 +439,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual true
+
+                  workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                   go to workspaceSummaryPage
@@ -476,8 +459,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.filter(workspaceName)
-                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+
+                  workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
                   go to workspaceSummaryPage
