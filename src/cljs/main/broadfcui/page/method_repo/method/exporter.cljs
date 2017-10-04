@@ -56,7 +56,7 @@
 (react/defc MethodExporter
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:preview-config (some-> (:initial-config props) config->id+snapshot)})
+     {:preview-config (:initial-config props)})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
