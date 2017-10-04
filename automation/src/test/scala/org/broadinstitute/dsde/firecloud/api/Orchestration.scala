@@ -202,7 +202,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     def createMethod(testname:String, method:Method, numSnapshots: Int = 1)
                     (implicit token: AuthToken): String = {
       val methodName = appendUnderscore(testname) + Util.makeUuid
-      for (i <- 1 to numSnapshots)
+      for (_ <- 1 to numSnapshots)
         createMethod(SimpleMethod.creationAttributes + ("name"->methodName))
       methodName
     }

@@ -246,14 +246,4 @@ trait WebBrowserUtil extends WebBrowser {
     cssSelector(s"[title='$title']")
   }
 
-  /**
-    * Creates a Query for an element with a class attribute.
-    *
-    * @param cssClass the expected class
-    * @param webDriver implicit WebDriver for the WebDriverWait
-    * @return a Query for the class
-    */
-  def cssClass(cssClass: String)(implicit webDriver: WebDriver): Query = {
-    cssSelector(s"[class='$cssClass']")
-  }
 }

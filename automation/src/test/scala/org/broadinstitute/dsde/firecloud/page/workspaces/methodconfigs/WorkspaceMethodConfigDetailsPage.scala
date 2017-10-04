@@ -57,7 +57,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     private val openLaunchAnalysisModalButtonQuery: Query = testId("open-launch-analysis-modal-button")
     private val openEditModeQuery: Query = testId("edit-method-config-button")
     private val editMethodConfigNameInputQuery: Query = testId("edit-method-config-name-input")
-    private val saveEdittedMethodConfigButtonQuery: Query = testId("save-editted-method-config-button")
+    private val saveEditedMethodConfigButtonQuery: Query = testId("save-edited-method-config-button")
     private val cancelEditMethodConfigModeButtonQuery: Query = testId("cancel-edit-method-config-button")
     private val editMethodConfigSnapshotIdSelectQuery: Query = testId("edit-method-config-snapshot-id-select")
     private val editMethodConfigRootEntityTypeInputQuery: Query = testId("edit-method-config-root-entity-type-select")
@@ -99,12 +99,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
 
     def checkSaveButtonState:String = {
-      val button = await enabled saveEdittedMethodConfigButtonQuery
+      val button = await enabled saveEditedMethodConfigButtonQuery
       button.attribute("data-test-state").getOrElse("")
     }
 
     def clickSaveButton() = {
-      val button = await enabled saveEdittedMethodConfigButtonQuery
+      val button = await enabled saveEditedMethodConfigButtonQuery
       // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
       webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", button.underlying)
       click on button

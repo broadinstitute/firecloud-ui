@@ -33,7 +33,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
       submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
-      submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
+      submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
     }
   }
 
@@ -231,7 +231,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
       val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
 
       workspaceMethodConfigPage.filter(methodConfigName)
-      find(methodConfigName).isEmpty shouldBe true
+      find(methodConfigName) shouldBe empty
     }
   }
 
@@ -270,14 +270,13 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
           signIn(uiUser)
           val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-          workspaceMethodConfigPage.filter(configName)
-          find(cssClass(s"fa-exclamation-triangle fa ")).isDefined shouldBe true
+          workspaceMethodConfigPage.hasRedactedIcon(configName) shouldBe true
         }
       }
     }
     "launch analysis button should be disabled and show error if clicked" ignore withWebDriver { implicit driver =>
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
-        withMethod("MethodConfigTabSpec_redacted_launch_analysis_error", MethodData.SimpleMethod, 2) { methodName =>
+        withMethod("MethodConfigTabSpec_redacted_launch_analysis_error", MethodData.SimpleMethod) { methodName =>
           val configName = methodName + "Config"
           api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
             SimpleMethodConfig.configNamespace, configName, 1, SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")

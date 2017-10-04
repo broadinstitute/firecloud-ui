@@ -93,21 +93,18 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
-          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
-            api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
-            val listPage = signIn(Config.Users.harry)
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
-            aclEditor.ui.canComputeEnabled() shouldBe true
-            aclEditor.ui.canComputeChecked() shouldBe false
-          }
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
+          aclEditor.ui.canComputeEnabled() shouldBe true
+          aclEditor.ui.canComputeChecked() shouldBe false
         }
       }
 
       "should not be able to set/change can compute permissions for other owners" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
           val listPage = signIn(Config.Users.harry)
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -120,7 +117,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should not be able to set/change compute permissions for readers" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
           val listPage = signIn(Config.Users.harry)
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
