@@ -13,9 +13,9 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   private def tab(name: String) = findInner(s"$name-tab")
 
-  private val prevPageButton = findInner("prev-page")
-  private val nextPageButton = findInner("next-page")
-  private def pageButton(page: Int) = findInner(s"page-$page")
+  private val prevPageButton = Button(findInner("prev-page").queryString)
+  private val nextPageButton = Button(findInner("next-page").queryString)
+  private def pageButton(page: Int) = Button(findInner(s"page-$page").queryString)
   private val perPageSelector = findInner("per-page")
 
   override def awaitReady(): Unit = {
@@ -41,17 +41,17 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   def goToPreviousPage(): Unit = {
     awaitReady()
-    click on prevPageButton
+    prevPageButton.doClick()
   }
 
   def goToNextPage(): Unit = {
     awaitReady()
-    click on nextPageButton
+    nextPageButton.doClick()
   }
 
   def goToPage(page: Int): Unit = {
     awaitReady()
-    click on pageButton(page)
+    pageButton(page).doClick()
   }
 
   def selectPerPage(perPage: Int): Unit = {

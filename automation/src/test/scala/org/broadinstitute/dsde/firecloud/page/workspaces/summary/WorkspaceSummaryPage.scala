@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.component.{Collapse, Table}
+import org.broadinstitute.dsde.firecloud.component.{Button, Collapse, Table}
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
@@ -115,15 +115,16 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val authDomainGroups = testId("auth-domain-groups")
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
 
-    private val editButton = testId("edit-button")
-    private val saveButton = testId("save-button")
-    private val cancelButton = testId("cancel-editing-button")
+    private val editButton = Button("edit-button")
+    private val saveButton = Button("save-button")
+    private val cancelButton = Button("cancel-editing-button")
 
-    private val cloneButton = testId("open-clone-workspace-modal-button")
-    private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
-    private val publishButtonQuery = testId("publish-button")
-    private val unpublishButtonQuery = testId("unpublish-button")
-    private val shareWorkspaceButton = testId("share-workspace-button")
+    private val cloneButton = Button("open-clone-workspace-modal-button")
+    private val deleteWorkspaceButton = Button("delete-workspace-button")
+    private val publishButton = Button("publish-button")
+    private val unpublishButton = Button("unpublish-button")
+    private val shareWorkspaceButton = Button("share-workspace-button")
+
     private val workspaceError = testId("workspace-details-error")
     private val accessLevel = testId("workspace-access-level")
 
@@ -138,38 +139,38 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     import scala.language.reflectiveCalls
 
     def clickCloneButton(): CloneWorkspaceModal = {
-      click on (await enabled cloneButton)
+      cloneButton.doClick()
       new CloneWorkspaceModal
     }
 
     def clickDeleteWorkspaceButton(): DeleteWorkspaceModal = {
-      click on (await enabled deleteWorkspaceButtonQuery)
+      deleteWorkspaceButton.doClick()
       new DeleteWorkspaceModal
     }
 
     def clickPublishButton(): Unit = {
-      click on (await enabled publishButtonQuery)
+      publishButton.doClick()
     }
 
     def clickUnpublishButton(): Unit = {
-      click on (await enabled unpublishButtonQuery)
+      unpublishButton.doClick()
     }
 
     def clickShareWorkspaceButton(): AclEditor = {
-      click on (await enabled shareWorkspaceButton)
+      shareWorkspaceButton.doClick()
       new AclEditor
     }
 
     def hasShareButton: Boolean = {
-      find(shareWorkspaceButton).isDefined
+      shareWorkspaceButton.isVisible
     }
 
     def hasPublishButton: Boolean = {
-      find(publishButtonQuery).isDefined
+      publishButton.isVisible
     }
 
     def hasUnpublishButton: Boolean = {
-      find(unpublishButtonQuery).isDefined
+      unpublishButton.isVisible
     }
 
     def hasWorkspaceNotFoundMessage: Boolean = {
@@ -193,19 +194,19 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
 
     def isEditing: Boolean = {
-      find(editButton).isEmpty
+      !editButton.isVisible
     }
 
     def beginEditing(): Unit = {
       if (!isEditing)
-        click on editButton
+        editButton.doClick()
       else
         throw new IllegalStateException("Already editing")
     }
 
     def save(): Unit = {
       if (isEditing) {
-        click on saveButton
+        saveButton.doClick()
         awaitReady()
       }
       else
@@ -213,8 +214,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
 
     def cancelEdit(): Unit = {
-      if (isEditing)
-        click on cancelButton
+      if (isEditing) {
+        cancelButton.doClick()
+        awaitReady()
+      }
       else
         throw new IllegalStateException("Tried to click on 'cancel' while not editing")
     }

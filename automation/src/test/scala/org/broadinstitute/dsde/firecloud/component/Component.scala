@@ -10,5 +10,7 @@ abstract class Component(id: String)(implicit webDriver: WebDriver) extends Fire
 
   def awaitVisible(): Unit = await visible element
 
+  def isVisible: Boolean = find(element).isDefined
+
   override def awaitReady(): Unit = awaitVisible()
 }

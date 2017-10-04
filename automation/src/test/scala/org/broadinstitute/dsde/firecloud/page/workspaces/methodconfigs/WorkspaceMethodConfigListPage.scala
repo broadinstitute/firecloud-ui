@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component.{Button, Table}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
@@ -43,17 +43,17 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   }
   
   trait UI extends super.UI {
-    private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
+    private val openImportConfigModalButton: Button = Button("import-config-button")
     private[WorkspaceMethodConfigListPage] val methodConfigsTable = Table("method-configs-table")
     private val methodConfigLinkId = "method-config-%s-link"
 
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
-      click on (await enabled openImportConfigModalButtonQuery)
+      openImportConfigModalButton.doClick()
       new ImportMethodChooseSourceModel()
     }
 
     def importConfigButtonEnabled(): Boolean = {
-      enabled(openImportConfigModalButtonQuery)
+      openImportConfigModalButton.isEnabled
     }
 
     def filter(searchText: String): Unit = {
@@ -75,18 +75,18 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
 }
 
 class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireCloudView {
-  override def awaitReady(): Unit = await visible gestures.chooseConfigFromRepoModalButtonQuery
+  override def awaitReady(): Unit = gestures.chooseConfigFromRepoModalButton.awaitVisible()
 
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     val importModel = gestures.clickChooseFromRepoButton()
     importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
   }
   object gestures {
-    private[ImportMethodChooseSourceModel] val chooseConfigFromRepoModalButtonQuery: Query = testId("import-from-repo-button")
-    private val chooseConfigFromWorkspaceModalButtonQuery: Query = testId("copy-from-workspace-button")
+    private[ImportMethodChooseSourceModel] val chooseConfigFromRepoModalButton = Button("import-from-repo-button")
+    private val chooseConfigFromWorkspaceModalButton = Button("copy-from-workspace-button")
 
     def clickChooseFromRepoButton(): ImportMethodConfigModal = {
-      click on chooseConfigFromRepoModalButtonQuery
+      chooseConfigFromRepoModalButton.doClick()
       new ImportMethodConfigModal()
     }
   }
