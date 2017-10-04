@@ -9,7 +9,7 @@ import org.scalatest._
 
 class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with CleanUp {
 
-  implicit val authToken: AuthToken = AuthTokens.hermione
+  implicit lazy val authToken: AuthToken = AuthTokens.hermione
 
   "A user" - {
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
