@@ -49,7 +49,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    await notVisible spinner
     val cloneModal = ui.clickCloneButton()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
   }

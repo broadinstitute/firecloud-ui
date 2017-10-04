@@ -14,9 +14,6 @@ class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
     * busy spinner disappears.
     */
   def confirmDelete(): Unit = {
-    clickOk()
-    // Micro-sleep to make sure the spinner has had a chance to render
-    Thread sleep 200
-    await notVisible spinner
+    submit()
   }
 }

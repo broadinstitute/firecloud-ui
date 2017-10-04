@@ -122,26 +122,14 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
     ui.fillWorkspaceName(workspaceName)
     authDomain foreach { ui.selectAuthDomain(_) }
 
-    ui.clickCreateWorkspaceButton()
-    createWorkspaceWait()
-  }
-
-  def createWorkspaceWait(): Unit = {
-    // Micro-sleep to make sure the spinner has had a chance to render
-    Thread sleep 200
-    await notVisible spinner
+    submit()
   }
 
 
   object ui {
     private val authDomainSelect = testId("workspace-auth-domain-select")
     private val billingProjectSelect = testId("billing-project-select")
-    private val createWorkspaceButton: Query = testId("create-workspace-button")
     private val workspaceNameInput: Query = testId("workspace-name-input")
-
-    def clickCreateWorkspaceButton(): Unit = {
-      click on createWorkspaceButton
-    }
 
     def fillWorkspaceName(workspaceName: String): Unit = {
       textField(workspaceNameInput).value = workspaceName

@@ -12,6 +12,7 @@ abstract class Component(id: String, raw: Boolean = false)(implicit webDriver: W
   def awaitNotVisible(): Unit = await notVisible element
 
   def isVisible: Boolean = find(element).isDefined
+  def isEnabled: Boolean = enabled(element)
 
   override def awaitReady(): Unit = awaitVisible()
 }

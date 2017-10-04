@@ -5,8 +5,6 @@ import org.broadinstitute.dsde.firecloud.page.OKCancelModal
 import org.openqa.selenium.WebDriver
 
 class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  override def awaitReady(): Unit = await visible authDomainGroupsQuery
-
   private val authDomainSelect = Select("workspace-auth-domain-select")
   private val billingProjectSelect = Select("billing-project-select")
   private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
@@ -23,8 +21,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
     workspaceNameInput.setText(workspaceName)
     authDomain foreach { authDomainSelect.select }
 
-    clickOk()
-    awaitDismissed()
+    submit()
     await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 

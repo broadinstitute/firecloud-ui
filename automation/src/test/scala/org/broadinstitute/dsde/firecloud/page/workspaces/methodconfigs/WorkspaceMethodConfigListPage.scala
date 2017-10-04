@@ -53,7 +53,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
     }
 
     def importConfigButtonEnabled(): Boolean = {
-      openImportConfigModalButton.isEnabled
+      openImportConfigModalButton.isStateEnabled
     }
 
     def filter(searchText: String): Unit = {

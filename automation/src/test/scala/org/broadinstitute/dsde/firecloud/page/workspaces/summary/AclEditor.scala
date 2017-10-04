@@ -1,14 +1,20 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
+import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, EmailField, Select}
 import org.broadinstitute.dsde.firecloud.page.OKCancelModal
 import org.openqa.selenium.WebDriver
 
 /**
   * Page class for the Acl Editor modal
   */
-class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal  {
+class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
+  private val addNewAclButton = Button("add-new-acl-button")
+  private val newAclEmailField = EmailField("acl-add-email")
+  private val roleDropdown = Select("role-dropdown-true")
+  private val canShareBox = Checkbox("acl-share-true")
+  private val canComputeBox = Checkbox("acl-compute-true")
+
   /**
     * Shares workspace being viewed.
     * @param email email of user to be shared with
@@ -18,68 +24,24 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal  {
     */
   def shareWorkspace(email: String, accessLevel: WorkspaceAccessLevel, share: Boolean, compute: Boolean): Unit = {
     fillEmailAndAccess(email, accessLevel)
+
     if (share) {
-      ui.clickCanShare()
+      canShareBox.ensureChecked()
     }
     if (compute) {
-      ui.clickCanCompute()
+      canComputeBox.ensureChecked()
     }
-    clickOk()
-    await notVisible spinner
+
+    submit()
   }
 
   def fillEmailAndAccess(email: String, accessLevel: WorkspaceAccessLevel): Unit = {
-    ui.clickAddNewAclButton()
-    ui.fillNewAclEmailField(email)
-    ui.clickRoleDropdown()
-    ui.clickRoleLink(accessLevel)
+    addNewAclButton.doClick()
+    newAclEmailField.setText(email)
+    roleDropdown.select(accessLevel.toString)
   }
 
-  def clickDropdown(): Unit = {
-    ui.clickRoleDropdown()
-  }
+  def canComputeEnabled: Boolean = canComputeBox.isEnabled
 
-  def clickRole(workspaceAccessLevel: WorkspaceAccessLevel): Unit = {
-    ui.clickRoleLink(workspaceAccessLevel)
-  }
-
-  object ui {
-    private val addNewAclButton: Query = testId("add-new-acl-button")
-    private val newAclEmailField: Query = testId("acl-add-email")
-    private val roleDropdown: Query = testId("role-dropdown-true")
-    private val canShareBox: Query = testId("acl-share-true")
-    private val canComputeBox: Query = testId("acl-compute-true")
-    //TODO: add more here for multiple user save
-    def clickAddNewAclButton(): Unit = {
-      click on (await enabled addNewAclButton)
-    }
-    def fillNewAclEmailField(email: String): Unit = {
-      emailField(ui.newAclEmailField).value = email
-    }
-
-    def clickRoleDropdown(): Unit = {
-      click on (await enabled roleDropdown)
-    }
-
-    def clickRoleLink(workspaceAccessLevel: WorkspaceAccessLevel): Unit = {
-      val role = workspaceAccessLevel.toString
-      singleSel(roleDropdown).value = option value role
-    }
-
-    def clickCanShare(): Unit = {
-      click on (await enabled canShareBox)
-    }
-
-    def clickCanCompute(): Unit = {
-      click on (await enabled canComputeBox)
-    }
-
-    def canComputeEnabled(): Boolean = {
-      enabled(canComputeBox)
-    }
-
-    def canComputeChecked(): Boolean = {
-      checkbox(canComputeBox).isSelected
-    }
-  }
+  def canComputeChecked: Boolean = canComputeBox.isChecked
 }
