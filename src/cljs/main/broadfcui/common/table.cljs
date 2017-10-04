@@ -120,10 +120,10 @@
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}
               [TextFilter (merge
-                                 {:data-test-id "filter"
-                                  :initial-text (:filter-text query-params)
-                                  :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
-                                 (:inner filter-bar-props))]]))
+                           {:data-test-id "filter"
+                            :initial-text (:filter-text query-params)
+                            :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
+                           (:inner filter-bar-props))]]))
          (when-let [get-items (:get-items toolbar)]
            (list* (get-items {:columns column-display})))]
         [:div {:style (merge {:display "flex"} (:content+sidebar style))}
