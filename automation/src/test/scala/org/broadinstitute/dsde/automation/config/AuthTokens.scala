@@ -1,11 +1,10 @@
-package org.broadinstitute.dsde.firecloud.config
+package org.broadinstitute.dsde.automation.config
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 
 import scala.collection.JavaConverters._
-
 
 object AuthTokens {
   val dumbledore = AuthToken(Config.Users.dumbledore)

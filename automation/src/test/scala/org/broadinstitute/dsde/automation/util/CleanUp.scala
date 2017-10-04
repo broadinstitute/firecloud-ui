@@ -1,7 +1,6 @@
-package org.broadinstitute.dsde.firecloud.test
+package org.broadinstitute.dsde.automation.util
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
 import org.scalatest.{Outcome, Suite, SuiteMixin}
 
 import scala.collection.mutable

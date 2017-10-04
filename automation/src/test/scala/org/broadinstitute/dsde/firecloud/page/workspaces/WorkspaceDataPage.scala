@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
+import org.broadinstitute.dsde.automation.browser.PageUtil
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.components.Table
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.FireCloudView
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

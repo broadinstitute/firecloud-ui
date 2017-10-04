@@ -1,21 +1,21 @@
-package org.broadinstitute.dsde.firecloud.api
+package org.broadinstitute.dsde.automation.api
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
-import akka.http.scaladsl.model.{Multipart, _}
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, _}
+import akka.stream.scaladsl._
 import akka.util.ByteString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.broadinstitute.dsde.firecloud.config.AuthToken
+import org.broadinstitute.dsde.automation.config.AuthToken
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-trait FireCloudClient {
+trait RestClient {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -45,7 +45,7 @@ trait FireCloudClient {
       case _ =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        throw APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
+        throw RestException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
 
@@ -58,7 +58,7 @@ trait FireCloudClient {
       case _ =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        throw APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
+        throw RestException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
 

@@ -1,8 +1,7 @@
-package org.broadinstitute.dsde.firecloud.util
+package org.broadinstitute.dsde.automation.util
 
 import java.util.UUID
 
-import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
 /**

@@ -2,11 +2,13 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
+import org.broadinstitute.dsde.automation.config.{AuthToken, AuthTokens, Credentials}
+import org.broadinstitute.dsde.automation.util.CleanUp
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, MessageModal}
+import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
 
 class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with MethodFixtures {

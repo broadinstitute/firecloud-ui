@@ -1,10 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.methodrepo
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.automation.config.{AuthToken, AuthTokens}
+import org.broadinstitute.dsde.automation.util.CleanUp
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.MethodData
-import org.broadinstitute.dsde.firecloud.page.components.Table
 import org.broadinstitute.dsde.firecloud.page.methodrepo.{CreateMethodModal, MethodRepoPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
 
 class MethodRepoSpec extends FreeSpec with WebBrowserSpec with Matchers with CleanUp {

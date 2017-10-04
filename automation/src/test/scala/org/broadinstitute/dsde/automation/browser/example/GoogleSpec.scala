@@ -1,6 +1,8 @@
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
-import org.scalatest.{FlatSpec, Matchers, ParallelTestExecution}
+package org.broadinstitute.dsde.automation.browser.example
+
+import org.broadinstitute.dsde.automation.browser.WebBrowserSpec
 import org.scalatest.selenium.WebBrowser
+import org.scalatest.{FlatSpec, Matchers, ParallelTestExecution}
 
 /**
   * Example test for running with Selenium Grid until we work out docker

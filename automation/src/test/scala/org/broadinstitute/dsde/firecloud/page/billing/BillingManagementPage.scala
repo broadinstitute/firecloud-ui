@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
+import org.broadinstitute.dsde.automation.browser.PageUtil
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.components.Table
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
-import org.broadinstitute.dsde.firecloud.util.Retry.retry
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView}
+import org.broadinstitute.dsde.automation.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

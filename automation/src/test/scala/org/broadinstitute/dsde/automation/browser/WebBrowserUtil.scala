@@ -1,4 +1,4 @@
-package org.broadinstitute.dsde.firecloud.test
+package org.broadinstitute.dsde.automation.browser
 
 import org.openqa.selenium.support.ui.{ExpectedCondition, WebDriverWait}
 import org.openqa.selenium.{StaleElementReferenceException, WebDriver}

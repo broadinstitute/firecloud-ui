@@ -1,10 +1,12 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
+import org.broadinstitute.dsde.automation.config.{AuthToken, AuthTokens}
+import org.broadinstitute.dsde.automation.util.CleanUp
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
 
 /**

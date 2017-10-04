@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.broadinstitute.dsde.firecloud.config.AuthToken
+import org.broadinstitute.dsde.automation.config.AuthToken
+import org.broadinstitute.dsde.automation.util.CleanUp
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.{SimpleMethod, SimpleMethodConfig}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.automation.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.Suite
 
 trait MethodFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
