@@ -74,14 +74,15 @@
      :href (nav/get-link :workspace-method-config workspace-id config-id)}}])
 
 
-(defn render-config-details [{:keys [managers method payloadObject]}]
+(defn render-config-details [{:keys [managers method payloadObject snapshotComment]}]
   [:div {}
    [:div {:style {:display "flex"}}
     (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
                                 (string/join ", " managers))
     (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
-
-   (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
+   [:div {:style {:display "flex"}}
+    (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
+    (style/create-summary-block "Snapshot Comment" snapshotComment)]
 
    (style/create-subsection-header "Connections")
    [IOView {:method-ref {:methodNamespace (:namespace method)
