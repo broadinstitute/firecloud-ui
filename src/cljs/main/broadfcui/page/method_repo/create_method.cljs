@@ -135,17 +135,16 @@
                                       (self :add-listener "change"
                                        #(swap! state assoc :undo-history
                                                (js->clj (self :call-method "historySize")))))}]
-           ;; TODO fix formatting
-           (style/create-form-label "Snapshot comment (optional)")
+           [:div {:style {:padding "0.25rem"}}]
+           (style/create-form-label "Snapshot Comment (optional)")
            (style/create-text-area {:data-test-id "snapshot-comment-field"
                                     :ref "snapshot-comment"
                                     :defaultValue (:snapshot-comment info)
                                     :style {:width "100%"}
                                     :rows 1})
            (when (:edit-mode? info)
-             [:div {:style {:marginTop "1rem"}}
-              [comps/Checkbox {:ref "redact-checkbox"
-                               :label (str "Redact Snapshot " (:snapshotId info))}]])
+             [comps/Checkbox {:ref "redact-checkbox"
+                              :label (str "Redact Snapshot " (:snapshotId info))}])
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
