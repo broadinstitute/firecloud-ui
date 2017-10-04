@@ -92,12 +92,9 @@
         [EntityTable
          {:ref "entity-table"
           :workspace-id workspace-id
+          :process-local-state true
           :column-defaults
-          (if-let [local-state (persistence/check-saved-state {:key (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state))})]
-            (let [shown (get (group-by :visible? (:column-display local-state)) true)
-                  hidden (get (group-by :visible? (:column-display local-state)) false)]
-              (hash-map (:selected-entity-type @state) (hash-map "shown" shown "hidden" hidden)))
-            (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults])))
+          (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :get-toolbar-items
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))

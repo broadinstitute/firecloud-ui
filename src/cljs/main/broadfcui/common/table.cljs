@@ -186,6 +186,7 @@
    (fn [{:keys [props]}]
      (persistence/try-restore
       {:key (:persistence-key props)
+       :process-local-state (:process-local-state props)
        :validator (fn [stored-value]
                     (or (not (:v props))
                         (= (:v props) (:v stored-value))))
