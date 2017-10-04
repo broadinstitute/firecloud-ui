@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
+import org.broadinstitute.dsde.firecloud.page.components.{Collapse, Table}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -11,12 +11,16 @@ import org.scalatest.selenium.Page
 /**
   * Page class for the Workspace Detail page.
   */
-class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends WorkspacePage with Page with PageUtil[WorkspaceSummaryPage] {
+class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
+  override val element: Query = testId("summary-tab")
+
   override def awaitLoaded(): WorkspaceSummaryPage = {
     await condition { enabled(testId("submission-status")) || enabled(testId("workspace-details-error")) }
+    await condition { getState == "ready" }
     await spinner "Loading..."
     this
   }
@@ -108,15 +112,36 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   trait UI extends super.UI {
     private val authDomainGroups = testId("auth-domain-groups")
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
+
+    private val editButton = testId("edit-button")
+    private val saveButton = testId("save-button")
+    private val cancelButton = testId("cancel-editing-button")
+
     private val cloneButton = testId("open-clone-workspace-modal-button")
     private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
-    private val nameHeader = testId("header-name")
     private val publishButtonQuery = testId("publish-button")
     private val unpublishButtonQuery = testId("unpublish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
     private val workspaceError = testId("workspace-details-error")
     private val accessLevel = testId("workspace-access-level")
-    private val methodConfigTab = testId("Method Configurations-tab")
+
+    private class WorkspaceAttributesArea extends FireCloudView {
+      def clickNewButton(): Unit = {
+        click on (await enabled ui.newButton)
+      }
+
+      def table: Table = {
+        ui.table
+      }
+
+      trait UI {
+        val newButton: Query = testId("add-new-button")
+        val table = Table("workspace-attributes")
+      }
+      object ui extends UI
+    }
+
+    private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea)
 
     def clickCloneButton(): CloneWorkspaceModal = {
       click on (await enabled cloneButton)
@@ -169,17 +194,61 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       readText(workspaceError)
     }
 
-    def readWorkspaceName: String = {
-      readText(nameHeader)
-    }
-
     def readAccessLevel(): WorkspaceAccessLevel = {
       WorkspaceAccessLevel.withName(readText(accessLevel).toUpperCase)
     }
 
-    def clickMethodConfigTab(namespace: String, name: String): WorkspaceMethodConfigListPage = {
-      click on (await enabled methodConfigTab)
-      new WorkspaceMethodConfigListPage(namespace, name)
+    def isEditing: Boolean = {
+      find(editButton).isEmpty
+    }
+
+    def beginEditing(): Unit = {
+      if (!isEditing)
+        click on editButton
+      else
+        throw new IllegalStateException("Already editing")
+    }
+
+    def save(): Unit = {
+      if (isEditing) {
+        click on saveButton
+        awaitLoaded()
+      }
+      else
+        throw new IllegalStateException("Tried to click on 'save' while not editing")
+    }
+
+    def cancelEdit(): Unit = {
+      if (isEditing)
+        click on cancelButton
+      else
+        throw new IllegalStateException("Tried to click on 'cancel' while not editing")
+    }
+
+    def addWorkspaceAttribute(key: String, value: String): Unit = {
+      if (isEditing) {
+        workspaceAttributesArea.getInner.clickNewButton()
+        // focus should take us to the field
+        pressKeys(key)
+        pressKeys("\t")
+        pressKeys(value)
+      } else {
+        throw new IllegalArgumentException("Tried to add workspace attribute while not editing")
+      }
+    }
+
+    def deleteWorkspaceAttribute(key: String): Unit = {
+      if (isEditing) {
+        // TODO: should do through table
+        workspaceAttributesArea.ensureExpanded()
+        click on testId(s"$key-delete")
+      } else {
+        throw new IllegalArgumentException("Tried to delete a row while not editing")
+      }
+    }
+
+    def readWorkspaceTable: List[List[String]] = {
+      workspaceAttributesArea.getInner.table.getData
     }
   }
   object ui extends UI

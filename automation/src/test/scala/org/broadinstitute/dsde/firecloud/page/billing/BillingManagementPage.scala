@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil, Table}
+import org.broadinstitute.dsde.firecloud.page.components.Table
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -80,7 +81,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
 
 
   trait UI extends super.UI {
-    private val billingProjectTable = new Table("billing-project-table")
+    private val billingProjectTable = Table("billing-project-table")
 
     private val createBillingProjectButton: Query = testId("begin-create-billing-project")
     private val addUserButton = testId("billing-project-add-user-button")

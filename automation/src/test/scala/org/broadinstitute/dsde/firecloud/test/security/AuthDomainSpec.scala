@@ -26,7 +26,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val projectName: String = Config.Projects.common
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  implicit val authToken: AuthToken = AuthTokens.fred
+  implicit lazy val authToken: AuthToken = AuthTokens.fred
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
@@ -63,7 +63,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               summaryPage.cloneWorkspaceWait()
 
               val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-              cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
+              cloneSummaryPage.validateWorkspace shouldEqual true
               cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
             }
           }
@@ -199,7 +199,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 summaryPage.cloneWorkspaceWait()
 
                 val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-                cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
+                cloneSummaryPage.validateWorkspace shouldEqual true
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
               }

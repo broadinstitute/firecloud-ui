@@ -102,11 +102,15 @@
              with-spaces {:error (str "Keys cannot have spaces: " (string/join ", " with-spaces))}
              invalid-numbers {:error (str "Invalid number for key(s): " (string/join ", " invalid-numbers))}
              :else {:success typed})))
+   :get-initial-state
+   (fn []
+     {:table-key (gensym)})
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing? writer?]} props]
        [Collapse
-        {:style {:marginBottom "2rem"}
+        {:data-test-id "attribute-editor"
+         :style {:marginBottom "2rem"}
          :default-hidden? true
          :title
          [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
@@ -137,11 +141,14 @@
             [:div {:style {:marginBottom "0.25em"}}
              [buttons/Button {:icon :add-new :text "Add new"
                               :onClick (fn [_]
-                                         (swap! state update :attributes conj ["" ""])
+                                         (swap! state #(-> %
+                                                           (assoc :table-key (gensym))
+                                                           (update :attributes conj ["" ""])))
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
-           {:key (str editing? (count (:attributes @state)))
+           {:data-test-id "workspace-attributes"
+            :key (:table-key @state)
             :data (if editing?
                     (map-indexed (fn [index [key value type]]
                                    (utils/restructure index key value type))
@@ -156,20 +163,25 @@
                               :sortable-columns? (not editing?) :allow-no-sort? editing?}
                    :columns (if editing?
                               [{:id "delete" :initial-width 40 :resizable? false
-                                :column-data :index :as-text (constantly "Delete")
+                                :as-text (constantly "Delete")
                                 :render
-                                (fn [index]
-                                  (icons/icon {:style {:color (:text-lightest style/colors)
+                                (fn [{:keys [key index]}]
+                                  (icons/icon {:data-test-id (str key "-delete")
+                                               :style {:color (:text-lightest style/colors)
                                                        :verticalAlign "middle" :fontSize 22
                                                        :cursor "pointer"}
-                                               :onClick #(swap! state update :attributes utils/delete index)}
+                                               :onClick (fn [_]
+                                                          (swap! state #(-> %
+                                                                            (assoc :table-key (gensym))
+                                                                            (update :attributes utils/delete index))))}
                                               :remove))}
                                {:id "key" :header (header "Key") :initial-width 300
                                 :as-text (constantly nil)
                                 :render
                                 (fn [{:keys [key index]}]
                                   (style/create-text-field (merge
-                                                            {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                            {:data-test-id (str key "-key")
+                                                             :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                              :defaultValue key
                                                              :onChange #(swap! state update-in [:attributes index]
                                                                                assoc 0 (-> % .-target .-value))}
@@ -179,7 +191,8 @@
                                 :as-text (constantly nil)
                                 :render
                                 (fn [{:keys [value index]}]
-                                  (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                  (style/create-text-field {:data-test-id (str key "-value")
+                                                            :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                             :defaultValue value
                                                             :onChange #(swap! state update-in [:attributes index]
                                                                               assoc 1 (-> % .-target .-value))}))}
@@ -188,7 +201,8 @@
                                 :render
                                 (fn [{:keys [type index]}]
                                   (style/create-identity-select
-                                   {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                   {:data-test-id (str key "-type")
+                                    :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                     :defaultValue type
                                     :onChange #(swap! state update-in [:attributes index]
                                                       assoc 2 (-> % .-target .-value))}
@@ -200,15 +214,17 @@
                                 :column-data val
                                 :as-text process-attribute-value
                                 :render (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])}
-            :paginator :none
-            :->row (if editing?
-                     (juxt :index identity identity identity)
-                     identity)}]]}]))
+            :paginator :none}]]}]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
-       (swap! state assoc :attributes
-              (mapv (fn [[k v]]
-                      (let [[type str-value] (get-type-and-string-rep v)]
-                        [(name k) str-value type]))
-                    (:workspace-attributes props)))))})
+       (swap! state assoc
+              :table-key (gensym)
+              :attributes (mapv (fn [[k v]]
+                                  (let [[type str-value] (get-type-and-string-rep v)]
+                                    [(name k) str-value type]))
+                                (:workspace-attributes props)))))
+   :component-will-receive-props
+   (fn [{:keys [props next-props state]}]
+     (when (not= (:editing? props) (:editing? next-props))
+       (swap! state assoc :table-key (gensym))))})

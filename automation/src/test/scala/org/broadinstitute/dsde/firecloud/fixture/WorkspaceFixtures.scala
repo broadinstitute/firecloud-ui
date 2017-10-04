@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.Suite
 
-/**
+/**WorkspaceFixtures
   * Fixtures for creating and cleaning up test workspaces.
   */
 trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
@@ -23,11 +23,15 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
     * @param token auth token for service API calls
     */
   def withWorkspace(namespace: String, namePrefix: String, authDomain: Set[String] = Set.empty,
-                    aclEntries: List[AclEntry] = List(), cleanUp: Boolean = true)
+                    aclEntries: List[AclEntry] = List(),
+                    attributes: Option[Map[String, String]] = None,
+                    cleanUp: Boolean = true)
                    (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     val workspaceName = appendUnderscore(namePrefix) + makeUuid
     api.workspaces.create(namespace, workspaceName, authDomain)
     api.workspaces.updateAcl(namespace, workspaceName, aclEntries)
+    if (attributes.isDefined)
+      api.workspaces.setAttributes(namespace, workspaceName, attributes.get)
     try {
       testCode(workspaceName)
     } finally {
