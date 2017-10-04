@@ -25,22 +25,21 @@ object AuthTokens {
   val nevilleTemp = AuthToken(Config.Users.nevilleTemp)
 }
 
-case class AuthToken(value: String)
-
-case object AuthToken {
-  def apply(user: Credentials): AuthToken = getUserToken(user.email)
+case class AuthToken(user: Credentials) {
 
   val httpTransport = GoogleNetHttpTransport.newTrustedTransport
   val jsonFactory = JacksonFactory.getDefaultInstance
   val authScopes = Seq("profile", "email", "openid", "https://www.googleapis.com/auth/devstorage.full_control", "https://www.googleapis.com/auth/cloud-platform")
 
-  def getUserToken(userEmail: String): AuthToken = {
-    val cred = buildCredential(userEmail)
+  lazy val value: String = makeUserToken()
+
+  private def makeUserToken(): String = {
+    val cred = buildCredential(user.email)
     cred.refreshToken()
-    AuthToken(cred.getAccessToken)
+    cred.getAccessToken
   }
 
-  def buildCredential(userEmail: String): GoogleCredential = {
+  private def buildCredential(userEmail: String): GoogleCredential = {
     val pemfile = new java.io.File(Config.GCS.pathToQAPem)
     val email = Config.GCS.qaEmail
 
