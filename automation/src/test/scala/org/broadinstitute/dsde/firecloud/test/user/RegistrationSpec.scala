@@ -16,7 +16,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   val password: String = Config.Users.lunaTemp.password
   val subjectId: String = Config.Users.lunaTempSubjectId
 
-  implicit lazy val authToken: AuthToken = AuthTokens.admin
+  implicit val authToken: AuthToken = AuthTokens.admin
 
   // Clean-up anything left over from any previous failures.
   before {
