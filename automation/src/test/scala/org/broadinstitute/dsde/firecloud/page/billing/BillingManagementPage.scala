@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
@@ -17,9 +16,14 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   with Page with PageUtil[BillingManagementPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
-  override def awaitReady(): Unit = {
-    await condition ui.hasCreateBillingProjectButton
+  override def awaitReady: Unit = {
+    billingProjectTable.awaitReady()
   }
+
+  private val billingProjectTable = Table("billing-project-table")
+
+  private val createBillingProjectButton = Button("begin-create-billing-project")
+  private val addUserButton = Button("billing-project-add-user-button")
 
   /**
     * Creates a new billing project. Returns after creation has started, though
@@ -30,17 +34,9 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     * @param billingAccountName the billing account for the new project
     */
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
-    val modal = ui.clickCreateBillingProjectButton()
+    createBillingProjectButton.doClick()
+    val modal = await ready new CreateBillingProjectModal
     modal.createBillingProject(projectName, billingAccountName)
-  }
-
-  /**
-    * Filters the list of billing projects.
-    *
-    * @param text the text to filter by
-    */
-  def filter(text: String): Unit = {
-    ui.filter(text)
   }
 
   /**
@@ -54,76 +50,42 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     * @return a status of "success", "failure", or "unknown"
     */
   def waitForCreateCompleted(projectName: String): String = {
-    filter(projectName)
+    billingProjectTable.filter(projectName)
     retry(10.seconds, 5.minutes)({
-          ui.readCreationStatusForProject(projectName).filterNot(_ equals "running")
+          readCreationStatusForProject(projectName).filterNot(_ equals "running")
         }) match {
       case None => throw new Exception("Billing project creation did not complete")
       case Some(s) => s
     }
   }
 
-
-  def openBillingProject(projectName: String) = {
-    filter(projectName)
-    ui.openBillingProject(projectName)
+  private def readCreationStatusForProject(projectName: String): Option[String] = {
+    for {
+      e <- find(xpath(s"//div[@data-test-id='$projectName-row']//span[@data-test-id='status-icon']"))
+      v <- e.attribute("data-test-value")
+    } yield v
   }
 
 
-  def addUserToBillingProject(userEmail: String, role: String) = {
-    val modal = ui.openAddUserDialog()
+  def openBillingProject(projectName: String): Unit = {
+    billingProjectTable.filter(projectName)
+    val billingProjectLink = testId(projectName + "-link")
+    click on (await enabled billingProjectLink)
+  }
+
+
+  def addUserToBillingProject(userEmail: String, role: String): Unit = {
+    addUserButton.doClick()
+    val modal = await ready new AddUserToBillingProjectModal
     modal.addUserToBillingProject(userEmail, role)
   }
 
   def isUserInBillingProject(userEmail: String): Boolean = {
-    userEmail == ui.findUser(userEmail)
+    val emailQuery = testId(userEmail)
+    await enabled emailQuery
+    val userEmailElement = find(emailQuery)
+    userEmail == userEmailElement.get.text
   }
-
-
-  trait UI extends super.UI {
-    private val billingProjectTable = Table("billing-project-table")
-
-    private val createBillingProjectButton: Query = testId("begin-create-billing-project")
-    private val addUserButton = testId("billing-project-add-user-button")
-
-    def clickCreateBillingProjectButton(): CreateBillingProjectModal = {
-      click on createBillingProjectButton
-      new CreateBillingProjectModal
-    }
-
-    def filter(text: String): Unit = {
-      billingProjectTable.filter(text)
-    }
-
-    def hasCreateBillingProjectButton: Boolean = {
-      find(createBillingProjectButton).isDefined
-    }
-
-    def readCreationStatusForProject(projectName: String): Option[String] = {
-      for {
-        e <- find(xpath(s"//div[@data-test-id='$projectName-row']//span[@data-test-id='status-icon']"))
-        v <- e.attribute("data-test-value")
-      } yield v
-    }
-
-    def openBillingProject(projectName: String) = {
-      val billingProjectLink = testId(projectName + "-link")
-      click on (await enabled billingProjectLink)
-    }
-
-    def openAddUserDialog() = {
-      click on (await enabled addUserButton)
-      new AddUserToBillingProjectModal
-    }
-
-    def findUser(userEmail: String): String = {
-      val emailQuery = testId(userEmail)
-      await enabled emailQuery
-      val userEmailElement = find(emailQuery)
-      userEmailElement.get.text
-    }
-  }
-  object ui extends UI
 }
 
 
@@ -131,61 +93,30 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   * Page class for the modal for creating a billing project.
   */
 class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  override def awaitReady(): Unit = projectNameInput.awaitVisible()
+
+  private val projectNameInput = TextField("project-name-input")
+  private def billingAccountButton(name: String) = Link(name + "-radio")
+
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
-    fillProjectName(projectName)
-    selectBillingAccount(billingAccountName)
-    clickCreateButton()
-    clickCreateButtonWait()
-  }
-
-  private val createBillingProjectModal: Query = testId("create-billing-project-modal")
-  private val createButton: Query = testId("create-project-button")
-  private val projectNameInput = testId("project-name-input")
-
-  private def clickCreateButton(): Unit = {
-    click on createButton
-  }
-
-  private def clickCreateButtonWait(): Unit = {
-    await notVisible createBillingProjectModal
-  }
-
-  private def fillProjectName(name: String): Unit = {
-    await enabled projectNameInput
-    textField(projectNameInput).value = name
-  }
-
-  private def selectBillingAccount(name: String): Unit = {
-    click on testId(name)
+    projectNameInput.setText(projectName)
+    billingAccountButton(billingAccountName).doClick()
+    clickOk()
+    projectNameInput.awaitNotVisible()
   }
 }
-
 
 
 /**
   * Page class for the modal for adding users to a billing project.
   */
 class AddUserToBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  private val addUserModalEmailInput = TextField("billing-project-add-user-modal-user-email-input")
+  private val addUserModalRoleSelect = Select("billing-project-add-user-modal-user-role-select")
+
   def addUserToBillingProject(userEmail: String, role: String): Unit = {
-    fillUserEmail(userEmail)
-    selectRole(role)
-    confirmAddUserDialog()
-  }
-
-  private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
-  private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
-  private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
-
-  private def fillUserEmail(email: String) = {
-    await enabled addUserModalEmailInput
-    textField(addUserModalEmailInput).value = email
-  }
-
-  private def selectRole(role: String) = {
-    singleSel(addUserModalRoleSelect).value = option value role
-  }
-
-  private def confirmAddUserDialog() = {
-    click on addUserModalConfirmButton
+    addUserModalEmailInput.setText(userEmail)
+    addUserModalRoleSelect.select(role)
+    clickOk()
   }
 }

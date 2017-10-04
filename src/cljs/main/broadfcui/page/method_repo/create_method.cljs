@@ -149,8 +149,8 @@
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
          :ok-button (react/create-element
-                     [buttons/Button {:data-test-id "upload-button"
-                                    :ref "ok-button"
+                     [buttons/Button {:data-test-id "ok-button"
+                                      :ref "ok-button"
                                       :text (:ok-text info)
                                       :onClick #(this :-create-method)}])}]))
    :-set-wdl-text

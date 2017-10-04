@@ -15,57 +15,48 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
   "A user" - {
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
-      withSignIn(Config.Users.hermione) { _ =>
-        val methodRepoPage = new MethodRepoPage()
-        val methodRepoTable = methodRepoPage.ui.MethodRepoTable
-        methodRepoPage.open
-        methodRepoPage.ui.clickNewMethodButton()
+      withSignIn(Config.Users.hermione){ _ =>
+      val methodRepoPage = new MethodRepoPage()
+      .open
 
-        // create it
-        val createDialog = new CreateMethodModal()
-        val name = "TEST-CREATE-" + randomUuid
-        val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
-        val namespace = attributes("namespace")
-        createDialog.createMethod(attributes)
-        register cleanUp api.methods.redact(namespace, name, 1)
 
-        // wait for it to finish, then go back to the method repo page
-        createDialog.awaitDismissed()
-        methodRepoPage.open
+      // create it
+      val  name = "TEST-CREATE-" + randomUuid
+      val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
+      val namespace = attributes("namespace")
+      methodRepoPage.createNewMethod(attributes)
+      register cleanUp api.methods.redact(namespace, name, 1)
 
-        // verify that it's in the table
-        methodRepoTable.goToTab("My Methods")
-        methodRepoTable.filter(name)
+      // go back to the method repo page
+      and verify that it's in the table
+      methodRepoPage.openmethodRepoPage.MethodRepoTable.goToTab("My Methods")
+      methodRepoPage.MethodRepoTable.filter(name)
 
-        methodRepoTable.hasMethod(namespace, name) shouldBe true
-      }
+      methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true}
     }
 
     "should be able to redact a method that they own" in withWebDriver { implicit driver =>
-      withMethod("TEST-REDACT-") { case (name, namespace) =>
-        withSignIn(Config.Users.hermione) { _ =>
-          val methodRepoPage = new MethodRepoPage()
-          val methodRepoTable = methodRepoPage.ui.MethodRepoTable
-          methodRepoPage.open
+      withMethod( "TEST-REDACT-" ) { case (name,namespace)=>
+      withSignIn(Config.Users.hermione){ _ =>
+      val methodRepoPage = new MethodRepoPage()
+      .open
 
-          // verify that it's in the table
-          methodRepoTable.goToTab("My Methods")
-          methodRepoTable.filter(name)
+      // verify that it's in the table
+      methodRepoPage.MethodRepoTable.goToTab("My Methods")
+      methodRepoPage.MethodRepoTable.filter(name)
 
-          methodRepoTable.hasMethod(namespace, name) shouldBe true
+      methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true
 
       // go in and redact it
-      val methodDetailPage = methodRepoTable.enterMethod(namespace, name)
+      val methodDetailPage = methodRepoPage.MethodRepoTable.enterMethod(namespace, name)
 
-      methodDetailPage.ui.redact()
+      methodDetailPage.redact()
 
-          // and verify that it's gone
-          methodRepoPage.open
-          methodRepoTable.hasMethod(namespace, name) shouldBe false
-        }
+      // and verify that it's gone
+      methodRepoPage.open
+      methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe false}
 
       }
-
     }
   }
 }

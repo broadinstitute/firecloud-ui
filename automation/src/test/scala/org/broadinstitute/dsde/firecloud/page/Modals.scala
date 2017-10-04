@@ -1,22 +1,47 @@
 package org.broadinstitute.dsde.firecloud.page
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.component.Button
 import org.openqa.selenium.WebDriver
 
 abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudView {
-  private val okButton: Query = testId("ok-button")
-  private val cancelButton: Query = testId("cancel-button")
+  private val okButton = Button("ok-button")
+  private val cancelButton = Button("cancel-button")
+  private val xButton = Button("x-button")
 
   def clickOk(): Unit = {
-    click on okButton
-    awaitReady()
+    okButton.doClick()
   }
+
   def clickCancel(): Unit = {
-    click on cancelButton
+    cancelButton.doClick()
+  }
+
+  def clickXButton(): Unit = {
+    xButton.doClick()
   }
 
   override def awaitReady(): Unit = {
-    await visible okButton
+    okButton.awaitVisible()
+  }
+
+  def awaitDismissed(): Unit = {
+    okButton.awaitNotVisible()
+  }
+
+  def submit(): Unit = {
+    clickOk()
+    awaitDismissed()
+  }
+
+  def cancel(): Unit = {
+    clickCancel()
+    awaitDismissed()
+  }
+
+  def xOut(): Unit = {
+    clickXButton()
+    awaitDismissed()
   }
 }
 

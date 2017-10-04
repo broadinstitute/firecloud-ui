@@ -42,8 +42,7 @@
                     (when (:published? props) " and unpublish the workspace from the Data Library")
                     ".")]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(this :delete)
-                   :data-test-id "confirm-delete-workspace-button"}}])
+       :ok-button {:text "Delete" :onClick #(this :delete)}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)

@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
 import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -13,99 +12,47 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 
+  override def awaitReady(): Unit = {
+    dataTable.awaitReady()
+  }
+
+  private val dataTable = Table("entity-table")
+  private val importMetadataButton = Button("import-metadata-button")
+
   def importFile(file: String): Unit = {
-    val importModal = ui.clickImportMetadataButton()
+    importMetadataButton.doClick()
+    val importModal = await ready new ImportMetadataModal
     importModal.importFile(file)
+    dataTable.awaitReady()
   }
 
   def getNumberOfParticipants: Int = {
-    ui.getNumberOfParticipants
+    // TODO: click on the tab and read the actual table size
+    dataTable.readDisplayedTabCount("participant")
   }
-
-  override def awaitReady(): Unit = {
-    await condition ui.hasimportMetadataButton()
-  }
-
-  trait UI extends super.UI {
-    private val dataTable = Table("entity-table")
-
-    private val importMetadataButtonQuery = testId("import-metadata-button")
-
-    def hasimportMetadataButton(): Boolean = {
-      find(importMetadataButtonQuery).isDefined
-    }
-
-    def clickImportMetadataButton(): ImportMetadataModal = {
-      click on importMetadataButtonQuery
-      new ImportMetadataModal
-    }
-
-    def getNumberOfParticipants: Int = {
-      // TODO: click on the tab and read the actual table size
-      dataTable.readDisplayedTabCount("participant")
-    }
-  }
-  object ui extends UI
 }
 
 /**
   * Page class for the import data modal.
   */
 class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  override def awaitReady(): Unit = importFromFileButton.isVisible
+
+  private val importFromFileButton = Button("import-from-file-button")
+  private val fileUploadInput = FileSelector("data-upload-input")
+  private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button")
+  private val uploadSuccessMessage = Label("upload-success-message")
+
   /**
     * Confirms the request to delete a workspace. Returns after the FireCloud
     * busy spinner disappears.
     */
   def importFile(file: String): Unit = {
-    ui.clickImportFromFileButton()
-    ui.uploadData(file)
-    ui.clickUploadMetaData()
-    assert(ui.isUploadSuccessMessagePresent)
-    ui.clickXButton()
-  }
-
-  object ui {
-
-    private[ImportMetadataModal] val importFromFileButtonQuery: Query = testId("import-from-file-button")
-    private val copyFromAnotherWorkspaceButtonQuery: Query = testId("copy-from-another-workspace-button")
-    private val chooseFileButton: Query = testId("choose-file-button")
-    private val fileUploadInputQuery: Query = testId("data-upload-input")
-    private val fileUploadContainerQuery: Query = testId("data-upload-container")
-    private val confirmUploadMetadataButtonQuery: Query = testId("confirm-upload-metadata-button")
-    private val xButtonQuery: Query = testId("x-button")
-    private val uploadSuccessMessageQuery = testId("upload-success-message")
-
-    def clickXButton(): Unit = {
-      click on xButtonQuery
-    }
-
-    def clickImportFromFileButton(): Unit = {
-      click on importFromFileButtonQuery
-    }
-
-    def clickCopyFromAnotherWorkspaceButton(): Unit = {
-      click on copyFromAnotherWorkspaceButtonQuery
-    }
-
-    def clickChooseFileButton(): Unit = {
-      click on chooseFileButton
-    }
-
-    def uploadData(filePath: String): Unit = {
-      executeScript("var field = document.getElementsByName('entities'); field[0].style.display = '';")
-      val webElement = find(fileUploadInputQuery).get.underlying
-      webElement.clear()
-      webElement.sendKeys(filePath)
-    }
-
-    def clickUploadMetaData(): Unit = {
-      click on confirmUploadMetadataButtonQuery
-    }
-
-    def isUploadSuccessMessagePresent: Boolean = {
-      // this seems like a terrible way to do this
-      find(uploadSuccessMessageQuery).size == 1
-    }
+    importFromFileButton.doClick()
+    fileUploadInput.selectFile(file)
+    confirmUploadMetadataButton.doClick()
+    uploadSuccessMessage.awaitVisible()
+    xOut()
   }
 }
 

@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -12,73 +11,46 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
   override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 
   override def awaitReady(): Unit = {
-    ui.MethodRepoTable.awaitReady()
+    MethodRepoTable.awaitReady()
   }
 
-  trait UI extends super.UI {
-    private val newMethodButtonQuery = testId("create-method-button")
+  private val newMethodButton = Button("create-method-button")
 
-    def clickNewMethodButton(): Unit = {
-      click on newMethodButtonQuery
-    }
-
-    object MethodRepoTable extends Table("methods-table") {
-      private def methodLink(namespace: String, name: String) = findInner(s"method-link-$namespace-$name")
-
-      def hasMethod(namespace: String, name: String): Boolean = {
-        find(methodLink(namespace, name)).isDefined
-      }
-
-      def enterMethod(namespace: String, name: String): MethodDetailPage = {
-        click on methodLink(namespace, name)
-        new MethodDetailPage(namespace, name)
-      }
-    }
+  def createNewMethod(attributes: Map[String, String]): Unit = {
+    newMethodButton.doClick()
+    val createMethodModal = await ready new CreateMethodModal()
+    createMethodModal.fillOut(attributes)
+    createMethodModal.submit()
   }
 
-  object ui extends UI
+  object MethodRepoTable extends Table("methods-table") {
+    private def methodLink(namespace: String, name: String) = Link(s"method-link-$namespace-$name")
+
+    def hasMethod(namespace: String, name: String): Boolean = {
+      val link = methodLink(namespace, name)
+      link.isVisible
+      methodLink(namespace, name).isVisible
+    }
+
+    def enterMethod(namespace: String, name: String): MethodDetailPage = {
+      methodLink(namespace, name).doClick()
+      await ready new MethodDetailPage(namespace, name)
+    }
+  }
 }
 
 class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  def createMethod(attributes: Map[String, String]): Unit = {
-    ui.fillNamespaceField(attributes("namespace"))
-    ui.fillNameField(attributes("name"))
-    ui.fillSynopsisField(attributes("synopsis"))
-    ui.fillDocumentationField(attributes("documentation"))
-    ui.fillWDLField(attributes("payload"))
+  private val namespaceField = TextField("namespace-field")
+  private val nameField = TextField("name-field")
+  private val synopsisField = TextField("synopsis-field")
+  private val documentationField = TextArea("documentation-field")
+  private val wdlField = WDLField("wdl-field")
 
-    ui.clickUploadButton()
-  }
-
-  def awaitDismissed(): Unit =
-    await notVisible ui.uploadButtonQuery
-
-  object ui {
-    private val namespaceFieldQuery = testId("namespace-field")
-    private val nameFieldQuery = testId("name-field")
-    private val synopsisFieldQuery = testId("synopsis-field")
-    private val documentationFieldQuery = testId("documentation-field")
-    private val wdlFieldQuery = cssSelector("[data-test-id='wdl-field'] .CodeMirror")
-    private[CreateMethodModal] val uploadButtonQuery = testId("upload-button")
-
-    def fillNamespaceField(namespace: String): Unit =
-      textField(namespaceFieldQuery).value = namespace
-
-    def fillNameField(name: String): Unit =
-      textField(nameFieldQuery).value = name
-
-    def fillSynopsisField(synopsis: String): Unit =
-      textField(synopsisFieldQuery).value = synopsis
-
-    def fillDocumentationField(documentation: String): Unit =
-      textArea(documentationFieldQuery).value = documentation
-
-    def fillWDLField(wdl: String): Unit = {
-      val sanitized = wdl.replaceAll("\"" ,"\\\\\"").replaceAll("\n", "\\\\n")
-      executeScript("arguments[0].CodeMirror.setValue(\"" + sanitized + "\");", wdlFieldQuery.webElement)
-    }
-
-    def clickUploadButton(): Unit =
-      click on uploadButtonQuery
+  def fillOut(attributes: Map[String, String]): Unit = {
+    namespaceField.setText(attributes("namespace"))
+    nameField.setText(attributes("name"))
+    synopsisField.setText(attributes("synopsis"))
+    documentationField.setText(attributes("documentation"))
+    wdlField.fillWDL(attributes("payload"))
   }
 }

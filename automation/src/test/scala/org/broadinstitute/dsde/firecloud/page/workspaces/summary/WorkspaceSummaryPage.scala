@@ -52,23 +52,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     await notVisible spinner
     val cloneModal = ui.clickCloneButton()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
-    cloneModal.cloneWorkspaceWait()
-    cloneWorkspaceWait()
-    new WorkspaceSummaryPage(billingProjectName, workspaceName)
-  }
-
-  /**
-    * Wait for workspace clone to complete.
-    *
-    * Clone is initiated from the workspace summary page for the source
-    * workspace and ends on the workspace summary page for the cloned
-    * workspace. WorkspaceSummaryPage.awaitLoaded() will complete even if the
-    * browser has not yet navigated to the cloned workspace which could cause
-    * subsequent assertions to fail. This extra wait makes sure that the
-    * browser has navigated somewhere else.
-    */
-  def cloneWorkspaceWait(): Unit = {
-    await condition { currentUrl != url }
   }
 
   def unpublishWorkspace(): Unit = {
@@ -84,7 +67,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   def deleteWorkspace(): WorkspaceListPage = {
     val workspaceDeleteModal = ui.clickDeleteWorkspaceButton()
     workspaceDeleteModal.confirmDelete()
-    workspaceDeleteModal.confirmDeleteWait()
     new WorkspaceListPage
   }
 
@@ -140,12 +122,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickCloneButton(): CloneWorkspaceModal = {
       cloneButton.doClick()
-      new CloneWorkspaceModal
+      await ready new CloneWorkspaceModal
     }
 
     def clickDeleteWorkspaceButton(): DeleteWorkspaceModal = {
       deleteWorkspaceButton.doClick()
-      new DeleteWorkspaceModal
+      await ready new DeleteWorkspaceModal
     }
 
     def clickPublishButton(): Unit = {
@@ -158,7 +140,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickShareWorkspaceButton(): AclEditor = {
       shareWorkspaceButton.doClick()
-      new AclEditor
+      await ready new AclEditor
     }
 
     def hasShareButton: Boolean = {
