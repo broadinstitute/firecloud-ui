@@ -97,7 +97,7 @@
                  {:configs configs
                   :style {:body-row (fn [{:keys [row]}]
                                       {:borderTop style/standard-line :alignItems "baseline"
-                                       :background-color (when (= preview-config (config->id+snapshot row))
+                                       :background-color (when (= (config->id+snapshot preview-config) (config->id+snapshot row))
                                                            (:tag-background style/colors))})}
                   :make-config-link-props
                   (fn [config]
