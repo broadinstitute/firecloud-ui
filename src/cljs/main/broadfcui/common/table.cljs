@@ -3,7 +3,7 @@
    [dmohs.react :as react]
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
-   [broadfcui.components.text-filter :as text-filter]
+   [broadfcui.components.text-filter :refer [TextFilter]]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.body :as body]
    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
@@ -119,7 +119,7 @@
          (when (and (:filterable? behavior) (not (contains? external-query-params :filter-text)))
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}
-              [text-filter/TextFilter (merge
+              [TextFilter (merge
                                  {:data-test-id "filter"
                                   :initial-text (:filter-text query-params)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
