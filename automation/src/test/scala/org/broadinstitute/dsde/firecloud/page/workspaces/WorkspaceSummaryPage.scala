@@ -19,8 +19,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   override val element: Query = testId("summary-tab")
 
   override def awaitLoaded(): WorkspaceSummaryPage = {
-    await condition { enabled(testId("submission-status")) || enabled(testId("workspace-details-error")) }
-    await condition { getState == "ready" }
+    await condition {
+      enabled(testId("workspace-details-error")) ||
+      (enabled(testId("submission-status")) && getState == "ready")
+    }
     await spinner "Loading..."
     this
   }
