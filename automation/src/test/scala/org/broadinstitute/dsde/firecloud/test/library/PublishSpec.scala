@@ -15,8 +15,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
-  implicit lazy val curatorAuthToken = AuthToken(Config.Users.curator)
-  lazy val ronAuthToken = AuthToken(Config.Users.ron)
+  implicit val curatorAuthToken = AuthToken(Config.Users.curator)
+  val ronAuthToken = AuthToken(Config.Users.ron)
 
 
   "For a user with publish permissions" - {
