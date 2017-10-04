@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.page.OKCancelModal
 import org.openqa.selenium.WebDriver
 
-class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
+class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
   /**
     * Clones a new workspace. Returns immediately after submitting. Call awaitCloneComplete to wait for cloning to be done.

@@ -54,10 +54,10 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
           methodRepoTable.hasMethod(namespace, name) shouldBe true
 
-          // go in and redact it
-          val methodDetailPage = methodRepoTable.enterMethod(namespace, name)
-          methodDetailPage.awaitLoaded()
-          methodDetailPage.ui.redact()
+      // go in and redact it
+      val methodDetailPage = methodRepoTable.enterMethod(namespace, name)
+
+      methodDetailPage.ui.redact()
 
           // and verify that it's gone
           methodRepoPage.open

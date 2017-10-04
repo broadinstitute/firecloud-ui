@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
-import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -13,18 +13,17 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 
-  def importFile(file: String) = {
+  def importFile(file: String): Unit = {
     val importModal = ui.clickImportMetadataButton()
     importModal.importFile(file)
   }
 
-  def getNumberOfParticipants(): Int = {
-    ui.getNumberOfParticipants()
+  def getNumberOfParticipants: Int = {
+    ui.getNumberOfParticipants
   }
 
-  override def awaitLoaded(): WorkspaceDataPage = {
+  override def awaitReady(): Unit = {
     await condition ui.hasimportMetadataButton()
-    this
   }
 
   trait UI extends super.UI {
@@ -41,7 +40,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       new ImportMetadataModal
     }
 
-    def getNumberOfParticipants(): Int = {
+    def getNumberOfParticipants: Int = {
       // TODO: click on the tab and read the actual table size
       dataTable.readDisplayedTabCount("participant")
     }
@@ -52,8 +51,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 /**
   * Page class for the import data modal.
   */
-class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
-
+class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
   /**
     * Confirms the request to delete a workspace. Returns after the FireCloud
     * busy spinner disappears.
@@ -68,7 +66,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
 
   object ui {
 
-    private val importFromFileButtonQuery: Query = testId("import-from-file-button")
+    private[ImportMetadataModal] val importFromFileButtonQuery: Query = testId("import-from-file-button")
     private val copyFromAnotherWorkspaceButtonQuery: Query = testId("copy-from-another-workspace-button")
     private val chooseFileButton: Query = testId("choose-file-button")
     private val fileUploadInputQuery: Query = testId("data-upload-input")
@@ -77,35 +75,34 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val xButtonQuery: Query = testId("x-button")
     private val uploadSuccessMessageQuery = testId("upload-success-message")
 
-    def clickXButton() = {
-      click on (await enabled xButtonQuery)
+    def clickXButton(): Unit = {
+      click on xButtonQuery
     }
 
-    def clickImportFromFileButton() = {
+    def clickImportFromFileButton(): Unit = {
       click on importFromFileButtonQuery
     }
 
-    def clickCopyFromAnotherWorkspaceButton() = {
-      click on (await enabled copyFromAnotherWorkspaceButtonQuery)
+    def clickCopyFromAnotherWorkspaceButton(): Unit = {
+      click on copyFromAnotherWorkspaceButtonQuery
     }
 
-    def clickChooseFileButton() = {
-      click on (await enabled chooseFileButton)
+    def clickChooseFileButton(): Unit = {
+      click on chooseFileButton
     }
 
-    def uploadData(filePath: String) = {
+    def uploadData(filePath: String): Unit = {
       executeScript("var field = document.getElementsByName('entities'); field[0].style.display = '';")
       val webElement = find(fileUploadInputQuery).get.underlying
       webElement.clear()
       webElement.sendKeys(filePath)
     }
 
-    def clickUploadMetaData() = {
-      click on (await enabled confirmUploadMetadataButtonQuery)
+    def clickUploadMetaData(): Unit = {
+      click on confirmUploadMetadataButtonQuery
     }
 
-    def isUploadSuccessMessagePresent(): Boolean = {
-      await enabled uploadSuccessMessageQuery
+    def isUploadSuccessMessagePresent: Boolean = {
       // this seems like a terrible way to do this
       find(uploadSuccessMessageQuery).size == 1
     }

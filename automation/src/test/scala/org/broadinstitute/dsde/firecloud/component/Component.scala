@@ -8,7 +8,7 @@ abstract class Component(id: String)(implicit webDriver: WebDriver) extends Fire
 
   def findInner(id: String): CssSelectorQuery = testId(id) inside element
 
-  def awaitEnabled(): Unit = {
-    await enabled element
-  }
+  def awaitVisible(): Unit = await visible element
+
+  override def awaitReady(): Unit = awaitVisible()
 }

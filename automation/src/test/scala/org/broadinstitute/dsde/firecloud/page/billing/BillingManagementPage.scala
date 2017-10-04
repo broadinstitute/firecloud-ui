@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.billing
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -17,9 +17,8 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   with Page with PageUtil[BillingManagementPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
-  override def awaitLoaded(): BillingManagementPage = {
+  override def awaitReady(): Unit = {
     await condition ui.hasCreateBillingProjectButton
-    this
   }
 
   /**
@@ -131,37 +130,33 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
 /**
   * Page class for the modal for creating a billing project.
   */
-class CreateBillingProjectModal(implicit webDriver: WebDriver) extends FireCloudView {
-
+class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
-    ui.fillProjectName(projectName)
-    ui.selectBillingAccount(billingAccountName)
-    ui.clickCreateButton()
-    ui.clickCreateButtonWait()
+    fillProjectName(projectName)
+    selectBillingAccount(billingAccountName)
+    clickCreateButton()
+    clickCreateButtonWait()
   }
 
+  private val createBillingProjectModal: Query = testId("create-billing-project-modal")
+  private val createButton: Query = testId("create-project-button")
+  private val projectNameInput = testId("project-name-input")
 
-  object ui {
-    private val createBillingProjectModal: Query = testId("create-billing-project-modal")
-    private val createButton: Query = testId("create-project-button")
-    private val projectNameInput = testId("project-name-input")
+  private def clickCreateButton(): Unit = {
+    click on createButton
+  }
 
-    def clickCreateButton(): Unit = {
-      click on createButton
-    }
+  private def clickCreateButtonWait(): Unit = {
+    await notVisible createBillingProjectModal
+  }
 
-    def clickCreateButtonWait(): Unit = {
-      await notVisible createBillingProjectModal
-    }
+  private def fillProjectName(name: String): Unit = {
+    await enabled projectNameInput
+    textField(projectNameInput).value = name
+  }
 
-    def fillProjectName(name: String): Unit = {
-      await enabled projectNameInput
-      textField(projectNameInput).value = name
-    }
-
-    def selectBillingAccount(name: String): Unit = {
-      click on testId(name)
-    }
+  private def selectBillingAccount(name: String): Unit = {
+    click on testId(name)
   }
 }
 
@@ -170,30 +165,27 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends FireCloud
 /**
   * Page class for the modal for adding users to a billing project.
   */
-class AddUserToBillingProjectModal(implicit webDriver: WebDriver) extends FireCloudView {
-
+class AddUserToBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def addUserToBillingProject(userEmail: String, role: String): Unit = {
-    ui.fillUserEmail(userEmail)
-    ui.selectRole(role)
-    ui.confirmAddUserDialog()
+    fillUserEmail(userEmail)
+    selectRole(role)
+    confirmAddUserDialog()
   }
 
-  object ui {
-    private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
-    private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
-    private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
+  private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
+  private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
+  private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
 
-    def fillUserEmail(email: String) = {
-      await enabled addUserModalEmailInput
-      textField(addUserModalEmailInput).value = email
-    }
+  private def fillUserEmail(email: String) = {
+    await enabled addUserModalEmailInput
+    textField(addUserModalEmailInput).value = email
+  }
 
-    def selectRole(role: String) = {
-      singleSel(addUserModalRoleSelect).value = option value role
-    }
+  private def selectRole(role: String) = {
+    singleSel(addUserModalRoleSelect).value = option value role
+  }
 
-    def confirmAddUserDialog() = {
-      click on addUserModalConfirmButton
-    }
+  private def confirmAddUserDialog() = {
+    click on addUserModalConfirmButton
   }
 }

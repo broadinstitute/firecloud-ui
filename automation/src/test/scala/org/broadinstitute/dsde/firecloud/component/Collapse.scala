@@ -1,20 +1,21 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.Stateful
+import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.WebBrowser
 
-case class Collapse[A <: WebBrowser](private val id: String, private val inner: A)(implicit webDriver: WebDriver)
+case class Collapse[A <: FireCloudView](private val id: String, private val inner: A)(implicit webDriver: WebDriver)
   extends Component(id) with Stateful {
   private val toggleComponent = findInner("toggle")
 
+  override def awaitReady(): Unit = inner.awaitReady()
+
   def isExpanded: Boolean = {
-    awaitEnabled()
+    awaitVisible()
     stateOf(toggleComponent) == "expanded"
   }
 
   def toggle(): Unit = {
-    awaitEnabled()
+    awaitVisible()
     click on toggleComponent
   }
 

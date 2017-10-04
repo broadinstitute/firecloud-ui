@@ -10,6 +10,8 @@ import org.scalatest.selenium.Page
 class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMonitorPage] {
 
+  override def awaitReady(): Unit = await visible ui.filterInput
+
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
 
   /**
@@ -26,7 +28,9 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
 
 
   trait UI extends super.UI {
-    private val filterInput = testId("-input")
+    // TODO: make this a Table
+    private[WorkspaceMonitorPage] val filterInput = testId("-input")
+
     private val submissionLinkId = "submission-%s"
 
     def filter(searchText: String) = {

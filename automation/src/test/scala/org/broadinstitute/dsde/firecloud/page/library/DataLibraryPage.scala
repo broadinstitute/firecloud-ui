@@ -11,9 +11,8 @@ import org.scalatest.selenium.Page
 class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage with Page with PageUtil[DataLibraryPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
-  override def awaitLoaded(): DataLibraryPage = {
+  override def awaitReady(): Unit = {
     await text "Data Use Limitation"
-    this
   }
 
   def validateLocation(): Unit = {

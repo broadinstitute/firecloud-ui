@@ -5,12 +5,17 @@ import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{ErrorModal, OKCancelModal, PageUtil}
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 import org.scalatest.selenium.Page
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
+
+  override def awaitReady(): Unit = {
+    await condition isLoaded
+    await spinner "Checking permissions..."
+  }
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
@@ -40,12 +45,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def isLoaded: Boolean = {
     ui.isLaunchAnalysisButtonPresent()
-  }
-
-  override def awaitLoaded(): WorkspaceMethodConfigDetailsPage = {
-    await condition isLoaded
-    await spinner "Checking permissions..."
-    this
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
@@ -153,7 +152,8 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 /**
   * Page class for the launch analysis modal.
   */
-class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
+class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  override def awaitReady(): Unit = ui.entityTable.awaitReady()
 
   /**
     *
@@ -209,7 +209,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 
   object ui {
-    private val entityTable = Table("entity-table")
+    private[LaunchAnalysisModal] val entityTable = Table("entity-table")
     private val expressionInputQuery: Query = testId("define-expression-input")
     private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
     private val launchAnalysisButtonQuery: Query = testId("launch-button")

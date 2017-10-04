@@ -20,13 +20,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   override val element: Query = testId("summary-tab")
 
-  override def awaitLoaded(): WorkspaceSummaryPage = {
+  override def awaitReady(): Unit = {
     await condition {
       enabled(testId("workspace-details-error")) ||
       (enabled(testId("submission-status")) && getState == "ready")
     }
     await spinner "Loading..."
-    this
   }
 
   /**
@@ -128,23 +127,15 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val workspaceError = testId("workspace-details-error")
     private val accessLevel = testId("workspace-access-level")
 
-    private class WorkspaceAttributesArea extends FireCloudView {
-      def clickNewButton(): Unit = {
-        click on (await enabled ui.newButton)
-      }
+    private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
+      override def awaitReady(): Unit = table.awaitReady()
 
-      def table: Table = {
-        ui.table
-      }
+      val newButton: Query = testId("add-new-button")
+      val table = Table("workspace-attributes")
 
-      trait UI {
-        val newButton: Query = testId("add-new-button")
-        val table = Table("workspace-attributes")
-      }
-      object ui extends UI
-    }
-
-    private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea)
+      def clickNewButton(): Unit = click on newButton
+    })
+    import scala.language.reflectiveCalls
 
     def clickCloneButton(): CloneWorkspaceModal = {
       click on (await enabled cloneButton)
@@ -215,7 +206,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     def save(): Unit = {
       if (isEditing) {
         click on saveButton
-        awaitLoaded()
+        awaitReady()
       }
       else
         throw new IllegalStateException("Tried to click on 'save' while not editing")

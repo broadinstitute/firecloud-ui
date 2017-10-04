@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.methodrepo
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -11,9 +11,8 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
 
   override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 
-  override def awaitLoaded(): MethodRepoPage = {
+  override def awaitReady(): Unit = {
     ui.MethodRepoTable.awaitReady()
-    this
   }
 
   trait UI extends super.UI {
@@ -40,8 +39,7 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
   object ui extends UI
 }
 
-class CreateMethodModal(implicit webDriver: WebDriver) extends FireCloudView {
-
+class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def createMethod(attributes: Map[String, String]): Unit = {
     ui.fillNamespaceField(attributes("namespace"))
     ui.fillNameField(attributes("name"))

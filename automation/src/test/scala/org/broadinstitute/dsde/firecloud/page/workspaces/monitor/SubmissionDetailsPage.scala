@@ -9,6 +9,11 @@ import org.scalatest.selenium.Page
 class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
+  override def awaitReady(): Unit = {
+    // TODO: wait on the table, once we're testing that
+    await visible ui.submissionStatusQuery
+  }
+
   private val submissionId = getSubmissionId()
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
 
@@ -56,7 +61,7 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   }
 
   trait UI extends super.UI {
-    private val submissionStatusQuery: Query = testId("submission-status")
+    private[SubmissionDetailsPage] val submissionStatusQuery: Query = testId("submission-status")
     private val workflowStatusQuery: Query = testId("workflow-status")
     private val submissionIdQuery: Query = testId("submission-id")
     private val submissionAbortButtonQuery: Query = testId("submission-abort-button")

@@ -10,6 +10,8 @@ import org.openqa.selenium.WebDriver
   */
 class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
 
+  override def awaitReady(): Unit = await text "User Info"
+
   /**
     * Fills in and submits the new user registration form. Returns as the browser is being redirected to its post-
     * registration destination.

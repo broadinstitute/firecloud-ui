@@ -72,7 +72,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
           val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
           val listPage = new WorkspaceListPage().open
           register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
-          val detailPage = listPage.createWorkspace(billingProjectName, workspaceName).awaitLoaded()
+          val detailPage = listPage.createWorkspace(billingProjectName, workspaceName)
 
           detailPage.validateWorkspace shouldEqual true
         }

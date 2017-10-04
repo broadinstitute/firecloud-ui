@@ -18,8 +18,8 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
 
-  def awaitReady(): Unit = {
-    awaitEnabled()
+  override def awaitReady(): Unit = {
+    awaitVisible()
     await condition { getState == "ready" }
   }
 

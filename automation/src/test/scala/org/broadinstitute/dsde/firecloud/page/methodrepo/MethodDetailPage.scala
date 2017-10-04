@@ -10,9 +10,8 @@ class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebD
 
   override val url = s"${Config.FireCloud.baseUrl}#methods/$namespace/$name"
 
-  override def awaitLoaded(): MethodDetailPage = {
+  override def awaitReady(): Unit = {
     await enabled ui.redactButtonQuery
-    this
   }
 
   trait UI extends super.UI {

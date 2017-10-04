@@ -11,7 +11,7 @@ import org.openqa.selenium.WebDriver
 /*
 A Workspace Page is any page within the workspace (i.e. the Summary tab, Data tab)
  */
-class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends AuthenticatedPage {
+abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends AuthenticatedPage {
 
   def readWorkspace: (String, String) = {
     ui.readWorkspace
@@ -32,25 +32,21 @@ class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriv
     }
 
     def goToSummaryTab(): WorkspaceSummaryPage = {
-      tabs.awaitEnabled()
       tabs.goToTab("Summary")
       new WorkspaceSummaryPage(namespace, name)
     }
 
     def goToDataTab(): WorkspaceDataPage = {
-      tabs.awaitEnabled()
       tabs.goToTab("Data")
       new WorkspaceDataPage(namespace, name)
     }
 
     def goToMethodConfigTab(): WorkspaceMethodConfigListPage = {
-      tabs.awaitEnabled()
       tabs.goToTab("Method Configurations")
       new WorkspaceMethodConfigListPage(namespace, name)
     }
 
     def goToMonitorTab(): WorkspaceMonitorPage = {
-      tabs.awaitEnabled()
       tabs.goToTab("Monitor")
       new WorkspaceMonitorPage(namespace, name)
     }

@@ -5,14 +5,14 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 
 /**
-  * Convenience parent class for FireCloud pages and other views such as modal
-  * dialogs.
+  * Parent class for all pages and components.
   */
 abstract class FireCloudView(implicit webDriver: WebDriver)
   extends WebBrowser with WebBrowserUtil {
+  def awaitReady(): Unit
 
   /** Query for the FireCloud Spinner component */
-  val spinner = testId("spinner")
+  val spinner: CssSelectorQuery = testId("spinner")
 
   def readText(q: Query): String = {
     find(q) map { _.text } getOrElse ""

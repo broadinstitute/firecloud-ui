@@ -23,7 +23,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     // create workspace
     val workspaceName = "Smoketests_create_" + randomUuid
-    val detailPage = listPageAsUser.createWorkspace(billingProject, workspaceName).awaitLoaded()
+    val detailPage = listPageAsUser.createWorkspace(billingProject, workspaceName)
 
     detailPage.readWorkspace shouldEqual (billingProject, workspaceName)
     listPageAsUser.open
@@ -34,7 +34,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     val filename = "src/test/resources/participants.txt"
     val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
     workspaceDataTab.importFile(filename)
-    workspaceDataTab.getNumberOfParticipants() shouldEqual 1
+    workspaceDataTab.getNumberOfParticipants shouldEqual 1
 
     // import known method config
     val methodConfigName = Config.Methods.testMethodConfig + "_" + UUID.randomUUID().toString
@@ -45,12 +45,12 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     assert(methodConfigDetailsPage.isLoaded)
 
     // launch method config with call caching off
-    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false).awaitLoaded()
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false)
     submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
     assert(submissionDetailsPage.verifyWorkflowSucceeded())
 
     // delete workspace
-    val wsSummaryPage = new WorkspaceSummaryPage(billingProject, workspaceName).open.awaitLoaded()
+    val wsSummaryPage = new WorkspaceSummaryPage(billingProject, workspaceName).open
     wsSummaryPage.deleteWorkspace()
 
   }

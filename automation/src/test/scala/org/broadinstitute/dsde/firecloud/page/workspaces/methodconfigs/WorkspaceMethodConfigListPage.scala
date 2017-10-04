@@ -4,13 +4,15 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 
 class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigListPage] {
+
+  override def awaitReady(): Unit = ui.methodConfigsTable.awaitReady()
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
@@ -23,7 +25,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): WorkspaceMethodConfigDetailsPage = {
     val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
-    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName).awaitLoaded()
+    new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
   def filter(searchText: String): Unit = {
@@ -42,7 +44,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
-    private val methodConfigsTable = Table("method-configs-table")
+    private[WorkspaceMethodConfigListPage] val methodConfigsTable = Table("method-configs-table")
     private val methodConfigLinkId = "method-config-%s-link"
 
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
@@ -73,17 +75,18 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
 }
 
 class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireCloudView {
+  override def awaitReady(): Unit = await visible gestures.chooseConfigFromRepoModalButtonQuery
 
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     val importModel = gestures.clickChooseFromRepoButton()
     importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
   }
   object gestures {
-    private val chooseConfigFromRepoModalButtonQuery: Query = testId("import-from-repo-button")
+    private[ImportMethodChooseSourceModel] val chooseConfigFromRepoModalButtonQuery: Query = testId("import-from-repo-button")
     private val chooseConfigFromWorkspaceModalButtonQuery: Query = testId("copy-from-workspace-button")
 
     def clickChooseFromRepoButton(): ImportMethodConfigModal = {
-      click on (await enabled chooseConfigFromRepoModalButtonQuery)
+      click on chooseConfigFromRepoModalButtonQuery
       new ImportMethodConfigModal()
     }
   }
@@ -93,7 +96,8 @@ class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireC
 /**
   * Page class for the import method config modal.
   */
-class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudView {
+class ImportMethodConfigModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  override def awaitReady(): Unit = ui.methodTable.awaitReady()
 
   /**
     *
@@ -109,7 +113,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
   }
 
   object ui {
-    private val methodTable = Table("method-repo-table")
+    private[ImportMethodConfigModal] val methodTable = Table("method-repo-table")
 
     private val methodNamespaceInputQuery: Query = testId("method-config-import-namespace-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")

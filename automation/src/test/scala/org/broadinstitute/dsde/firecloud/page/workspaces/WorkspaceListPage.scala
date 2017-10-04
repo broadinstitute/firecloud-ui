@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.Table
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -51,16 +51,15 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   def openWorkspaceDetails(namespace: String, name: String): WorkspaceSummaryPage = {
     filter(name)
     ui.clickWorkspaceInList(namespace, name)
-    new WorkspaceSummaryPage(namespace, name)
+    await ready new WorkspaceSummaryPage(namespace, name)
   }
 
   def validateLocation(): Unit = {
     assert(ui.validateLocation())
   }
 
-  override def awaitLoaded(): WorkspaceListPage = {
+  override def awaitReady(): Unit = {
     ui.awaitReady()
-    this
   }
 
 
@@ -109,7 +108,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
 /**
   * Page class for the create workspace modal.
   */
-class CreateWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
+class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
   /**
     * Creates a new workspace. Returns after the FireCloud busy spinner
