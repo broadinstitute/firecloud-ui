@@ -9,10 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.method-repo-NEW.method-repo-table :as method-table-new]
-   [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
@@ -160,34 +157,14 @@
      ((:load-workspaces props)))})
 
 
-(defn- confirm-entity [props]
-  (wrap
-   (mci/import-form
-    (merge (select-keys props [:type :id :workspace-id :after-import :dismiss])
-           {:allow-edit false}))))
-
-
-(defn- method-chooser [{:keys [push-page replace-page workspace-id] :as props}]
-  (if config/debug?
-    (let [nav-method (fn [{:keys [replace? label component props]}]
-                       ((if replace? replace-page push-page)
-                        {:breadcrumb-text label
-                         :component [component props]}))]
-      [method-table-new/MethodRepoTable
-       {:nav-method nav-method
-        :workspace-id workspace-id}])
+(defn- method-chooser [{:keys [push-page replace-page workspace-id]}]
+  (let [nav-method (fn [{:keys [replace? label component props]}]
+                     ((if replace? replace-page push-page)
+                      {:breadcrumb-text label
+                       :component [component props]}))]
     [MethodRepoTable
-     {:render-name
-      (fn [{:keys [namespace name snapshotId entityType]}]
-        (let [id {:namespace namespace
-                  :name name
-                  :snapshot-id snapshotId}
-              type (if (= entityType "Configuration") :method-config :method)]
-          (links/create-internal
-            {:data-test-id (str name "_" snapshotId)
-             :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
-                                   :component (confirm-entity (assoc props :type type :id id))})}
-            (style/render-name-id name snapshotId))))}]))
+     {:nav-method nav-method
+      :workspace-id workspace-id}]))
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
