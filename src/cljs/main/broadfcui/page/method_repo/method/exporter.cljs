@@ -56,7 +56,7 @@
 (react/defc MethodExporter
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:preview-config (:initial-config props)})
+     {:preview-config-id (config->id+snapshot (:initial-config-id props))})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
@@ -84,7 +84,7 @@
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
                      (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
-                       (swap! state assoc :configs configs))
+                       (swap! state assoc :configs configs :preview-config (first (filter (fn [c] (= (:preview-config-id @state) (config->id+snapshot c))) configs))))
                      (swap! state assoc :configs-error (:message parsed-response)))))}))
    :-render-config-selector
    (fn [{:keys [state]}]
@@ -185,6 +185,7 @@
                       (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
+     (assert (not (nil? (:rootEntityType config))) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner "Exporting...")
      (let [{:keys [selected-workspace-id]} @locals]
        (endpoints/call-ajax-orch
