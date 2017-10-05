@@ -3,9 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
-   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -260,66 +258,3 @@
 
 (defn import-form [{:keys [type] :as props}]
   [(if (= type :method) MethodImportForm ConfigImportForm) props])
-
-
-(react/defc MethodConfigImporter
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [workspace-id]} props
-           type (some :type [props @state])
-           id (some :id [props @state])]
-       [:div {:key (str id)}
-        (when (:editing-namespace-acl? @state)
-          (let [{:keys [edit-namespace edit-type]} @state]
-            [mca/AgoraPermsEditor
-             {:dismiss #(swap! state dissoc :editing-namespace-acl?)
-              :save-endpoint (endpoints/post-agora-namespace-acl edit-namespace (= :config edit-type))
-              :load-endpoint (endpoints/get-agora-namespace-acl edit-namespace (= :config edit-type))
-              :entityType "Namespace" :entityName edit-namespace
-              :title (str "Namespace " edit-namespace)}]))
-        (when (:creating? @state)
-          [create/CreateMethodDialog
-           {:dismiss #(swap! state dissoc :creating?)
-            :on-created (fn [type id]
-                          (if (:in-workspace? props)
-                            ((:on-selected props) type id)
-                            (nav/go-to-path :method id)))}])
-        (when id
-          [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
-        (if id
-          (import-form (merge (utils/restructure type id)
-                              (select-keys props [:workspace-id :allow-edit :after-import])
-                              {:on-delete #(nav/go-to-path :method-repo)}))
-          [MethodRepoTable
-           {:table-props {:toolbar {:style {:padding "1rem" :margin 0
-                                            :backgroundColor (:background-light style/colors)}}
-                          :tabs {:style {:padding "0 1rem" :marginLeft "-1rem" :marginRight "-1rem"
-                                         :backgroundColor (:background-light style/colors)}}
-                          :style {:content {:padding "0 1rem"}}}
-            :render-name
-            (fn [{:keys [namespace name snapshotId entityType]}]
-              (let [id {:namespace namespace
-                        :name name
-                        :snapshot-id snapshotId}
-                    type (if (= entityType "Configuration") :method-config :method)]
-                (links/create-internal
-                  {:data-test-id (str name "_" snapshotId)
-                   :href (if workspace-id "javascript:;" (nav/get-link type id))
-                   :onClick (when workspace-id
-                              #(swap! state assoc :type type :id id))}
-                  (style/render-name-id name snapshotId))))
-            :render-namespace
-            (fn [{:keys [namespace type]}]
-              (if workspace-id
-                namespace
-                (links/create-internal
-                  {:onClick #(swap! state assoc
-                                    :editing-namespace-acl? true
-                                    :edit-namespace namespace
-                                    :edit-type type)}
-                  namespace)))
-            :toolbar-items
-            [flex/spring
-             [buttons/Button
-              {:text "Create new method..."
-               :onClick #(swap! state assoc :creating? true)}]]}])]))})
