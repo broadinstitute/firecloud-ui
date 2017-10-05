@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.Table
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{ErrorModal, OKCancelModal, PageUtil}
@@ -19,32 +19,32 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
-  def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true) = {
+  def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
     val launchModal = ui.openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
-    new SubmissionDetailsPage(namespace, name)
+    await ready new SubmissionDetailsPage(namespace, name)
   }
 
   def editMethodConfig(newName: Option[String] = None, newSnapshotId: Option[Int] = None, newRootEntityType: Option[String] = None,
-                       inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None) = {
+                       inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None): Unit = {
     ui.openEditMode()
     await spinner "Loading attributes..."
 
-    if (newName != None) { ui.changeMethodConfigName(newName.get) }
-    if (newSnapshotId != None) { ui.changeSnapshotId(newSnapshotId.get) }
-    if (newRootEntityType != None) { ui.changeRootEntityType(newRootEntityType.get)}
-    if (inputs != None) { ui.changeInputsOutputs(inputs.get)  }
-    if (outputs != None) { ui.changeInputsOutputs(outputs.get)}
+    if (newName.isDefined) { ui.changeMethodConfigName(newName.get) }
+    if (newSnapshotId.isDefined) { ui.changeSnapshotId(newSnapshotId.get) }
+    if (newRootEntityType.isDefined) { ui.changeRootEntityType(newRootEntityType.get)}
+    if (inputs.isDefined) { ui.changeInputsOutputs(inputs.get) }
+    if (outputs.isDefined) { ui.changeInputsOutputs(outputs.get)}
     ui.clickSaveButton()
 
   }
 
-  def openlaunchModal() = {
+  def openLaunchModal(): LaunchAnalysisModal = {
     ui.openLaunchAnalysisModal()
   }
 
   def isLoaded: Boolean = {
-    ui.isLaunchAnalysisButtonPresent()
+    ui.isLaunchAnalysisButtonPresent
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
@@ -69,29 +69,29 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     def openLaunchAnalysisModal(): LaunchAnalysisModal = {
       await enabled methodConfigNameTextQuery
       click on (await enabled openLaunchAnalysisModalButtonQuery)
-      new LaunchAnalysisModal
+      await ready new LaunchAnalysisModal
     }
 
-    def openEditMode() = {
+    def openEditMode(): Unit = {
       click on (await enabled openEditModeQuery)
     }
 
-    def changeMethodConfigName(newName: String) = {
+    def changeMethodConfigName(newName: String): Unit = {
       await enabled editMethodConfigNameInputQuery
       textField(editMethodConfigNameInputQuery).value = newName
     }
 
-    def changeSnapshotId(newSnapshotId: Int) = {
+    def changeSnapshotId(newSnapshotId: Int): Unit = {
       await enabled editMethodConfigSnapshotIdSelectQuery
       singleSel(editMethodConfigSnapshotIdSelectQuery).value = newSnapshotId.toString
     }
 
-    def changeRootEntityType(newRootEntityType: String) = {
+    def changeRootEntityType(newRootEntityType: String): Unit = {
       await enabled editMethodConfigRootEntityTypeInputQuery
       singleSel(editMethodConfigRootEntityTypeInputQuery).value = newRootEntityType
     }
 
-    def changeInputsOutputs(fields: Map[String, String]) = {
+    def changeInputsOutputs(fields: Map[String, String]): Unit = {
       for ((field, expression) <- fields) {
         val fieldInputQuery: Query = xpath(s"//*[@data-test-id='$field-text-input']/..//input")
         searchField(fieldInputQuery).value = expression
@@ -110,11 +110,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       click on button
     }
 
-    def cancelEdits() = {
+    def cancelEdits(): Unit = {
       click on (await enabled cancelEditMethodConfigModeButtonQuery)
     }
 
-    def isLaunchAnalysisButtonPresent() = {
+    def isLaunchAnalysisButtonPresent: Boolean = {
       await enabled openLaunchAnalysisModalButtonQuery
       find(openLaunchAnalysisModalButtonQuery).size == 1
     }
@@ -124,7 +124,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       new ErrorModal
     }
 
-    def verifyMethodConfigurationName(methodConfigName: String) = {
+    def verifyMethodConfigurationName(methodConfigName: String): Boolean = {
       await enabled methodConfigNameTextQuery
 
       val methodConfigNameElement = find(methodConfigNameTextQuery)
@@ -132,12 +132,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
     }
 
-    def isSnapshotRedacted() = {
+    def isSnapshotRedacted: Boolean = {
       await enabled snapshotIdLabelQuery
       find(snapshotRedactedTitleQuery).isDefined
     }
 
-    def deleteMethodConfig() = {
+    def deleteMethodConfig(): Unit = {
       click on (await enabled deleteMethodConfigButtonQuery)
       click on (await enabled modalConfirmDeleteButtonQuery)
     }
@@ -148,128 +148,69 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 }
 
 
-
 /**
   * Page class for the launch analysis modal.
   */
 class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  override def awaitReady(): Unit = ui.entityTable.awaitReady()
+  override def awaitReady(): Unit = entityTable.awaitReady()
 
-  /**
-    *
-    */
+  private val entityTable = Table("entity-table")
+  private val expressionInput = TextField("define-expression-input")
+  private val emptyDefaultEntitiesMessage = Label("message-well")
+  private val launchAnalysisButton = Button("launch-button")
+  private val numberOfWorkflowsWarning = Label("number-of-workflows-warning")
+  private val callCachingCheckbox = Checkbox("call-cache-checkbox")
+
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean): Unit = { //Use Option(String) for expression?
-    ui.filterRootEntityType(rootEntityType)
-    ui.searchEntity(entityId)
-    ui.selectEntity(entityId)
-    if (!expression.isEmpty()) { ui.fillExpression(expression) }
-    if (!enableCallCaching) { ui.clickCallCachingCheckbox() }
-    ui.clickLaunchButton()
+    filterRootEntityType(rootEntityType)
+    searchAndSelectEntity(entityId)
+    if (!expression.isEmpty) { fillExpressionField(expression) }
+    if (!enableCallCaching) { callCachingCheckbox.ensureChecked() }
+    clickLaunchButton()
   }
 
-  def validateLocation(implicit webDriver: WebDriver): Boolean = {
-    testId("launch-analysis-modal").element != null
+  def validateLocation: Boolean = {
+    entityTable.isVisible
   }
 
-  def filterRootEntityType(rootEntityType: String) = {
-    ui.filterRootEntityType(rootEntityType)
+  def filterRootEntityType(rootEntityType: String): Unit = {
+    entityTable.goToTab(rootEntityType)
   }
 
-  def searchAndSelectEntity(entityId: String) = {
-    ui.searchEntity(entityId)
-    ui.selectEntity(entityId)
+  def searchAndSelectEntity(entityId: String): Unit = {
+    entityTable.filter(entityId)
+    click on testId(entityId + "-link")
   }
 
-  def fillExpressionField(expression: String) = {
-    ui.fillExpression(expression)
+  def fillExpressionField(expression: String): Unit = {
+    expressionInput.setText(expression)
   }
 
-  def clickLaunchButton() = {
-    ui.clickLaunchButton()
+  def clickLaunchButton(): Unit = {
+    launchAnalysisButton.doClick()
   }
 
   def verifyNoDefaultEntityMessage(): Boolean = {
-    ui.isNoDefaultEntitiesMessagePresent()
+    emptyDefaultEntitiesMessage.isVisible
   }
 
   def verifyWorkflowsWarning(): Boolean = {
-    ui.isNumberOfWorkflowWarningPresent()
+    numberOfWorkflowsWarning.isVisible
   }
 
   def verifyWrongEntityError(errorText: String): Boolean = {
-    ui.isErrorTextPresent(errorText)
+    isErrorTextPresent(errorText)
   }
 
   def verifyMissingInputsError(errorText: String): Boolean = {
-    ui.isErrorTextPresent(errorText)
+    isErrorTextPresent(errorText)
   }
 
-  def closeModal() = {
-    ui.closeModal()
-  }
-
-  object ui {
-    private[LaunchAnalysisModal] val entityTable = Table("entity-table")
-    private val expressionInputQuery: Query = testId("define-expression-input")
-    private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
-    private val launchAnalysisButtonQuery: Query = testId("launch-button")
-    private val closeModalXButtonQuery: Query = testId("x-button")
-    private val numberOfWorkflowsWarningQuery: Query = testId("number-of-workflows-warning")
-    private val callCachingCheckboxQuery: Query = testId("call-cache-checkbox")
-
-    private val emptyDefaultMessage = "There are no entities to display."
-
-    def filterRootEntityType(rootEntityType: String) = {
-      entityTable.goToTab(rootEntityType)
-    }
-
-    def filterParticipantSetType() = {
-      entityTable.goToTab("participant_set")
-    }
-
-    def searchEntity(entityId: String) = {
-      entityTable.filter(entityId)
-    }
-
-    def selectEntity(entityId: String) = {
-      entityTable.awaitReady()
-      click on testId(entityId + "-link")
-    }
-
-    def fillExpression(expression: String) = {
-      await enabled expressionInputQuery
-      searchField(expressionInputQuery).value = expression
-    }
-
-    def clickLaunchButton() = {
-      click on (await enabled launchAnalysisButtonQuery)
-    }
-
-    def isNoDefaultEntitiesMessagePresent(): Boolean = {
-      await enabled emptyDefaultEntitiesMessageQuery
-      find(emptyDefaultEntitiesMessageQuery).size == 1
-    }
-
-    def closeModal() = {
-      click on (await enabled closeModalXButtonQuery)
-    }
-
-    def isNumberOfWorkflowWarningPresent(): Boolean = {
-      await enabled numberOfWorkflowsWarningQuery
-      find(numberOfWorkflowsWarningQuery).size == 1
-    }
-
-    def isErrorTextPresent(errorText: String): Boolean = {
-      val errorTextQuery: Query = text(errorText)
-      await enabled errorTextQuery
-      val error = find(errorTextQuery)
-      error.size == 1
-    }
-
-    def clickCallCachingCheckbox() = {
-      click on (await enabled callCachingCheckboxQuery)
-    }
-
+  private def isErrorTextPresent(errorText: String): Boolean = {
+    val errorTextQuery: Query = text(errorText)
+    await enabled errorTextQuery
+    val error = find(errorTextQuery)
+    error.size == 1
   }
 }
 

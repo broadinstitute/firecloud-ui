@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
+import org.broadinstitute.dsde.firecloud.component.{Button, Label}
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
@@ -9,13 +10,19 @@ import org.scalatest.selenium.Page
 class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
+  private val submissionId = getSubmissionId
+  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
+
   override def awaitReady(): Unit = {
     // TODO: wait on the table, once we're testing that
-    await visible ui.submissionStatusQuery
+    submissionStatusLabel.awaitVisible()
   }
 
-  private val submissionId = getSubmissionId()
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
+  private val submissionStatusLabel = Label("submission-status")
+  private val workflowStatusLabel = Label("workflow-status")
+  private val submissionIdLabel = Label("submission-id")
+  private val submissionAbortButton = Button("submission-abort-button")
+  private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
 
   private val WAITING_STATES = Array("Queued","Launching")
   private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
@@ -25,13 +32,13 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
 
   private val SUBMISSION_COMPLETE_STATES = Array("Done", SUCCESS_STATUS, FAILED_STATUS, ABORTED_STATUS)
 
-  def isSubmissionDone():Boolean = {
-    val status = ui.getSubmissionStatus()
-    (SUBMISSION_COMPLETE_STATES.contains(status))
+  def isSubmissionDone: Boolean = {
+    val status = submissionStatusLabel.getText
+    SUBMISSION_COMPLETE_STATES.contains(status)
   }
 
-  def getSubmissionId(): String = {
-    ui.getSubmissionId()
+  def getSubmissionId: String = {
+    submissionIdLabel.getText
   }
 
   def readWorkflowStatus() :String = {
@@ -39,56 +46,25 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   }
 
   def verifyWorkflowSucceeded(): Boolean = {
-    SUCCESS_STATUS == ui.getWorkflowStatus()
+    SUCCESS_STATUS.contains(workflowStatusLabel.getText)
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    FAILED_STATUS == ui.getWorkflowStatus()
+    FAILED_STATUS.contains(workflowStatusLabel.getText)
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    ABORTED_STATUS == ui.getWorkflowStatus()
+    ABORTED_STATUS.contains(workflowStatusLabel.getText)
   }
 
-  def waitUntilSubmissionCompletes() = {
-    while (!isSubmissionDone()) {
+  def waitUntilSubmissionCompletes(): Unit = {
+    while (!isSubmissionDone) {
       open
     }
   }
 
-  def abortSubmission() = {
-    ui.abortSubmission()
+  def abortSubmission(): Unit = {
+    submissionAbortButton.doClick()
+    submissionAbortModalConfirmButton.doClick()
   }
-
-  trait UI extends super.UI {
-    private[SubmissionDetailsPage] val submissionStatusQuery: Query = testId("submission-status")
-    private val workflowStatusQuery: Query = testId("workflow-status")
-    private val submissionIdQuery: Query = testId("submission-id")
-    private val submissionAbortButtonQuery: Query = testId("submission-abort-button")
-    private val submissionAbortModalConfirmButtonQuery: Query = testId("submission-abort-modal-confirm-button")
-
-    def getSubmissionStatus(): String = {
-      (await enabled submissionStatusQuery).text
-    }
-
-    //This currently only works for 1 workflow!!!
-    def getWorkflowStatus(): String = {
-      await enabled workflowStatusQuery
-      val workflowStatusElement = find(workflowStatusQuery)
-      workflowStatusElement.get.text
-    }
-
-    def getSubmissionId(): String = {
-      await enabled submissionIdQuery
-      val submissionIdElement = find(submissionIdQuery)
-      submissionIdElement.get.text
-    }
-
-    def abortSubmission() = {
-      await enabled submissionAbortButtonQuery
-      click on submissionAbortButtonQuery
-      click on submissionAbortModalConfirmButtonQuery
-    }
-  }
-  object ui extends UI
 }
