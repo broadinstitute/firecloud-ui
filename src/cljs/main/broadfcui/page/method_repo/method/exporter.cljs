@@ -91,30 +91,32 @@
    :-render-config-selector
    (fn [{:keys [state]}]
      (let [{:keys [configs preview-config]} @state]
-       [:div {:style {:width "80vw" :maxHeight 600 :overflow "hidden"}}
+       [:div {:style {:backgroundColor "white" :padding "1rem" :width "100vw" :maxWidth "calc(100% - 2rem)"}}
         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
          "Select Method Configuration"]
-        [SplitPane
-         {:left (method-common/render-config-table
-                 {:configs configs
-                  :style {:body-row (fn [{:keys [row]}]
-                                      {:borderTop style/standard-line :alignItems "baseline"
-                                       :background-color (when (= (config->id+snapshot preview-config) (config->id+snapshot row))
-                                                           (:tag-background style/colors))})}
-                  :make-config-link-props
-                  (fn [config]
-                    {:onClick #(swap! state assoc :preview-config config)})})
-          :right (if preview-config
-                   [Preview {:preview-config preview-config}]
-                   [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
-                    (style/center {:style {:textAlign "center"}} "Select a Configuration to Preview")])
-          :initial-slider-position 800
-          :slider-padding "0.5rem"}]]))
+        [:div {:style {:maxHeight 580}}
+         [SplitPane
+          {:left (method-common/render-config-table
+                  {:configs configs
+                   :style {:body-row (fn [{:keys [row]}]
+                                       {:borderTop style/standard-line :alignItems "baseline"
+                                        :background-color (when (= (config->id+snapshot preview-config) (config->id+snapshot row))
+                                                            (:tag-background style/colors))})}
+                   :make-config-link-props
+                   (fn [config]
+                     {:onClick #(swap! state assoc :preview-config config)})})
+           :right (if preview-config
+                    [Preview {:preview-config preview-config}]
+                    [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
+                     (style/center {:style {:textAlign "center"}} "Select a Configuration to Preview")])
+           :initial-slider-position 625
+           :slider-padding "0.5rem"}]]]))
    :-render-config-selector-buttons
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [preview-config]} @state]
        (flex/box
-        {}
+        {:style {:margin "-1rem" :padding "1rem" :paddingBottom (if (:workspace-id props) 0 "1rem")
+                 :backgroundColor (:background-light style/colors)}}
         flex/spring
         [buttons/Button {:type :secondary :text "Use Blank Configuration"
                          :onClick #(swap! state assoc :selected-config :blank)}]
@@ -153,11 +155,11 @@
      (flex/box
       {:style {:alignItems "center"}}
       (links/create-internal
-        {:onClick #(swap! state dissoc :selected-config)}
-        (flex/box
-         {:style {:alignItems "center"}}
-         (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-         "Choose Another Configuration"))
+       {:onClick #(swap! state dissoc :selected-config)}
+       (flex/box
+        {:style {:alignItems "center"}}
+        (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+        "Choose Another Configuration"))
       flex/spring
       [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
                        :onClick #(this :-export)}]))

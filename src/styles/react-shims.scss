@@ -17,3 +17,8 @@ body.modal-open {
 .underline-on-hover:hover {
   text-decoration: underline !important;
 }
+
+// for any-resize-event...
+iframe {
+  box-sizing: border-box;
+}
