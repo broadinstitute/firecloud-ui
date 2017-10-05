@@ -189,7 +189,7 @@
                       (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
-     (swap! state assoc :banner "Exporting...")
+     (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
      (let [workspace-id (or (:workspace-id props) (:selected-workspace-id @locals))]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config workspace-id)

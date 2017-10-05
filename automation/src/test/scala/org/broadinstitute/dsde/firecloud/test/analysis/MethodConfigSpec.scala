@@ -128,33 +128,31 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   }
 
-  "import a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
-    withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>
-      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-
-      signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethodConfig.configNamespace,
-        MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, methodConfigName)
-      //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
-
-      assert(methodConfigDetailsPage.isLoaded)
-    }
-  }
-
-  "import a method into a workspace from the method repo" in withWebDriver { implicit driver =>
-    withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
-      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-
-      signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethod.methodNamespace,
-        MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId, methodName, Some(MethodData.SimpleMethod.rootEntityType))
-      methodConfigDetailsPage.editMethodConfig(inputs = Some(MethodData.SimpleMethodConfig.inputs))
-
-      assert(methodConfigDetailsPage.isLoaded)
-    }
-  }
+  // TODO: rewrite import tests with new method repo workflow
+//  "import a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
+//    withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>
+//      signIn(uiUser)
+//      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+//      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethodConfig.configNamespace,
+//        MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, methodConfigName)
+//
+//      assert(methodConfigDetailsPage.isLoaded)
+//    }
+//  }
+//
+//  "import a method into a workspace from the method repo" in withWebDriver { implicit driver =>
+//    withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
+//      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+//
+//      signIn(uiUser)
+//      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+//      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethod.methodNamespace,
+//        MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId, methodName, Some(MethodData.SimpleMethod.rootEntityType))
+//      methodConfigDetailsPage.editMethodConfig(inputs = Some(MethodData.SimpleMethodConfig.inputs))
+//
+//      assert(methodConfigDetailsPage.isLoaded)
+//    }
+//  }
 
   "launch a method config from the method repo" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_config_from_workspace") { workspaceName =>
