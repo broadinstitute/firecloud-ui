@@ -243,7 +243,7 @@
   (first (keep-indexed (fn [i x] (when (= item x) i)) coll)))
 
 (defn first-matching [pred coll]
-  (first (keep-indexed (fn [_ x] (when (pred x) x)) coll)))
+  (first (keep #(when (pred %) %) coll)))
 
 (defn first-matching-index [pred coll]
   (first (keep-indexed (fn [i x] (when (pred x) i)) coll)))
