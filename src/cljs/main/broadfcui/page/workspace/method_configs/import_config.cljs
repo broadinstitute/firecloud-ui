@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -190,7 +191,8 @@
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
-  [:div {}
+  (flex/box
+   {:style {:justifyContent "center"}}
    [buttons/Button {:data-test-id "import-from-repo-button"
                     :text "Import from Method Repository"
                     :onClick #(push-page {:breadcrumb-text "Method Repository"
@@ -199,7 +201,7 @@
    [buttons/Button {:data-test-id "copy-from-workspace-button"
                     :text "Copy from another Workspace"
                     :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                          :component [WorkspaceChooser props]})}]])
+                                          :component [WorkspaceChooser props]})}]))
 
 
 (defn- filter-workspaces [workspaces]
