@@ -36,7 +36,7 @@
                                       :text-selection (common/disable-text-selection)))}
           [:div {:style {:display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
            (icons/icon {:className (when left "fa-rotate-90")
-                        :style {:padding (:slider-padding props)
+                        :style {:padding (if top (str slider-padding " 0") (str "0 " slider-padding))
                                 :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
