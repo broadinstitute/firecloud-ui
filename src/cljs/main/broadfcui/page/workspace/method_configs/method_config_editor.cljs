@@ -219,16 +219,19 @@
         (create-section-header "Root Entity Type")
         (create-section
          (if editing?
-           (style/create-identity-select {:ref "rootentitytype"
-                                          :data-test-id "edit-method-config-root-entity-type-select"
-                                          :defaultValue rootEntityType
-                                          :style {:maxWidth 500}
-                                          :onChange #(swap! state assoc :autocomplete-list
-                                                            (build-autocomplete-list
-                                                             {:workspace-attributes workspace-attributes
-                                                              :entity-types entity-types
-                                                              :selected-entity-type (.. % -target -value)}))}
-                                         common/root-entity-types)
+           (if (seq entity-types)
+             (style/create-identity-select {:ref "rootentitytype"
+                                            :data-test-id "edit-method-config-root-entity-type-select"
+                                            :defaultValue rootEntityType
+                                            :style {:maxWidth 500}
+                                            :onChange #(swap! state assoc :autocomplete-list
+                                                              (build-autocomplete-list
+                                                               {:workspace-attributes workspace-attributes
+                                                                :entity-types entity-types
+                                                                :selected-entity-type (.. % -target -value)}))}
+                                           (mapv #(name (first %)) entity-types))
+             [:select {:style (assoc style/select-style :width 500) :disabled true}
+              [:option {} "No entities in workspace. Import some in the Data tab."]])
            [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
@@ -273,8 +276,11 @@
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
-           config (-> @state :loaded-config :methodConfiguration)
-           [name root-entity-type] (common/get-text refs "confname" "rootentitytype")
+           config (get-in @state [:loaded-config :methodConfiguration])
+           name (common/get-text refs "confname")
+           root-entity-type (if (seq (:entity-types @state))
+                              (common/get-text refs "rootentitytype")
+                              (:rootEntityType config))
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch

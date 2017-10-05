@@ -5,7 +5,6 @@
   "dependencies": {
     "any-resize-event": "~1.0.0",
     "codemirror": "~5.29.0",
-    "corejs-typeahead": "~1.1.1",
     "font-awesome": "~4.7.0",
     "foundation-sites": "~6.3.1",
     "github-markdown-css": "~2.8.0",
