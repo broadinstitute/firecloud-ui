@@ -105,15 +105,17 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "launch workflow with input not defined" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_input_not_defined") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+      val method = MethodData.InputRequiredMethod
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method.snapshotId,
+        method.methodNamespace, method.methodName, method.snapshotId,
+        method.methodNamespace, methodConfigName,
+        Map.empty, Map.empty, method.rootEntityType)
 
       signIn(uiUser)
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName)
-      workspaceMethodConfigPage.open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.InputRequiredMethod.methodNamespace,
-        MethodData.InputRequiredMethod.methodName, MethodData.InputRequiredMethod.snapshotId, methodConfigName, Some(MethodData.InputRequiredMethod.rootEntityType))
+      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
 
       val launchModal = methodConfigDetailsPage.openlaunchModal()
-      launchModal.filterRootEntityType(MethodData.InputRequiredMethod.rootEntityType)
+      launchModal.filterRootEntityType(method.rootEntityType)
       launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
       launchModal.clickLaunchButton()
       assert(launchModal.verifyMissingInputsError(missingInputsErrorText))
