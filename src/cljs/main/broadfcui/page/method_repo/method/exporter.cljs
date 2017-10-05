@@ -84,7 +84,7 @@
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
                      (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
-                       (swap! state assoc :configs configs :preview-config (first (filter (fn [c] (= (:preview-config-id @state) (config->id+snapshot c))) configs))))
+                       (swap! state assoc :configs configs :preview-config (first (filter #(= (:preview-config-id @state) (config->id+snapshot %)) configs))))
                      (swap! state assoc :configs-error (:message parsed-response)))))}))
    :-render-config-selector
    (fn [{:keys [state]}]
