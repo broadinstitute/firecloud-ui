@@ -1,10 +1,10 @@
 (ns broadfcui.page.workspace.method-configs.tab
   (:require
    [dmohs.react :as react]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
@@ -14,7 +14,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
-   [broadfcui.common :as common]))
+   ))
 
 (defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
@@ -32,42 +32,44 @@
      (react/call :load this))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [server-response methods]} @state
+     (let [{:keys [server-response methods importing?]} @state
            {:keys [configs error-message]} server-response
            locked? (get-in props [:workspace :workspace :isLocked])]
-       (cond
-         error-message (style/create-server-error-message error-message)
-         (and configs methods)
-         (ws-common/method-config-selector
-          {:configs (map #(add-redacted-attribute % methods) configs)
-           :render-name (fn [config]
-                          (links/create-internal
-                           {:data-test-id (str "method-config-" (:name config) "-link")
-                            :href (nav/get-link :workspace-method-config
-                                                (:workspace-id props)
-                                                (ws-common/config->id config))}
-                           (:name config)))
-           :toolbar-items
-           [flex/spring
-            [buttons/Button
-             {:data-test-id "import-config-button"
-              :text "Import Configuration..."
-              :disabled? (cond
-                           (nil? locked?) "Looking up workspace status..."
-                           locked? "This workspace is locked."
-                           (not (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER"))
-                           "You do not have access to Import Configurations.")
+       [:div {}
+        (when importing?
+          [import-config/ConfigImporter
+           {:workspace-id (:workspace-id props)
+            :data-test-id "import-method-configuration-modal"
+            :dismiss #(swap! state dissoc :importing?)
+            :after-import (fn [{:keys [config-id]}]
+                            (mc-sync/flag-synchronization)
+                            ((:on-config-imported props) config-id))}])
+        (cond
+          error-message (style/create-server-error-message error-message)
+          (and configs methods)
+          (ws-common/method-config-selector
+           {:configs (map #(add-redacted-attribute % methods) configs)
+            :render-name (fn [config]
+                           (links/create-internal
+                             {:data-test-id (str "method-config-" (:name config) "-link")
+                              :href (nav/get-link :workspace-method-config
+                                                  (:workspace-id props)
+                                                  (ws-common/config->id config))}
+                             (:name config)))
+            :toolbar-items
+            [flex/spring
+             [buttons/Button
+              {:data-test-id "import-config-button"
+               :text "Import Configuration..."
+               :disabled? (cond
+                            (nil? locked?) "Looking up workspace status..."
+                            locked? "This workspace is locked."
+                            (not (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER"))
+                            "You do not have access to Import Configurations.")
 
-              :onClick #(modal/push-modal
-                         [import-config/ConfigImporter
-                          {:workspace-id (:workspace-id props)
-                           :data-test-id "import-method-configuration-modal"
-                           :after-import (fn [{:keys [config-id]}]
-                                           (modal/pop-modal)
-                                           (mc-sync/flag-synchronization)
-                                           ((:on-config-imported props) config-id))}])}]]})
-         :else [:div {:style {:textAlign "center"}}
-                [comps/Spinner {:text "Loading configurations..."}]])))
+               :onClick #(swap! state assoc :importing? true)}]]})
+          :else [:div {:style {:textAlign "center"}}
+                 [comps/Spinner {:text "Loading configurations..."}]])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))

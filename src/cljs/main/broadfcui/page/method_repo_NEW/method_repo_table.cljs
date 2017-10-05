@@ -12,6 +12,7 @@
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.method.details :refer [MethodDetails]]
    [broadfcui.utils :as utils]
    ))
 
@@ -20,7 +21,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [methods error editing-namespace]} @state
-           {:keys [allow-modals? make-method-clicked-props]} props]
+           {:keys [workspace-id nav-method]} props]
        [:div {}
         (when (:creating? @state)
           [CreateMethodDialog
@@ -63,29 +64,35 @@
                                :sort-by (comp string/lower-case second)
                                :render
                                (fn [[namespace name]]
-                                 (links/create-internal
-                                  (utils/deep-merge
-                                   {:data-test-id (str "method-link-" namespace "-" name)
-                                    :style {:display "block" :marginTop -4}}
-                                   (make-method-clicked-props (utils/restructure namespace name)))
-                                  [:span
-                                   {:className (when allow-modals? "underline-on-hover")
-                                    :style {:fontSize "80%" :color "black"}
-                                    :onClick (when allow-modals?
-                                               (fn [e]
-                                                 (.preventDefault e)
-                                                 (swap! state assoc :editing-namespace namespace)))}
-                                   namespace]
-                                  [:div {:style {:fontWeight 600}} name]))}
-                              {:header "Synopsis" :initial-width 700
+                                 (let [method-id (utils/restructure namespace name)]
+                                   (links/create-internal
+                                     (utils/deep-merge
+                                      {:data-test-id (str "method-link-" namespace "-" name)
+                                       :style {:display "block" :marginTop -4}}
+                                      (if workspace-id
+                                        {:onClick #(nav-method
+                                                    {:label (str namespace "/" name)
+                                                     :component MethodDetails
+                                                     :props (utils/restructure method-id nav-method workspace-id)})}
+                                        {:href (nav/get-link :method-loader method-id)}))
+                                     [:span
+                                      {:className (when-not workspace-id "underline-on-hover")
+                                       :style {:fontSize "80%" :color "black"}
+                                       :onClick (when-not workspace-id
+                                                  (fn [e]
+                                                    (.preventDefault e)
+                                                    (swap! state assoc :editing-namespace namespace)))}
+                                      namespace]
+                                     [:div {:style {:fontWeight 600}} name])))}
+                              {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}
-                              {:header "Owners" :initial-width 175
+                              {:header "Owners" :initial-width 225
                                :column-data :managers
                                :as-text (partial string/join ", ")}
                               {:header "Snapshots" :initial-width 94 :filterable? false
                                :column-data :numSnapshots}
-                              {:header "Configurations" :initial-width 117 :filterable? false
+                              {:header "Configurations" :initial-width :auto :filterable? false
                                :column-data :numConfigurations}]}
                       :toolbar {:filter-bar {:inner {:width 300}}
                                 :style {:alignItems "flex-start"
@@ -93,11 +100,12 @@
                                         :backgroundColor (:background-light style/colors)}
                                 :get-items
                                 (constantly
-                                 [[buttons/Button {:data-test-id "create-method-button"
-                                                   :style {:marginLeft "auto"}
-                                                   :text "Create New Method..."
-                                                   :icon :add-new
-                                                   :onClick #(swap! state assoc :creating? true)}]])}}])]))
+                                 (when-not workspace-id
+                                   [[buttons/Button {:data-test-id "create-method-button"
+                                                     :style {:marginLeft "auto"}
+                                                     :text "Create New Method..."
+                                                     :icon :add-new
+                                                     :onClick #(swap! state assoc :creating? true)}]]))}}])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))

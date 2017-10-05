@@ -115,10 +115,11 @@
                                                       (swap! locals update io-key assoc (keyword name)
                                                              (if (empty? value) "" value)))
                                          :theme {:input {:width "calc(100% - 16px)"}}}]
-                                       (if value
-                                         [:span {:style (when optional? table-style/table-cell-optional)} value]
-                                         (when optional?
-                                           [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))])}])
+                                       [:span {:style (when optional? table-style/table-cell-optional)}
+                                        (if (not (string/blank? value))
+                                          value
+                                          [:span {:style {:color (:text-lighter style/colors)}}
+                                           (if optional? "Optional" "Required")])])])}])
                               (when invalid-values
                                 [{:header "Message" :initial-width 400
                                   :as-text :error-message :sort-by :text
