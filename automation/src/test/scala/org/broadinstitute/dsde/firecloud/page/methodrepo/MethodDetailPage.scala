@@ -8,7 +8,7 @@ import org.scalatest.selenium.Page
 class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends AuthenticatedPage
   with Page with PageUtil[MethodDetailPage] {
 
-  override val url = s"${Config.FireCloud.baseUrl}#methods2/$namespace/$name"
+  override val url = s"${Config.FireCloud.baseUrl}#methods/$namespace/$name"
 
   override def awaitLoaded(): MethodDetailPage = {
     await enabled ui.redactButtonQuery

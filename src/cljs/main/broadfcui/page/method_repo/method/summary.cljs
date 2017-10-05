@@ -41,7 +41,7 @@
         (modals/show-modals
          state
          {:deleting?
-          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo2)}]
+          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo)}]
           :sharing?
           [mca/AgoraPermsEditor
            {:save-endpoint (endpoints/persist-agora-entity-acl false selected-snapshot)
