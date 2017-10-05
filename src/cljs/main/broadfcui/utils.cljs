@@ -242,6 +242,9 @@
 (defn index-of [coll item]
   (first (keep-indexed (fn [i x] (when (= item x) i)) coll)))
 
+(defn first-matching [pred coll]
+  (first (filter pred coll)))
+
 (defn first-matching-index [pred coll]
   (first (keep-indexed (fn [i x] (when (pred x) i)) coll)))
 
