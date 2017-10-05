@@ -105,13 +105,16 @@
                                      (if editing?
                                        [Autosuggest
                                         {:key name
-                                         :initial-value value
+                                         :default-value value
+                                         :caching? true
                                          :data data
-                                         :label name
-                                         :placeholder (if optional? "Optional" "Select or enter")
+                                         :shouldRenderSuggestions (constantly true)
+                                         :inputProps {:data-test-id (str name "-text-input")
+                                                      :placeholder (if optional? "Optional" "Select or enter")}
                                          :on-change (fn [value]
                                                       (swap! locals update io-key assoc (keyword name)
-                                                             (if (empty? value) "" value)))}]
+                                                             (if (empty? value) "" value)))
+                                         :theme {:input {:width "calc(100% - 16px)"}}}]
                                        [:span {:style (when optional? table-style/table-cell-optional)}
                                         (if (not (string/blank? value))
                                           value
