@@ -10,11 +10,12 @@ import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Ignore, Matchers}
 
 /**
   * Tests related to billing accounts.
   */
+@Ignore
 class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
   with Matchers with LazyLogging {
 
