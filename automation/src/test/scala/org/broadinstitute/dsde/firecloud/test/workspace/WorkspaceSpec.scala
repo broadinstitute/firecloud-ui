@@ -267,7 +267,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         }
       }
       "and does have canCompute permission" - {
-        "should be able to launch analysis" in withWebDriver { implicit driver =>
+        "should be able to launch analysis" ignore withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_writerAccess") { workspaceName =>
             withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
               api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
