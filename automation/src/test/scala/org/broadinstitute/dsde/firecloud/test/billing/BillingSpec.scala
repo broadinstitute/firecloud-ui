@@ -10,11 +10,12 @@ import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Ignore, Matchers}
 
 /**
   * Tests related to billing accounts.
   */
+@Ignore
 class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
   with Matchers with LazyLogging {
 
@@ -73,7 +74,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
           register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
           val detailPage = listPage.createWorkspace(billingProjectName, workspaceName).awaitLoaded()
 
-          detailPage.ui.readWorkspaceName shouldEqual workspaceName
+          detailPage.validateWorkspace shouldEqual true
         }
 
         "should be able to run a method in a new workspace in the billing project" in withWebDriver { implicit driver =>

@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
@@ -108,79 +109,61 @@
                            :rows 3
                            :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
 
-(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
-  [:div {:style {:marginBottom "0.75em"}}
-   [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
-                                        :style (colorize {:width "100%" :marginBottom "0px"})
-                                        :value value-nullsafe
-                                        :onChange update-property
-                                        :data-test-id  property} ;; Dataset attribute, looks like "library:datasetOwner"
-                     :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
-                              :wildcard "%QUERY"
-                              :cache false}
-                     :render-display #(aget % "label")
-                     :disabled disabled
-                     :render-suggestion (fn [result]
-                                          (-> (js/$ "<div>")
-                                              (.append (-> (js/$ "<div style='line-height: 1.5em;'>")
-                                                           (.text (aget result "label"))
-                                                           (.append (-> (js/$ "<small style='float: right;'>")
-                                                                        (.text (aget result "id")))))
-                                                       (-> (js/$ "<small style='font-style: italic;'> ")
-                                                           (.text (aget result "definition"))))))
-                     :on-select (fn [_ suggestion]
-                                  (let [[id label] (map (partial aget suggestion) ["id" "label"])
-                                        [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
-                                    (swap! state update :attributes assoc
-                                           property label
-                                           related-id-prop id
-                                           related-label-prop label)))
-                     :typeahead-events ["typeahead:select"]
-                     :on-clear #(apply swap! state update :attributes dissoc property
-                                       (library-utils/get-related-id+label-props library-schema property))}]
-   (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-     [:div {:style {:display (when (some clojure.string/blank? [related-id related-label]) "none")}}
-      [:span {:style {:fontWeight "bold"}} related-label]
-      [:span {:style {:fontSize "small" :float "right"}} related-id]
-      [:div {}
-       (when-not disabled
-         (links/create-internal {:onClick #(apply swap! state update :attributes dissoc property
-                                                  (library-utils/get-related-id+label-props library-schema property))}
-                                "Clear Selection"))]]
-     ;; TODO: why is this causing React to bomb when adding the node?
-     #_(when (not-any? clojure.string/blank? [related-id related-label])
+(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe set-property state property library-schema disabled]}]
+  (let [clear #(apply swap! state update :attributes dissoc property
+                      (library-utils/get-related-id+label-props library-schema property))]
+    [:div {:style {:marginBottom "0.75em"}}
+     [Autosuggest
+      {:value value-nullsafe
+       :inputProps {:placeholder (:inputHint prop)
+                    :data-test-id property
+                    :disabled disabled}
+       :url "/autocomplete/"
+       :service-prefix "/duos"
+       :get-value #(.-label %)
+       :renderSuggestion (fn [suggestion]
+                           (react/create-element
+                            [:div {}
+                             [:div {:style {:lineHeight "1.5em"}}
+                              (.-label suggestion)
+                              [:small {:style {:float "right"}} (.-id suggestion)]]
+                             [:small {:style {:fontStyle "italic"}}
+                              (.-definition suggestion)]
+                             [:div {:style {:clear "both"}}]]))
+       :highlightFirstSuggestion false
+       :onSuggestionSelected (fn [_ suggestion]
+                               (let [suggestion (utils/log (js->clj (.-suggestion suggestion) :keywordize-keys true))
+                                     {:keys [id label]} suggestion
+                                     [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
+                                 (swap! state update :attributes assoc
+                                        related-id-prop id
+                                        related-label-prop label)))
+       :on-change set-property
+       :on-submit #(when (empty? %) (clear))
+       :theme {:input (colorize {:width "100%" :marginBottom 0})
+               :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
+
+     (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
+       (when (not-any? clojure.string/blank? [related-id related-label])
          [:div {}
           [:span {:style {:fontWeight "bold"}} related-label]
           [:span {:style {:fontSize "small" :float "right"}} related-id]
           [:div {}
-           (links/create-internal {:onClick #(apply swap! state update :attributes dissoc property
-                                                    (library-utils/get-related-id+label-props library-schema property))}
-                                  "Clear Selection")]]))])
+           (when-not disabled
+             (links/create-internal {:onClick clear}
+                                    "Clear Selection"))]]))]))
 
-(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
+(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
-   [comps/AutocompleteFilter
-    {:ref "text-filter"
-     :width "100%"
-     :field-attributes {:placeholder inputHint
-                        :defaultValue value-nullsafe
-                        :style (colorize {})
-                        :data-test-id property ;; Dataset attribute, looks like "library:datasetOwner"
-                        :onChange update-property}
-     :disabled disabled
-     :typeahead-events ["typeahead:select" "typeahead:change"]
-     :on-filter set-property
-     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
-                      :cache false
-                      :prepare (fn [query settings]
-                                 (clj->js
-                                  (assoc (js->clj settings)
-                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                    :type "GET"
-                                    :url (str (aget settings "url") "?q=" query))))}
-     :typeaheadSuggestionTemplate (fn [result]
-                                    (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
-                                        (.text result)))}]])
+   [Autosuggest
+    {:value value-nullsafe
+     :inputProps {:placeholder inputHint
+                  :disabled disabled
+                  :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
+     :url (str "/library/populate/suggest/" (name property) "?q=")
+     :on-change set-property
+     :theme {:input (colorize {:width "100%" :marginBottom 0})
+             :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]])
 
 (defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled property]}]
   (style/create-text-field {:style (colorize {:width "100%"})

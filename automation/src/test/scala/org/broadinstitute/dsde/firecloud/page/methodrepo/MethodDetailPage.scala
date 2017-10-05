@@ -21,6 +21,8 @@ class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebD
     def redact(): Unit = {
       click on redactButtonQuery
       MessageModal().clickOk()
+      // redact takes us back to the table:
+      await notVisible redactButtonQuery
     }
   }
 

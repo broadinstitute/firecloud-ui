@@ -18,7 +18,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  implicit val authToken: AuthToken = AuthTokens.hermione
+  implicit lazy val authToken: AuthToken = AuthTokens.hermione
   val uiUser: Credentials = Config.Users.hermione
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
@@ -34,22 +34,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
       submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
       assert(submissionDetailsPage.verifyWorkflowSucceeded())
-    }
-  }
-
-  "launch modal with no default entities" in withWebDriver { implicit driver =>
-    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
-      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace,
-        MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
-
-      signIn(uiUser)
-      val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace, methodConfigName).open
-
-      methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
-      val launchModal = methodConfigDetailsPage.openlaunchModal()
-      assert(launchModal.verifyNoDefaultEntityMessage())
-      launchModal.closeModal()
     }
   }
 
@@ -78,6 +62,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "launch workflow with wrong root entity" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+      api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, MethodData.SimpleMethodConfig.configNamespace,
         MethodData.SimpleMethodConfig.configName, MethodData.SimpleMethodConfig.snapshotId, MethodData.SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -253,7 +238,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
-    "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
+    "launch analysis button should be disabled and show error if clicked" ignore withWebDriver { implicit driver =>
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
         withConfigForRedactedMethodInWorkspace("MethodConfigTabSpec_redacted_launch_analysis_error", billingProject, workspaceName, true) { configName =>
           signIn(uiUser)

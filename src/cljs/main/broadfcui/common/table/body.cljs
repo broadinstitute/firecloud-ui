@@ -54,13 +54,15 @@
 
 
 (defn- body [{:keys [rows joined-columns style on-row-click data-props]}]
-  [:div {:style (:body style)}
+  [:div {:data-test-id "table-body"
+         :style (:body style)}
    (map-indexed
     (fn [index row]
       [:div (merge (when (and (some? data-props)
                               (some? (:row data-props)))
                      ((:row data-props) row))
-                   {:style (merge {:display "flex" :minWidth "fit-content"}
+                   {:data-test-class "table-row"
+                    :style (merge {:display "flex" :minWidth "fit-content"}
                                   (:row style)
                                   (when-let [f (:body-row style)]
                                     (f (utils/restructure index row))))
@@ -70,7 +72,8 @@
               (when visible?
                 (let [column-value (column-data row)
                       rendered (render column-value)]
-                  [:div {:style (merge {:boxSizing "border-box"} (flex-params width) (:cell style) (:body-cell style))
+                  [:div {:data-test-class "table-cell"
+                         :style (merge {:boxSizing "border-box"} (flex-params width) (:cell style) (:body-cell style))
                          :title (cond as-text (as-text column-value)
                                       (string? rendered) rendered)}
                    rendered])))

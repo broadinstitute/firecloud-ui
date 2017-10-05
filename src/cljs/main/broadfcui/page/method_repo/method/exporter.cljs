@@ -56,7 +56,7 @@
 (react/defc MethodExporter
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:preview-config (some-> (:initial-config props) config->id+snapshot)})
+     {:preview-config-id (config->id+snapshot (:initial-config-id props))})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss]} props
@@ -79,12 +79,12 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-method-configs (:method-id props))
+      {:endpoint (endpoints/get-agora-compatible-configs (assoc (:method-id props) :snapshot-id (:selected-snapshot-id props)))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
                      (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
-                       (swap! state assoc :configs configs))
+                       (swap! state assoc :configs configs :preview-config (utils/first-matching #(= (:preview-config-id @state) (config->id+snapshot %)) configs)))
                      (swap! state assoc :configs-error (:message parsed-response)))))}))
    :-render-config-selector
    (fn [{:keys [state]}]
@@ -97,11 +97,11 @@
                  {:configs configs
                   :style {:body-row (fn [{:keys [row]}]
                                       {:borderTop style/standard-line :alignItems "baseline"
-                                       :background-color (when (= preview-config (config->id+snapshot row))
+                                       :background-color (when (= (config->id+snapshot preview-config) (config->id+snapshot row))
                                                            (:tag-background style/colors))})}
                   :make-config-link-props
                   (fn [config]
-                    {:onClick #(swap! state assoc :preview-config (config->id+snapshot config))})})
+                    {:onClick #(swap! state assoc :preview-config config)})})
           :right (if preview-config
                    [Preview {:preview-config preview-config}]
                    [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
@@ -125,20 +125,13 @@
      (let [{:keys [method-name]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
-        [:div {:style {:display "flex"}}
-         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
-          (style/create-form-label "Namespace")
-          [input/TextField {:ref "namespace-field"
-                            :style {:width "100%"}
-                            :predicates [(input/nonempty "Namespace")]}]]
-         [:div {:style {:flex "1 1 50%"}}
-          (style/create-form-label "Name")
-          [input/TextField {:ref "name-field"
-                            :style {:width "100%"}
-                            :defaultValue (if (= selected-config :blank)
-                                            method-name
-                                            (:name selected-config))
-                            :predicates [(input/nonempty "Name")]}]]]
+        (style/create-form-label "Name")
+        [input/TextField {:ref "name-field"
+                          :style {:width "100%"}
+                          :defaultValue (if (= selected-config :blank)
+                                          method-name
+                                          (:name selected-config))
+                          :predicates [(input/nonempty "Name")]}]
         (when (= selected-config :blank)
           (list
            (style/create-form-label "Root Entity Type")
@@ -165,10 +158,11 @@
       [buttons/Button {:text "Export to Workspace"
                        :onClick #(this :-export)}]))
    :-export
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [props state refs this]}]
      (swap! state assoc :validation-errors nil :banner "Resolving...")
-     (let [[namespace name & errors] (input/get-and-validate refs "namespace-field" "name-field")
-           new-id (utils/restructure namespace name)
+     (let [[name & errors] (input/get-and-validate refs "name-field")
+           new-id (assoc (select-keys (:method-id props) [:namespace])
+                    :name name)
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
              (= :blank selected-config) (this :-create-template new-id)
@@ -191,6 +185,7 @@
                       (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
+     (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner "Exporting...")
      (let [{:keys [selected-workspace-id]} @locals]
        (endpoints/call-ajax-orch

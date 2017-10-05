@@ -120,11 +120,15 @@
    (fn [{:keys [props this]}]
      (when-not (:config-id props)
        (this :refresh)))
+   :component-did-update
+   (fn [{:keys [props prev-props this]}]
+     (when (not= (:snapshot-id props) (:snapshot-id prev-props))
+       (this :refresh)))
    :refresh
    (fn [{:keys [props state]}]
      (swap! state dissoc :configs :configs-error)
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-method-configs (:method-id props))
+      {:endpoint (endpoints/get-agora-compatible-configs (conj (:method-id props) (select-keys props [:snapshot-id])))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?

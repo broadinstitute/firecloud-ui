@@ -63,7 +63,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               summaryPage.cloneWorkspaceWait()
 
               val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-              cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
+              cloneSummaryPage.validateWorkspace shouldEqual true
               cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
             }
           }
@@ -184,7 +184,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
                 val listPage = signIn(Config.Users.george)
-                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
 
                 val cloneWorkspaceName = workspaceName + "_clone"
                 val cloneModal = summaryPage.ui.clickCloneButton()
@@ -199,7 +199,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 summaryPage.cloneWorkspaceWait()
 
                 val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-                cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
+                cloneSummaryPage.validateWorkspace shouldEqual true
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
                 cloneSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
               }
