@@ -185,7 +185,7 @@
                       (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
-     (assert (not (nil? (:rootEntityType config))) "Trying to send a config ID where a config is required")
+     (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner "Exporting...")
      (let [{:keys [selected-workspace-id]} @locals]
        (endpoints/call-ajax-orch
