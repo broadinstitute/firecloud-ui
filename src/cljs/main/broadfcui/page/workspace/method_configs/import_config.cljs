@@ -225,7 +225,8 @@
        [:div {}
         [:div {:style {:marginBottom "1rem"}}
          (this :-build-breadcrumbs)]
-        (-> (:pages @state) last :component)]}])
+        (wrap
+         (-> (:pages @state) last :component))]}])
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :workspaces-status :not-requested))

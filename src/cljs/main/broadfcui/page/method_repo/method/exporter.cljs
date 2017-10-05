@@ -149,17 +149,17 @@
         (style/create-validation-error-message (:validation-errors @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
    :-render-export-page-buttons
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      (flex/box
       {:style {:alignItems "center"}}
       (links/create-internal
-       {:onClick #(swap! state dissoc :selected-config)}
-       (flex/box
-        {:style {:alignItems "center"}}
-        (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-        "Choose Another Configuration"))
+        {:onClick #(swap! state dissoc :selected-config)}
+        (flex/box
+         {:style {:alignItems "center"}}
+         (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+         "Choose Another Configuration"))
       flex/spring
-      [buttons/Button {:text "Export to Workspace"
+      [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
                        :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs this]}]

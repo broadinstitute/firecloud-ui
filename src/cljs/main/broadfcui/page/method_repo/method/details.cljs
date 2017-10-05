@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.tab-bar :as tab-bar]
@@ -76,12 +77,14 @@
         (tab-bar/create-bar (merge {:tabs [[SUMMARY :method-summary]
                                            [WDL :method-wdl]
                                            (when-not workspace-id [CONFIGS :method-configs])]
-                                    :on-click (when workspace-id #(nav-method {:replace? true
-                                                                            :label (str (:namespace method-id) "/" (:name method-id))
-                                                                            :component MethodDetails
-                                                                            :props (merge (utils/restructure method-id nav-method workspace-id)
-                                                                                          {:snapshot-id selected-snapshot-id
-                                                                                           :tab-name %})}))
+                                    :on-click (when workspace-id
+                                                #(nav-method
+                                                  {:replace? true
+                                                   :label (str (:namespace method-id) "/" (:name method-id))
+                                                   :component MethodDetails
+                                                   :props (merge (utils/restructure method-id nav-method workspace-id)
+                                                                 {:snapshot-id selected-snapshot-id
+                                                                  :tab-name %})}))
                                     :context-id (assoc method-id :snapshot-id selected-snapshot-id)
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
@@ -106,20 +109,23 @@
                  (merge {:ref SUMMARY}
                         (utils/restructure selected-snapshot workspace-id))]))))]
         (when workspace-id
-          [buttons/Button {:style {:marginLeft "auto"}
-                           :text "Export to Workspace..."
-                           :onClick #(nav-method {:label "Select Configuration"
-                                                  :component MethodExporter
-                                                  :props {:workspace-id workspace-id
-                                                          :method-name (:name (last method))
-                                                          :method-id method-id
-                                                          :selected-snapshot-id selected-snapshot-id
-                                                          :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
-                                                          :on-export
-                                                          (fn [workspace-id config-id]
-                                                            (nav/go-to-path :workspace-method-config
-                                                                            workspace-id
-                                                                            (ws-common/config->id config-id)))}})}])]))
+          (flex/box
+           {:style {:marginTop "-1.5rem"}}
+           flex/spring
+           [buttons/Button {:style {:marginLeft "auto"}
+                            :text "Select Configuration"
+                            :onClick #(nav-method {:label "Select Configuration"
+                                                   :component MethodExporter
+                                                   :props {:workspace-id workspace-id
+                                                           :method-name (:name (last method))
+                                                           :method-id method-id
+                                                           :selected-snapshot-id selected-snapshot-id
+                                                           :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
+                                                           :on-export
+                                                           (fn [workspace-id config-id]
+                                                             (nav/go-to-path :workspace-method-config
+                                                                             workspace-id
+                                                                             (ws-common/config->id config-id)))}})}]))]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))
