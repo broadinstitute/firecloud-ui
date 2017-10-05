@@ -27,7 +27,7 @@
          [:div {:style {:flex "0 0 10px"
                         :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
                         :backgroundColor (:background-light style/colors)
-                        :margin (str "0 " slider-padding)
+                        :margin (if top (str slider-padding " 0") (str "0 " slider-padding))
                         :cursor (if left "ew-resize" "ns-resize")}
                 :onMouseDown (fn [e]
                                (swap! state assoc
@@ -36,7 +36,7 @@
                                       :text-selection (common/disable-text-selection)))}
           [:div {:style {:display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
            (icons/icon {:className (when left "fa-rotate-90")
-                        :style {:padding (if top (str slider-padding " 0") (str "0 " slider-padding))
+                        :style {:padding slider-padding
                                 :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
