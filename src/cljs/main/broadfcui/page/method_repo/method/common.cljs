@@ -52,7 +52,8 @@
                       :sort-by #(replace % [:namespace :name :snapshotId])
                       :render (fn [{:keys [name namespace snapshotId] :as config}]
                                 (links/create-internal
-                                  (make-config-link-props config)
+                                  (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
+                                         (make-config-link-props config))
                                   (style/render-name-id (str namespace "/" name) snapshotId)))}
                      {:header "Method Snapshot" :initial-width 135 :filterable? false
                       :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}

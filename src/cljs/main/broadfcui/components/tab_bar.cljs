@@ -35,15 +35,17 @@
    [:div {:style {:fontSize "80%"}} label]
    [:span {:style {:fontWeight 500 :fontSize "125%"}} title]])
 
-(defn- make-tab [{:keys [label first? active? link-key context-id refresh-tab request-refresh]}]
+(defn- make-tab [{:keys [label first? active? link-key context-id refresh-tab request-refresh on-click]}]
   [Tab {:data-test-id (str label "-tab")
         :label label :first? first? :active? active?
-        :href (nav/get-link link-key context-id)
-        :on-refresh #(when active?
-                       (request-refresh)
-                       (refresh-tab label))}])
+        :on-refresh #(if active?
+                       (do (request-refresh)
+                           (refresh-tab label))
+                       (when on-click
+                         (on-click label)))
+        :href (when-not on-click (nav/get-link link-key context-id))}])
 
-(defn create-bar [{:keys [data-test-id tabs active-tab context-id refresh-tab request-refresh]}]
+(defn create-bar [{:keys [data-test-id tabs active-tab context-id refresh-tab request-refresh on-click]}]
   [:div {:style {:marginTop "1rem"
                  :display "flex" :backgroundColor (:background-light style/colors)
                  :borderTop style/standard-line :borderBottom style/standard-line
@@ -54,5 +56,5 @@
      (fn [index [label link-key]]
        (make-tab (merge {:first? (= index 0)
                          :active? (= label active-tab)}
-                        (utils/restructure label link-key context-id refresh-tab request-refresh))))
-     tabs)]])
+                        (utils/restructure label link-key context-id refresh-tab request-refresh on-click))))
+     (remove nil? tabs))]])

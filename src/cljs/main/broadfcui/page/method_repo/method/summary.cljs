@@ -23,9 +23,10 @@
    (fn [{:keys [locals]}]
      (swap! locals assoc :body-id (gensym "summary")))
    :render
-   (fn [{:keys [this]}]
+   (fn [{:keys [this props]}]
      [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-      (this :-render-sidebar)
+      (when-not (:workspace-id props)
+        (this :-render-sidebar))
       (this :-render-main)])
    :-render-sidebar
    (fn [{:keys [props state locals]}]
@@ -40,7 +41,7 @@
         (modals/show-modals
          state
          {:deleting?
-          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo2)}]
+          [Redactor {:entity selected-snapshot :config? false :on-delete #(nav/go-to-path :method-repo)}]
           :sharing?
           [mca/AgoraPermsEditor
            {:save-endpoint (endpoints/persist-agora-entity-acl false selected-snapshot)

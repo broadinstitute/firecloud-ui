@@ -158,12 +158,12 @@ trait Orchestration extends FireCloudClient with LazyLogging {
         Map("configurationNamespace" -> configurationNamespace, "configurationName" -> configurationName, "configurationSnapshotId" -> configurationSnapshotId, "destinationNamespace" -> destinationNamespace, "destinationName" -> destinationName))
     }
 
-    def createMethodConfigInWorkspace(ns: String, wsName: String, methodConfigVersion: Int,
+    def createMethodConfigInWorkspace(wsNs: String, wsName: String, methodConfigVersion: Int,
                                       methodNamespace: String, methodName: String, methodVersion: Int,
                                       destinationNamespace: String, destinationName: String, inputs: Map[String, String], outputs: Map[String, String],
                                       rootEntityType: String)(implicit token: AuthToken): String = {
-      logger.info(s"Creating method config: $ns/$wsName $methodConfigVersion method: $methodNamespace/$methodName destination: $destinationNamespace/$destinationName")
-      postRequest(apiUrl(s"api/workspaces/$ns/$wsName/methodconfigs"),
+      logger.info(s"Creating method config: $wsNs/$wsName $methodConfigVersion method: $methodNamespace/$methodName destination: $destinationNamespace/$destinationName")
+      postRequest(apiUrl(s"api/workspaces/$wsNs/$wsName/methodconfigs"),
         Map("deleted" -> false,
           "inputs" -> inputs,
           "methodConfigVersion" -> methodConfigVersion,

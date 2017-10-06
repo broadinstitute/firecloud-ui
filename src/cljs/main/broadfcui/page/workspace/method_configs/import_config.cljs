@@ -3,12 +3,13 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
@@ -95,7 +96,9 @@
              :headers utils/content-type=json
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (if success?
-                          ((:after-import props) {:config-id (ws-common/config->id updated-config)})
+                          (do
+                            ((:dismiss props))
+                            ((:after-import props) {:config-id (ws-common/config->id updated-config)}))
                           (swap! state assoc :import-error (get-parsed-response false))))})))))})
 
 
@@ -113,10 +116,10 @@
                 :render-name
                 (fn [config]
                   (links/create-internal
-                   {:onClick #(push-page {:breadcrumb-text (id->str config)
-                                          :component [ConfirmWorkspaceConfig
-                                                      (assoc props :config config)]})}
-                   (:name config)))})
+                    {:onClick #(push-page {:breadcrumb-text (id->str config)
+                                           :component [ConfirmWorkspaceConfig
+                                                       (assoc props :config config)]})}
+                    (:name config)))})
               :else [comps/Spinner {:text "Loading configurations..."}]))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -154,30 +157,19 @@
      ((:load-workspaces props)))})
 
 
-(defn- confirm-entity [props]
-  (wrap
-   (mci/import-form
-    (merge (select-keys props [:type :id :workspace-id :after-import])
-           {:allow-edit false}))))
-
-
-(defn- method-chooser [{:keys [push-page] :as props}]
-  [MethodRepoTable
-   {:render-name
-    (fn [{:keys [namespace name snapshotId entityType]}]
-      (let [id {:namespace namespace
-                :name name
-                :snapshot-id snapshotId}
-            type (if (= entityType "Configuration") :method-config :method)]
-        (links/create-internal
-         {:data-test-id (str name "_" snapshotId)
-          :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
-                                :component (confirm-entity (assoc props :type type :id id))})}
-         (style/render-name-id name snapshotId))))}])
+(defn- method-chooser [{:keys [push-page replace-page workspace-id]}]
+  (let [nav-method (fn [{:keys [replace? label component props]}]
+                     ((if replace? replace-page push-page)
+                      {:breadcrumb-text label
+                       :component [component props]}))]
+    [MethodRepoTable
+     {:nav-method nav-method
+      :workspace-id workspace-id}]))
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
-  [:div {}
+  (flex/box
+   {:style {:justifyContent "center"}}
    [buttons/Button {:data-test-id "import-from-repo-button"
                     :text "Import from Method Repository"
                     :onClick #(push-page {:breadcrumb-text "Method Repository"
@@ -186,7 +178,7 @@
    [buttons/Button {:data-test-id "copy-from-workspace-button"
                     :text "Copy from another Workspace"
                     :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                          :component [WorkspaceChooser props]})}]])
+                                          :component [WorkspaceChooser props]})}]))
 
 
 (defn- filter-workspaces [workspaces]
@@ -196,21 +188,24 @@
   {:get-initial-state
    (fn [{:keys [props state this]}]
      (let [push-page #(swap! state update :pages conj %)
+           replace-page #(swap! state update :pages utils/replace-top %)
            load-workspaces #(this :-load-workspaces)
            get-workspaces #(this :-get-workspaces)]
        {:pages [{:breadcrumb-text "Choose Source"
                  :component (source-chooser
-                             (merge props (utils/restructure push-page load-workspaces get-workspaces)))}]}))
+                             (merge props (utils/restructure push-page replace-page load-workspaces get-workspaces)))}]}))
    :render
-   (fn [{:keys [state this]}]
-     [comps/OKCancelForm
+   (fn [{:keys [props state this]}]
+     [modals/OKCancelForm
       {:header "Import Method Configuration"
        :show-cancel? false
+       :dismiss (:dismiss props)
        :content
        [:div {}
         [:div {:style {:marginBottom "1rem"}}
          (this :-build-breadcrumbs)]
-        (-> (:pages @state) last :component)]}])
+        (wrap
+         (-> (:pages @state) last :component))]}])
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :workspaces-status :not-requested))

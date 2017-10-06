@@ -8,7 +8,7 @@ import org.scalatest.selenium.Page
 
 class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage with Page with PageUtil[MethodRepoPage] {
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#methods2"
+  override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 
   override def awaitLoaded(): MethodRepoPage = {
     ui.MethodRepoTable.awaitReady()

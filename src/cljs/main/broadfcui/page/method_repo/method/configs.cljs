@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.buttons :as buttons]
@@ -13,7 +12,6 @@
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
    [broadfcui.page.method-repo.method.common :as method-common]
-   [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
