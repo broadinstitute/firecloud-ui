@@ -78,7 +78,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.signOut()
             val listPage2 = signIn(Config.Users.ron)
             val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
-            detailPage2.ui.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader
+            detailPage2.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader
           }
         }
 
@@ -93,7 +93,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             detailPage.signOut()
             val listPage2 = signIn(Config.Users.ron)
             val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
-            detailPage2.ui.hasShareButton shouldBe true
+            detailPage2.hasShareButton shouldBe true
           }
         }
 
@@ -146,14 +146,14 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-            detailPage.ui.beginEditing()
-            detailPage.ui.addWorkspaceAttribute("a", "X")
-            detailPage.ui.addWorkspaceAttribute("b", "Y")
-            detailPage.ui.addWorkspaceAttribute("c", "Z")
-            detailPage.ui.save()
+          detailPage.edit {
+          detailPage.addWorkspaceAttribute("a", "X")
+          detailPage.addWorkspaceAttribute("b", "Y")
+          detailPage.addWorkspaceAttribute("c", "Z")
+          }
 
             // TODO: ensure sort, for now it's default sorted by key, ascending
-            detailPage.ui.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
+            detailPage.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
           }
         }
 
@@ -166,11 +166,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.deleteWorkspaceAttribute("A-key")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.deleteWorkspaceAttribute("A-key")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
+              detailPage.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
             }
           }
 
@@ -181,11 +181,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.deleteWorkspaceAttribute("B-key")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.deleteWorkspaceAttribute("B-key")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
+              detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
             }
           }
 
@@ -196,11 +196,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.deleteWorkspaceAttribute("C-key")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.deleteWorkspaceAttribute("C-key")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
+              detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
             }
           }
 
@@ -211,31 +211,31 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.addWorkspaceAttribute("a", "W")
-              detailPage.ui.addWorkspaceAttribute("b", "X")
-              detailPage.ui.addWorkspaceAttribute("c", "Y")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.addWorkspaceAttribute("a", "W")
+            detailPage.addWorkspaceAttribute("b", "X")
+            detailPage.addWorkspaceAttribute("c", "Y")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
+              detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.addWorkspaceAttribute("d", "Z")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.addWorkspaceAttribute("d", "Z")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
+              detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.deleteWorkspaceAttribute("c")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.deleteWorkspaceAttribute("c")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
+              detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
 
-              detailPage.ui.beginEditing()
-              detailPage.ui.deleteWorkspaceAttribute("b")
-              detailPage.ui.save()
+            detailPage.edit {
+            detailPage.deleteWorkspaceAttribute("b")
+            }
 
-              detailPage.ui.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
+              detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
             }
           }
 

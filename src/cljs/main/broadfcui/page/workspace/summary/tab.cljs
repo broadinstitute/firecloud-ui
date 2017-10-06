@@ -179,39 +179,42 @@
                          :data-top-anchor (str label-id ":bottom")
                          :data-btm-anchor (str body-id ":bottom")}
           :contents
-          [:div {:style {:width 270}}
-           (when-not (and library-schema billing-projects (some? curator?))
-             (comps/render-blocker "Loading..."))
-           (when (and can-share? (not editing?))
-             [buttons/SidebarButton
-              {:data-test-id "share-workspace-button"
-               :style :light :margin :top :color :button-primary
-               :text "Share..." :icon :share
-               :onClick #(swap! state assoc :sharing? true)}])
-           (when-not editing?
-             [buttons/SidebarButton
-              {:data-test-id "catalog-button"
-               :style :light :color :button-primary :margin :top
-               :icon :catalog :text "Catalog Dataset..."
-               :onClick #(modal/push-modal
-                          [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
-                                                            owner? curator? writer? catalog-with-read? request-refresh)])}])
-           (when (and publishable? (not editing?))
-             (let [working-attributes (library-utils/get-initial-attributes workspace)
-                   questions (->> (range (count (:wizard library-schema)))
-                                  (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
-                                  (apply concat))
-                   required-attributes (library-utils/find-required-attributes library-schema)]
-               (if (:library:published library-attributes)
-                 [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
-                 [publish/PublishButton
-                  (merge (utils/restructure workspace-id request-refresh)
-                         {:disabled? (cond (empty? library-attributes)
-                                           "Dataset attributes must be created before publishing."
-                                           (seq (library-utils/validate-required
-                                                 (library-utils/remove-empty-values working-attributes)
-                                                 questions required-attributes))
-                                           "All required dataset attributes must be set before publishing.")})])))
+          (let [ready? (and library-schema billing-projects (some? curator?))]
+            [:div {:data-test-id "sidebar"
+                   :data-test-state (if ready? "ready" "loading")
+                   :style {:width 270}}
+             (when-not ready?
+               (comps/render-blocker "Loading..."))
+             (when (and can-share? (not editing?))
+               [buttons/SidebarButton
+                {:data-test-id "share-workspace-button"
+                 :style :light :margin :top :color :button-primary
+                 :text "Share..." :icon :share
+                 :onClick #(swap! state assoc :sharing? true)}])
+             (when (not editing?)
+               [buttons/SidebarButton
+                {:data-test-id "catalog-button"
+                 :style :light :color :button-primary :margin :top
+                 :icon :catalog :text "Catalog Dataset..."
+                 :onClick #(modal/push-modal
+                            [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
+                                                              owner? curator? writer? catalog-with-read? request-refresh)])}])
+             (when (and publishable? (not editing?))
+               (let [working-attributes (library-utils/get-initial-attributes workspace)
+                     questions (->> (range (count (:wizard library-schema)))
+                                    (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                                    (apply concat))
+                     required-attributes (library-utils/find-required-attributes library-schema)]
+                 (if (:library:published library-attributes)
+                   [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
+                   [publish/PublishButton
+                    (merge (utils/restructure workspace-id request-refresh)
+                           {:disabled? (cond (empty? library-attributes)
+                                             "Dataset attributes must be created before publishing."
+                                             (seq (library-utils/validate-required
+                                                   (library-utils/remove-empty-values working-attributes)
+                                                   questions required-attributes))
+                                             "All required dataset attributes must be set before publishing.")})])))
 
            (when (or owner? writer?)
              (if-not editing?

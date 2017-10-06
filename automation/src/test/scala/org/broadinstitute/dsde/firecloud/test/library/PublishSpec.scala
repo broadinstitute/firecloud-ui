@@ -27,8 +27,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
             withSignIn(Config.Users.curator) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.clickPublishButton()
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.clickPublishButton()
               val messageModal = MessageModal()
               messageModal.validateLocation shouldBe true
             }
@@ -40,8 +40,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
             withSignIn(Config.Users.curator) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.hasPublishButton shouldBe true
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.hasPublishButton shouldBe true
             }
           }
         }
@@ -100,8 +100,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(ronAuthToken)
             withSignIn(Config.Users.ron) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.hasPublishButton shouldBe false
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.hasPublishButton shouldBe false
             }
           }(ronAuthToken)
         }

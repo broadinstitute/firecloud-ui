@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.component.{Button, Collapse, Table}
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
@@ -23,10 +23,37 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   override def awaitReady(): Unit = {
     await condition {
       enabled(testId("workspace-details-error")) ||
-      (enabled(testId("submission-status")) && getState == "ready")
+      (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
     }
-    await spinner "Loading..."
   }
+
+  private val authDomainGroups = Label("auth-domain-groups")
+  private val workspaceError = Label("workspace-details-error")
+  private val accessLevel = Label("workspace-access-level")
+
+  private val sidebar = new Component("sidebar") with Stateful {
+    override def awaitReady(): Unit = getState == "ready"
+
+    val editButton = Button("edit-button")
+    val saveButton = Button("save-button")
+    val cancelButton = Button("cancel-editing-button")
+
+    val cloneButton = Button("open-clone-workspace-modal-button")
+    val deleteWorkspaceButton = Button("delete-workspace-button")
+    val publishButton = Button("publish-button")
+    val unpublishButton = Button("unpublish-button")
+    val shareWorkspaceButton = Button("share-workspace-button")
+  }
+
+  private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
+    override def awaitReady(): Unit = table.awaitReady()
+
+    val newButton = Button("add-new-button")
+    val table = Table("workspace-attributes")
+
+    def clickNewButton(): Unit = newButton.doClick()
+  })
+  import scala.language.reflectiveCalls
 
   /**
     * Dictionary of access level labels displayed in the web UI.
@@ -39,6 +66,14 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val Writer = Value("WRITER")
   }
 
+  def readError(): String = {
+    workspaceError.getText
+  }
+
+  def readAccessLevel(): WorkspaceAccessLevel = {
+    WorkspaceAccessLevel.withName(accessLevel.getText.toUpperCase)
+  }
+
   /**
     * Clones the workspace currently being viewed. Returns when the clone
     * operation is complete.
@@ -49,12 +84,13 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    val cloneModal = ui.clickCloneButton()
+    sidebar.cloneButton.doClick()
+    val cloneModal = await ready new CloneWorkspaceModal
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
   }
 
   def unpublishWorkspace(): Unit = {
-    ui.clickUnpublishButton()
+    sidebar.unpublishButton.doClick()
     val msgModal = await ready new MessageModal
     msgModal.clickOk()
   }
@@ -64,7 +100,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * to the resulting view after successful deletion.
     */
   def deleteWorkspace(): WorkspaceListPage = {
-    val workspaceDeleteModal = ui.clickDeleteWorkspaceButton()
+    sidebar.deleteWorkspaceButton.doClick()
+    val workspaceDeleteModal = await ready new DeleteWorkspaceModal
     workspaceDeleteModal.confirmDelete()
     await ready new WorkspaceListPage
   }
@@ -79,155 +116,83 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     */
 
   def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false): WorkspaceSummaryPage = {
-    await notVisible spinner
-    val aclEditor = ui.clickShareWorkspaceButton()
+    sidebar.shareWorkspaceButton.doClick()
+    val aclEditor = await ready new AclEditor
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 
   def openShareDialog(email: String, accessLevel: String): AclEditor = {
-    await notVisible spinner
-    val aclEditor = ui.clickShareWorkspaceButton()
+    sidebar.shareWorkspaceButton.doClick()
+    val aclEditor = await ready new AclEditor
     aclEditor.fillEmailAndAccess(email, WorkspaceAccessLevel.withName(accessLevel))
     aclEditor
   }
 
-  trait UI {
-    private val authDomainGroups = testId("auth-domain-groups")
-    private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
+  def clickPublishButton(): Unit = {
+    sidebar.publishButton.doClick()
+  }
 
-    private val editButton = Button("edit-button")
-    private val saveButton = Button("save-button")
-    private val cancelButton = Button("cancel-editing-button")
+  def hasPublishButton: Boolean = {
+    sidebar.publishButton.isVisible
+  }
 
-    private val cloneButton = Button("open-clone-workspace-modal-button")
-    private val deleteWorkspaceButton = Button("delete-workspace-button")
-    private val publishButton = Button("publish-button")
-    private val unpublishButton = Button("unpublish-button")
-    private val shareWorkspaceButton = Button("share-workspace-button")
+  def hasShareButton: Boolean = {
+    sidebar.shareWorkspaceButton.isVisible
+  }
 
-    private val workspaceError = testId("workspace-details-error")
-    private val accessLevel = testId("workspace-access-level")
+  def readAuthDomainGroups: String = {
+    authDomainGroups.getText
+  }
 
-    private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
-      override def awaitReady(): Unit = table.awaitReady()
+  def clickCloneButton(): CloneWorkspaceModal = {
+    sidebar.cloneButton.doClick()
+    await ready new CloneWorkspaceModal
+  }
 
-      val newButton: Query = testId("add-new-button")
-      val table = Table("workspace-attributes")
+  private def isEditing: Boolean = {
+    !sidebar.editButton.isVisible
+  }
 
-      def clickNewButton(): Unit = click on newButton
-    })
-    import scala.language.reflectiveCalls
-
-    def clickCloneButton(): CloneWorkspaceModal = {
-      cloneButton.doClick()
-      await ready new CloneWorkspaceModal
-    }
-
-    def clickDeleteWorkspaceButton(): DeleteWorkspaceModal = {
-      deleteWorkspaceButton.doClick()
-      await ready new DeleteWorkspaceModal
-    }
-
-    def clickPublishButton(): Unit = {
-      publishButton.doClick()
-    }
-
-    def clickUnpublishButton(): Unit = {
-      unpublishButton.doClick()
-    }
-
-    def clickShareWorkspaceButton(): AclEditor = {
-      shareWorkspaceButton.doClick()
-      await ready new AclEditor
-    }
-
-    def hasShareButton: Boolean = {
-      shareWorkspaceButton.isVisible
-    }
-
-    def hasPublishButton: Boolean = {
-      publishButton.isVisible
-    }
-
-    def hasUnpublishButton: Boolean = {
-      unpublishButton.isVisible
-    }
-
-    def hasWorkspaceNotFoundMessage: Boolean = {
-      find(withText(s"$namespace/$name does not exist")).isDefined
-    }
-
-    def readAuthDomainGroups: String = {
-      readText(authDomainGroups)
-    }
-
-    def readAuthDomainRestrictionMessage: String = {
-      readText(authDomainRestrictionMessage)
-    }
-
-    def readError(): String = {
-      readText(workspaceError)
-    }
-
-    def readAccessLevel(): WorkspaceAccessLevel = {
-      WorkspaceAccessLevel.withName(readText(accessLevel).toUpperCase)
-    }
-
-    def isEditing: Boolean = {
-      !editButton.isVisible
-    }
-
-    def beginEditing(): Unit = {
-      if (!isEditing)
-        editButton.doClick()
-      else
-        throw new IllegalStateException("Already editing")
-    }
-
-    def save(): Unit = {
-      if (isEditing) {
-        saveButton.doClick()
-        awaitReady()
-      }
-      else
-        throw new IllegalStateException("Tried to click on 'save' while not editing")
-    }
-
-    def cancelEdit(): Unit = {
-      if (isEditing) {
-        cancelButton.doClick()
-        awaitReady()
-      }
-      else
-        throw new IllegalStateException("Tried to click on 'cancel' while not editing")
-    }
-
-    def addWorkspaceAttribute(key: String, value: String): Unit = {
-      if (isEditing) {
-        workspaceAttributesArea.getInner.clickNewButton()
-        // focus should take us to the field
-        pressKeys(key)
-        pressKeys("\t")
-        pressKeys(value)
-      } else {
-        throw new IllegalArgumentException("Tried to add workspace attribute while not editing")
-      }
-    }
-
-    def deleteWorkspaceAttribute(key: String): Unit = {
-      if (isEditing) {
-        // TODO: should do through table
-        workspaceAttributesArea.ensureExpanded()
-        click on testId(s"$key-delete")
-      } else {
-        throw new IllegalArgumentException("Tried to delete a row while not editing")
-      }
-    }
-
-    def readWorkspaceTable: List[List[String]] = {
-      workspaceAttributesArea.getInner.table.getData
+  def addWorkspaceAttribute(key: String, value: String): Unit = {
+    if (isEditing) {
+      workspaceAttributesArea.getInner.clickNewButton()
+      // focus should take us to the field
+      pressKeys(key)
+      pressKeys("\t")
+      pressKeys(value)
+    } else {
+      throw new IllegalArgumentException("Tried to add workspace attribute while not editing")
     }
   }
-  object ui extends UI
+
+  def deleteWorkspaceAttribute(key: String): Unit = {
+    if (isEditing) {
+      // TODO: should do through table
+      workspaceAttributesArea.ensureExpanded()
+      click on testId(s"$key-delete")
+    } else {
+      throw new IllegalArgumentException("Tried to delete a row while not editing")
+    }
+  }
+
+  def edit(action: => Unit): Unit = {
+    if (!isEditing)
+      sidebar.editButton.doClick()
+    else
+      throw new IllegalStateException("Already editing")
+
+    action
+
+    if (isEditing) {
+      sidebar.saveButton.doClick()
+      awaitReady()
+    }
+    else
+      throw new IllegalStateException("Tried to click on 'save' while not editing")
+  }
+
+  def readWorkspaceTable: List[List[String]] = {
+    workspaceAttributesArea.getInner.table.getData
+  }
 }
