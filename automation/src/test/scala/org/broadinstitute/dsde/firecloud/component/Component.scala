@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 
 abstract class Component(id: String, raw: Boolean = false)(implicit webDriver: WebDriver) extends FireCloudView {
   val element: CssSelectorQuery = if (raw) CssSelectorQuery(id) else testId(id)
@@ -15,4 +15,8 @@ abstract class Component(id: String, raw: Boolean = false)(implicit webDriver: W
   def isEnabled: Boolean = enabled(element)
 
   override def awaitReady(): Unit = awaitVisible()
+
+  def scrollToVisible(): Unit = {
+    webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(element).get.underlying)
+  }
 }

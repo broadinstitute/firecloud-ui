@@ -92,7 +92,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     aclEditor
   }
 
-  trait UI extends super.UI {
+  trait UI {
     private val authDomainGroups = testId("auth-domain-groups")
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
 

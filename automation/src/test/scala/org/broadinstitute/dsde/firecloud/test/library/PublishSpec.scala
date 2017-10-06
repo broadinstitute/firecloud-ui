@@ -57,7 +57,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             api.library.publishWorkspace(namespace, wsName)
             withSignIn(Config.Users.curator) { _ =>
               val page = new DataLibraryPage().open
-              page.ui.hasDataset(wsName) shouldBe true
+              page.hasDataset(wsName) shouldBe true
             }
           }
         }
@@ -78,7 +78,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
               retry[Boolean](100.milliseconds, 1.minute)({
                 val libraryPage = new DataLibraryPage().open
-                if (libraryPage.ui.hasDataset(wsName))
+                if (libraryPage.hasDataset(wsName))
                   None
                 else Some(false)
               }) match {

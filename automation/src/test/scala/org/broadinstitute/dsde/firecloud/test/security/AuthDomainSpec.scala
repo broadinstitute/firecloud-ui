@@ -78,7 +78,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withSignIn(Config.Users.draco) { workspaceListPage =>
-                  workspaceListPage.enterWorkspace(projectName, workspaceName)
+                  workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                   workspaceListPage.showsRequestAccessModal shouldEqual true
                   workspaceListPage.validateLocation()
                   // TODO: add assertions for the new "request access" modal
@@ -97,8 +97,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                 val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                go to workspaceSummaryPage
-
+                .open
                 workspaceSummaryPage.ui.readError() should include(projectName)
                 workspaceSummaryPage.ui.readError() should include(workspaceName)
                 workspaceSummaryPage.ui.readError() should include("does not exist")}
@@ -131,8 +130,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                 val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                go to workspaceSummaryPage
-
+                .open
                 workspaceSummaryPage.ui.readError() should include(projectName)
                 workspaceSummaryPage.ui.readError() should include(workspaceName)
                 workspaceSummaryPage.ui.readError() should include("does not exist")}
@@ -269,7 +267,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
@@ -290,8 +288,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-
+                  .open
                   workspaceSummaryPage.ui.readError() should include(projectName)
                   workspaceSummaryPage.ui.readError() should include(workspaceName)
                   workspaceSummaryPage.ui.readError() should include("does not exist")}
@@ -309,7 +306,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(Config.Users.draco) { workspaceListPage =>
-                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
@@ -324,7 +321,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   withSignIn(Config.Users.hermione) { workspaceListPage =>
-                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: finish this test somewhere we can access the sign out button
@@ -344,8 +341,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-
+                  .open
                   workspaceSummaryPage.ui.readError() should include(projectName)
                   workspaceSummaryPage.ui.readError() should include(workspaceName)
                   workspaceSummaryPage.ui.readError() should include("does not exist")}
@@ -358,7 +354,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                   withSignIn(Config.Users.hermione) { workspaceListPage =>
-                    workspaceListPage.enterWorkspace(projectName, workspaceName)
+                    workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                   }
@@ -443,8 +439,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-
+                  .open
                   workspaceSummaryPage.ui.readError() should include(projectName)
                   workspaceSummaryPage.ui.readError() should include(workspaceName)
                   workspaceSummaryPage.ui.readError() should include("does not exist")}
@@ -463,8 +458,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                   val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-
+                  .open
                   workspaceSummaryPage.ui.readError() should include(projectName)
                   workspaceSummaryPage.ui.readError() should include(workspaceName)
                   workspaceSummaryPage.ui.readError() should include("does not exist")}

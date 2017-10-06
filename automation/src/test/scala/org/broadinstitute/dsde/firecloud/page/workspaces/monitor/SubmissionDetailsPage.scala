@@ -7,15 +7,16 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
-  private val submissionId = getSubmissionId
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
+  // TODO: Launch Analysis sends us to this page without knowing the submission ID. Fix this.
+  override lazy val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
 
   override def awaitReady(): Unit = {
     // TODO: wait on the table, once we're testing that
-    submissionStatusLabel.awaitVisible()
+    submissionIdLabel.awaitVisible()
+    submissionId = submissionIdLabel.getText
   }
 
   private val submissionStatusLabel = Label("submission-status")

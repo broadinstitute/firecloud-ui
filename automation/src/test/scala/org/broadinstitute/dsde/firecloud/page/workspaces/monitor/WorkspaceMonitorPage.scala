@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
+import org.broadinstitute.dsde.firecloud.component.{Link, SearchField}
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
@@ -10,40 +11,22 @@ import org.scalatest.selenium.Page
 class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMonitorPage] {
 
-  override def awaitReady(): Unit = await visible ui.filterInput
+  override def awaitReady(): Unit = filterInput.awaitVisible()
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
 
-  /**
-    * Opens a submission
-    */
-  def openSubmission(submissionName: String): SubmissionDetailsPage = {
-    ui.openSubmission(submissionName)
-    new SubmissionDetailsPage(namespace, name)
-  }
+  // TODO: make this a Table
+  private val filterInput = SearchField("filter-input")
+
+  private def submissionLink(name: String) = Link(s"submission-$name")
 
   def filter(searchText: String): Unit = {
-    ui.filter(searchText)
+    filterInput.setText(searchText)
+    pressKeys("\n")
   }
 
-
-  trait UI extends super.UI {
-    // TODO: make this a Table
-    private[WorkspaceMonitorPage] val filterInput = testId("-input")
-
-    private val submissionLinkId = "submission-%s"
-
-    def filter(searchText: String) = {
-      await enabled filterInput
-      searchField(filterInput).value = searchText
-      pressKeys("\n")
-    }
-
-    def openSubmission(submissionName: String) = {
-      val linkId = submissionLinkId.format(submissionName)
-      val link = testId(linkId)
-      click on (await enabled link)
-    }
+  def openSubmission(submissionId: String): Unit = {
+    submissionLink(submissionId).doClick()
+    await ready new SubmissionDetailsPage(namespace, name, submissionId)
   }
-  object ui extends UI
 }

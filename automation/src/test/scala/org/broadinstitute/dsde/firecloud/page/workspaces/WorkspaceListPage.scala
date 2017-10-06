@@ -61,6 +61,11 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     restrictedWorkspaceLabel(namespace, name).isVisible
   }
 
+  def clickWorkspaceLink(namespace: String, name: String): Unit = {
+    filter(name)
+    workspaceLink(namespace, name).doClick()
+  }
+
   /**
     * Filter to and select a given workspace
     *
@@ -69,8 +74,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     * @return a WorkspaceDetailPage for the selected workspace
     */
   def enterWorkspace(namespace: String, name: String): WorkspaceSummaryPage = {
-    filter(name)
-    workspaceLink(namespace, name).doClick()
+    clickWorkspaceLink(namespace, name)
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 

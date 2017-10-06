@@ -1,12 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{ErrorModal, OKCancelModal, PageUtil}
-import org.openqa.selenium.{JavascriptExecutor, WebDriver}
+import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver)
@@ -19,71 +18,87 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
+  private val openLaunchAnalysisModalButton = Button("open-launch-analysis-modal-button")
+  private val openEditModeButton = Button("edit-method-config-button")
+  private val editMethodConfigNameInput = TextField("edit-method-config-name-input")
+  private val saveEditedMethodConfigButton = Button("save-edited-method-config-button")
+  private val editMethodConfigSnapshotIdSelect = Select("edit-method-config-snapshot-id-select")
+  private val editMethodConfigRootEntityTypeSelect = Select("edit-method-config-root-entity-type-select")
+  private val deleteMethodConfigButton = Button("delete-method-config-button")
+  private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
+  private val snapshotRedactedLabel = Label("snapshot-redacted-title")
+
+  def clickLaunchAnalysis(): Unit = openLaunchAnalysisModalButton.doClick()
+
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
-    val launchModal = ui.openLaunchAnalysisModal()
+    val launchModal = openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
     await ready new SubmissionDetailsPage(namespace, name)
   }
 
+  def openLaunchAnalysisModal(): LaunchAnalysisModal = {
+    openLaunchAnalysisModalButton.doClick()
+    await ready new LaunchAnalysisModal
+  }
+
+  def clickLaunchAnalysisButtonError(): ErrorModal = {
+    clickLaunchAnalysis()
+    await ready new ErrorModal
+  }
+
+  def openEditMode(): Unit = {
+    openEditModeButton.doClick()
+    saveEditedMethodConfigButton.awaitVisible()
+  }
+
+  def saveEdits(expectSuccess: Boolean = true): Unit = {
+    // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
+    saveEditedMethodConfigButton.scrollToVisible()
+    saveEditedMethodConfigButton.doClick()
+    if (expectSuccess)
+      openLaunchAnalysisModalButton.awaitVisible()
+  }
+
   def editMethodConfig(newName: Option[String] = None, newSnapshotId: Option[Int] = None, newRootEntityType: Option[String] = None,
                        inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None): Unit = {
-    ui.openEditMode()
+    openEditMode()
     await spinner "Loading attributes..."
 
-    if (newName.isDefined) { ui.changeMethodConfigName(newName.get) }
-    if (newSnapshotId.isDefined) { ui.changeSnapshotId(newSnapshotId.get) }
-    if (newRootEntityType.isDefined) { ui.changeRootEntityType(newRootEntityType.get)}
-    if (inputs.isDefined) { ui.changeInputsOutputs(inputs.get) }
-    if (outputs.isDefined) { ui.changeInputsOutputs(outputs.get)}
-    ui.clickSaveButton()
+    if (newName.isDefined) { editMethodConfigNameInput.setText(newName.get) }
+    if (newSnapshotId.isDefined) { editMethodConfigSnapshotIdSelect.select(newSnapshotId.get.toString) }
+    if (newRootEntityType.isDefined) { editMethodConfigRootEntityTypeSelect.select(newRootEntityType.get)}
+    if (inputs.isDefined) { changeInputsOutputs(inputs.get) }
+    if (outputs.isDefined) { changeInputsOutputs(outputs.get)}
 
+    saveEdits()
+  }
+
+  private def changeInputsOutputs(fields: Map[String, String]): Unit = {
+    for ((field, expression) <- fields) {
+      val fieldInputQuery: Query = xpath(s"//*[@data-test-id='$field-text-input']/..//input")
+      searchField(fieldInputQuery).value = expression
+    }
   }
 
   def openLaunchModal(): LaunchAnalysisModal = {
-    ui.openLaunchAnalysisModal()
+    openLaunchAnalysisModalButton.doClick()
+    await ready new LaunchAnalysisModal
   }
 
   def isLoaded: Boolean = {
-    ui.isLaunchAnalysisButtonPresent
+    openLaunchAnalysisModalButton.isVisible
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
-    ui.deleteMethodConfig()
-    new WorkspaceMethodConfigListPage(namespace, name)
+    deleteMethodConfigButton.doClick()
+    // TODO: make this a proper modal view
+    modalConfirmDeleteButton.awaitVisible()
+    modalConfirmDeleteButton.doClick()
+    await ready new WorkspaceMethodConfigListPage(namespace, name)
   }
 
-  trait UI extends super.UI {
-    private val methodConfigNameTextQuery: Query = testId("method-config-name")
-    private val openLaunchAnalysisModalButtonQuery: Query = testId("open-launch-analysis-modal-button")
-    private val openEditModeQuery: Query = testId("edit-method-config-button")
-    private val editMethodConfigNameInputQuery: Query = testId("edit-method-config-name-input")
-    private val saveEditedMethodConfigButtonQuery: Query = testId("save-edited-method-config-button")
-    private val cancelEditMethodConfigModeButtonQuery: Query = testId("cancel-edit-method-config-button")
-    private val editMethodConfigSnapshotIdSelectQuery: Query = testId("edit-method-config-snapshot-id-select")
-    private val editMethodConfigRootEntityTypeInputQuery: Query = testId("edit-method-config-root-entity-type-select")
-    private val deleteMethodConfigButtonQuery: Query = testId("delete-method-config-button")
-    private val modalConfirmDeleteButtonQuery: Query = testId("modal-confirm-delete-button")
-    private val snapshotRedactedTitleQuery: Query = testId("snapshot-redacted-title")
-    private val snapshotIdLabelQuery: Query = testId("method-label-Snapshot ID")
-
-    def openLaunchAnalysisModal(): LaunchAnalysisModal = {
-      await enabled methodConfigNameTextQuery
-      click on (await enabled openLaunchAnalysisModalButtonQuery)
-      await ready new LaunchAnalysisModal
-    }
-
-    def openEditMode(): Unit = {
-      click on (await enabled openEditModeQuery)
-    }
-
-    def changeMethodConfigName(newName: String): Unit = {
-      await enabled editMethodConfigNameInputQuery
-      textField(editMethodConfigNameInputQuery).value = newName
-    }
-
     def changeSnapshotId(newSnapshotId: Int): Unit = {
-      await enabled editMethodConfigSnapshotIdSelectQuery
-      singleSel(editMethodConfigSnapshotIdSelectQuery).value = newSnapshotId.toString
+      editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
     }
 
     def changeRootEntityType(newRootEntityType: String): Unit = {
@@ -132,19 +147,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
     }
 
-    def isSnapshotRedacted: Boolean = {
-      await enabled snapshotIdLabelQuery
-      find(snapshotRedactedTitleQuery).isDefined
-    }
-
-    def deleteMethodConfig(): Unit = {
-      click on (await enabled deleteMethodConfigButtonQuery)
-      click on (await enabled modalConfirmDeleteButtonQuery)
-    }
-
+  def isSnapshotRedacted: Boolean = {
+    snapshotRedactedLabel.isVisible
   }
-  object ui extends UI
-
 }
 
 

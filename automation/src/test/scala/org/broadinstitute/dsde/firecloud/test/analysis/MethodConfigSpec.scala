@@ -237,8 +237,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
 
-        workspaceMethodConfigPage.filter(methodConfigName)
-        find(methodConfigName) shouldBe empty
+        assert(!workspaceMethodConfigPage.hasConfig(methodConfigName))
       }
 
     }
@@ -318,9 +317,9 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             modal.validateLocation shouldBe true
             modal.clickCancel()
 
-            methodConfigDetailsPage.ui.deleteMethodConfig()
-            val list = new WorkspaceMethodConfigListPage(billingProject, workspaceName)
-            list.ui.hasConfig(configName) shouldBe false
+            methodConfigDetailsPage.deleteMethodConfig()
+            val list = await ready new WorkspaceMethodConfigListPage(billingProject, workspaceName)
+            list.hasConfig(configName) shouldBe false
           }
         }
       }
