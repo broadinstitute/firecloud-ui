@@ -84,11 +84,13 @@
                :onClick #(swap! state assoc :deleting? true)}])]}]]))
    :-render-main
    (fn [{:keys [props locals]}]
-     (let [{:keys [synopsis managers createDate documentation]} (:selected-snapshot props)
+     (let [{:keys [synopsis managers createDate documentation snapshotComment]} (:selected-snapshot props)
            {:keys [body-id]} @locals]
        [:div {:style {:flex "1 1 auto" :overflow "hidden" :paddingLeft icons/fw-icon-width}
               :id body-id}
-        (style/create-summary-block "Synopsis" synopsis)
+        [:div {:style {:display "flex"}}
+         (style/create-summary-block "Synopsis" synopsis)
+         (style/create-summary-block "Snapshot Comment" snapshotComment)]
         [:div {:style {:display "flex"}}
          (style/create-summary-block (str "Method Owner" (when (> (count managers) 1) "s"))
                                      (string/join ", " managers))

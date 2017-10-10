@@ -152,9 +152,9 @@
      (let [{:keys [editing? redacted?]} props
            {:keys [redacted-snapshot]} @state
            make-field
-           (fn [key label & {:keys [dropdown? wrap? render]}]
+           (fn [key label & {:keys [dropdown? wrap? render width]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:flex "0 0 100px" :fontWeight 500} } (str label ":")]
+              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (if width width "100px")) :fontWeight 500} } (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
@@ -170,7 +170,7 @@
                    [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
        [:div {}
         [:div {:style {:display "flex"}}
-         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
+         [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
           (when redacted?
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
              (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
@@ -179,10 +179,11 @@
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
          (when-not redacted?
-           [:div {:style {:flex "1 1 50%" :overflow "hidden"}}
-            (make-field :createDate "Created" :render common/format-date)
-            (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
-            (make-field :synopsis "Synopsis")])]
+           [:div {:style {:flex "1 1 60%" :overflow "hidden"}}
+            (make-field :createDate "Created" :render common/format-date :width "150px")
+            (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true :width "150px")
+            (make-field :synopsis "Synopsis" :width "150px")
+            (make-field :snapshotComment "Snapshot Comment" :wrap? true :width "150px")])]
         (when-not redacted?
           [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
            "Documentation:"
