@@ -3,13 +3,15 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.automation.config.AuthTokens
+import org.broadinstitute.dsde.automation.util.CleanUp
 import org.broadinstitute.dsde.firecloud.api.Rawls
-import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest.{FreeSpec, Ignore, Matchers}
 
 /**

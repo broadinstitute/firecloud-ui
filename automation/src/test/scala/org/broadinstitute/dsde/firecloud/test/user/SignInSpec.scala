@@ -1,7 +1,9 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.automation.config.{AuthToken, AuthTokens}
+import org.broadinstitute.dsde.automation.util.CleanUp
+import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
 
 class SignInSpec extends FreeSpec with WebBrowserSpec with CleanUp {

@@ -1,14 +1,16 @@
 package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.automation.api.RestClient
+import org.broadinstitute.dsde.automation.config.AuthToken
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
-import org.broadinstitute.dsde.firecloud.util.Retry.retry
+import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.automation.util.Retry.retry
 
 import scala.concurrent.duration._
 
 
-trait Orchestration extends FireCloudClient with LazyLogging {
+trait Orchestration extends RestClient with LazyLogging {
 
   def responseAsList(response: String): List[Map[String, Object]] = {
     mapper.readValue(response, classOf[List[Map[String, Object]]])

@@ -1,11 +1,13 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import org.broadinstitute.dsde.automation.config.AuthToken
+import org.broadinstitute.dsde.automation.util.CleanUp
 import org.broadinstitute.dsde.firecloud.page._
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.LibraryData
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}

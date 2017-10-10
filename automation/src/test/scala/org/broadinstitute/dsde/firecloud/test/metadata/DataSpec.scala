@@ -1,8 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config}
+import org.broadinstitute.dsde.automation.browser.WebBrowserUtil
+import org.broadinstitute.dsde.automation.config.AuthTokens
+import org.broadinstitute.dsde.automation.util.CleanUp
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
 

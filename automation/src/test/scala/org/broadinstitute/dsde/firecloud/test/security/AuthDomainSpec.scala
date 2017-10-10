@@ -1,12 +1,14 @@
 package org.broadinstitute.dsde.firecloud.test.security
 
+import org.broadinstitute.dsde.automation.config.{AuthToken, AuthTokens}
+import org.broadinstitute.dsde.automation.util.CleanUp
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.scalatest._
 
 /*

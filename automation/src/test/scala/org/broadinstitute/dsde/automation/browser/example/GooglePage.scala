@@ -1,3 +1,5 @@
+package org.broadinstitute.dsde.automation.browser.example
+
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

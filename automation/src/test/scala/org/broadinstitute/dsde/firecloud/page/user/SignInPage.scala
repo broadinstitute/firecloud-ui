@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
-import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
-import org.broadinstitute.dsde.firecloud.test.WebBrowserUtil
+import org.broadinstitute.dsde.automation.browser.{PageUtil, WebBrowserUtil}
+import org.broadinstitute.dsde.firecloud.page.FireCloudView
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.{Page, WebBrowser}
 
