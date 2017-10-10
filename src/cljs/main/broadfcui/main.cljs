@@ -218,7 +218,7 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                js/window "error" (fn [e] (show-js-exception e)))))}]
+                                js/window "error" show-js-exception)))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -253,8 +253,7 @@
      (aset js/window "testJsException"
            (fn [] (js/setTimeout #(throw (js/Error. "You told me to do this.")) 100) nil)))
    :component-will-receive-props
-   (fn []
-     (init-nav-paths))
+   init-nav-paths
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))

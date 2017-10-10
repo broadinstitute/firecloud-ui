@@ -121,15 +121,14 @@
        (let [[name & fails] (input/get-and-validate refs "name-field")]
          (swap! state assoc :validation-errors fails)
          (when-not (or fails (not account))
-           (do
-             (swap! state assoc :creating? true)
-             (endpoints/call-ajax-orch
-              {:endpoint endpoints/create-billing-project
-               :payload {:projectName name :billingAccount account}
-               :headers utils/content-type=json
-               :on-done (fn [{:keys [success? get-parsed-response]}]
-                          (swap! state dissoc :creating?)
-                          (if success?
-                            (do ((:on-success props))
-                                (modal/pop-modal))
-                            (swap! state assoc :server-error (get-parsed-response false))))}))))))})
+           (swap! state assoc :creating? true)
+           (endpoints/call-ajax-orch
+            {:endpoint endpoints/create-billing-project
+             :payload {:projectName name :billingAccount account}
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :creating?)
+                        (if success?
+                          (do ((:on-success props))
+                              (modal/pop-modal))
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))})

@@ -18,7 +18,7 @@
    :render
    (fn [{:keys [state]}]
      (let [{:keys [stack]} @state
-           stack (filter (complement nil?) (vals stack))]
+           stack (remove nil? (vals stack))]
        [:div {}
         (interpose [:div {:style {:height 1}}] stack)]))
    :component-did-mount

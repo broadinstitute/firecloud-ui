@@ -167,7 +167,7 @@
        [:div {:style style/thin-page-style}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [:div {:style {:fontSize "1.2em"}} (when project-name "Billing Project: ")
-          [:span {:style {:fontWeight 500}} (if project-name project-name "Billing Management")]]]
+          [:span {:style {:fontWeight 500}} (or project-name "Billing Management")]]]
         (if project-name
           [management-utils/MembershipManagementPage
            {:admin-term "Owner"

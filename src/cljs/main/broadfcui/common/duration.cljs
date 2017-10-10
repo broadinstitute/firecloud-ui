@@ -4,11 +4,11 @@
    ))
 
 (defn fuzzy-time [years months days hours minutes seconds]
-  (cond (> years 0) (utils/maybe-pluralize years "year")
-        (> months 0) (utils/maybe-pluralize months "month")
-        (> days 0) (utils/maybe-pluralize days "day")
-        (> hours 0) (utils/maybe-pluralize hours "hour")
-        (> minutes 0) (utils/maybe-pluralize minutes "minute")
+  (cond (pos? years) (utils/maybe-pluralize years "year")
+        (pos? months) (utils/maybe-pluralize months "month")
+        (pos? days) (utils/maybe-pluralize days "day")
+        (pos? hours) (utils/maybe-pluralize hours "hour")
+        (pos? minutes) (utils/maybe-pluralize minutes "minute")
         (> seconds 30) "less than a minute"
         :else "a few seconds"))
 
@@ -21,7 +21,7 @@
      (str (when (and suffix? (not in-past?)) "in ")
           (fuzzy-time (- (.getUTCFullYear duration-date) 1970)
                       (.getUTCMonth duration-date)
-                      (- (.getUTCDate duration-date) 1)
+                      (dec (.getUTCDate duration-date))
                       (.getUTCHours duration-date)
                       (.getUTCMinutes duration-date)
                       (.getUTCSeconds duration-date))
