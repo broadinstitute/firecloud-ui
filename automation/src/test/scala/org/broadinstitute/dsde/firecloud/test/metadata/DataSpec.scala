@@ -42,6 +42,20 @@ class DataSpec extends FlatSpec with WebBrowserSpec
     metadataFile
   }
 
+  def createAndImportMetadataFile(fileName: String, headers: List[String], dataTab: WorkspaceDataPage): Unit = {
+    val data = for {
+      h <- headers
+    }yield {
+      if (h == "participant_id") {
+        "participant1"
+      } else {
+        h.takeRight(1)
+      }
+    }
+    val file = makeTempMetadataFile(fileName, headers, List(data))
+    dataTab.importFile(file.getAbsolutePath)
+  }
+
   "Writer and reader should see new columns" - {
     "With no defaults or local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
       implicit val authToken: AuthToken = AuthTokens.harry
@@ -50,12 +64,10 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         signIn(Config.Users.harry)
         val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
         val headers1 = List("participant_id", "test1")
-        val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1")))
-        workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
+        createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
         val headers2 = headers1 :+ "test2"
-        val metaDataFile2 = makeTempMetadataFile("DataSpec_column_display2", headers2, List(List("participant1", "1", "2")))
-        workspaceDataTab.importFile(metaDataFile2.getAbsolutePath)
+        createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers2
         workspaceDataTab.signOut()
         signIn(Config.Users.ron)
@@ -71,8 +83,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         signIn(Config.Users.harry)
         val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2")
-        val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1", "2")))
-        workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
+        createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.hideColumn("test1")
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2")
         workspaceDataTab.signOut()
@@ -87,8 +98,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         signIn(Config.Users.harry)
         workspaceDataTab.open
         val headers2 = List("participant_id", "test1", "test2", "test3")
-        val metaDataFile2 = makeTempMetadataFile("DataSpec_column_display2", headers2, List(List("participant1", "1", "2", "3")))
-        workspaceDataTab.importFile(metaDataFile2.getAbsolutePath)
+        createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
         workspaceDataTab.signOut()
 
@@ -110,8 +120,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
           workspaceSummaryTab.ui.save
           val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
           val headers1 = List("participant_id", "test1", "test2", "test3")
-          val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1", "2", "3")))
-          workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
+          createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
           workspaceDataTab.signOut()
 
@@ -123,8 +132,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
           signIn(Config.Users.harry)
           workspaceDataTab.open
           val headers2 = headers1 :+ "test4"
-          val metaDataFile2 = makeTempMetadataFile("DataSpec_column_display", headers2, List(List("participant1", "1", "2", "3", "4")))
-          workspaceDataTab.importFile(metaDataFile2.getAbsolutePath)
+          createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
           workspaceDataTab.signOut()
 
@@ -144,30 +152,28 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\" \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
         workspaceSummaryTab.ui.save
         val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
-        val headers1 = List("participant_id", "test1", "test4", "test2", "test3")
-        val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1", "4", "2", "3")))
-        workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
+        val headers1 = List("participant_id", "test1", "test2", "test3", "test4")
+        createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.hideColumn("test1")
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test4")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4")
         workspaceDataTab.signOut()
 
         signIn(Config.Users.ron)
         workspaceDataTab.open
         workspaceDataTab.hideColumn("test4")
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3")
         workspaceDataTab.signOut()
 
         signIn(Config.Users.harry)
         workspaceDataTab.open
         val headers2 = headers1 :+ "test5"
-        val metaDataFile2 = makeTempMetadataFile("DataSpec_column_display1", headers2, List(List("participant1", "1", "4", "2", "3")))
-        workspaceDataTab.importFile(metaDataFile2.getAbsolutePath)
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
+        createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4", "test5")
         workspaceDataTab.signOut
 
         signIn(Config.Users.ron)
         workspaceDataTab.open
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test5")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3", "test5")
       }
 >>>>>>> adding tests
     }
