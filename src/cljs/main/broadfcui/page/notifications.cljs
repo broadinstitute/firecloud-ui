@@ -90,8 +90,7 @@
       [:h2 {} "Account Notifications"]
       (render-ajax-or-continue m #(this :-render-notifications))])
    :component-did-mount
-   (fn [m]
-     (start-ajax-calls m))
+   start-ajax-calls
    :-render-notifications
    (fn [{:keys [this state]}]
      (let [{:keys [overridden]} @state
@@ -155,8 +154,7 @@
        "Workspace Notifications"]
       (render-ajax-or-continue m #(this :-render-notifications))])
    :component-did-mount
-   (fn [m]
-     (start-ajax-calls m))
+   start-ajax-calls
    :-render-notifications
    (fn [{:keys [this state after-update]}]
      (let [{:keys [overridden pending]} @state
