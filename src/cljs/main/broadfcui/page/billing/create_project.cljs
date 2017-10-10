@@ -94,7 +94,7 @@
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button {:data-test-id "create-project-button"
-                   :onClick (when-not (empty? (:billing-accounts @state))
+                   :onClick (when (seq (:billing-accounts @state))
                               #(react/call :create-billing-project this))}}])
    :component-did-mount
    (fn [{:keys [this]}]
