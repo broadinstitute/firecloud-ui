@@ -77,7 +77,7 @@ docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     broadinstitute/dsde-toolbox:dev render-templates.sh
 
 if [ "$DOCKERHOST" != "" ]; then
-    HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e TEST_CHANNEL=${SLACK_CHANNEL_NOTIFY}"
+    HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
 fi
 
 TEST_ENTRYPOINT="testOnly -- -l ProdTest"
