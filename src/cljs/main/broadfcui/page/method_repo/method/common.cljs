@@ -78,7 +78,7 @@
 (defn render-config-details [{:keys [managers method payloadObject snapshotComment]}]
   [:div {}
    [:div {:style {:display "flex"}}
-    (style/create-summary-block (str "Config Owner" (when (> (count managers) 1) "s"))
+    (style/create-summary-block (str "Configuration Owner" (when (> (count managers) 1) "s"))
                                 (string/join ", " managers))
     (style/create-summary-block "Designed For" (str "Method Snapshot " (:snapshotId method)))]
    [:div {:style {:display "flex"}}
