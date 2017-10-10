@@ -6,6 +6,8 @@ import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
+import org.broadinstitute.dsde.firecloud.test.Tags
+
 
 /**
   * Tests for new user registration scenarios.
@@ -33,7 +35,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
   "FireCloud registration" - {
 
-    "should allow a person to register" in withWebDriver { implicit driver =>
+    "should allow a person to register" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
 
       signIn(email, password)
       val registrationPage = new RegistrationPage

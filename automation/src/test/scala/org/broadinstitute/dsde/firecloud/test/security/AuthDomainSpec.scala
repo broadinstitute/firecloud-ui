@@ -8,6 +8,9 @@ import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+import org.broadinstitute.dsde.firecloud.test.Tags
+import org.broadinstitute.dsde.firecloud.test.Tags.GooglePassing
+
 
 /*
  * This test SHOULD be able to run with ParallelTestExecution. However, Rawls
@@ -30,7 +33,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
-      "can be created" in withWebDriver { implicit driver =>
+      "can be created" taggedAs GooglePassing in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { authDomainName =>
           withCleanUp {
             val workspaceListPage = signIn(Config.Users.fred)
