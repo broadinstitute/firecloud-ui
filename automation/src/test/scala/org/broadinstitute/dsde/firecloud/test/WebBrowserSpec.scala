@@ -20,7 +20,6 @@ import org.scalatest.Suite
 import scala.sys.SystemProperties
 import scala.util.Random
 
-
 /**
   * Base spec for writing FireCloud web browser tests.
   */
@@ -54,7 +53,6 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
   private def runLocalChrome(testCode: (WebDriver) => Any) = {
     val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
-
     implicit val driver = new RemoteWebDriver(service.getUrl, getChromeIncognitoOption())
     driver.setFileDetector(new LocalFileDetector())
     try {
@@ -69,7 +67,6 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
 
   private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-
     implicit val driver = new RemoteWebDriver(new URL(defaultChrome), getChromeIncognitoOption())
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))
     driver.setFileDetector(new LocalFileDetector())
