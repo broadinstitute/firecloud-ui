@@ -5,12 +5,12 @@ import java.io.{File, PrintWriter}
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
->>>>>>> in progress
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
+import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
 
 class DataSpec extends FlatSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures with ParallelTestExecution
@@ -68,6 +68,12 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
         val headers2 = headers1 :+ "test2"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+        val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1")))
+        workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
+        workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
+        val headers2 = headers1 :+ "test2"
+        val metaDataFile2 = makeTempMetadataFile("DataSpec_column_display2", headers2, List(List("participant1", "1", "2")))
+        workspaceDataTab.importFile(metaDataFile2.getAbsolutePath)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers2
         workspaceDataTab.signOut()
         signIn(Config.Users.ron)
@@ -175,10 +181,6 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3", "test5")
       }
-    }
-  }
-
-
     }
   }
 }
