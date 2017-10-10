@@ -46,9 +46,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     await ready new ErrorModal
   }
 
-  def openEditMode(): Unit = {
+  def openEditMode(expectSuccess: Boolean = true): Unit = {
     openEditModeButton.doClick()
-    saveEditedMethodConfigButton.awaitVisible()
+    if (expectSuccess)
+      saveEditedMethodConfigButton.awaitVisible()
   }
 
   def saveEdits(expectSuccess: Boolean = true): Unit = {

@@ -312,7 +312,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
           withSignIn(uiUser) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
-            methodConfigDetailsPage.ui.openEditMode()
+            methodConfigDetailsPage.ui.openEditMode(expectSuccess = false)
             val modal = MessageModal()
             modal.validateLocation shouldBe true
             modal.clickCancel()
