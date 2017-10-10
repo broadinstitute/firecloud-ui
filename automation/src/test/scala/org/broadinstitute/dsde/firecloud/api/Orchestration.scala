@@ -3,7 +3,11 @@ package org.broadinstitute.dsde.firecloud.api
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.fixture.Method
+import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
+import org.broadinstitute.dsde.firecloud.util.Util
+import org.broadinstitute.dsde.firecloud.util.Util.appendUnderscore
 
 import scala.concurrent.duration._
 
@@ -158,18 +162,18 @@ trait Orchestration extends FireCloudClient with LazyLogging {
         Map("configurationNamespace" -> configurationNamespace, "configurationName" -> configurationName, "configurationSnapshotId" -> configurationSnapshotId, "destinationNamespace" -> destinationNamespace, "destinationName" -> destinationName))
     }
 
-    def createMethodConfigInWorkspace(wsNs: String, wsName: String, methodConfigVersion: Int,
-                                      methodNamespace: String, methodName: String, methodVersion: Int,
-                                      destinationNamespace: String, destinationName: String, inputs: Map[String, String], outputs: Map[String, String],
-                                      rootEntityType: String)(implicit token: AuthToken): String = {
-      logger.info(s"Creating method config: $wsNs/$wsName $methodConfigVersion method: $methodNamespace/$methodName destination: $destinationNamespace/$destinationName")
+    def createMethodConfigInWorkspace(wsNs: String, wsName: String, method:Method,
+                                      configNamespace: String, configName: String, methodConfigVersion: Int,
+                                      inputs: Map[String, String], outputs: Map[String, String],
+                                      rootEntityType: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Creating method config: $wsNs/$wsName $methodConfigVersion method: ${method.methodNamespace}/${method.methodName} config: $configNamespace/$configName")
       postRequest(apiUrl(s"api/workspaces/$wsNs/$wsName/methodconfigs"),
         Map("deleted" -> false,
           "inputs" -> inputs,
           "methodConfigVersion" -> methodConfigVersion,
-          "methodRepoMethod" -> Map("methodNamespace" -> methodNamespace, "methodName" -> methodName, "methodVersion" -> methodVersion),
-          "namespace" -> destinationNamespace,
-          "name" -> destinationName,
+          "methodRepoMethod" -> method.methodRepoInfo,
+          "namespace" -> configNamespace,
+          "name" -> configName,
           "outputs" -> outputs,
           "prerequisites" -> Map(),
           "rootEntityType" -> rootEntityType)
@@ -195,9 +199,21 @@ trait Orchestration extends FireCloudClient with LazyLogging {
   }
 
   object methods {
+    def createMethod(testname:String, method:Method, numSnapshots: Int = 1)
+                    (implicit token: AuthToken): String = {
+      val methodName = appendUnderscore(testname) + Util.makeUuid
+      for (_ <- 1 to numSnapshots)
+        createMethod(SimpleMethod.creationAttributes + ("name"->methodName))
+      methodName
+    }
+
     def createMethod(methodData: Map[String,Any])(implicit token: AuthToken): Unit = {
       logger.info(s"Adding a method.")
       postRequest(apiUrl(s"api/methods"), methodData)
+    }
+
+    def redact(method: Method)(implicit token: AuthToken): Unit = {
+      redact(method.methodNamespace, method.methodName, method.snapshotId)
     }
 
     def redact(ns: String, name: String, snapshotId: Int)(implicit token: AuthToken): Unit = {

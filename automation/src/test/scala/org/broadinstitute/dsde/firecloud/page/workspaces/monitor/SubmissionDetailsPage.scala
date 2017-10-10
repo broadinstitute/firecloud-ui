@@ -12,36 +12,37 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   private val submissionId = getSubmissionId()
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
 
-  private val WAITING_STATS = Array("Queued","Launching")
-  private val WORKING_STATS = Array("Submitted", "Running", "Aborting")
-  private val SUCCESS_STATS = Array("Succeeded")
-  private val FAILED_STATS  = Array("Failed")
-  private val ABORTED_STATS  = Array("Aborted")
+  private val WAITING_STATES = Array("Queued","Launching")
+  private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
+  val SUCCESS_STATUS = "Succeeded"
+  private val FAILED_STATUS  = "Failed"
+  private val ABORTED_STATUS  = "Aborted"
 
-  private val SUBMISSION_COMPLETE_STATS = Array("Done") ++ SUCCESS_STATS ++ FAILED_STATS ++ ABORTED_STATS
+  private val SUBMISSION_COMPLETE_STATES = Array("Done", SUCCESS_STATUS, FAILED_STATUS, ABORTED_STATUS)
 
   def isSubmissionDone():Boolean = {
     val status = ui.getSubmissionStatus()
-    (SUBMISSION_COMPLETE_STATS.contains(status))
+    (SUBMISSION_COMPLETE_STATES.contains(status))
   }
 
   def getSubmissionId(): String = {
     ui.getSubmissionId()
   }
 
+  def readWorkflowStatus() :String = {
+    ui.getWorkflowStatus()
+  }
+
   def verifyWorkflowSucceeded(): Boolean = {
-    val status = ui.getWorkflowStatus()
-    SUCCESS_STATS.contains(status)
+    SUCCESS_STATUS == ui.getWorkflowStatus()
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    val status = ui.getWorkflowStatus()
-    FAILED_STATS.contains(status)
+    FAILED_STATUS == ui.getWorkflowStatus()
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    val status = ui.getWorkflowStatus()
-    ABORTED_STATS.contains(status)
+    ABORTED_STATUS == ui.getWorkflowStatus()
   }
 
   def waitUntilSubmissionCompletes() = {

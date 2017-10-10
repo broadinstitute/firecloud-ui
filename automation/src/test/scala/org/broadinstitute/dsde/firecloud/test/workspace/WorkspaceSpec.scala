@@ -4,9 +4,8 @@ import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.fixture.MethodData.{SimpleMethod, SimpleMethodConfig}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, TestData, WorkspaceFixtures}
-import org.broadinstitute.dsde.firecloud.page.MessageModal
+import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -15,8 +14,8 @@ import org.scalatest._
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with MethodFixtures
   with CleanUp with Matchers {
 
-  val methodConfigName: String = MethodData.SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
-  implicit val authToken: AuthToken = AuthTokens.harry
+  val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString + "Config"
+  implicit lazy val authToken: AuthToken = AuthTokens.harry
   val billingProject: String = Config.Projects.default
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
@@ -94,21 +93,18 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
-          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
-            api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
-            val listPage = signIn(Config.Users.harry)
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
-            aclEditor.ui.canComputeEnabled() shouldBe true
-            aclEditor.ui.canComputeChecked() shouldBe false
-          }
+          val listPage = signIn(Config.Users.harry)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
+          aclEditor.ui.canComputeEnabled() shouldBe true
+          aclEditor.ui.canComputeChecked() shouldBe false
         }
       }
 
       "should not be able to set/change can compute permissions for other owners" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
           val listPage = signIn(Config.Users.harry)
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -121,7 +117,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should not be able to set/change compute permissions for readers" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1, SimpleMethod.methodNamespace, methodConfigName, 1, SimpleMethodConfig.configNamespace, s"$methodConfigName Config",
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
           val listPage = signIn(Config.Users.harry)
           val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -226,15 +222,15 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should see launch analysis button disabled" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
-          withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
-            val listPage = signIn(Config.Users.ron)
-            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-            val methodConfigTab = detailPage.ui.goToMethodConfigTab()
-            val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
-            val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
-            errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+          val listPage = signIn(Config.Users.ron)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          val methodConfigTab = detailPage.ui.goToMethodConfigTab()
+          val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
+          val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
+          errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
 
-          }
         }
       }
 
@@ -250,27 +246,29 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
-            withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
-              api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
-              val listPage = signIn(Config.Users.harry)
-              val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              detailPage.share(Config.Users.ron.email, "WRITER", false, false)
-              detailPage.signOut()
-              val listPage2 = signIn(Config.Users.ron)
-              val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-              val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
-              val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
-              val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
-              errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
-            }
+            api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+              SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+            api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, Config.Users.ron.email, "OWNER")
+            val listPage = signIn(Config.Users.harry)
+            val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            detailPage.share(Config.Users.ron.email, "WRITER", false, false)
+            detailPage.signOut()
+            val listPage2 = signIn(Config.Users.ron)
+            val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+            val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
+            val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
+            val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
+            errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
           }
         }
       }
       "and does have canCompute permission" - {
         "should be able to launch analysis" ignore withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_writerAccess") { workspaceName =>
-            withConfigForMethodInWorkspace("MethodinWorkspaceSpec", billingProject, workspaceName) { configName =>
-              api.methodConfigurations.setMethodConfigPermission("MethodinWorkspaceSpec", SimpleMethod.methodName, 1, Config.Users.ron.email, "OWNER")
+            withMethod("MethodinWorkspaceSpec", MethodData.SimpleMethod) { methodName =>
+              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+                SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+              api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, Config.Users.ron.email, "OWNER")
               val listPage = signIn(Config.Users.harry)
               val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
               detailPage.share(Config.Users.ron.email, "WRITER", false, true)
@@ -278,7 +276,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               val listPage2 = signIn(Config.Users.ron)
               val detailPage2 = listPage2.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
               val methodConfigTab = detailPage2.ui.goToMethodConfigTab()
-              val methodConfigDetailsPage = methodConfigTab.openMethodConfig("MethodinWorkspaceSpec", "MethodinWorkspaceSpec")
+              val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
               val launchAnalysisModal = methodConfigDetailsPage.ui.openLaunchAnalysisModal()
               launchAnalysisModal.validateLocation shouldBe true
             }
