@@ -1,16 +1,18 @@
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
-   [inflections "0.9.14"]
+   [inflections "0.13.0"]
    [dmohs/react "1.2.4+15.5.4-1"]
-   [org.broadinstitute/react-cljs-modal "2017.06.28"]
+   [org.broadinstitute/react-cljs-modal "2017.08.28"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.293"]
    [cljsjs/react-autosuggest "9.3.2-0"]
    ]
-  :plugins [[lein-cljsbuild "1.1.4"] [lein-figwheel "0.5.8"] [lein-resource "16.9.1"]]
+  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
+            ; [lein-ancient "0.6.12"] ; check for outdated dependencies, uncomment and run `lein ancient` to use
+            ]
   :profiles {:dev
-             {:dependencies [[binaryage/devtools "0.8.3"]]
+             {:dependencies [[binaryage/devtools "0.9.7"]]
               :figwheel {:css-dirs ["resources/public"]}
               :cljsbuild
               {:builds
