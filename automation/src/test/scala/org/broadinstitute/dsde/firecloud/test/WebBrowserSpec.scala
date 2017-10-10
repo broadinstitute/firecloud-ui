@@ -12,6 +12,7 @@ import org.broadinstitute.dsde.firecloud.page.user.SignInPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
 import org.openqa.selenium.chrome.ChromeDriverService
+import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
 import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.scalatest.Suite
@@ -41,10 +42,18 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     }
   }
 
+  private def getChromeIncognitoOption: DesiredCapabilities = {
+    val options = new ChromeOptions
+    options.addArguments("--incognito")
+    val capabilities = DesiredCapabilities.chrome
+    capabilities.setCapability(ChromeOptions.CAPABILITY, options)
+    capabilities
+  }
+
   private def runLocalChrome(testCode: (WebDriver) => Any) = {
     val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
-    implicit val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
+    implicit val driver = new RemoteWebDriver(service.getUrl, getChromeIncognitoOption)
     driver.setFileDetector(new LocalFileDetector())
     try {
       withScreenshot {
@@ -58,7 +67,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
 
   private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
+    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), getChromeIncognitoOption)
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))
     driver.setFileDetector(new LocalFileDetector())
     try {
