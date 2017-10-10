@@ -12,12 +12,14 @@ import org.broadinstitute.dsde.firecloud.page.user.SignInPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
 import org.openqa.selenium.chrome.ChromeDriverService
+import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
 import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.scalatest.Suite
 
 import scala.sys.SystemProperties
 import scala.util.Random
+
 
 /**
   * Base spec for writing FireCloud web browser tests.
@@ -44,7 +46,14 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
   private def runLocalChrome(testCode: (WebDriver) => Any) = {
     val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
-    implicit val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
+
+    // run in incognito
+    val options = new ChromeOptions
+    options.addArguments("--incognito")
+    val capabilities = DesiredCapabilities.chrome
+    capabilities.setCapability(ChromeOptions.CAPABILITY, options)
+
+    implicit val driver = new RemoteWebDriver(service.getUrl, capabilities)
     driver.setFileDetector(new LocalFileDetector())
     try {
       withScreenshot {
@@ -58,7 +67,14 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
 
   private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
+
+    // run in incognito
+    val options = new ChromeOptions
+    options.addArguments("--incognito")
+    val capabilities = DesiredCapabilities.chrome
+    capabilities.setCapability(ChromeOptions.CAPABILITY, options)
+
+    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), capabilities)
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))
     driver.setFileDetector(new LocalFileDetector())
     try {
