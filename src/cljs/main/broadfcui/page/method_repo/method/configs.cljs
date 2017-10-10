@@ -26,9 +26,11 @@
      (this :-refresh))
    :render
    (fn [{:keys [state this props]}]
-     (let [{:keys [config config-error]} @state
+     (let [{:keys [config config-error refreshing?]} @state
            owner? (contains? (set (:managers config)) (utils/get-user-email))]
        [:div {:style {:margin "2.5rem 1.5rem"}}
+        (when refreshing?
+          [comps/Blocker {:banner "Refreshing..."}])
         [:div {:style {:marginBottom "2rem"}}
          (let [{:keys [namespace name]} (:config-id props)]
            [:div {:style {:display "flex" :marginLeft (when owner? "300px")}}
@@ -91,15 +93,15 @@
         (method-common/render-config-details config)]))
    :-refresh
    (fn [{:keys [props state]}]
-     (swap! state dissoc :config :config-error)
+     (swap! state assoc :refreshing? true :config-error nil)
      (let [{:keys [config-id config-snapshot-id]} props]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-configuration (:namespace config-id) (:name config-id) config-snapshot-id true)
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
-                       (swap! state assoc :config parsed-response)
-                       (swap! state assoc :config-error (:message parsed-response)))))})))})
+                       (swap! state assoc :config parsed-response :refreshing? false)
+                       (swap! state assoc :config-error (:message parsed-response) :refreshing? false))))})))})
 
 (react/defc Configs
   {:render
