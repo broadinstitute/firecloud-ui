@@ -128,7 +128,7 @@
                                                   (str ": " (string/join ", " items)))))
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
-               :column-defaults (if (utils/log (some? process-local-state))
+               :column-defaults (if (some? process-local-state)
                                   (let [local-state (persistence/check-saved-state {:key (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state))})]
                                     (let [shown (mapv #(get % :id) (get (group-by :visible? (:column-display local-state)) true))
                                           hidden (mapv #(get % :id) (get (group-by :visible? (:column-display local-state)) false))]
