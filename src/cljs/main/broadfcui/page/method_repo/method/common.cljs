@@ -85,7 +85,7 @@
     (style/create-summary-block "Root Entity Type" (:rootEntityType payloadObject))
     ;; Snapshot comments for configs can only be created by the API. Hide the comment field if it doesn't
     ;; exist to avoid tantalizing UI-only users with something they can't have (at least until GAWB-2702)
-    (if snapshotComment (style/create-summary-block "Snapshot Comment" snapshotComment))]
+    (some->> snapshotComment (style/create-summary-block "Snapshot Comment"))]
 
    (style/create-subsection-header "Connections")
    [IOView {:method-ref {:methodNamespace (:namespace method)
