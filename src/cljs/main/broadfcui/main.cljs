@@ -88,9 +88,7 @@
                                                   :text [:span {} "User Guide" icons/external-link-icon]}
                                                  {:href (config/forum-url) :target "_blank"
                                                   :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
-           (header/create-account-dropdown)]
-          (when (= :registered (:registration-status @state))
-            [header/GlobalSubmissionStatus])]]
+           (header/create-account-dropdown)]]]
         (let [original-destination (aget js/window "location" "hash")
               on-done (fn [fall-through]
                         (when (empty? original-destination)
