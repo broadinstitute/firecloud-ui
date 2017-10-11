@@ -15,7 +15,6 @@
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
-   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
 
@@ -93,7 +92,6 @@
         [EntityTable
          {:ref "entity-table"
           :workspace-id workspace-id
-          :process-local-state true
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :get-toolbar-items
