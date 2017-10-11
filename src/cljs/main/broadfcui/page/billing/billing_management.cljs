@@ -1,7 +1,6 @@
 (ns broadfcui.page.billing.billing-management
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
@@ -11,6 +10,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -108,7 +108,7 @@
                        (when message
                          [:div {:style {:float "right" :position "relative"
                                         :height table-style/table-icon-size}}
-                          (common/render-info-box
+                          (dropdown/render-info-box
                            {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}

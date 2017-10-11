@@ -1,7 +1,6 @@
 (ns broadfcui.common.style
   (:require
    [clojure.string :as string]
-   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 

@@ -1,11 +1,12 @@
 (ns broadfcui.page.notifications
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.foundation-switch :refer [render-foundation-switch]]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -167,7 +168,7 @@
                           (swap! state assoc-in [:pending k] true)
                           (after-update #(this :-save k)))
            checkbox (fn [k checked?]
-                      (common/render-foundation-switch
+                      (render-foundation-switch
                        {:checked? checked? :on-change (partial set-checked? k)}))
            row (fn [{:keys [key value]}]
                  (let [{:keys [id]} (parse-ws-notification-key key)
@@ -175,7 +176,7 @@
                    [:tr {}
                     [:td {} (checkbox key value)]
                     [:td {:style {:padding "0.5rem"}} label]
-                    [:td {} (common/render-info-box {:text description})]
+                    [:td {} (dropdown/render-info-box {:text description})]
                     [:td {} (when-let [pending (get pending key)]
                               (case pending
                                 :error

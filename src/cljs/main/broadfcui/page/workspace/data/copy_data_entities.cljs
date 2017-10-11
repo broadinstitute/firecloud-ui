@@ -3,10 +3,10 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [clojure.walk :as walk]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
    [broadfcui.utils :as utils]
@@ -94,7 +94,7 @@
                       entities in the destination workspace, by clicking " [:strong {} "Re-link"] "."]
                       [:p {} "Re-linking will not import the conflicting entities from, or change the "
                        import-type "s in, the source workspace."
-                       (common/render-info-box
+                       (dropdown/render-info-box
                         {:position "top"
                          :text [comps/ScrollFader
                                 {:outer-style {:margin "-1rem"}

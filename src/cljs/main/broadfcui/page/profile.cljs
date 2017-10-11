@@ -9,6 +9,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -62,7 +63,7 @@
                   [:span {:style {:color (:success-state style/colors)}} "Authorized"]
                   [:span {:style {:color (:text-light style/colors)}}
                    "Not Authorized"
-                   (common/render-info-box
+                   (dropdown/render-info-box
                     {:text
                      [:div {}
                       "Your account was linked, but you are not authorized to view this controlled dataset. Please go "

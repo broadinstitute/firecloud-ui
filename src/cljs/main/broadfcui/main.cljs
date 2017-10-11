@@ -12,6 +12,7 @@
    [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -81,13 +82,13 @@
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:display "flex" :justifyContent "flex-end"}}
-           (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
-                                         :width 150
-                                         :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
-                                         :items [{:href (config/user-guide-url) :target "_blank"
-                                                  :text [:span {} "User Guide" icons/external-link-icon]}
-                                                 {:href (config/forum-url) :target "_blank"
-                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
+           (dropdown/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
+                                           :width 150
+                                           :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
+                                           :items [{:href (config/user-guide-url) :target "_blank"
+                                                    :text [:span {} "User Guide" icons/external-link-icon]}
+                                                   {:href (config/forum-url) :target "_blank"
+                                                    :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
            (header/create-account-dropdown)]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]

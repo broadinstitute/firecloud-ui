@@ -2,11 +2,13 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.foundation-switch :refer [render-foundation-switch]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -100,8 +102,8 @@
    (create-sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]
    [:div {:style {:marginBottom "0.5rem"}}
-    (common/render-foundation-switch {:on-change identity})]
-   (create-code-block "(common/render-foundation-switch {:on-change #(...)})")
+    (render-foundation-switch {:on-change identity})]
+   (create-code-block "(render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
    have a submit button. See the example of workspace notification control: toggling the switch
    saves the new value."]
@@ -166,8 +168,8 @@
 
    (create-sub-head "Infoboxes")
    [:p {} "Observe, the ever-useful infobox:"
-    (common/render-info-box {:text "Can we be friends?"})]
-   (create-code-block "(common/render-info-box {:text \"Infobox text or element here.\"]})")
+    (dropdown/render-info-box {:text "Can we be friends?"})]
+   (create-code-block "(dropdown/render-info-box {:text \"Infobox text or element here.\"]})")
    [:p {} "An infobox is an instance of a " (style/create-code-sample "common/FoundationDropdown") ", but it should
    only be used when there's a contextual explanation to be displayed. The most interactivity inside
    of it should be an external link."]
@@ -177,8 +179,8 @@
    has a title attribute, so hovering over them spawns a standard browser tooltip. The purpose of
    these is to show the full text contents of a cell, regardless of its width."]
    [:p {} "We also have Foundation's tooltips, "
-    [common/FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
-   (create-code-block "[common/FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
+    [FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
+   (create-code-block "[FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
    [:p {} "These are used for description or explanation. Generally, it's something the user could
    figure out either from context or from clicking, but we want to be explicit."]])
 
