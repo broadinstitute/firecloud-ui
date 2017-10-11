@@ -15,6 +15,7 @@
    [broadfcui.page.method-repo.method.exporter :refer [MethodExporter]]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
    [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
@@ -124,6 +125,7 @@
                                                            :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
                                                            :on-export
                                                            (fn [workspace-id config-id]
+                                                             (mc-sync/flag-synchronization)
                                                              (nav/go-to-path :workspace-method-config
                                                                              workspace-id
                                                                              (ws-common/config->id config-id)))}})}]))]))
