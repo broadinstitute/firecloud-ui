@@ -26,7 +26,7 @@
             [comps/Blocker {:banner "Granting permission..."}])
           (when owned-methods
             [:div {}
-             (messages/get-methods-repo-group-alert)
+             messages/get-methods-repo-group-alert
              "In order to allow the users you have added to this workspace to run the methods configured
               for it, you must grant them access to the following:"
              [:ul {} (map (fn [method] [:li {} (sync-common/get-method-display (:method method))]) owned-methods)]])

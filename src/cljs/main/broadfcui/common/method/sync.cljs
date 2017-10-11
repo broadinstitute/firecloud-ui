@@ -26,7 +26,7 @@
        :content
        (react/create-element
         [:div {:style {:maxWidth 670}}
-         (messages/get-methods-repo-group-alert)
+         messages/get-methods-repo-group-alert
          [:div {:style {:marginBottom "1.5rem"}}
           (str "In order to allow other users of this "
                (:flavor props)
