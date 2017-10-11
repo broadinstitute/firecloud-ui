@@ -1,6 +1,7 @@
 (ns broadfcui.persistence
   (:require
    [broadfcui.utils :as utils]
+   [cljs.reader :as reader]
    ))
 
 (defn- generate-persistence-key [key]
@@ -16,18 +17,17 @@
          :else @state)))
 
 (defn try-restore [{:keys [key initial validator process-local-state]}]
-  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
+  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read reader/read-string)]
     (if (and saved-state (nil? process-local-state)
              (or (not validator) (validator saved-state)))
       saved-state
       (initial))))
 
 (defn check-saved-state [{:keys [key initial validator]}]
-  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
-    (if (and saved-state
+  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read reader/read-string)]
+    (when (and saved-state
              (or (not validator) (validator saved-state)))
-      saved-state
-      nil)))
+      saved-state)))
 
 (defn delete [key]
   (utils/local-storage-remove
