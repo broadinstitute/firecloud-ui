@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
-import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.component.{Button, TextField}
 import org.openqa.selenium.WebDriver
 
 /**
@@ -12,6 +12,19 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
 
   override def awaitReady(): Unit = await text "User Info"
 
+  private val contactEmailInput = TextField("contactEmail")
+  private val firstNameInput = TextField("firstName")
+  private val lastNameInput = TextField("lastName")
+  private val instituteInput = TextField("institute")
+  private val institutionalProgramInput = TextField("institutionalProgram")
+  private val principalInvestigatorInput = TextField("pi")
+  private val programLocationCityInput = TextField("programLocationCity")
+  private val programLocationCountryInput = TextField("programLocationCountry")
+  private val programLocationStateInput = TextField("programLocationState")
+  private val registerButton = Button("register-button")
+  private val registrationCompleteMessage = withText("Profile saved")
+  private val titleInput = TextField("title")
+
   /**
     * Fills in and submits the new user registration form. Returns as the browser is being redirected to its post-
     * registration destination.
@@ -21,95 +34,24 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
                institutionalProgram: String, nonProfitStatus: Boolean,
                principalInvestigator: String, city: String, state: String,
                country: String): Unit = {
-    ui.fillFirstName(firstName)
-    ui.fillLastName(lastName)
-    ui.fillTitle(title)
-    contactEmail.foreach(ui.fillContactEmail(_))
-    ui.fillInstitute(institute)
-    ui.fillInstitutionalProgram(institutionalProgram)
-    ui.selectNonProfitStatus(nonProfitStatus)
-    ui.fillPrincipalInvestigator(principalInvestigator)
-    ui.fillProgramLocationCity(city)
-    ui.fillProgramLocationState(state)
-    ui.fillProgramLocationCountry(country)
-    ui.clickRegisterButton()
+    firstNameInput.setText(firstName)
+    lastNameInput.setText(lastName)
+    titleInput.setText(title)
+    contactEmail.foreach(contactEmailInput.setText)
+    instituteInput.setText(institute)
+    institutionalProgramInput.setText(institutionalProgram)
+    radioButtonGroup("nonProfitStatus").value = if (nonProfitStatus) "Profit" else "Non-Profit"
+    principalInvestigatorInput.setText(principalInvestigator)
+    programLocationCityInput.setText(city)
+    programLocationStateInput.setText(state)
+    programLocationCountryInput.setText(country)
+
+    registerButton.doClick()
+    await condition registrationCompleteMessageIsPresent()
+    await condition !registrationCompleteMessageIsPresent()
   }
 
-  def registerWait(): Unit = {
-    await condition ui.registrationCompleteMessageIsPresent()
-    await condition !ui.registrationCompleteMessageIsPresent()
-  }
-
-  object ui extends LazyLogging {
-
-    private val contactEmailInput = testId("contactEmail")
-    private val firstNameInput = testId("firstName")
-    private val instituteInput = testId("institute")
-    private val institutionalProgramInput = testId("institutionalProgram")
-    private val lastNameInput = testId("lastName")
-    private val nonProfitStatusRadioInput = testId("nonProfitStatus")
-    private val principalInvestigatorInput = testId("pi")
-    private val programLocationCityInput = testId("programLocationCity")
-    private val programLocationCountryInput = testId("programLocationCountry")
-    private val programLocationStateInput = testId("programLocationState")
-    private val registerButton = testId("register-button")
-    private val registrationCompleteMessage = withText("Profile saved")
-    private val titleInput = testId("title")
-
-    def clickRegisterButton(): Unit = {
-      click on registerButton
-    }
-
-    def fillContactEmail(email: String): Unit = {
-      textField(contactEmailInput).value = email
-    }
-
-    def fillFirstName(firstName: String): Unit = {
-      await enabled firstNameInput
-      textField(firstNameInput).value = firstName
-    }
-
-    def fillInstitute(institute: String): Unit = {
-      textField(instituteInput).value = institute
-    }
-
-    def fillInstitutionalProgram(institutionalProgram: String): Unit = {
-      textField(institutionalProgramInput).value = institutionalProgram
-    }
-
-    def fillLastName(lastName: String): Unit = {
-      textField(lastNameInput).value = lastName
-    }
-
-    def fillPrincipalInvestigator(principalInvestigator: String): Unit = {
-      textField(principalInvestigatorInput).value = principalInvestigator
-    }
-
-    def fillProgramLocationCity(city: String): Unit = {
-      textField(programLocationCityInput).value = city
-    }
-
-    def fillProgramLocationCountry(country: String): Unit = {
-      textField(programLocationCountryInput).value = country
-    }
-
-    def fillProgramLocationState(state: String): Unit = {
-      textField(programLocationStateInput).value = state
-    }
-
-    def fillTitle(title: String): Unit = {
-      textField(titleInput).value = title
-    }
-
-    def registrationCompleteMessageIsPresent(): Boolean = {
-      find(registrationCompleteMessage).isDefined
-    }
-
-    def selectNonProfitStatus(nonProfit: Boolean): Unit = {
-      radioButtonGroup("nonProfitStatus").value = nonProfit match {
-        case false => "Non-Profit"
-        case true => "Profit"
-      }
-    }
+  private def registrationCompleteMessageIsPresent(): Boolean = {
+    find(registrationCompleteMessage).isDefined
   }
 }
