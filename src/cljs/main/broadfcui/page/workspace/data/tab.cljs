@@ -16,7 +16,8 @@
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.persistence :as persistence]
-   [broadfcui.utils :as utils]))
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc- MetadataImporter
   {:get-initial-state
