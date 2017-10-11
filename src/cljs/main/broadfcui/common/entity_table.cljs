@@ -71,7 +71,7 @@
              {:data-test-id "entity-table"
               :ref "table" :key selected-entity-type
               :persistence-key (when selected-entity-type
-                                 (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state)))
+                                 (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2
               :fetch-data (this :-pagination)
               :blocker-delay-time-ms 0
