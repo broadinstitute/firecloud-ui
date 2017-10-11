@@ -201,7 +201,7 @@
              (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
              (let [status (data "executionStatus")]
                (create-field "Status" (moncommon/icon-for-call-status status) status))
-             (when (= (get (data "callCaching") "effectiveCallCachingMode") "ReadAndWriteCache")
+             (when (= (get-in data ["callCaching" "effectiveCallCachingMode"]) "ReadAndWriteCache")
                (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
              (create-field "Started" (moncommon/render-date (data "start")))
              ;(utils/cljslog data)
