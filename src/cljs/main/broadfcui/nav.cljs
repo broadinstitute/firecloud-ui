@@ -59,8 +59,8 @@
 
 (defn execute-redirects [window-hash]
   (let [cleaned (js/decodeURI (subs window-hash 1))
-        matching-handlers (remove
-                           nil?
+        matching-handlers (filter
+                           some?
                            (map
                             (fn [handler]
                               (when-let [matches (re-matches (:regex handler) cleaned)]

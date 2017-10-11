@@ -253,7 +253,8 @@
      (aset js/window "testJsException"
            (fn [] (js/setTimeout #(throw (js/Error. "You told me to do this.")) 100) nil)))
    :component-will-receive-props
-   init-nav-paths
+   (fn []
+     (init-nav-paths))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
