@@ -122,9 +122,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_input_not_defined") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       val method = MethodData.InputRequiredMethod
-      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method.snapshotId,
-        method.methodNamespace, method.methodName, method.snapshotId,
-        method.methodNamespace, methodConfigName,
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method,
+        method.methodNamespace, methodConfigName, 1,
         Map.empty, Map.empty, method.rootEntityType)
 
       signIn(uiUser)
