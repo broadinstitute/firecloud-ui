@@ -50,7 +50,7 @@
                                                     (<= minimum (int value) maximum))
                                        k)))
                              set)]
-    (when-not (empty? invalid-numbers)
+    (when (seq invalid-numbers)
       {:error "Invalid number"
        :invalid invalid-numbers})))
 

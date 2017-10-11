@@ -275,7 +275,7 @@
                       {:entityType type
                        :name (str "entity" (inc i))
                        :attributes {}})
-                    (map #(-> % (+ 1 (* (dec page) pageSize)))
+                    (map #(+ 1 (* (dec page) pageSize) %)
                          (range pageSize)))})})
 
 (defn get-entities-by-type [workspace-id]

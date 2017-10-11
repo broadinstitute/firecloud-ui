@@ -30,7 +30,7 @@
                     :color (when-not (contains? pages-seen (count pages)) (:text-lighter style/colors))
                     :fontWeight (when (= page-num (count pages)) "bold")}}
       "Discoverability"]
-     [:div {:style {:color (when-not (contains? pages-seen (+ 1 (count pages))) (:text-lighter style/colors))
+     [:div {:style {:color (when-not (contains? pages-seen (inc (count pages))) (:text-lighter style/colors))
                     :fontWeight (when (> page-num (count pages)) "bold")}}
       "Summary"]]))
 

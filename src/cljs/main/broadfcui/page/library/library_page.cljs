@@ -165,9 +165,9 @@
    (fn [{:keys [this state props]}]
      (fn [{:keys [query-params on-done]}]
        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
-         (when-not (empty? (:aggregate-fields props))
+         (when (seq (:aggregate-fields props))
            (endpoints/call-ajax-orch
-            (let [from (* (- page-number 1) rows-per-page)
+            (let [from (* (dec page-number) rows-per-page)
                   update-aggregates? (or (= 1 page-number) (:no-aggregates? props))]
               {:endpoint endpoints/search-datasets
                :payload {:searchString (:filter-text props)
@@ -194,7 +194,7 @@
 
 (defn- highlight-suggestion [{:strs [suggestion highlight]}]
   [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}}
-   (if (not (string/blank? highlight))
+   (if-not (string/blank? highlight)
      (let [suggestion-parts (string/split suggestion highlight)]
        [:span {} (first suggestion-parts) [:strong {} highlight] (last suggestion-parts)])
      suggestion)])
@@ -253,7 +253,7 @@
            (if (:expanded? props)
              (when (> (count (:buckets props)) 5)
                (links/create-internal {:onClick #(this :update-expanded false)} " less..."))
-             (when (> size 0)
+             (when (pos? size)
                (links/create-internal {:onClick #(this :update-expanded true)} " more...")))]]})))
    :clear-all
    (fn [{:keys [props]}]

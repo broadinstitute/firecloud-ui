@@ -188,7 +188,7 @@
                :style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
                :onClick #(swap! state assoc :sharing? true)}])
-           (when (not editing?)
+           (when-not editing?
              [buttons/SidebarButton
               {:data-test-id "catalog-button"
                :style :light :color :button-primary :margin :top
@@ -214,7 +214,7 @@
                                            "All required dataset attributes must be set before publishing.")})])))
 
            (when (or owner? writer?)
-             (if (not editing?)
+             (if-not editing?
                [buttons/SidebarButton
                 {:style :light :color :button-primary :margin :top
                  :text "Edit" :icon :edit
