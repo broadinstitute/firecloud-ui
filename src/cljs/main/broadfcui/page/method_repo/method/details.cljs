@@ -39,6 +39,7 @@
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-method)
+           refresh-snapshot #(this :-refresh-snapshot selected-snapshot-id)
            refresh-tab #((@refs %) :refresh)]
        [:div {:style {:position "relative"}}
         (when loading-snapshot?
@@ -107,7 +108,7 @@
                (react/create-element
                 [Summary
                  (merge {:ref SUMMARY}
-                        (utils/restructure selected-snapshot workspace-id))]))))]
+                        (utils/restructure selected-snapshot workspace-id refresh-snapshot))]))))]
         (when workspace-id
           (flex/box
            {:style {:marginTop "-1.5rem"}}
