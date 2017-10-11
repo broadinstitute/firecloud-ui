@@ -42,8 +42,8 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     submissionIdLabel.getText
   }
 
-  def readWorkflowStatus() :String = {
-    ui.getWorkflowStatus()
+  def readWorkflowStatus(): String = {
+    workflowStatusLabel.getText
   }
 
   def verifyWorkflowSucceeded(): Boolean = {

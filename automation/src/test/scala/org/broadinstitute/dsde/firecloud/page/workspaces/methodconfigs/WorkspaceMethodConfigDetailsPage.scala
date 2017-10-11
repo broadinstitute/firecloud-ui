@@ -52,6 +52,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       saveEditedMethodConfigButton.awaitVisible()
   }
 
+  def checkSaveButtonState(): String = {
+    saveEditedMethodConfigButton.getState
+  }
+
   def saveEdits(expectSuccess: Boolean = true): Unit = {
     // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
     saveEditedMethodConfigButton.scrollToVisible()
@@ -66,12 +70,16 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     await spinner "Loading attributes..."
 
     if (newName.isDefined) { editMethodConfigNameInput.setText(newName.get) }
-    if (newSnapshotId.isDefined) { editMethodConfigSnapshotIdSelect.select(newSnapshotId.get.toString) }
+    if (newSnapshotId.isDefined) { changeSnapshotId(newSnapshotId.get) }
     if (newRootEntityType.isDefined) { editMethodConfigRootEntityTypeSelect.select(newRootEntityType.get)}
     if (inputs.isDefined) { changeInputsOutputs(inputs.get) }
     if (outputs.isDefined) { changeInputsOutputs(outputs.get)}
 
     saveEdits()
+  }
+
+  def changeSnapshotId(newSnapshotId: Int): Unit = {
+    editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
   }
 
   private def changeInputsOutputs(fields: Map[String, String]): Unit = {
@@ -97,56 +105,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     modalConfirmDeleteButton.doClick()
     await ready new WorkspaceMethodConfigListPage(namespace, name)
   }
-
-    def changeSnapshotId(newSnapshotId: Int): Unit = {
-      editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
-    }
-
-    def changeRootEntityType(newRootEntityType: String): Unit = {
-      await enabled editMethodConfigRootEntityTypeInputQuery
-      singleSel(editMethodConfigRootEntityTypeInputQuery).value = newRootEntityType
-    }
-
-    def changeInputsOutputs(fields: Map[String, String]): Unit = {
-      for ((field, expression) <- fields) {
-        val fieldInputQuery: Query = xpath(s"//*[@data-test-id='$field-text-input']/..//input")
-        searchField(fieldInputQuery).value = expression
-      }
-    }
-
-    def checkSaveButtonState:String = {
-      val button = await enabled saveEditedMethodConfigButtonQuery
-      button.attribute("data-test-state").getOrElse("")
-    }
-
-    def clickSaveButton() = {
-      val button = await enabled saveEditedMethodConfigButtonQuery
-      // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
-      webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", button.underlying)
-      click on button
-    }
-
-    def cancelEdits(): Unit = {
-      click on (await enabled cancelEditMethodConfigModeButtonQuery)
-    }
-
-    def isLaunchAnalysisButtonPresent: Boolean = {
-      await enabled openLaunchAnalysisModalButtonQuery
-      find(openLaunchAnalysisModalButtonQuery).size == 1
-    }
-
-    def clickLaunchAnalysisButtonError(): ErrorModal = {
-      click on (await enabled openLaunchAnalysisModalButtonQuery)
-      new ErrorModal
-    }
-
-    def verifyMethodConfigurationName(methodConfigName: String): Boolean = {
-      await enabled methodConfigNameTextQuery
-
-      val methodConfigNameElement = find(methodConfigNameTextQuery)
-      methodConfigNameElement.get.text == methodConfigName
-
-    }
 
   def isSnapshotRedacted: Boolean = {
     snapshotRedactedLabel.isVisible
