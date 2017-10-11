@@ -10,6 +10,4 @@
   [:p {:style {:fontSize "100%"}}
    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
                :warning)
-   "Currently user groups are not supported in the Method Repository. "
-   "That is, you cannot share a method/configuration with a user group. "
-   "We appreciate your patience as we work on developing this feature."])
+   "Note: Sharing with user-groups is not yet supported."])
