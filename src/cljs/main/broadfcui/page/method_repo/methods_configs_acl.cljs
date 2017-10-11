@@ -134,9 +134,10 @@
       (range (count (:acl-vec @state)))))
    :-post-update
    (fn [{:keys [props locals]} new-users]
-     (let [{:keys [entityType on-users-added dismiss]} props]
-       (when (= "Configuration" entityType)
+     (let [{:keys [entityType on-users-added on-commit dismiss]} props]
+       (when on-commit (on-commit))
+       (when (and on-users-added (= "Configuration" entityType))
          (let [diff (set/difference new-users (:initial-users @locals))]
-           (when (and (seq diff) on-users-added)
+           (when (seq diff)
              (on-users-added diff))))
        (dismiss)))})
