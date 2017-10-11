@@ -47,7 +47,7 @@
                          :onClick #(-> (@refs "entities") .click)}]
         (when file-contents
           [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
-           (str "Previewing '" (-> (:file @state) .-name) "':")
+           (str "Previewing '" (.. (:file @state) -name) "':")
            [:div {:style {:overflow "auto" :maxHeight 200
                           :paddingBottom "0.5em" :textAlign "left"}}
             [:pre {} file-contents]
