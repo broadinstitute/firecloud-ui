@@ -38,9 +38,9 @@
               (aget 0) (.-childNodes))]
     (-> (if (> (alength e) 1)
           (let [el (-> e (aget 1) (.-childNodes) (aget 0) (.-childNodes) (aget 1) (.-childNodes))]
-            (aget el (- (alength el) 1)))
+            (aget el (dec (alength el))))
           (let [el (-> e (aget 0) (.-childNodes) (aget 1) (.-childNodes))]
-            (aget el (- (alength el) 1))))
+            (aget el (dec (alength el)))))
         (aget "height") (aget "animVal") (aget "value"))))
 
 (defn- workflow-name [callName]
@@ -201,8 +201,8 @@
              (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
              (let [status (data "executionStatus")]
                (create-field "Status" (moncommon/icon-for-call-status status) status))
-             (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
-               (create-field "Cache Result" (moncommon/format-call-cache (-> (data "callCaching") (get "hit")))))
+             (when (= (get (data "callCaching") "effectiveCallCachingMode") "ReadAndWriteCache")
+               (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
              (create-field "Started" (moncommon/render-date (data "start")))
              ;(utils/cljslog data)
              (create-field "Ended" (moncommon/render-date (data "end")))
@@ -220,7 +220,7 @@
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-light style/colors)}}
    [:div {}
-    (let [inputs (first (first (workflow "calls")))
+    (let [inputs (ffirst (workflow "calls"))
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
       (create-field "Workflow ID"
@@ -244,11 +244,11 @@
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
                         (workflow "id") ".log")]
        (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
-    (when-not (empty? (workflow "calls"))
+    (when (seq (workflow "calls"))
       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
     (when-let [failures (workflow "failures")]
       [Failures {:data failures}])]
-   (when-not (empty? (workflow "calls"))
+   (when (seq (workflow "calls"))
      [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
    (for [[call data] (workflow "calls")]
      [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
