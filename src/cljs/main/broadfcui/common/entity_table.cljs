@@ -10,7 +10,6 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
 
@@ -67,14 +66,12 @@
           (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
           :else
           (let [attributes (map keyword (get-in entity-metadata [(keyword selected-entity-type) :attributeNames]))
-                attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))
-                process-local-state (and (:process-local-state props) (persistence/check-saved-state {:key (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state))}))]
+                attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
              {:data-test-id "entity-table"
-              :process-local-state process-local-state
               :ref "table" :key selected-entity-type
               :persistence-key (when selected-entity-type
-                                 (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
+                                 (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state)))
               :v 2
               :fetch-data (this :-pagination)
               :blocker-delay-time-ms 0
@@ -129,13 +126,7 @@
                                                   (str ": " (string/join ", " items)))))
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
-               :column-defaults (if process-local-state
-                                  (let [local-state (persistence/check-saved-state {:key (str (common/workspace-id->string (:workspace-id props)) ":data:" (:selected-entity-type @state))})
-                                        grouped-visible (group-by :visible? (:column-display local-state))
-                                        shown (mapv #(get % :id) (get grouped-visible true))
-                                        hidden (mapv #(get % :id) (get grouped-visible false))]
-                                    (hash-map "shown" shown "hidden" hidden))
-                                  (get (:column-defaults props) selected-entity-type))
+               :column-defaults (get (:column-defaults props) selected-entity-type)
                :on-row-click (:on-row-click props)
                :on-column-change (:on-column-change props)}
               :toolbar
