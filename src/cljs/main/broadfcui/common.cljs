@@ -224,3 +224,10 @@
         (do (swap! locals assoc element-key element)
             (did-mount c element))
         (will-unmount c (element-key @locals))))))
+
+(defn mapwrap
+  "Map over a collection, wrapping each in a DOM element/React class"
+  ([component coll] (mapwrap component {} identity coll))
+  ([component attrs coll] (mapwrap component attrs identity coll))
+  ([component attrs f coll] (map (fn [elem] [component attrs (f elem)]) coll)))
+

@@ -95,10 +95,10 @@
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button {:data-test-id "create-project-button"
                    :onClick (when (seq (:billing-accounts @state))
-                              #(react/call :create-billing-project this))}}])
+                              #(this :create-billing-project))}}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :get-billing-accounts this))
+     (this :get-billing-accounts))
    :get-billing-accounts
    (fn [{:keys [state]}]
      (swap! state dissoc :billing-accounts :error)

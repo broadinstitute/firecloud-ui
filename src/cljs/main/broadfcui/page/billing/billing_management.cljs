@@ -34,8 +34,7 @@
         [comps/AnimatedEllipsis])])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-set-timeout this project-refresh-interval-ms
-                 #(react/call :-refresh-status this)))
+     (this :-set-timeout project-refresh-interval-ms #(this :-refresh-status)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (dorun (map (fn [id] (js/clearTimeout id)) (vals (:timeouts @locals)))))
@@ -51,10 +50,8 @@
             (on-status-change new-status message))
           ;; Ensure a minimum of 2000ms of animation.
           (let [request-time (- (.getTime (js/Date.)) (:busy @state))]
-            (react/call :-set-timeout this (max 0 (- 2000 request-time))
-                        #(swap! state dissoc :busy))
-            (react/call :-set-timeout this project-refresh-interval-ms
-                        #(react/call :-refresh-status this)))))))
+            (this :-set-timeout (max 0 (- 2000 request-time)) #(swap! state dissoc :busy))
+            (this :-set-timeout project-refresh-interval-ms #(this :-refresh-status)))))))
    :-set-timeout
    (fn [{:keys [locals]} ms f]
      (swap! locals assoc-in [:timeouts f]
@@ -64,7 +61,7 @@
 (react/defc- BillingProjectTable
   {:reload
    (fn [{:keys [this]}]
-     (react/call :load-data this))
+     (this :load-data))
    :render
    (fn [{:keys [state this]}]
      (cond
@@ -125,7 +122,7 @@
                           (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                     (modal/push-modal
                      [CreateBillingProjectDialog
-                      {:on-success #(react/call :reload this)}])
+                      {:on-success #(this :reload)}])
                     (do
                       (utils/add-user-listener
                        ::billing
@@ -133,7 +130,7 @@
                          (utils/remove-user-listener ::billing)
                          (modal/push-modal
                           [CreateBillingProjectDialog
-                           {:on-success #(react/call :reload this)}])))
+                           {:on-success #(this :reload)}])))
                       (js-invoke
                        @utils/auth2-atom
                        "grantOfflineAccess"
@@ -141,7 +138,7 @@
                                  :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]])}}])))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-data this))
+     (this :load-data))
    :load-data
    (fn [{:keys [state]}]
      (endpoints/get-billing-projects

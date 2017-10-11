@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -106,4 +107,4 @@
            [:b {} method-display]
            " and request access. Method owners:"]
           [:ul {}
-           (map (fn [owner] [:li {} owner]) owners)]])])}])
+           (common/mapwrap :li owners)]])])}])

@@ -249,7 +249,7 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (old-modal/set-instance! (@refs "modal"))
-     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
            (fn [] (js/setTimeout #(throw (js/Error. "You told me to do this.")) 100) nil)))

@@ -29,7 +29,7 @@
    (fn [{:keys [state this props]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
-     (react/call :load this))
+     (this :load))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [server-response methods importing?]} @state
@@ -72,7 +72,7 @@
                  [comps/Spinner {:text "Loading configurations..."}]])]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load this))
+     (this :load))
    :load
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -95,7 +95,7 @@
   {:refresh
    (fn [{:keys [props refs]}]
      (when-not (:config-id props)
-       (react/call :reload (@refs "method-config-list"))))
+       ((@refs "method-config-list") :reload)))
    :render
    (fn [{:keys [props]}]
      (let [{:keys [config-id workspace-id]} props]

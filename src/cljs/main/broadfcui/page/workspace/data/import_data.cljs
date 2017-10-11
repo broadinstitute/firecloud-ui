@@ -56,7 +56,7 @@
         (when (and file (not upload-result))
           [buttons/Button {:data-test-id "confirm-upload-metadata-button"
                            :text "Upload"
-                           :onClick #(react/call :do-upload this)}])
+                           :onClick #(this :do-upload)}])
         (when upload-result
           (if (:success? upload-result)
             (style/create-flexbox

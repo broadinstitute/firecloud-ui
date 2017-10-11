@@ -36,14 +36,14 @@
       (repeat (:dot-count @state) "•")])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-cycle this))
+     (this :-cycle))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (js/clearTimeout (:-cycle @locals)))
    :-cycle
    (fn [{:keys [this state locals]}]
      (swap! state update :dot-count #(mod (inc %) 4))
-     (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
+     (swap! locals assoc :-cycle (js/setTimeout #(this :-cycle) 600)))})
 
 
 (react/defc Checkbox
