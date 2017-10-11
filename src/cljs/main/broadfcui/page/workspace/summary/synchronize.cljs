@@ -33,11 +33,9 @@
           (when unowned-methods
             [:div {}
              (if owned-methods
-               [:div {}
-                (messages/get-methods-repo-group-alert)
-                "Additionally, users will need to request access to the following methods:"
-                "In order to run the methods configured for this workspace, users will need to request
-                 access to the following:"])
+               "Additionally, users will need to request access to the following methods:"
+               "In order to run the methods configured for this workspace, users will need to request
+                access to the following:")
              [:table {:style {:marginTop "1rem"}}
               [:thead {}
                [:tr {:style {:fontWeight "bold"}}
