@@ -4,6 +4,7 @@
    [clojure.set :as set]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.method.messages :as messages]
    [broadfcui.common.method.sync :as sync-common]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
@@ -25,15 +26,18 @@
             [comps/Blocker {:banner "Granting permission..."}])
           (when owned-methods
             [:div {}
+             (messages/get-methods-repo-group-alert)
              "In order to allow the users you have added to this workspace to run the methods configured
               for it, you must grant them access to the following:"
              [:ul {} (map (fn [method] [:li {} (sync-common/get-method-display (:method method))]) owned-methods)]])
           (when unowned-methods
             [:div {}
              (if owned-methods
-               "Additionally, users will need to request access to the following methods:"
-               "In order to run the methods configured for this workspace, users will need to request
-                access to the following:")
+               [:div {}
+                (messages/get-methods-repo-group-alert)
+                "Additionally, users will need to request access to the following methods:"
+                "In order to run the methods configured for this workspace, users will need to request
+                 access to the following:"])
              [:table {:style {:marginTop "1rem"}}
               [:thead {}
                [:tr {:style {:fontWeight "bold"}}
