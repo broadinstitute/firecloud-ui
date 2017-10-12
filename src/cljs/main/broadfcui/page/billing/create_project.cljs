@@ -94,7 +94,7 @@
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button {:data-test-id "create-project-button"
-                   :onClick (when-not (empty? (:billing-accounts @state))
+                   :onClick (when (seq (:billing-accounts @state))
                               #(react/call :create-billing-project this))}}])
    :component-did-mount
    (fn [{:keys [this]}]
@@ -121,15 +121,14 @@
        (let [[name & fails] (input/get-and-validate refs "name-field")]
          (swap! state assoc :validation-errors fails)
          (when-not (or fails (not account))
-           (do
-             (swap! state assoc :creating? true)
-             (endpoints/call-ajax-orch
-              {:endpoint endpoints/create-billing-project
-               :payload {:projectName name :billingAccount account}
-               :headers utils/content-type=json
-               :on-done (fn [{:keys [success? get-parsed-response]}]
-                          (swap! state dissoc :creating?)
-                          (if success?
-                            (do ((:on-success props))
-                                (modal/pop-modal))
-                            (swap! state assoc :server-error (get-parsed-response false))))}))))))})
+           (swap! state assoc :creating? true)
+           (endpoints/call-ajax-orch
+            {:endpoint endpoints/create-billing-project
+             :payload {:projectName name :billingAccount account}
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :creating?)
+                        (if success?
+                          (do ((:on-success props))
+                              (modal/pop-modal))
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))})

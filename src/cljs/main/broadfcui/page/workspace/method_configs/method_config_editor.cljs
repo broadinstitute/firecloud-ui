@@ -153,7 +153,7 @@
                           (if success?
                             (swap! state assoc
                                    :methods-response response
-                                   :methods {[methodNamespace methodName] (mapv #(:snapshotId %) response)})
+                                   :methods {[methodNamespace methodName] (mapv :snapshotId response)})
                             ;; FIXME: :error-message is unused
                             (swap! state assoc :error-message status-text))))})))))
    :-render-display

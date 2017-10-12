@@ -89,7 +89,7 @@
              selected-auth-domain-index (int (:selected-auth-domain @state))
              auth-domain (if (:auth-domain props)
                            {:authorizationDomain {:membersGroupName (:auth-domain props)}}
-                           (when (> selected-auth-domain-index 0)
+                           (when (pos? selected-auth-domain-index)
                              {:authorizationDomain
                               {:membersGroupName (nth (:groups @state) selected-auth-domain-index)}}))]
          (swap! state assoc :working? true :validation-error nil :error nil)

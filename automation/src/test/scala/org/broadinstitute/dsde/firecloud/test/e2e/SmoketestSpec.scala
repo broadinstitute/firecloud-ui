@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.firecloud.test.e2e
 
 import java.util.UUID
+
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig, TestData, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
@@ -43,7 +44,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     assert(methodConfigDetailsPage.isLoaded)
 
     // launch method config with call caching off
-    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false).awaitLoaded()
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false).awaitLoaded()
     submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
     assert(submissionDetailsPage.verifyWorkflowSucceeded())
 

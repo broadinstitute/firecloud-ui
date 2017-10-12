@@ -7,7 +7,7 @@
 (defn- non-empty-string?
   [s]
   (when (string? s)
-    (not (empty? (string/trim s)))))
+    (seq (string/trim s))))
 
 (def validators
   {:boolean {:message "must be a boolean" :check boolean?}

@@ -55,7 +55,7 @@
                             (filter (partial contains? required-attributes))
                             set)
         missing-props (clojure.set/difference required-props (->> attributes (utils/filter-values some?) keys set))]
-    (when-not (empty? missing-props)
+    (when (seq missing-props)
       {:error "Please provide all required attributes"
        :invalid missing-props})))
 

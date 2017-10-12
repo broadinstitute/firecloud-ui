@@ -27,7 +27,7 @@
 (defn find-path-handler [window-hash]
   (let [cleaned (js/decodeURI (subs window-hash 1))
         matching-handlers (filter
-                           (complement nil?)
+                           some?
                            (map
                             (fn [[k handler]]
                               (when-let [matches (re-matches (:regex handler) cleaned)]
@@ -60,7 +60,7 @@
 (defn execute-redirects [window-hash]
   (let [cleaned (js/decodeURI (subs window-hash 1))
         matching-handlers (filter
-                           (complement nil?)
+                           some?
                            (map
                             (fn [handler]
                               (when-let [matches (re-matches (:regex handler) cleaned)]

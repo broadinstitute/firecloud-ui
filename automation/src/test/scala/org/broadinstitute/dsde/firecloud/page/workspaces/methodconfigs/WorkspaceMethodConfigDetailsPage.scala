@@ -29,7 +29,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     if (newRootEntityType != None) { ui.changeRootEntityType(newRootEntityType.get)}
     if (inputs != None) { ui.changeInputsOutputs(inputs.get)  }
     if (outputs != None) { ui.changeInputsOutputs(outputs.get)}
-    ui.saveEdits()
+    ui.clickSaveButton()
 
   }
 
@@ -98,9 +98,13 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       }
     }
 
-    def saveEdits(state: String = "enabled") = {
+    def checkSaveButtonState:String = {
       val button = await enabled saveEditedMethodConfigButtonQuery
-      await forState(button, state)
+      button.attribute("data-test-state").getOrElse("")
+    }
+
+    def clickSaveButton() = {
+      val button = await enabled saveEditedMethodConfigButtonQuery
       // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
       webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", button.underlying)
       click on button

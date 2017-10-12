@@ -20,7 +20,7 @@
                     :padding "1rem"}}
       (when cleared?
         [:div {:style {:float "right"}}
-         (icons/icon {:style {:fontSize "80%" :cursor "pointer"} :on-click #(dismiss)} :close)])
+         (icons/icon {:style {:fontSize "80%" :cursor "pointer"} :on-click dismiss} :close)])
       [:div {:style {:display "flex" :align-items "baseline"}}
        [icons/ExceptionIcon {:size 18 :color text-color}]
        [:span {:style {:margin-left "0.5rem" :font-weight "bold" :vertical-align "middle"}}
@@ -36,7 +36,7 @@
 
 (defn- status-alert-interval [attempt]
   (cond
-    (= attempt 0) (config/status-alerts-refresh)
+    (zero? attempt) (config/status-alerts-refresh)
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
     :else (utils/get-exponential-backoff-interval attempt)))
 
@@ -82,7 +82,7 @@
                     (let [[parsed _] (utils/parse-json-string raw-response true false)]
                       parsed))
            alerts-set (set alerts)
-           existing (set (filter (complement :cleared?) (:service-alerts @state)))
+           existing (set (remove :cleared? (:service-alerts @state)))
            cleared (clojure.set/difference existing alerts-set)
            new (clojure.set/difference alerts-set existing)
            updated (concat (:service-alerts @state) (filter #(contains? new %) alerts))
@@ -94,7 +94,7 @@
               :failed-retries (if (utils/check-server-down status-code)
                                 (inc (:failed-retries @state))
                                 0))
-       (when (and (not (empty? new)) (not first-time?))
+       (when (and (seq new) (not first-time?))
          (comps/push-message
           {:header "New Service Alert" :message "See the page header for details."}))))
    :-remove-alert
