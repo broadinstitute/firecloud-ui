@@ -9,9 +9,8 @@ import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
 import org.scalatest._
-import org.broadinstitute.dsde.firecloud.test.Tags
 
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures
   with CleanUp with Matchers {
@@ -273,7 +272,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     "who has writer access" - {
       "and does not have canCompute permission" - {
-        "should see launch analysis button disabled" in withWebDriver { implicit driver =>
+        "should see launch analysis button disabled" taggedAs Tags.Failing in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
