@@ -12,7 +12,7 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cle
   "A user" - {
     "with a registered account" - {
 
-      "should be able to log in and out multiple times as multiple users" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should be able to log in and out multiple times as multiple users" in withWebDriver { implicit driver =>
         withSignIn(Config.Users.draco) { listPage =>
           listPage.readUserEmail() shouldEqual Config.Users.draco.email
         }

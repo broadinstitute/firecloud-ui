@@ -35,7 +35,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
   "FireCloud registration" - {
 
-    "should allow a person to register" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+    "should allow a person to register" in withWebDriver { implicit driver =>
 
       signIn(email, password)
       val registrationPage = new RegistrationPage

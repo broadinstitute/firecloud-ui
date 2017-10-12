@@ -14,7 +14,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   implicit val authToken: AuthToken = AuthTokens.hermione
 
   "A user" - {
-    "should be able to create a method and see it in the table" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+    "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
       withSignIn(Config.Users.hermione) { _ =>
         val methodRepoPage = new MethodRepoPage()
         val methodRepoTable = methodRepoPage.ui.MethodRepoTable
@@ -41,7 +41,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
       }
     }
 
-    "should be able to redact a method that they own" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+    "should be able to redact a method that they own" in withWebDriver { implicit driver =>
       withMethod("TEST-REDACT-") { case (name, namespace) =>
         withSignIn(Config.Users.hermione) { _ =>
           val methodRepoPage = new MethodRepoPage()

@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures
@@ -24,7 +24,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
   "A user" - {
     "with a billing project" - {
-      "should be able to create a workspace" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should be able to create a workspace" in withWebDriver { implicit driver =>
         withSignIn(Config.Users.draco) { listPage =>
 
           val workspaceName = "WorkspaceSpec_create_" + randomUuid
@@ -40,7 +40,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to clone a workspace" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should be able to clone a workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
 
@@ -59,7 +59,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     }
 
     "who owns a workspace" - {
-      "should be able to delete the workspace" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should be able to delete the workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -102,7 +102,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to set can compute permissions for users that are writers" taggedAs Tags.GooglePassing in withWebDriver {implicit driver =>
+      "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -144,7 +144,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to enter workspace attributes" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should be able to enter workspace attributes" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -164,7 +164,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       // This table is notorious for getting out of sync
       "should be able to correctly delete workspace attributes" - {
-        "from the top" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+        "from the top" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -179,7 +179,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         }
 
-        "from the middle"  taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+        "from the middle" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -194,7 +194,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         }
 
-        "from the bottom" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+        "from the bottom" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -209,7 +209,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         }
 
-        "after adding them" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+        "after adding them" in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
@@ -262,7 +262,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should see import config button disabled" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should see import config button disabled" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
           methodConfigListPage.ui.importConfigButtonEnabled() shouldBe false

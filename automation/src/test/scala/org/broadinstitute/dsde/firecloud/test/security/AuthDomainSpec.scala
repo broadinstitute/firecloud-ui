@@ -9,7 +9,6 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 import org.broadinstitute.dsde.firecloud.test.Tags
-import org.broadinstitute.dsde.firecloud.test.Tags.GooglePassing
 
 
 /*
@@ -34,7 +33,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
-      "can be created" taggedAs GooglePassing in withWebDriver { implicit driver =>
+      "can be created" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { authDomainName =>
           withCleanUp {
             withSignIn(Config.Users.fred) { listPage =>
@@ -79,7 +78,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "when the user is not inside of the group" - {
         "when the workspace is shared with them" - {
-          "can be seen but is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withSignIn(Config.Users.draco) { workspaceListPage =>
@@ -96,7 +95,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when the workspace is not shared with them" - {
-          "cannot be seen and is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                 withSignIn(Config.Users.draco) { workspaceListPage =>
@@ -118,7 +117,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "when the user is inside of the group" - {
         "when the workspace is shared with them" - {
-          "can be seen and is accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen and is accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withSignIn(Config.Users.george) { listPage =>
@@ -132,7 +131,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when the workspace is not shared with them" - {
-          "cannot be seen and is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                 withSignIn(Config.Users.george) { workspaceListPage =>
@@ -152,7 +151,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         //TCGA controlled access workspaces use-case
         "when the workspace is shared with the group" - {
-          "can be seen and is accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen and is accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -174,7 +173,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     //MULTI-GROUP AUTH DOMAIN TESTS
 
     "with multiple groups inside of it" - {
-      "can be created" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "can be created" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { groupOneName =>
           withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
@@ -190,7 +189,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
-      "can be cloned and retain the auth domain" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
         withGroup("AuthDomain", List(Config.Users.george.email)) { groupOneName =>
           withGroup("AuthDomain", List(Config.Users.george.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -220,7 +219,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
-      "can be cloned and have a group added to the auth domain" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "can be cloned and have a group added to the auth domain" in withWebDriver { implicit driver =>
         withGroup("AuthDomain", List(Config.Users.george.email)) { groupOneName =>
           withGroup("AuthDomain", List(Config.Users.george.email)) { groupTwoName =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { groupThreeName =>
@@ -246,7 +245,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
-      "looks restricted in the workspace list page" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { groupOneName =>
           withGroup("AuthDomain") { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
@@ -260,7 +259,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
-      "contains the list of auth domain groups in the workspace summary page" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "contains the list of auth domain groups in the workspace summary page" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { groupOneName =>
           withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
@@ -279,7 +278,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "when the user is in none of the groups" - {
         "when shared with them" - {
-          "can be seen but is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -298,7 +297,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when not shared with them" - {
-          "cannot be seen and is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
@@ -322,7 +321,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "when the user is in one of the groups" - {
         "when shared with them" - {
-          "can be seen but is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -357,7 +356,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when not shared with them" - {
-          "cannot be seen and is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
@@ -396,7 +395,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "when the user is in all of the groups" - {
         "when shared with them" - {
-          "can be seen and is accessible" taggedAs Tags.ProdTest in withWebDriver { implicit driver =>
+          "can be seen and is accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -412,7 +411,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             }
           }
           "and given writer access" - {
-            "the user has correct permissions" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+            "the user has correct permissions" in withWebDriver { implicit driver =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
                 withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                   withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
@@ -448,7 +447,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when shared with one of the groups in the auth domain" - {
-          "can be seen and is accessible by group member who is a member of both auth domain groups" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -463,7 +462,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
-          "can be seen but is not accessible by group member who is a member of only one auth domain group" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "can be seen but is not accessible by group member who is a member of only one auth domain group"in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -484,7 +483,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
         "when not shared with them" - {
-          "cannot be seen and is not accessible" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+          "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>

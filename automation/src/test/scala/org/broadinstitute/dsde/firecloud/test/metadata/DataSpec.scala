@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, Tags, WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
@@ -15,7 +15,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
   implicit lazy val authToken: AuthToken = AuthTokens.harry
   behavior of "Data"
 
-  it should "import a participants file" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+  it should "import a participants file" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_import_participants_file_") { workspaceName =>
       withSignIn(Config.Users.harry) { _ =>
         val filename = "src/test/resources/participants.txt"
