@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.scalatest._
@@ -8,8 +8,6 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 
 
 class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
-
-  // implicit val authToken: AuthToken = AuthTokens.draco
 
   "A user" - {
     "with a registered account" - {

@@ -272,7 +272,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     "who has writer access" - {
       "and does not have canCompute permission" - {
-        "should see launch analysis button disabled" taggedAs Tags.Failing in withWebDriver { implicit driver =>
+        "should see launch analysis button disabled" ignore in withWebDriver { implicit driver =>
           withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
             withSignIn(Config.Users.draco) { listPage =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
@@ -288,7 +288,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
               errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
             }
-          }
+          }f
         }
       }
       "and does have canCompute permission" - {
@@ -319,7 +319,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
   // Experimental
   "A cloned workspace" - {
-    "should retain the source workspace's authorization domain" in withWebDriver { implicit driver =>
+    "should retain the source workspace's authorization domain" ignore withWebDriver { implicit driver =>
       withSignIn(Config.Users.draco) { listPage =>
         withClonedWorkspace(Config.Projects.common, "AuthDomainSpec_share") { cloneWorkspaceName =>
           val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName).awaitLoaded()

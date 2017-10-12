@@ -39,7 +39,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "launch modal with no default entities" taggedAs Tags.Failing in withWebDriver { implicit driver =>
+  "launch modal with no default entities" ignore withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
@@ -149,7 +149,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   }
 
-  "import a method config into a workspace from the method repo" taggedAs Tags.Failing in withWebDriver { implicit driver =>
+  "import a method config into a workspace from the method repo" ignore withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(uiUser) { _ =>
@@ -163,7 +163,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "import a method into a workspace from the method repo" taggedAs Tags.Failing in withWebDriver { implicit driver =>
+  "import a method into a workspace from the method repo" ignore withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(uiUser) { _ =>
