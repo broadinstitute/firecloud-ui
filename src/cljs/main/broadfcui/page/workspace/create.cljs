@@ -10,6 +10,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -58,7 +59,7 @@
                                     :defaultValue (:description props)})
            [:div {:style {:display "flex"}}
             (style/create-form-label "Authorization Domain (optional)")
-            (common/render-info-box
+            (dropdown/render-info-box
              {:text [:div {} [:strong {} "Note:"]
                      [:div {}
                       "An Authorization Domain can only be set when creating a Workspace.
@@ -128,7 +129,7 @@
                       (swap! state dissoc :creating-ws)
                       (if success?
                         (do (modal/pop-modal)
-                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                            (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]

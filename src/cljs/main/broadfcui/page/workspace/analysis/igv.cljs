@@ -30,11 +30,11 @@
      [:div {:ref "container"}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :refresh this))
+     (this :refresh))
    :component-did-update
    (fn [{:keys [props prev-props this]}]
      (when (not= (:tracks props) (:tracks prev-props))
-       (react/call :refresh this)))
+       (this :refresh)))
    :refresh
    (fn [{:keys [props refs]}]
      (.createBrowser js/igv (@refs "container") (options (:tracks props))))})

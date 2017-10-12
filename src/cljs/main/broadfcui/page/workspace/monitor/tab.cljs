@@ -63,7 +63,7 @@
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     (react/call :load-submissions this))
+     (this :load-submissions))
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
@@ -76,7 +76,7 @@
          (render-submissions-table (:workspace-id props) submissions (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-submissions this))
+     (this :load-submissions))
    :load-submissions
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -91,7 +91,7 @@
   {:refresh
    (fn [{:keys [props refs]}]
      (when-not (:submission-id props)
-       (react/call :reload (@refs "submissions-list"))))
+       ((@refs "submissions-list") :reload)))
    :render
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props

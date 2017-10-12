@@ -1,11 +1,11 @@
 (ns broadfcui.page.method-repo.method.details
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -141,7 +141,7 @@
      (let [{:keys [method]} @state
            snapshot-id (some :snapshot-id [props @state])
            selected-snapshot-id (or snapshot-id (:snapshotId (last method)))]
-       (common/render-dropdown-menu
+       (dropdown/render-dropdown-menu
         {:label (tab-bar/render-title
                  "SNAPSHOT"
                  [:div {:style {:display "flex" :alignItems "center"}
