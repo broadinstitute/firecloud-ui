@@ -38,6 +38,8 @@ trait MethodFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
     try {
       testCode((name, namespace))
+    } finally {
+
     }
 
   }
