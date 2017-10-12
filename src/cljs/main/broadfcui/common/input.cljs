@@ -14,7 +14,7 @@
      (let [text (react/call :get-text this)
            fails (keep (fn [p] (when-not ((:test p) text) (:message p)))
                        (filter some? (:predicates props)))]
-       (when-not (empty? fails)
+       (when (seq fails)
          (swap! state assoc :invalid true)
          fails)))
    :access-field

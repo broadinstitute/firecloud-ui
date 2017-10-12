@@ -29,6 +29,11 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
     ui.filter(searchText)
   }
 
+  def hasRedactedIcon(configName: String): Boolean = {
+    filter(configName)
+    find(className(s"fa-exclamation-triangle")).isDefined
+  }
+
   def openMethodConfig(methodNamespace: String, methodName: String): WorkspaceMethodConfigDetailsPage = {
     ui.openMethodConfig(methodName)
     new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodName)

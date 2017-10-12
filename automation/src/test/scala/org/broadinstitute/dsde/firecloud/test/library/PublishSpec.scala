@@ -2,16 +2,18 @@ package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
-import org.broadinstitute.dsde.firecloud.fixture.LibraryData
+import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
+import scala.concurrent.duration.DurationLong
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
-class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
+class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with CleanUp with Matchers {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
@@ -23,87 +25,83 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     "an unpublished workspace" - {
       "without required library attributes" - {
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
-          val wsName = "PublishSpec_curator_unpub_" + randomUuid
-          api.workspaces.create(namespace, wsName)
-          register cleanUp api.workspaces.delete(namespace, wsName)
-
-          signIn(Config.Users.curator)
-          val page = new WorkspaceSummaryPage(namespace, wsName)
-          page.open
-          page.ui.clickPublishButton()
-          val messageModal = MessageModal()
-          assert(messageModal.validateLocation)
+          withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
+            val wsList = signIn(Config.Users.curator)
+            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+            page.ui.clickPublishButton()
+            val messageModal = MessageModal()
+            messageModal.validateLocation shouldBe true
+          }
         }
       }
       "with required library attributes" - {
         "publish button should be visible " in withWebDriver { implicit driver =>
-          val wsName = "PublishSpec_curator_unpub_withAttributes_" + randomUuid
-          api.workspaces.create(namespace, wsName)
-          api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
-          register cleanUp api.workspaces.delete(namespace, wsName)
+          withWorkspace(namespace, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
+            api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
 
-          signIn(Config.Users.curator)
-          val page = new WorkspaceSummaryPage(namespace, wsName)
-          page.open
-          assert(page.ui.hasPublishButton)
+            val wsList = signIn(Config.Users.curator)
+            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+            page.ui.hasPublishButton shouldBe true
+          }
         }
       }
     }
     "a published workspace" - {
       "should be visible in the library table" in withWebDriver { implicit driver =>
-        val wsName = "PublishSpec_curator_publish_" + randomUuid
+        withWorkspace(namespace, "PublishSpec_curator_publish_") { wsName =>
+          withCleanUp {
+            val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+            api.library.setLibraryAttributes(namespace, wsName, data)
+            register cleanUp api.library.unpublishWorkspace(namespace, wsName)
+            api.library.publishWorkspace(namespace, wsName)
 
-        register cleanUp api.workspaces.delete(namespace, wsName)
-        api.workspaces.create(namespace, wsName)
-
-        val data = LibraryData.metadata + ("library:datasetName" -> wsName)
-        api.library.setLibraryAttributes(namespace, wsName, data)
-        register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-        api.library.publishWorkspace(namespace, wsName)
-
-        signIn(Config.Users.curator)
-        val page = new DataLibraryPage().open
-        assert(page.ui.hasDataset(wsName))
+            signIn(Config.Users.curator)
+            val page = new DataLibraryPage().open
+            page.ui.hasDataset(wsName) shouldBe true
+          }
+        }
       }
       "should be able to be unpublished" in withWebDriver { implicit driver =>
-        val wsName = "PublishSpec_curator_unpublish_" + randomUuid
+        withWorkspace(namespace, "PublishSpec_curator_unpublish_") { wsName =>
+          withCleanUp {
+            val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+            api.library.setLibraryAttributes(namespace, wsName, data)
+            register cleanUp api.library.unpublishWorkspace(namespace, wsName)
+            api.library.publishWorkspace(namespace, wsName)
 
-        register cleanUp api.workspaces.delete(namespace, wsName)
-        api.workspaces.create(namespace, wsName)
+            signIn(Config.Users.curator)
+            val wspage = new WorkspaceSummaryPage(namespace, wsName).open
+            wspage.unpublishWorkspace()
 
-        val data = LibraryData.metadata + ("library:datasetName" -> wsName)
-        api.library.setLibraryAttributes(namespace, wsName, data)
-        register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-        api.library.publishWorkspace(namespace, wsName)
+            // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
+            //            Thread sleep 500
 
-        signIn(Config.Users.curator)
-        val wspage = new WorkspaceSummaryPage(namespace, wsName).open
-        wspage.unpublishWorkspace()
-
-        // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
-        Thread sleep 200
-
-        val libraryPage = new DataLibraryPage().open
-        assert(!libraryPage.ui.hasDataset(wsName))
+            retry[Boolean](100.milliseconds, 1.minute)({
+              val libraryPage = new DataLibraryPage().open
+              if (libraryPage.ui.hasDataset(wsName))
+                None
+              else Some(false)
+            }) match {
+              case None => fail()
+              case Some(s) => s shouldBe false
+            }
+          }
+        }
       }
-
     }
+  }
 
-    "As a non-curator" - {
-      "an unpublished workspace" - {
-        "with required library attributes" - {
-          "should not see publish button " in withWebDriver { implicit driver =>
-            val wsName = "PublishSpec_unpub_withAttributes_" + randomUuid
-
-            register cleanUp api.workspaces.delete(namespace, wsName)(ronAuthToken)
-            api.workspaces.create(namespace, wsName)(ronAuthToken)
+  "As a non-curator" - {
+    "an unpublished workspace" - {
+      "with required library attributes" - {
+        "should not see publish button " in withWebDriver { implicit driver =>
+          withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(ronAuthToken)
 
-            signIn(Config.Users.ron)
-            val page = new WorkspaceSummaryPage(namespace, wsName)
-            page.open
-            assert(!page.ui.hasPublishButton)
-          }
+            val wsList = signIn(Config.Users.ron)
+            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+            page.ui.hasPublishButton shouldBe false
+          }(ronAuthToken)
         }
       }
     }

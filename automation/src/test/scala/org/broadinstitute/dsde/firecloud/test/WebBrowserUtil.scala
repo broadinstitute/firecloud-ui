@@ -245,4 +245,5 @@ trait WebBrowserUtil extends WebBrowser {
   def title(title: String)(implicit webDriver: WebDriver): Query = {
     cssSelector(s"[title='$title']")
   }
+
 }

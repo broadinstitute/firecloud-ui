@@ -83,7 +83,7 @@
    :component-did-update
    (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
-       (common/scroll-to-center (-> (@refs "pending-spinner") react/find-dom-node))))
+       (common/scroll-to-center (react/find-dom-node (@refs "pending-spinner")))))
    :load-nih-status
    (fn [{:keys [state]}]
      (endpoints/profile-get-nih-status

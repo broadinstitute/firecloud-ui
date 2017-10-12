@@ -173,8 +173,8 @@
   (or (= status-code 502)
       ;; status code 0 means maintenance mode--unless it's this net::ERR_CONNECTION_REFUSED thing
       ;; which has a completely empty response, so exclude that.
-      (and (= status-code 0)
-           (not (empty? status-text)))))
+      (and (zero? status-code)
+           (seq status-text))))
 
 (defn- check-server-down [status-code]
   (or (= 501 status-code)

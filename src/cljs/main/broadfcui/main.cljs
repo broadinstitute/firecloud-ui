@@ -218,7 +218,7 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                js/window "error" (fn [e] (show-js-exception e)))))}]
+                                js/window "error" show-js-exception)))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
