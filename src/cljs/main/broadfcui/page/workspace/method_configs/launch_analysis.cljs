@@ -4,7 +4,6 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.duration :as duration]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
@@ -20,25 +19,6 @@
 (defn- entity->id [entity]
   {:type (:entityType entity) :name (:name entity)})
 
-
-(defn- row [label content]
-  [:div {}
-   [:div {:style {:display "inline-block" :width 200 :textAlign "right" :marginRight "1ex"}} label]
-   [:div {:style {:display "inline-block" :width 240}} content]])
-
-(defn queue-status-table [state]
-  (let [{:keys [queue-status queue-error]} @state
-        {:keys [queue-time queue-position queued active]} queue-status]
-    [:div {:style {:marginBottom "1em" :float "right"}}
-     (cond
-       queue-error (style/create-server-error-message queue-error)
-       (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
-       :else
-       [:div {}
-        (row "Estimated wait time:" (duration/fuzzy-time-from-now-ms (+ (.now js/Date) queue-time) false))
-        (row "Workflows ahead of yours:" queue-position)
-        (row "Queue status:" (str queued " Queued; " active " Active"))])]))
-
 (defn- render-form [state props]
   [:div {:style {:width "80vw"}}
    (when (:launching? @state)
@@ -52,7 +32,7 @@
           (if-let [e (:selected-entity @state)]
             (str (:name e) " (" (:type e) ")")
             "None"))]
-    (queue-status-table state)
+    [comps/QueueStatus]
     (common/clear-both)
     (let [set-entity (fn [entity]
                        (swap! state assoc
@@ -127,12 +107,6 @@
        :data-test-id "launch-analysis-modal"}])
    :component-did-mount
    (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/submissions-queue-status)
-       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                  (if success?
-                    (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
-                    (swap! state assoc :queue-error status-text)))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/cromwell-version)
        :on-done (fn [{:keys [success? get-parsed-response]}]
