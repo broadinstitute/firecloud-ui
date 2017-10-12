@@ -7,7 +7,7 @@ import org.scalatest._
 import org.broadinstitute.dsde.firecloud.test.Tags
 
 
-class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp {
+class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
 
   // implicit val authToken: AuthToken = AuthTokens.draco
 
@@ -16,14 +16,15 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cle
 
       "should be able to log in and out multiple times as multiple users" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
         withSignIn(Config.Users.draco) { listPage =>
-          listPage.signOut()
-          val listPageAsUser2 = signIn(Config.Users.snape)
-          assert(listPageAsUser2.readUserEmail().equals(Config.Users.snape.email))
-          listPageAsUser2.signOut()
-          val listPageAsUser1 = signIn(Config.Users.draco)
-          assert(listPageAsUser1.readUserEmail().equals(Config.Users.draco.email))
+          listPage.readUserEmail() shouldEqual Config.Users.draco.email
         }
+        withSignIn(Config.Users.snape) { listPage =>
+          listPage.readUserEmail() shouldEqual Config.Users.snape.email
+        }
+        withSignIn(Config.Users.draco) { listPage =>
+          listPage.readUserEmail() shouldEqual Config.Users.draco.email
 
+        }
       }
     }
 
