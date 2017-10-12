@@ -129,7 +129,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
       //reader permissions should always be false
-      "should not be able to set/change compute permissions for readers" taggedAs Tags.GooglePassing in withWebDriver { implicit driver =>
+      "should not be able to set/change compute permissions for readers" ignore withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
