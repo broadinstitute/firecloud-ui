@@ -428,7 +428,7 @@
                  :error-message err-text :disabled-reason :error)
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
-                 :disabled-reason (if (empty? projects) :no-billing nil)))))
+                 :disabled-reason (when (empty? projects) :no-billing)))))
      (utils/ajax
       {:url (config/featured-json-url)
        :on-done (fn [{:keys [raw-response]}]

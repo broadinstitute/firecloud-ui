@@ -126,7 +126,7 @@
        [:div {:style style/thin-page-style}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [:div {:style {:fontSize "1.2em"}} (when group-name "Group: ")
-          [:span {:style {:fontWeight 500}} (if group-name group-name "Group Management")]]]
+          [:span {:style {:fontWeight 500}} (or group-name "Group Management")]]]
         (if group-name
           [management-utils/MembershipManagementPage
            {:group-name group-name

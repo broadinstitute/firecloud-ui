@@ -21,7 +21,7 @@
 
 (defn- protected-banner [workspace]
   (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain])]
-    (when (not (empty? this-auth-domain))
+    (when (seq this-auth-domain)
       [:div {:style {:paddingTop 2}}
        [:div {:style {:backgroundColor "#ccc"
                       :fontSize "small"
@@ -32,7 +32,7 @@
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
 (defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]
-  (when (= false bucket-access?)
+  (when (false? bucket-access?)
     [:div {:style {:paddingTop 2}}
      [:div {:style {:backgroundColor "#efdcd7"
                     :fontSize "small"

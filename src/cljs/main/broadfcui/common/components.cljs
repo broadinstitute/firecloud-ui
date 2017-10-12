@@ -154,7 +154,7 @@
            make-field
            (fn [key label & {:keys [dropdown? wrap? render width]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (if width width "100px")) :fontWeight 500} } (str label ":")]
+              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (or width "100px")) :fontWeight 500} } (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
@@ -343,7 +343,7 @@
            scroll-height (.-scrollHeight (@refs "scroller"))
            inner-height (.-offsetHeight (@refs "scroller"))]
        (swap! state assoc
-              :more-above? (> scroll-top 0)
+              :more-above? (pos? scroll-top)
               :more-below? (< (+ scroll-top inner-height) scroll-height))))})
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use

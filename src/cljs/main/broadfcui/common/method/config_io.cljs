@@ -116,7 +116,7 @@
                                                              (if (empty? value) "" value)))
                                          :theme {:input {:width "calc(100% - 16px)"}}}]
                                        [:span {:style (when optional? table-style/table-cell-optional)}
-                                        (if (not (string/blank? value))
+                                        (if-not (string/blank? value)
                                           value
                                           [:span {:style {:color (:text-lighter style/colors)}}
                                            (if optional? "Optional" "Required")])])])}])

@@ -54,7 +54,7 @@
           :style {:display "flex"}}
     (map-indexed
      (fn [index [label link-key]]
-       (make-tab (merge {:first? (= index 0)
+       (make-tab (merge {:first? (zero? index)
                          :active? (= label active-tab)}
                         (utils/restructure label link-key context-id refresh-tab request-refresh on-click))))
      (remove nil? tabs))]])
