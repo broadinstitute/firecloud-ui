@@ -170,7 +170,7 @@
    [:p {} "Observe, the ever-useful infobox:"
     (dropdown/render-info-box {:text "Can we be friends?"})]
    (create-code-block "(dropdown/render-info-box {:text \"Infobox text or element here.\"]})")
-   [:p {} "An infobox is an instance of a " (style/create-code-sample "common/FoundationDropdown") ", but it should
+   [:p {} "An infobox is an instance of a " (style/create-code-sample "FoundationDropdown") ", but it should
    only be used when there's a contextual explanation to be displayed. The most interactivity inside
    of it should be an external link."]
 
