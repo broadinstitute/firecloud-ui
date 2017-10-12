@@ -8,8 +8,7 @@ import org.scalatest.Suite
 
 trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
-  def withSignIn(user: Credentials,
-                 cleanUp: Boolean = true)
+  def withSignIn(user: Credentials)
                 (testCode: (WorkspaceListPage) => Any)(implicit webdriver: WebDriver): Unit = {
 
     val listPage = signIn(user)
@@ -18,11 +17,9 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
     try {
       testCode(listPage)
     } finally {
-      if (cleanUp) {
-        try {
-          listPage.signOut()
-        } catch nonFatalAndLog(s"Error logging out user: $userEmail")
-      }
+      try {
+        listPage.signOut()
+      } catch nonFatalAndLog(s"Error logging out user: $userEmail")
     }
 
   }

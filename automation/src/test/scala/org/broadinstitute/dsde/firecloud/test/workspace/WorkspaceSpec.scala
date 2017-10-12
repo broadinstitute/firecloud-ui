@@ -288,7 +288,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               val errorModal = methodConfigDetailsPage.ui.clickLaunchAnalysisButtonError()
               errorModal.getErrorText() shouldBe "You do not have access to run analysis.\nCancel"
             }
-          }f
+          }
         }
       }
       "and does have canCompute permission" - {
