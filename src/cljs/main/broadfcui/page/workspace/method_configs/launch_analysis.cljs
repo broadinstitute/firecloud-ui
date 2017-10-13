@@ -32,7 +32,8 @@
           (if-let [e (:selected-entity @state)]
             (str (:name e) " (" (:type e) ")")
             "None"))]
-    [comps/QueueStatus]
+    [:div {:style {:float "right"}}
+      [comps/QueueStatus]]
     (common/clear-both)
     (let [set-entity (fn [entity]
                        (swap! state assoc

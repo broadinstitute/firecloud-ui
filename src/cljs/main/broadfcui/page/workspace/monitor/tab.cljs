@@ -96,13 +96,15 @@
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props
            bucketName (get-in (:workspace props) [:workspace :bucketName])]
-       [:div {:style {:padding "1rem 1.5rem"}}
-        (if submission-id
-          [submission-details/Page {:key submission-id
-                                    :workspace-id workspace-id
-                                    :bucketName bucketName
-                                    :submission-id submission-id
-                                    :workflow-id (:workflow-id props)}]
-          [SubmissionsList {:ref "submissions-list"
-                            :workspace-id workspace-id
-                            :bucketName bucketName}])]))})
+       [:div {}
+        [comps/QueueStatus {}]
+        [:div {:style {:padding "1rem 1.5rem"}}
+         (if submission-id
+           [submission-details/Page {:key submission-id
+                                     :workspace-id workspace-id
+                                     :bucketName bucketName
+                                     :submission-id submission-id
+                                     :workflow-id (:workflow-id props)}]
+           [SubmissionsList {:ref "submissions-list"
+                             :workspace-id workspace-id
+                             :bucketName bucketName}])]]))})
