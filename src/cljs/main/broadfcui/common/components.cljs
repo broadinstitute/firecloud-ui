@@ -632,7 +632,7 @@
            (this :-row "Estimated wait time:" (duration/fuzzy-time-from-now-ms (+ (.now js/Date) queue-time) false))
            (this :-row "Workflows ahead of yours:" queue-position)
            (this :-row "Queue status:" (str queued " Queued; " active " Active")
-                 [:div {:style {:display "inline-block" :marginLeft "1ex" :fontStyle "italic"}} (links/create-internal {:onClick (fn [] (this :-load-data) (swap! state assoc :queue-status nil))} "(refresh)")])])]))
+                 [:div {:style {:display "inline-block" :marginLeft "1ex" :fontStyle "italic"}} (links/create-internal {:data-test-id "queue-status-refresh" :onClick (fn [] (this :-load-data) (swap! state assoc :queue-status nil))} "(refresh)")])])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
