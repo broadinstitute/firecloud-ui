@@ -623,7 +623,7 @@
    (fn [{:keys [state this]}]
      (let [{:keys [queue-status queue-error]} @state
            {:keys [queue-time queue-position queued active]} queue-status]
-       [:div {:style {:marginBottom "0.5em" :marginTop "-0.5em"}}
+       [:div {:style {:marginBottom "0.5em"}}
         (cond
           queue-error (style/create-server-error-message queue-error)
           (not queue-status) [Spinner {:text "Loading submission queue status..."}]
