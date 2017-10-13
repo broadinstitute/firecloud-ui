@@ -139,7 +139,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            
+
             detailPage.edit {
               detailPage.addWorkspaceAttribute("a", "X")
               detailPage.addWorkspaceAttribute("b", "Y")

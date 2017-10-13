@@ -268,7 +268,7 @@
                                           [:p {}
                                            "If you are unable to contact a curator, contact help@firecloud.org."]]})
                  :onClick #(modal/push-modal
-                            [DeleteDialog (utils/restructure workspace-id published?)])}]))]}]]))
+                            [DeleteDialog (utils/restructure workspace-id published?)])}]))])}]]))
    :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
