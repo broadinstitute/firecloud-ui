@@ -26,32 +26,29 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
         withSignIn(Config.Users.draco) { listPage =>
-
           val workspaceName = "WorkspaceSpec_create_" + randomUuid
           register cleanUp api.workspaces.delete(billingProject, workspaceName)
           val detailPage = listPage.createWorkspace(billingProject, workspaceName)
 
           detailPage.validateWorkspace shouldEqual true
 
-        listPage.open
-        listPage.hasWorkspace(billingProject, workspaceName) shouldBe true
-      }
+          listPage.open
+          listPage.hasWorkspace(billingProject, workspaceName) shouldBe true
+        }
 
       }
 
       "should be able to clone a workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-
             val workspaceNameCloned = "WorkspaceSpec_clone_" + randomUuid
             val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, workspaceName).open
             register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)
             workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned)
 
-          listPage.open
-          listPage.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true}
+            listPage.open
+            listPage.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true}
         }
-
       }
     }
 
@@ -59,20 +56,18 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to delete the workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          detailPage.deleteWorkspace()
-          listPage.validateLocation()
-          listPage.hasWorkspace(billingProject, workspaceName) shouldBe false
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+            detailPage.deleteWorkspace()
+            listPage.validateLocation()
+            listPage.hasWorkspace(billingProject, workspaceName) shouldBe false
+          }
         }
-      }
 
       }
 
       "should be able to share the workspace" in withWebDriver { implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             detailPage.share(Config.Users.ron.email, "READER")
             detailPage.signOut()
@@ -87,7 +82,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to set can share permissions for other (non-owner) users" in withWebDriver {implicit driver =>
         withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
-
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             detailPage.share(Config.Users.ron.email, "READER", true)
             detailPage.signOut()
@@ -145,12 +139,12 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
           withSignIn(Config.Users.draco) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-
-          detailPage.edit {
-          detailPage.addWorkspaceAttribute("a", "X")
-          detailPage.addWorkspaceAttribute("b", "Y")
-          detailPage.addWorkspaceAttribute("c", "Z")
-          }
+            
+            detailPage.edit {
+              detailPage.addWorkspaceAttribute("a", "X")
+              detailPage.addWorkspaceAttribute("b", "Y")
+              detailPage.addWorkspaceAttribute("c", "Z")
+            }
 
             // TODO: ensure sort, for now it's default sorted by key, ascending
             detailPage.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
@@ -166,9 +160,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-            detailPage.edit {
-            detailPage.deleteWorkspaceAttribute("A-key")
-            }
+              detailPage.edit {
+                detailPage.deleteWorkspaceAttribute("A-key")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
             }
@@ -181,9 +175,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-            detailPage.edit {
-            detailPage.deleteWorkspaceAttribute("B-key")
-            }
+              detailPage.edit {
+                detailPage.deleteWorkspaceAttribute("B-key")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
             }
@@ -196,9 +190,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-            detailPage.edit {
-            detailPage.deleteWorkspaceAttribute("C-key")
-            }
+              detailPage.edit {
+                detailPage.deleteWorkspaceAttribute("C-key")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
             }
@@ -211,29 +205,29 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             withSignIn(Config.Users.draco) { listPage =>
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
 
-            detailPage.edit {
-            detailPage.addWorkspaceAttribute("a", "W")
-            detailPage.addWorkspaceAttribute("b", "X")
-            detailPage.addWorkspaceAttribute("c", "Y")
-            }
+              detailPage.edit {
+                detailPage.addWorkspaceAttribute("a", "W")
+                detailPage.addWorkspaceAttribute("b", "X")
+                detailPage.addWorkspaceAttribute("c", "Y")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
 
-            detailPage.edit {
-            detailPage.addWorkspaceAttribute("d", "Z")
-            }
+              detailPage.edit {
+                detailPage.addWorkspaceAttribute("d", "Z")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
 
-            detailPage.edit {
-            detailPage.deleteWorkspaceAttribute("c")
-            }
+              detailPage.edit {
+                detailPage.deleteWorkspaceAttribute("c")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
 
-            detailPage.edit {
-            detailPage.deleteWorkspaceAttribute("b")
-            }
+              detailPage.edit {
+                detailPage.deleteWorkspaceAttribute("b")
+              }
 
               detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
             }
@@ -248,7 +242,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           withSignIn(Config.Users.ron) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
-            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+              SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val methodConfigTab = detailPage.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")

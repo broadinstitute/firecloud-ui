@@ -236,8 +236,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
       withSignIn(uiUser) { _ =>
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
-
-      workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
+        workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
+      }
     }
   }
 
