@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -36,7 +37,7 @@
 
 (defn create-account-dropdown []
   (let [auth2 @utils/auth2-atom]
-    (common/render-dropdown-menu
+    (dropdown/render-dropdown-menu
      {:label [:div {:style {:borderRadius 2 :display "inline-block"
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"

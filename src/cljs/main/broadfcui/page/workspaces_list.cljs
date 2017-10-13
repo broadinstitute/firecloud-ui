@@ -12,6 +12,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -95,7 +96,7 @@
                                                          :onClick #(this :-request-access name i)}]
                                         (when requesting? [comps/Spinner])
                                         (when requested?
-                                          (common/render-info-box
+                                          (dropdown/render-info-box
                                            {:text [:div {} "Your request has been submitted. When you are granted
                                                    access, the " [:strong {} "Access Level"] " displayed on
                                                    the Workspace list will be updated."]}))]))]]))
@@ -428,7 +429,7 @@
                  :error-message err-text :disabled-reason :error)
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
-                 :disabled-reason (if (empty? projects) :no-billing nil)))))
+                 :disabled-reason (when (empty? projects) :no-billing)))))
      (utils/ajax
       {:url (config/featured-json-url)
        :on-done (fn [{:keys [raw-response]}]

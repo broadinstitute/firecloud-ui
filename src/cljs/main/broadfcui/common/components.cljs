@@ -37,14 +37,14 @@
       (repeat (:dot-count @state) "•")])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-cycle this))
+     (this :-cycle))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (js/clearTimeout (:-cycle @locals)))
    :-cycle
    (fn [{:keys [this state locals]}]
      (swap! state update :dot-count #(mod (inc %) 4))
-     (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
+     (swap! locals assoc :-cycle (js/setTimeout #(this :-cycle) 600)))})
 
 
 (react/defc Checkbox
@@ -155,7 +155,7 @@
            make-field
            (fn [key label & {:keys [dropdown? wrap? render width]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (if width width "100px")) :fontWeight 500} } (str label ":")]
+              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (or width "100px")) :fontWeight 500} } (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
@@ -344,7 +344,7 @@
            scroll-height (.-scrollHeight (@refs "scroller"))
            inner-height (.-offsetHeight (@refs "scroller"))]
        (swap! state assoc
-              :more-above? (> scroll-top 0)
+              :more-above? (pos? scroll-top)
               :more-below? (< (+ scroll-top inner-height) scroll-height))))})
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use

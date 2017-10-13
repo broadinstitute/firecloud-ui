@@ -1,6 +1,7 @@
 (ns broadfcui.config.loader
   (:require
    [dmohs.react :as react]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -15,7 +16,7 @@
         [:div {:style {:color (:exception-state style/colors)}}
          "Error loading configuration:"
          [:ul {}
-          (map (fn [message] [:li {} message]) errors)]]
+          (common/mapwrap :li errors)]]
         [comps/Spinner {:text "Loading configuration..."}])])
    :component-did-mount
    (fn [{:keys [this]}]

@@ -23,6 +23,7 @@
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -188,7 +189,7 @@
                :style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
                :onClick #(swap! state assoc :sharing? true)}])
-           (when (not editing?)
+           (when-not editing?
              [buttons/SidebarButton
               {:data-test-id "catalog-button"
                :style :light :color :button-primary :margin :top
@@ -214,7 +215,7 @@
                                            "All required dataset attributes must be set before publishing.")})])))
 
            (when (or owner? writer?)
-             (if (not editing?)
+             (if-not editing?
                [buttons/SidebarButton
                 {:style :light :color :button-primary :margin :top
                  :text "Edit" :icon :edit
@@ -340,7 +341,7 @@
                                          :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
                                          :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
 
-        (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+        (when editing? [:div {:style {:marginBottom "10px"}} ws-common/PHI-warning])
 
         [Collapse
          {:style {:marginBottom "2rem"}

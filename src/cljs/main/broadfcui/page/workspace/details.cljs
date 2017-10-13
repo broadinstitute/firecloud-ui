@@ -1,11 +1,11 @@
 (ns broadfcui.page.workspace.details
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.tab-bar :as tab-bar]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -21,7 +21,7 @@
 
 (defn- protected-banner [workspace]
   (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain])]
-    (when (not (empty? this-auth-domain))
+    (when (seq this-auth-domain)
       [:div {:style {:paddingTop 2}}
        [:div {:style {:backgroundColor "#ccc"
                       :fontSize "small"
@@ -32,7 +32,7 @@
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
 (defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]
-  (when (= false bucket-access?)
+  (when (false? bucket-access?)
     [:div {:style {:paddingTop 2}}
      [:div {:style {:backgroundColor "#efdcd7"
                     :fontSize "small"
@@ -91,13 +91,13 @@
                                 [:span {:data-test-id "header-namespace"} (:namespace workspace-id)]
                                 "/"
                                 [:span {:data-test-id "header-name"} (:name workspace-id)]])
-         [common/FoundationTooltip
+         [FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"
            :style {:marginRight "-0.5rem" :borderBottom "none" :alignSelf "center"}
            :data-hover-delay "1000" :data-click-open "false"
            :text
-           (common/render-icon-dropdown
+           (dropdown/render-icon-dropdown
             {:icon-name :bell :icon-color (:text-light style/colors)
              :position "bottom"
              :button-class "float-right"
