@@ -1,20 +1,19 @@
 (ns broadfcui.common.style
   (:require
    [clojure.string :as string]
-   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 
-(def colors {:background-light "#f4f4f4"
-             :background-dark "#4d4d4d"
+(def colors {:background-dark "#4d4d4d"
+             :background-light "#f4f4f4"
              :border-light "#cacaca"
              :button-primary "#457fd2"
              :line-default "#e6e6e6"
-             :running-state "#67688a"
-             :success-state "#7aac20"
-             :warning-state "#ebaf3b"
-             :exception-state "#e85c46"
-             :disabled-state "#dadada"
+             :state-disabled "#dadada"
+             :state-exception "#e85c46"
+             :state-running "#67688a"
+             :state-success "#7aac20"
+             :state-warning "#ebaf3b"
              :tag-background "#d4ecff"
              :tag-foreground "#2c3c4d"
              :text-light "#666"
@@ -28,9 +27,9 @@
 
 (defn color-for-status [status]
   (case status
-    "Complete" (:success-state colors)
-    "Running" (:running-state colors)
-    "Exception" (:exception-state colors)))
+    "Complete" (:state-success colors)
+    "Running" (:state-running colors)
+    "Exception" (:state-exception colors)))
 
 (def secondary-icon-style
   {:color (:text-light colors)
@@ -124,11 +123,11 @@
    (map (fn [opt] [:option {:value opt} opt]) options)])
 
 (defn create-server-error-message [message]
-  [:div {:style {:textAlign "center" :color (:exception-state colors)}}
+  [:div {:style {:textAlign "center" :color (:state-exception colors)}}
    message])
 
 (defn create-validation-error-message [fails]
-  [:div {:style {:color (:exception-state colors)}}
+  [:div {:style {:color (:state-exception colors)}}
    (map (fn [fail] [:div {} fail]) fails)])
 
 (defn create-message-well [message]

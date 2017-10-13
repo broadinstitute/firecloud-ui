@@ -81,7 +81,7 @@
                (case @index-url
                  :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
                  :error (if requires-index?
-                          [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:exception-state style/colors) :overflow "hidden"}}
+                          [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:state-exception style/colors) :overflow "hidden"}}
                            (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
                            (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
@@ -155,5 +155,5 @@
                            :on-remove #(swap! state update :tracks utils/delete %)}]
             :initial-slider-position 700}]]
          (when (:index-error @state)
-           [:div {:style {:textAlign "center" :color (:exception-state style/colors) :marginTop "1em"}}
+           [:div {:style {:textAlign "center" :color (:state-exception style/colors) :marginTop "1em"}}
             "All .bam tracks must have associated index (.bai) files."])])}])})

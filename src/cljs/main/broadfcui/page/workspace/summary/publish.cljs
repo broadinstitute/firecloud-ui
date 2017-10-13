@@ -40,7 +40,7 @@
       (when (:unpublishing? @state)
         [comps/Blocker {:banner "Unpublishing..."}])
       [buttons/SidebarButton
-       {:style :light :color :exception-state :margin :top
+       {:style :light :color :state-exception :margin :top
         :icon :library :text "Unpublish"
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)

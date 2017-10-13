@@ -15,8 +15,8 @@
     (top-banner/render
      [:div {:style {:color text-color
                     :background-color (if cleared?
-                                        (:success-state style/colors)
-                                        (:exception-state style/colors))
+                                        (:state-success style/colors)
+                                        (:state-exception style/colors))
                     :padding "1rem"}}
       (when cleared?
         [:div {:style {:float "right"}}

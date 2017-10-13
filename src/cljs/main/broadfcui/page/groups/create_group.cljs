@@ -28,7 +28,7 @@
                                         (input/max-string-length "Group name" 50)]}]
          (style/create-validation-error-message (:validation-errors @state))
          [:div {:style {:marginBottom "1.5em"
-                        :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
+                        :color (if (:validation-errors @state) (:state-exception style/colors) (:text-lighter style/colors))
                         :fontSize "0.8em"}}
           input/hint-alphanumeric_-]
 

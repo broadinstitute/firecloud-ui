@@ -92,7 +92,7 @@
                                    (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
          (if method-error
-           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
+           [:div {:style {:textAlign "center" :color (:state-exception style/colors)}
                   :data-test-id "method-details-error"}
             "Error loading method: " method-error]
            (if-not selected-snapshot

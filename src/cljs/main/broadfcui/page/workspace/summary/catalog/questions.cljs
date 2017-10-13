@@ -77,7 +77,7 @@
               [:div {:style {:display "flex" :alignItems "center"
                              :margin "0.5rem 0" :padding "1em"
                              :border style/standard-line :borderRadius 8
-                             :backgroundColor (cond disabled (:disabled-state style/colors) selected? (:button-primary style/colors))
+                             :backgroundColor (cond disabled (:state-disabled style/colors) selected? (:button-primary style/colors))
                              :cursor "pointer"}
                      :onClick #(when-not disabled (set-property option))}
                [:input {:type "radio" :readOnly true :checked selected? :disabled disabled
@@ -217,8 +217,8 @@
            (let [current-value (get attributes property)
                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
                  error? (or (contains? invalid-properties property) (contains? missing-properties property))
-                 colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
-                                                  :color (:exception-state style/colors)}))
+                 colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
+                                                  :color (:state-exception style/colors)}))
                  data (merge (utils/restructure prop state property library-schema colorize current-value)
                              {:value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)

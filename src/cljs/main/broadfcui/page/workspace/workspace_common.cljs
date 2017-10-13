@@ -60,7 +60,7 @@
                                    "The method snapshot referenced by this config has been redacted."))
                       :render (fn [config]
                                 (when (:redacted config)
-                                  (icons/icon {:style {:alignSelf "center" :color (:warning-state style/colors)}} :warning)))}
+                                  (icons/icon {:style {:alignSelf "center" :color (:state-warning style/colors)}} :warning)))}
                      {:header "Name" :initial-width 240
                       :as-text :name :sort-by :text
                       :sort-initial :asc

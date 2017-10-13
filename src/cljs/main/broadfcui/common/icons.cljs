@@ -71,7 +71,7 @@
 (react/defc RunningIcon
   {:get-default-props
    (fn []
-     {:color (:success-state style/colors)
+     {:color (:state-success style/colors)
       :size 24})
    :render
    (fn [{:keys [props]}]

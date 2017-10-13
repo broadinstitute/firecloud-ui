@@ -73,7 +73,7 @@
                 :text "Permissions..." :icon :settings :margin :bottom
                 :onClick #(swap! state assoc :editing-acl? true)}]
               [buttons/SidebarButton
-               {:style :light :color :exception-state
+               {:style :light :color :state-exception
                 :text "Redact" :icon :delete :margin :bottom
                 :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
 

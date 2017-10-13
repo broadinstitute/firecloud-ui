@@ -92,13 +92,13 @@
              (list
               [buttons/SidebarButton
                {:data-test-id "save-edited-method-config-button"
-                :color :success-state
+                :color :state-success
                 :text "Save" :icon :done
                 :disabled? (when redacted? "Choose an available snapshot")
                 :onClick #(parent :-commit)}]
               [buttons/SidebarButton
                {:data-test-id "cancel-edit-method-config-button"
-                :color :exception-state :margin :top
+                :color :state-exception :margin :top
                 :text "Cancel Editing" :icon :cancel
                 :onClick #(parent :-cancel-editing)}])
              (list
@@ -113,7 +113,7 @@
               (when can-edit?
                 [buttons/SidebarButton
                  {:data-test-id "delete-method-config-button"
-                  :style :light :color :exception-state :margin :top
+                  :style :light :color :state-exception :margin :top
                   :text "Delete" :icon :delete
                   :disabled? (when locked? "The workspace is locked")
                   :onClick #(swap! state assoc :show-delete-dialog? true)}])

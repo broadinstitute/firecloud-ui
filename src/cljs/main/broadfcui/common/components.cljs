@@ -173,7 +173,7 @@
          [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
           (when redacted?
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
-             (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
+             (icons/icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
@@ -241,13 +241,13 @@
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
-                                  (icons/icon {:style {:color (:exception-state style/colors)}}
+                                  (icons/icon {:style {:color (:state-exception style/colors)}}
                                               :warning)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
-                                   (icons/icon {:style {:color (:exception-state style/colors)}}
+                                   (icons/icon {:style {:color (:state-exception style/colors)}}
                                                :warning)]
                                   (str "Error: " message))
             (if (:expanded? @state)
@@ -427,7 +427,7 @@
 (defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
-             (icons/icon {:style {:color (:exception-state style/colors)
+             (icons/icon {:style {:color (:state-exception style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
     :data-test-id "push-error"
@@ -580,7 +580,7 @@
 (react/defc Tree
   ":start-collapsed? (optional [false]) - Start with branches collapsed
   :label (optional) - Label into which whole tree can be collapsed, must display inline
-  :highlight-ends? (optional) - Highlight the ends of the tree as :warning-state
+  :highlight-ends? (optional) - Highlight the ends of the tree as :state-warning
   :data - Vector of maps to display in tree, any value can be a nested vector of maps.
   NOTE: no current support for keys leading directly to nested maps."
   {:get-initial-state
@@ -595,7 +595,7 @@
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)
                                                            (is-leaf-node? node))
-                                                    (:warning-state style/colors)
+                                                    (:state-warning style/colors)
                                                     "rgba(0,0,0,0.1)")
                                  :borderRadius 8}}
                     (map-node

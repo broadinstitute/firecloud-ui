@@ -12,7 +12,7 @@
    (fn [{:keys [state]}]
      [:div {:style {:padding "40px 0"}}
       (if-let [errors (:errors @state)]
-        [:div {:style {:color (:exception-state style/colors)}}
+        [:div {:style {:color (:state-exception style/colors)}}
          "Error loading configuration:"
          [:ul {}
           (map (fn [message] [:li {} message]) errors)]]

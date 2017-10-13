@@ -104,7 +104,7 @@
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}
                :data-test-id "number-of-workflows-warning"}
-         (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
+         (icons/icon {:style {:color (:state-exception style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}

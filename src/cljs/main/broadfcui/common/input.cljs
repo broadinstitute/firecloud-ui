@@ -26,7 +26,7 @@
       (merge {:ref "textfield"
               :style (merge (or (:style props) {})
                             (when (:invalid @state)
-                              {:borderColor (:exception-state style/colors)}))
+                              {:borderColor (:state-exception style/colors)}))
               :onChange #(do (swap! state dissoc :invalid)
                              (when-let [x (:onChange props)]
                                (x %)))}
