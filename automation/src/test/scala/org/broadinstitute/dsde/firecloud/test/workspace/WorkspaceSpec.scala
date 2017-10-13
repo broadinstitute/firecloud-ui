@@ -15,7 +15,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   with CleanUp with Matchers {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString + "Config"
-  implicit lazy val authToken: AuthToken = AuthTokens.harry
+  implicit lazy val authToken: AuthToken = AuthTokens.snape
   val billingProject: String = Config.Projects.default
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
