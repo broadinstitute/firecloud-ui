@@ -58,31 +58,29 @@ class DataSpec extends FlatSpec with WebBrowserSpec
 
   "Writer and reader should see new columns" - {
     "With no defaults or local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      implicit val authToken: AuthToken = AuthTokens.harry
-      withWorkspace(Config.Projects.default, "DataSpec_column_display", aclEntries = List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+      implicit val authToken: AuthToken = AuthTokens.snape
+      withWorkspace(Config.Projects.default, "DataSpec_column_display", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
-        signIn(Config.Users.harry)
+        signIn(Config.Users.snape)
         val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
         val headers1 = List("participant_id", "test1")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
         val headers2 = headers1 :+ "test2"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-        val metaDataFile1 = makeTempMetadataFile("DataSpec_column_display", headers1, List(List("participant1", "1")))
-        workspaceDataTab.importFile(metaDataFile1.getAbsolutePath)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers2
         workspaceDataTab.signOut()
-        signIn(Config.Users.ron)
+        signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers2
       }
     }
 
     "With local preferences, but no defaults when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      implicit val authToken: AuthToken = AuthTokens.harry
-      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_preferences", aclEntries = List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+      implicit val authToken: AuthToken = AuthTokens.snape
+      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_preferences", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
-        signIn(Config.Users.harry)
+        signIn(Config.Users.snape)
         val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
@@ -90,32 +88,32 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2")
         workspaceDataTab.signOut()
 
-        signIn(Config.Users.ron)
+        signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
         workspaceDataTab.hideColumn("test2")
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
 
-        signIn(Config.Users.harry)
+        signIn(Config.Users.snape)
         workspaceDataTab.open
         val headers2 = List("participant_id", "test1", "test2", "test3")
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
         workspaceDataTab.signOut()
 
-        signIn(Config.Users.ron)
+        signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
       }
     }
 
     "With defaults on workspace, but no local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      implicit val authToken: AuthToken = AuthTokens.harry
-      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_defaults", aclEntries = List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) {
+      implicit val authToken: AuthToken = AuthTokens.snape
+      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_defaults", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) {
         workspaceName =>
 
-          signIn(Config.Users.harry)
+          signIn(Config.Users.snape)
           val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
           workspaceSummaryTab.ui.beginEditing
           workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}")
@@ -126,29 +124,29 @@ class DataSpec extends FlatSpec with WebBrowserSpec
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
           workspaceDataTab.signOut()
 
-          signIn(Config.Users.ron)
+          signIn(Config.Users.draco)
           workspaceDataTab.open
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
           workspaceDataTab.signOut()
 
-          signIn(Config.Users.harry)
+          signIn(Config.Users.snape)
           workspaceDataTab.open
           val headers2 = headers1 :+ "test4"
           createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
           workspaceDataTab.signOut()
 
-          signIn(Config.Users.ron)
+          signIn(Config.Users.draco)
           workspaceDataTab.open
           workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
       }
     }
 
     "With defaults on workspace and local preferences for reader and writer when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      implicit val authToken: AuthToken = AuthTokens.harry
-      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_defaults_and_local", aclEntries = List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+      implicit val authToken: AuthToken = AuthTokens.snape
+      withWorkspace(Config.Projects.default, "DataSpec_col_display_w_defaults_and_local", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
-        signIn(Config.Users.harry)
+        signIn(Config.Users.snape)
         val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
         workspaceSummaryTab.ui.beginEditing
         workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\" \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
@@ -160,20 +158,20 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4")
         workspaceDataTab.signOut()
 
-        signIn(Config.Users.ron)
+        signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.hideColumn("test4")
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3")
         workspaceDataTab.signOut()
 
-        signIn(Config.Users.harry)
+        signIn(Config.Users.snape)
         workspaceDataTab.open
         val headers2 = headers1 :+ "test5"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4", "test5")
         workspaceDataTab.signOut
 
-        signIn(Config.Users.ron)
+        signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3", "test5")
       }

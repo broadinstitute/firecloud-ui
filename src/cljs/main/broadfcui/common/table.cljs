@@ -53,7 +53,7 @@
 (react/defc Table
   {:reinitialize
    (fn [{:keys [state this]}]
-     (swap! state merge (this :-process-initial-state)))
+     (swap! state merge (this :-get-initial-state)))
    :update-query-params
    (fn [{:keys [state]} new-params]
      (assert (set/subset? (set (keys new-params)) all-query-params) "Unknown key passed to :update-query-params")
@@ -86,6 +86,9 @@
    (fn []
      {:load-on-mount true})
    :get-initial-state
+   (fn [{:keys [this]}]
+     (this :-get-initial-state))
+   :-get-initial-state
    (fn [{:keys [props this]}]
      (let [restored-state
            (persistence/try-restore

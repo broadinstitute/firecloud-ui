@@ -7,6 +7,7 @@ import org.scalatest._
 
 
 class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
+  implicit val authToken: AuthToken = AuthTokens.snape
 
   "A user" - {
     "with a registered account" - {
