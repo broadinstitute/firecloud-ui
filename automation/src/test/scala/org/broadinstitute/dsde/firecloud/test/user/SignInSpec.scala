@@ -1,10 +1,9 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.scalatest._
-import org.broadinstitute.dsde.firecloud.test.Tags
 
 
 class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
@@ -13,14 +12,17 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cle
     "with a registered account" - {
 
       "should be able to log in and out multiple times as multiple users" in withWebDriver { implicit driver =>
-        withSignIn(Config.Users.draco) { listPage =>
-          listPage.readUserEmail() shouldEqual Config.Users.draco.email
+        val users = UserPool.chooseStudent(2)
+        val user1 = users.head
+        val user2 = users(1)
+        withSignIn(user1) { listPage =>
+          listPage.readUserEmail() shouldEqual user1.email
         }
-        withSignIn(Config.Users.snape) { listPage =>
-          listPage.readUserEmail() shouldEqual Config.Users.snape.email
+        withSignIn(user2) { listPage =>
+          listPage.readUserEmail() shouldEqual user2.email
         }
-        withSignIn(Config.Users.draco) { listPage =>
-          listPage.readUserEmail() shouldEqual Config.Users.draco.email
+        withSignIn(user1) { listPage =>
+          listPage.readUserEmail() shouldEqual user1.email
 
         }
       }

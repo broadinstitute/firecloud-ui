@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.firecloud.test.security
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
@@ -29,14 +30,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val projectName: String = Config.Projects.common
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  implicit val authToken: AuthToken = AuthTokens.fred
+  //val defaultUser = UserPool.chooseAuthDomainUser().head
+  //implicit val authToken = AuthTokens(defaultUser)
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { authDomainName =>
           withCleanUp {
-            withSignIn(Config.Users.fred) { listPage =>
+            val user = UserPool.chooseAuthDomainUser().head
+            implicit val authToken = AuthTokens(user)
+            withSignIn(user) { listPage =>
               val workspaceName = "AuthDomainSpec_create_" + randomUuid
               register cleanUp api.workspaces.delete(projectName, workspaceName)
               val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
@@ -49,10 +53,12 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
 
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
-        withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
-          withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+        val user = UserPool.chooseAuthDomainUser().head
+        implicit val authToken = AuthTokens(user)
+        withGroup("AuthDomain", List(user.email)) { authDomainName =>
+          withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
             withCleanUp {
-              withSignIn(Config.Users.george) { listPage =>
+              withSignIn(user) { listPage =>
                 val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
                 val cloneWorkspaceName = workspaceName + "_clone"
@@ -60,7 +66,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 cloneModal.ui.readLockedAuthDomainGroups() should contain(authDomainName)
 
                 register cleanUp {
-                  api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                  api.workspaces.delete(projectName, cloneWorkspaceName)(authToken)
                 }
                 cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
                 cloneModal.cloneWorkspaceWait()

@@ -6,27 +6,10 @@ import com.google.api.client.json.jackson2.JacksonFactory
 
 import scala.collection.JavaConverters._
 
+// todo: maybe make all auth tokens and map them to their credentials?  so when we grab random creds we grab pre-populated auth token?
+// is it expensive to make auth tokens?
 
-object AuthTokens {
-//  val dumbledore = AuthToken(Config.Users.dumbledore)
-//  val admin = dumbledore
-//  val hermione = AuthToken(Config.Users.hermione)
-//  val owner = hermione
-//  val mcgonagall = AuthToken(Config.Users.mcgonagall)
-//  val curator = mcgonagall
-//  val harry = AuthToken(Config.Users.harry)
-//  val testUser = harry
-//  val dominique = harry
-//  val fred = AuthToken(Config.Users.fred)
-//  val elvin = fred
-//  val george = AuthToken(Config.Users.george)
-//  val bill = AuthToken(Config.Users.bill)
-//  val lunaTemp = AuthToken(Config.Users.lunaTemp)
-//  val nevilleTemp = AuthToken(Config.Users.nevilleTemp)
-//  val draco = AuthToken(Config.Users.draco)
-}
-
-case class AuthToken(user: Credentials) {
+case class AuthTokens(user: Credentials) {
 
   val httpTransport = GoogleNetHttpTransport.newTrustedTransport
   val jsonFactory = JacksonFactory.getDefaultInstance

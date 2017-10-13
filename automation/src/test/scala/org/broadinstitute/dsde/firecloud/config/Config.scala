@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.config
 
-import com.google.api.client.json.Json
 import com.typesafe.config.ConfigFactory
-
 import scala.util.Random
+import scala.util.parsing.json.JSON
 
 
 /**
@@ -19,14 +18,14 @@ case class UserSet(userMap: Map[String, Credentials]) {
     userMap(username)
   }
 
-  def getRandomCredential: Credentials = {
-    val rnd = new Random
-    userMap.values.toVector(rnd.nextInt(userMap.size))
+  def getRandomCredentials(n: Int): Seq[Credentials] = {
+    Random.shuffle(userMap.values.toVector).take(n)
   }
 }
 
 object Config {
   private val config = ConfigFactory.load()
+
   private val fireCloud = config.getConfig("fireCloud")
   private val users = config.getConfig("users")
   private val chromeSettings = config.getConfig("chromeSettings")
@@ -49,9 +48,8 @@ object Config {
   }
 
   object Users {
-    private val domain = users.getString("domain")
     private val notSoSecretPassword = users.getString("notSoSecretPassword")
-    private val userDataJson = Json.parse(users.getString("userdata")).values.asInstanceOf[Map[String, Any]]
+    private val userDataJson = JSON.parseFull(scala.io.Source.fromFile(users.getString("userDataPath")).getLines.mkString).get.asInstanceOf[Map[String, Map[String,String]]]
 
     def makeCredsMap(jsonMap: Map[String, String]): Map[String, Credentials] = {
       for((k,v) <- jsonMap) yield (k, Credentials(v, notSoSecretPassword))
@@ -69,6 +67,9 @@ object Config {
     val curator = Curators.getUserCredential("mcgonagall")
     val admin = Admins.getUserCredential("dumbledore")
     val testUser = Students.getUserCredential("harry")
+    val temp = Temps.getUserCredential("luna")
+
+    val tempSubjectId = users.getString("tempSubjectId")
 
     val smoketestpassword = users.getString("smoketestpassword")
     val smoketestuser = Credentials(users.getString("smoketestuser"), smoketestpassword)
