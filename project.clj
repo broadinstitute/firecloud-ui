@@ -5,7 +5,7 @@
    [dmohs/react "1.2.4+15.5.4-1"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
    [org.clojure/clojure "1.8.0"]
-   [org.clojure/clojurescript "1.9.293"]
+   [org.clojure/clojurescript "1.9.908"]
    [cljsjs/react-autosuggest "9.3.2-0"]
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
@@ -25,7 +25,8 @@
                   :main "broadfcuitest.testrunner"
                   :optimizations :none
                   :asset-path "target/build"
-                  :source-map true
+                  :pretty-print true
+                  :anon-fn-naming-policy :mapped
                   :preloads [devtools.preload]
                   :external-config {:devtools/config {:features-to-install
                                                       [:formatters :hints]}}}}}}}
@@ -38,7 +39,11 @@
                   ;; infinite recursion, which I was not able to figure
                   ;; out.
                   :optimizations :simple
-                  :pretty-print false
+                  :static-fns true
+                  :fn-invoke-direct true
+                  :elide-asserts true
+                  :language-out :es6
+                  :optimize-constants true
                   :output-dir "build"}}}}}}
   :target-path "resources/public/target"
   :clean-targets ^{:protect false} [:target-path]
