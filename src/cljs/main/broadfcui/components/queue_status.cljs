@@ -14,7 +14,7 @@
            {:keys [queue-time queue-position queued active]} queue-status]
        [:div {:style {:marginBottom "0.5em"}}
         (cond
-          queue-error (style/create-server-error-message queue-error)
+          queue-error [:div {:style {:display "inline-block"}} (style/create-server-error-message (str "Could not load queue status: " queue-error)) (this :-refresh-button)]
           (not queue-status) [:div {:style {:height "57px"}} [comps/Spinner {:text "Loading submission queue status..."}]]
           :else
           [:div {}
@@ -22,11 +22,14 @@
            (this :-row "Workflows ahead of yours:" queue-position)
            (this :-row "Queue status:" (str queued " Queued; " active " Active")
                  [:div {:style {:display "inline-block" :marginLeft "1ex" :fontStyle "italic"}}
-                  (links/create-internal {:data-test-id "queue-status-refresh"
-                                          :onClick (fn []
-                                                     (this :-load-data)
-                                                     (swap! state assoc :queue-status nil))}
-                                         "(refresh)")])])]))
+                  (this :-refresh-button)])])]))
+   :-refresh-button
+   (fn [{:keys [this state]}]
+     (links/create-internal {:data-test-id "queue-status-refresh"
+                           :onClick (fn []
+                                      (this :-load-data)
+                                      (swap! state assoc :queue-status nil :queue-error nil))}
+                          "(refresh)"))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
