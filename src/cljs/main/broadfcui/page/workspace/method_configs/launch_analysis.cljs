@@ -34,7 +34,7 @@
             (str (:name e) " (" (:type e) ")")
             "None"))]
     [:div {:style {:float "right"}}
-      [QueueStatus]]
+     [QueueStatus]]
     (common/clear-both)
     (let [set-entity (fn [entity]
                        (swap! state assoc
@@ -47,9 +47,9 @@
         :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
                                 (let [entity-name (or name entityName)]
                                   (links/create-internal
-                                    {:data-test-id (str entity-name "-link")
-                                     :onClick #(set-entity entity)}
-                                    entity-name)))
+                                   {:data-test-id (str entity-name "-link")
+                                    :onClick #(set-entity entity)}
+                                   entity-name)))
         :style {:body-row (fn [{:keys [index row]}]
                             {:backgroundColor
                              (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
