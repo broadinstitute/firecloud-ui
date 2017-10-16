@@ -1,7 +1,6 @@
 (ns broadfcui.components.queue-status
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.common.duration :as duration]
@@ -32,16 +31,23 @@
    (fn [{:keys [this]}]
      (this :-load-data))
    :-load-data
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/submissions-queue-status)
        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                   (if success?
-                    (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
+                    (swap! state assoc :queue-status (this :-queue-status-counts (get-parsed-response false)))
                     (swap! state assoc :queue-error status-text)))}))
    :-row
    (fn [_ label content button]
      [:div {}
       [:div {:style {:display "inline-block" :width 200 :textAlign "right" :marginRight "1ex"}} label]
       [:div {:style {:display "inline-block"}} content]
-      button])})
+      button])
+   ;; GAWB-666 Queued and Cromwell (active) counts
+   :-queue-status-counts
+   (fn [_ {:strs [workflowCountsByStatus estimatedQueueTimeMS workflowsBeforeNextUserWorkflow]}]
+     {:queue-time (or estimatedQueueTimeMS 0)
+      :queue-position (or workflowsBeforeNextUserWorkflow 0)
+      :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
+      :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})})

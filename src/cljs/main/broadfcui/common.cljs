@@ -157,13 +157,6 @@
     (let [[ns n] (clojure.string/split segment #":" 2)]
       {:namespace ns :name n})))
 
-;; GAWB-666 Globally show Queued and Cromwell (active) counts
-(defn queue-status-counts [{:strs [workflowCountsByStatus estimatedQueueTimeMS workflowsBeforeNextUserWorkflow]}]
-  {:queue-time (or estimatedQueueTimeMS 0)
-   :queue-position (or workflowsBeforeNextUserWorkflow 0)
-   :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
-   :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})
-
 (defn attribute-list? [attr-value]
   (and (map? attr-value)
        (= (set (keys attr-value)) #{:itemsType :items})))
