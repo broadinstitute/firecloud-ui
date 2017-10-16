@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
-import org.broadinstitute.dsde.firecloud.config.{AuthTokens, Config, UserPool}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -18,7 +18,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   val password: String = Config.Users.temp.password
   val subjectId: String = Config.Users.tempSubjectId
 
-  implicit val authToken = AuthTokens(UserPool.chooseAdmin().head)
+  implicit val authToken = AuthToken(UserPool.chooseAdmin().head)
 
   // Clean-up anything left over from any previous failures.
   before {

@@ -1,11 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.page._
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
 import scala.concurrent.duration.DurationLong
@@ -17,8 +17,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
-  implicit val curatorAuthToken = AuthToken(Config.Users.curator)
-  val ronAuthToken = AuthToken(Config.Users.ron)
+  val curatorUser: Credentials = UserPool.chooseCurator().head
+  implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
+  val studentUser: Credentials = UserPool.chooseStudent().head
+  val studentAuthToken: AuthToken = AuthToken(studentUser)
 
 
   "For a user with publish permissions" - {
@@ -98,12 +100,12 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       "with required library attributes" - {
         "should not see publish button " in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
-            api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(ronAuthToken)
-            withSignIn(Config.Users.ron) { wsList =>
+            api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(studentAuthToken)
+            withSignIn(studentUser) { wsList =>
               val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
               page.ui.hasPublishButton shouldBe false
             }
-          }(ronAuthToken)
+          }(studentAuthToken)
         }
       }
     }

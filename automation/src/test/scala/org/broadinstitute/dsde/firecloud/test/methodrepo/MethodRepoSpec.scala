@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.methodrepo
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, UserFixtures, MethodFixtures}
 import org.broadinstitute.dsde.firecloud.page.components.Table
 import org.broadinstitute.dsde.firecloud.page.methodrepo.{CreateMethodModal, MethodRepoPage}
@@ -11,11 +11,12 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WebBrowserSpec with Matchers with CleanUp {
 
-  implicit val authToken: AuthToken = AuthTokens.hermione
+  val ownerUser: Credentials = UserPool.chooseProjectOwner().head
+  implicit val ownerAuthToken: AuthToken = AuthToken(ownerUser)
 
   "A user" - {
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
-      withSignIn(Config.Users.hermione) { _ =>
+      withSignIn(ownerUser) { _ =>
         val methodRepoPage = new MethodRepoPage()
         val methodRepoTable = methodRepoPage.ui.MethodRepoTable
         methodRepoPage.open
@@ -43,7 +44,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
     "should be able to redact a method that they own" in withWebDriver { implicit driver =>
       withMethod("TEST-REDACT-") { case (name, namespace) =>
-        withSignIn(Config.Users.hermione) { _ =>
+        withSignIn(ownerUser) { _ =>
           val methodRepoPage = new MethodRepoPage()
           val methodRepoTable = methodRepoPage.ui.MethodRepoTable
           methodRepoPage.open
