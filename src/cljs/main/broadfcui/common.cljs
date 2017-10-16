@@ -204,18 +204,6 @@
           ;; something nonsensical has been selected, submission will probably fail anyway:
           :else 1)))
 
-<<<<<<< HEAD
-(def PHI-warning
-  [:div {:style {:display "flex" :marginBottom ".5rem" :alignItems "center" :justifyContent "space-around"
-                 :padding "1rem" :backgroundColor (:background-light style/colors)}}
-   (icons/icon {:style {:fontSize 22 :color (:state-exception style/colors) :marginRight "1rem"}}
-               :alert)
-   [:span {:style {:fontWeight 500}}
-    "FireCloud is not intended to host personally identifiable information. Do not use any patient
-     identifier, including name, social security number, or medical record number."]])
-
-=======
->>>>>>> develop
 (defn create-element-ref-handler
   "Calls the methods with the element on mount/unmount."
   [{:keys [element-key store did-mount will-unmount]}]
