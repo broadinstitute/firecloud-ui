@@ -15,7 +15,7 @@
        [:div {:style {:marginBottom "0.5em"}}
         (cond
           queue-error (style/create-server-error-message queue-error)
-          (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
+          (not queue-status) [:div {:style {:height "57px"}} [comps/Spinner {:text "Loading submission queue status..."}]]
           :else
           [:div {}
            (this :-row "Estimated wait time:" (duration/fuzzy-time-from-now-ms (+ (.now js/Date) queue-time) false))
