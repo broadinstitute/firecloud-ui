@@ -12,6 +12,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -95,7 +96,7 @@
                                                          :onClick #(this :-request-access name i)}]
                                         (when requesting? [comps/Spinner])
                                         (when requested?
-                                          (common/render-info-box
+                                          (dropdown/render-info-box
                                            {:text [:div {} "Your request has been submitted. When you are granted
                                                    access, the " [:strong {} "Access Level"] " displayed on
                                                    the Workspace list will be updated."]}))]))]]))

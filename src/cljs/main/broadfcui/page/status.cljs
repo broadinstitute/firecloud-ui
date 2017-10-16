@@ -1,6 +1,7 @@
 (ns broadfcui.page.status
   (:require
    [dmohs.react :as react]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
@@ -21,7 +22,7 @@
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when (:errors props)
             [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
-             [:ul {} (map (fn [e] [:li {} e]) (:errors props))]])]
+             [:ul {} (common/mapwrap :li (:errors props))]])]
          :else
          [:span {:style {:color "green"}} "Okay"])]])})
 

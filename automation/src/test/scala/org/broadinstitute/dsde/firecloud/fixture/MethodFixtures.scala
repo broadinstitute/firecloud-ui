@@ -28,4 +28,19 @@ trait MethodFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
   }
 
+  def withMethod(methodName: String)
+                (testCode: ((String, String)) => Any)
+                (implicit token: AuthToken): Unit = {
+    val name = methodName + randomUuid
+    val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
+    val namespace = attributes("namespace")
+    api.methods.createMethod(attributes)
+
+    try {
+      testCode((name, namespace))
+    } finally {
+
+    }
+
+  }
 }

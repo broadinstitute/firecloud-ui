@@ -6,6 +6,8 @@ import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
+import org.broadinstitute.dsde.firecloud.test.Tags
+
 
 /**
   * Tests for new user registration scenarios.

@@ -9,6 +9,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -62,7 +63,7 @@
                   [:span {:style {:color (:state-success style/colors)}} "Authorized"]
                   [:span {:style {:color (:text-light style/colors)}}
                    "Not Authorized"
-                   (common/render-info-box
+                   (dropdown/render-info-box
                     {:text
                      [:div {}
                       "Your account was linked, but you are not authorized to view this controlled dataset. Please go "
@@ -79,7 +80,7 @@
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
            (.replace (.-location js/window) (nav/get-link :profile)))
-         (react/call :load-nih-status this))))
+         (this :load-nih-status))))
    :component-did-update
    (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
@@ -114,7 +115,7 @@
      (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (:values @state)))
    :validation-errors
    (fn [{:keys [refs this]}]
-     (apply input/validate refs (map name (react/call :get-field-keys this))))
+     (apply input/validate refs (map name (this :get-field-keys))))
    :render
    (fn [{:keys [this props state]}]
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
@@ -212,7 +213,7 @@
                           :warning)]
              "Validation Errors:")
             [:ul {}
-             (map (fn [e] [:li {} e]) (:validation-errors @state))]])
+             (common/mapwrap :li (:validation-errors @state))]])
          (cond
            (:done? @state)
            [:div {:style {:color (:state-success style/colors)}} "Profile saved!"]
@@ -220,12 +221,12 @@
            [components/Spinner {:text "Saving..."}]
            :else
            [buttons/Button {:text (if new? "Register" "Save Profile")
-                            :onClick #(react/call :save this)}])]]))
+                            :onClick #(this :save)}])]]))
    :save
    (fn [{:keys [props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error :validation-errors) :in-progress? true)))
-     (let [values (react/call :get-values (@refs "form"))
-           validation-errors (react/call :validation-errors (@refs "form"))]
+     (let [values ((@refs "form") :get-values)
+           validation-errors ((@refs "form") :validation-errors)]
        (cond
          (nil? validation-errors)
          (endpoints/profile-set

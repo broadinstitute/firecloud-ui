@@ -171,7 +171,7 @@ use the new value directly:
 or wait until after the re-render:
 
 ```clojure
-(react/call :some-state-modifying-method this)
+(this :some-state-modifying-method)
 (after-update #(some-func (:some-key @state))))
 ```
 

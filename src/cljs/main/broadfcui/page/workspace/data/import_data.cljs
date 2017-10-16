@@ -1,12 +1,12 @@
 (ns broadfcui.page.workspace.data.import-data
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -41,7 +41,7 @@
                                                :file-contents (.-result reader)
                                                :file-input-key (gensym "file-input-")))
                                  (.readAsText reader (.slice file 0 preview-limit)))))}]
-        common/PHI-warning
+        ws-common/PHI-warning
         [buttons/Button {:data-test-id "choose-file-button"
                          :text (if (:upload-result @state) "Choose another file..." "Choose file...")
                          :onClick #(-> (@refs "entities") .click)}]
@@ -56,7 +56,7 @@
         (when (and file (not upload-result))
           [buttons/Button {:data-test-id "confirm-upload-metadata-button"
                            :text "Upload"
-                           :onClick #(react/call :do-upload this)}])
+                           :onClick #(this :do-upload)}])
         (when upload-result
           (if (:success? upload-result)
             (style/create-flexbox

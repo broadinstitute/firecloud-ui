@@ -81,7 +81,7 @@
                    :column-data :messages
                    :as-text (partial string/join "\n")
                    :render (fn [message-list]
-                             [:div {} (map (fn [message] [:div {} message]) message-list)])}
+                             [:div {} (common/mapwrap :div message-list)])}
                   {:header "Workflow ID" :initial-width 300
                    :as-text :workflowId :sort-by :text
                    :render
@@ -163,7 +163,7 @@
              [AbortButton
               {:on-abort (fn []
                            (swap! state assoc :server-response nil)
-                           (react/call :load-details this))
+                           (this :load-details))
                :workspace-id (:workspace-id props)
                :submission-id (:submissionId submission)}])]
           [:div {:style {:float "left"}}
@@ -210,4 +210,4 @@
                   (swap! state assoc :server-response (if success?
                                                         {:submission (get-parsed-response)}
                                                         {:error-message status-text})))}))
-   :component-did-mount (fn [{:keys [this]}] (react/call :load-details this))})
+   :component-did-mount (fn [{:keys [this]}] (this :load-details))})

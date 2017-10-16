@@ -123,7 +123,7 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props))
-       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id "launch-button"}
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(this :launch) :data-test-id "launch-button"}
        :data-test-id "launch-analysis-modal"}])
    :component-did-mount
    (fn [{:keys [state]}]
@@ -147,7 +147,7 @@
                              :methodConfigurationName (:name config-id)
                              :entityType (:type entity)
                              :entityName (:name entity)
-                             :useCallCache (react/call :checked? (@refs "callCache-check"))}
+                             :useCallCache ((@refs "callCache-check") :checked?)}
                             (when-not (string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch
