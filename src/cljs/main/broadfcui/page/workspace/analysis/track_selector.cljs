@@ -74,10 +74,10 @@
                      :style {:display "flex" :alignItems "center" :padding 4 :margin "2px 3px"
                              :border style/standard-line :borderRadius 4}}
                (when (> (count tracks) 1)
-                 (icons/icon {:style {:cursor "ns-resize"}
-                              :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
-                                                   :text-selection (common/disable-text-selection))}
-                             :reorder))
+                 (icons/render-icon {:style {:cursor "ns-resize"}
+                                     :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
+                                                          :text-selection (common/disable-text-selection))}
+                                    :reorder))
                (case @index-url
                  :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
                  :error (if requires-index?

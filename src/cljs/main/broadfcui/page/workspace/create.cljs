@@ -152,15 +152,15 @@
                   (set/difference all-groups (set (utils/delete selected-groups i))))]
                 [:div {:style {:float "right"}}
                  (if (utils/seq-contains? locked-groups opt)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :padding "0.25rem 0.5rem"}}
-                               :lock)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :cursor "pointer" :padding "0.25rem 0.5rem"}
-                                :onClick #(swap! state update :selected-groups utils/delete i)}
-                               :remove))]])
+                   (icons/render-icon {:style {:color (:text-lightest style/colors)
+                                               :verticalAlign "middle" :fontSize 22
+                                               :padding "0.25rem 0.5rem"}}
+                                      :lock)
+                   (icons/render-icon {:style {:color (:text-lightest style/colors)
+                                               :verticalAlign "middle" :fontSize 22
+                                               :cursor "pointer" :padding "0.25rem 0.5rem"}
+                                       :onClick #(swap! state update :selected-groups utils/delete i)}
+                                      :remove))]])
              selected-groups))
           (when (not-empty (set/difference all-groups selected-groups))
             [:div {:style {:float "left" :width "90%"}}

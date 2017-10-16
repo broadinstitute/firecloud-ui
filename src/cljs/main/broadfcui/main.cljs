@@ -82,7 +82,7 @@
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:display "flex" :justifyContent "flex-end"}}
-           (dropdown/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
+           (dropdown/render-dropdown-menu {:label (icons/render-icon {:style style/secondary-icon-style} :help)
                                            :width 150
                                            :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
                                            :items [{:href (config/user-guide-url) :target "_blank"
@@ -148,9 +148,9 @@
 
 (defn- show-js-exception [e]
   (comps/push-ok-cancel-modal
-   {:header [:span {} (icons/icon {:style {:color (:warning-state style/colors)
+   {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
                                            :marginRight "1rem"}}
-                                  :warning)
+                                         :warning)
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
               "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "

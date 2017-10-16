@@ -42,19 +42,19 @@
            item-column-name (get-column-name selected-entity-type)
            item-link (fn [item-type item-name]
                        (links/create-internal
-                         {:onClick (fn []
-                                     (swap! state update
-                                            :last-entity conj {:type (:entity-type props)
-                                                               :name (:entity-name props)})
-                                     (this :-update-and-load item-type item-name))}
-                         item-name))]
+                        {:onClick (fn []
+                                    (swap! state update
+                                           :last-entity conj {:type (:entity-type props)
+                                                              :name (:entity-name props)})
+                                    (this :-update-and-load item-type item-name))}
+                        item-name))]
        [:div {:style {:position "relative" :width "30%" :padding "0.5rem" :marginLeft ".38em"
                       :border (str "1px solid " (:line-default style/colors))}}
         [:a {:onClick #(update-parent-state :selected-entity nil)
              :href "javascript:;"
              :style {:padding "1rem" :float "right"
                      :fontSize "80%" :color (:text-light style/colors)}}
-         (icons/icon {} :close)]
+         (icons/render-icon {} :close)]
         (when (:loading-attributes? @state)
           [comps/Blocker {:banner "Loading entity attributes..."}])
         (when (not-empty (:last-entity @state))
@@ -65,7 +65,7 @@
                  :href "javascript:;"
                  :style {:padding "1rem"
                          :color (:text-light style/colors)}}
-             (icons/icon {} :angle-left)]))
+             (icons/render-icon {} :angle-left)]))
         [:div {:style {:display "inline-block" :fontWeight "bold" :padding "1rem 0 0 1rem" :marginBottom "1em"}} selected-entity]
         [Table {:key selected-entity-type ; key to enforce re-evaluating columns when changing entity types
                 :data (or selected-attr-list [])
