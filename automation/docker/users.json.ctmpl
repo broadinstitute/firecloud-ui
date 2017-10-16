@@ -39,8 +39,8 @@
     "ginny": "ginny.weasley@quality.firecloud.org"
   },
   "temps": {
-    "luna": "luna.lovegood@quality.firecloud.org",
-    "neville": "neville.longbottom@quality.firecloud.org"
+    "luna": "luna.temp@quality.firecloud.org",
+    "neville": "neville.temp@quality.firecloud.org"
   }
 }
 {{else}}
@@ -67,8 +67,8 @@
     "draco": "draco.malfoy@test.firecloud.org"
   },
   "temps": {
-    "luna": "luna.lovegood@quality.firecloud.org",
-    "neville": "neville.longbottom@quality.firecloud.org"
+    "luna": "luna.temp@quality.firecloud.org",
+    "neville": "neville.temp@quality.firecloud.org"
   }
 }
 {{end}}
