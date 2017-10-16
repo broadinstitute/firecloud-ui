@@ -30,15 +30,16 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val projectName: String = Config.Projects.common
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  val defaultUser: Credentials = UserPool.chooseAuthDomainUser().head
+  val defaultUser: Credentials = UserPool.chooseAdmin().head
   implicit val authToken: AuthToken = AuthToken(defaultUser)
 
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
-        withGroup("AuthDomain") { authDomainName =>
+        val user = UserPool.chooseAuthDomainUser().head
+        withGroup("AuthDomain", List(user.email)) { authDomainName =>
           withCleanUp {
-            val user = UserPool.chooseAuthDomainUser().head
+
             withSignIn(user) { listPage =>
               val workspaceName = "AuthDomainSpec_create_" + randomUuid
               register cleanUp api.workspaces.delete(projectName, workspaceName)
@@ -184,8 +185,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     "with multiple groups inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
-        withGroup("AuthDomain") { groupOneName =>
-          withGroup("AuthDomain") { groupTwoName =>
+        withGroup("AuthDomain", List(user.email)) { groupOneName =>
+          withGroup("AuthDomain", List(user.email)) { groupTwoName =>
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
@@ -259,8 +260,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
-        withGroup("AuthDomain") { groupOneName =>
-          withGroup("AuthDomain") { groupTwoName =>
+        withGroup("AuthDomain", List(user.email)) { groupOneName =>
+          withGroup("AuthDomain", List(user.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
               withCleanUp {
                 withSignIn(user) { workspaceListPage =>
@@ -274,8 +275,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "contains the list of auth domain groups in the workspace summary page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
-        withGroup("AuthDomain") { groupOneName =>
-          withGroup("AuthDomain") { groupTwoName =>
+        withGroup("AuthDomain", List(user.email)) { groupOneName =>
+          withGroup("AuthDomain", List(user.email)) { groupTwoName =>
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
