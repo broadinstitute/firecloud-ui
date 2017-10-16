@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
@@ -56,7 +57,10 @@
        :render (fn [submission-id]
                  (links/create-external {:href (str moncommon/google-cloud-context
                                                     bucketName "/" submission-id "/")}
-                                        submission-id))}]}}])
+                                        submission-id))}]}
+    :toolbar
+    {:style {:alignItems "flex-end"}
+     :get-items (constantly [flex/spring [QueueStatus]])}}])
 
 
 (react/defc- SubmissionsList
@@ -96,15 +100,13 @@
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props
            bucketName (get-in (:workspace props) [:workspace :bucketName])]
-       [:div {}
-        [QueueStatus]
-        [:div {:style {:padding "1rem 1.5rem"}}
-         (if submission-id
-           [submission-details/Page {:key submission-id
-                                     :workspace-id workspace-id
-                                     :bucketName bucketName
-                                     :submission-id submission-id
-                                     :workflow-id (:workflow-id props)}]
-           [SubmissionsList {:ref "submissions-list"
-                             :workspace-id workspace-id
-                             :bucketName bucketName}])]]))})
+       [:div {:style {:padding "1rem 1.5rem"}}
+        (if submission-id
+          [submission-details/Page {:key submission-id
+                                    :workspace-id workspace-id
+                                    :bucketName bucketName
+                                    :submission-id submission-id
+                                    :workflow-id (:workflow-id props)}]
+          [SubmissionsList {:ref "submissions-list"
+                            :workspace-id workspace-id
+                            :bucketName bucketName}])]))})

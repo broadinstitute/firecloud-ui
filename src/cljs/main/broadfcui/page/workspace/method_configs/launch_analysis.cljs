@@ -4,11 +4,12 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
@@ -27,15 +28,15 @@
    (style/create-form-label "Select Entity")
    [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}
-    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}
-           :data-test-id "selected-entity"}
-     (str "Selected: "
-          (if-let [e (:selected-entity @state)]
-            (str (:name e) " (" (:type e) ")")
-            "None"))]
-    [:div {:style {:float "right"}}
+    [:div {:style {:display "flex" :alignItems "flex-end"}}
+     [:div {:style {:marginBottom "1em" :fontSize "140%"}
+            :data-test-id "selected-entity"}
+      "Selected: "
+      (if-let [e (:selected-entity @state)]
+        (str (:name e) " (" (:type e) ")")
+        "None")]
+     flex/spring
      [QueueStatus]]
-    (common/clear-both)
     (let [set-entity (fn [entity]
                        (swap! state assoc
                               :selected-entity (entity->id entity)
