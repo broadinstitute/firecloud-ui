@@ -1,11 +1,12 @@
 (ns broadfcui.components.queue-status
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.style :as style]
-   [broadfcui.endpoints :as endpoints]
+   [broadfcui.common.components :as comps]
    [broadfcui.common.duration :as duration]
    [broadfcui.common.links :as links]
-   [broadfcui.common.components :as comps]))
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   ))
 
 (react/defc QueueStatus
   {:render
@@ -24,16 +25,16 @@
            (this :-row "Queue status:" (str queued " Queued; " active " Active")
                  [:div {:style {:display "inline-block" :marginLeft "1ex" :fontStyle "italic"}}
                   (this :-refresh-button)])])]))
-   :-refresh-button
-   (fn [{:keys [this state]}]
-     (links/create-internal {:data-test-id "queue-status-refresh"
-                           :onClick (fn []
-                                      (this :-load-data)
-                                      (swap! state assoc :queue-status nil :queue-error nil))}
-                          "(refresh)"))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
+   :-refresh-button
+   (fn [{:keys [this state]}]
+     (links/create-internal {:data-test-id "queue-status-refresh"
+                             :onClick (fn []
+                                        (this :-load-data)
+                                        (swap! state assoc :queue-status nil :queue-error nil))}
+                            "(refresh)"))
    :-load-data
    (fn [{:keys [state this]}]
      (endpoints/call-ajax-orch

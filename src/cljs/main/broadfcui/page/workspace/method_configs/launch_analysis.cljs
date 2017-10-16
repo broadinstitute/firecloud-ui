@@ -10,10 +10,10 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
-   [broadfcui.components.queue-status :refer [QueueStatus]]
    ))
 
 
