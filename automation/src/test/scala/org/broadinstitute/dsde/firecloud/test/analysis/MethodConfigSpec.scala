@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Config, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
@@ -19,8 +19,10 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  implicit lazy val authToken: AuthToken = AuthTokens.hermione
-  val uiUser: Credentials = Config.Users.hermione
+  val uiUser: Credentials = UserPool.chooseProjectOwner().head
+  implicit val authToken: AuthToken = AuthToken(uiUser)
+
+  // todo: is this necessarily a proj owner?
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow") { workspaceName =>
