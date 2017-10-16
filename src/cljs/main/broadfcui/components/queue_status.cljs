@@ -14,7 +14,8 @@
            {:keys [queue-time queue-position queued active]} queue-status]
        [:div {:style {:marginBottom "0.5em"}}
         (cond
-          queue-error [:div {:style {:display "inline-block"}} (style/create-server-error-message (str "Could not load queue status: " queue-error)) (this :-refresh-button)]
+          true [:div {:style {:display "inline-block"}}
+                (style/create-server-error-message (str "Could not load queue status: " queue-error)) (this :-refresh-button)]
           (not queue-status) [:div {:style {:height "57px"}} [comps/Spinner {:text "Loading submission queue status..."}]]
           :else
           [:div {}
