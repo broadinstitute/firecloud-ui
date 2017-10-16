@@ -7,7 +7,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
+   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -97,7 +97,7 @@
      (let [{:keys [submission-id workspace-id]} props
            bucketName (get-in (:workspace props) [:workspace :bucketName])]
        [:div {}
-        [comps/QueueStatus {}]
+        [QueueStatus]
         [:div {:style {:padding "1rem 1.5rem"}}
          (if submission-id
            [submission-details/Page {:key submission-id

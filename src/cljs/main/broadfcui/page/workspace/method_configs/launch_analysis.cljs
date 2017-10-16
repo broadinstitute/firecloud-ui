@@ -13,6 +13,7 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.components.queue-status :refer [QueueStatus]]
    ))
 
 
@@ -33,7 +34,7 @@
             (str (:name e) " (" (:type e) ")")
             "None"))]
     [:div {:style {:float "right"}}
-      [comps/QueueStatus]]
+      [QueueStatus]]
     (common/clear-both)
     (let [set-entity (fn [entity]
                        (swap! state assoc
