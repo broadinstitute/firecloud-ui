@@ -1,5 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{if $environment eq "qa"}}
+{{if eq $environment "qa"}}
 {
   "admins": {
     "dumbledore": "dumbledore.admin@quality.firecloud.org",
