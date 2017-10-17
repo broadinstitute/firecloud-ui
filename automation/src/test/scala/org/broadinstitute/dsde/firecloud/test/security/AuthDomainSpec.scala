@@ -30,7 +30,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val projectName: String = Config.Projects.common
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  val defaultUser: Credentials = UserPool.chooseAdmin().head
+  val defaultUser: Credentials = UserPool.chooseCurator().head
   val authTokenDefault: AuthToken = AuthToken(defaultUser)
 
   "A workspace with an authorization domain" - {
