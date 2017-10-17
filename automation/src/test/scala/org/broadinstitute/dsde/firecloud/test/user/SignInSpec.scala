@@ -6,7 +6,6 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.scalatest._
 import org.broadinstitute.dsde.firecloud.test.Tags
 
-
 class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
 
   "A user" - {

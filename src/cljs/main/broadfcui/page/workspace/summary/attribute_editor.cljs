@@ -113,7 +113,7 @@
          :style {:marginBottom "2rem"}
          :default-hidden? true
          :title
-         [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
+         [:div {:style {:flexShrink 0} :data-test-id "expand-workspace-attributes"} (style/create-section-header "Workspace Attributes")]
          :title-expand
          [:div {:style {:flexGrow 1 :fontSize "125%" :fontWeight 500}}
           (when-not editing?
@@ -191,7 +191,7 @@
                                 :as-text (constantly nil)
                                 :render
                                 (fn [{:keys [value index]}]
-                                  (style/create-text-field {:data-test-id (str key "-value")
+                                  (style/create-text-field {:data-test-id (str value "-value")
                                                             :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                             :defaultValue value
                                                             :onChange #(swap! state update-in [:attributes index]
