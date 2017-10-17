@@ -82,7 +82,7 @@
 
 (react/defc- WorkflowTiming
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [error? expanded?]} @state
            {:keys [label data]} props]
        [:div {}
@@ -100,19 +100,14 @@
               {:on-error #(swap! state assoc :error? true)
                :on-load (fn []
                           (js/google.charts.load "current" (clj->js {"packages" ["timeline"]}))
-                          (js/google.charts.setOnLoadCallback #(this :-update-element)))
+                          (js/google.charts.setOnLoadCallback
+                           (fn []
+                             (let [chart-container (@refs "chart-container")]
+                               (.timingDiagram js/window chart-container data workflow-name 100)
+                               (let [height (getTimingDiagramHeight chart-container)]
+                                 (.timingDiagram js/window chart-container data workflow-name (+ 75 height)))))))
                :path "https://www.gstatic.com/charts/loader.js"}])
-           [:div {:ref "chart-container" :style {:padding "0.25em 0 0 0"}}]])]))
-   :-update-element
-   (fn [{:keys [props state refs]}]
-     (let [{:keys [expanded?]} @state
-           {:keys [data workflow-name]} props
-           chart-container (@refs "chart-container")]
-       (when expanded?
-         (.timingDiagram js/window chart-container data workflow-name 100)
-         (let [height (getTimingDiagramHeight chart-container)]
-           #_(gdom/removeChildren chart-container)
-           (.timingDiagram js/window chart-container data workflow-name (+ 75 height))))))})
+           [:div {:ref "chart-container" :style {:paddingTop "0.5rem"}}]])]))})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
