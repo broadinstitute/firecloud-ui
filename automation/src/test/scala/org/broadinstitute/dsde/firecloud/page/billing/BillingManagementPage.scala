@@ -55,7 +55,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     */
   def waitForCreateCompleted(projectName: String): String = {
     filter(projectName)
-    retry(10.seconds, 5.minutes)({
+    retry(10.seconds, 8.minutes)({
           ui.readCreationStatusForProject(projectName).filterNot(_ equals "running")
         }) match {
       case None => throw new Exception("Billing project creation did not complete")
