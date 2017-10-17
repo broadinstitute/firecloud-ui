@@ -23,6 +23,7 @@
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -340,7 +341,7 @@
                                          :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
                                          :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
 
-        (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+        (when editing? [:div {:style {:marginBottom "10px"}} ws-common/PHI-warning])
 
         [Collapse
          {:style {:marginBottom "2rem"}

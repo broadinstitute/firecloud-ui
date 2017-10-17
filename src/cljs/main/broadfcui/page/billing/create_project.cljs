@@ -89,16 +89,16 @@
                                       "https://console.developers.google.com/billing/"
                                       (second (string/split (account "accountName") #"/")))
                                :target "_blank"}
-                              (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)]]])
+                              (icons/render-icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)]]])
                          billing-accounts)]]
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button {:data-test-id "create-project-button"
                    :onClick (when (seq (:billing-accounts @state))
-                              #(react/call :create-billing-project this))}}])
+                              #(this :create-billing-project))}}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :get-billing-accounts this))
+     (this :get-billing-accounts))
    :get-billing-accounts
    (fn [{:keys [state]}]
      (swap! state dissoc :billing-accounts :error)

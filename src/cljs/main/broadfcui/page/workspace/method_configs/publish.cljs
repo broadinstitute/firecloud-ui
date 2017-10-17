@@ -17,7 +17,7 @@
            {:keys [namespace name]} config-id]
        [modals/OKCancelForm
         {:header "Publish Method Configuration"
-         :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
+         :get-first-element-dom-node #((@refs "mcNamespace") :access-field)
          :content
          (react/create-element
           [:div {:style {:width 500}}

@@ -1,11 +1,12 @@
 (ns broadfcui.page.notifications
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.foundation-switch :refer [render-foundation-switch]]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -115,11 +116,11 @@
                           :onClick #(this :-save)}]
          [:div {:style {:marginLeft "1rem"}}
           (cond
-            (:saving? @state) (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
-            (:error? @state) (icons/icon {:style {:color (:exception-state style/colors)}}
-                                         :error)
-            (:saved? @state) (icons/icon {:style {:color (:success-state style/colors)}}
-                                         :done))]]]))
+            (:saving? @state) (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
+            (:error? @state) (icons/render-icon {:style {:color (:exception-state style/colors)}}
+                                                :error)
+            (:saved? @state) (icons/render-icon {:style {:color (:success-state style/colors)}}
+                                                :done))]]]))
    :-save
    (fn [{:keys [state after-update] :as m}]
      (swap! state assoc :saving? true :error? false)
@@ -167,7 +168,7 @@
                           (swap! state assoc-in [:pending k] true)
                           (after-update #(this :-save k)))
            checkbox (fn [k checked?]
-                      (common/render-foundation-switch
+                      (render-foundation-switch
                        {:checked? checked? :on-change (partial set-checked? k)}))
            row (fn [{:keys [key value]}]
                  (let [{:keys [id]} (parse-ws-notification-key key)
@@ -175,16 +176,16 @@
                    [:tr {}
                     [:td {} (checkbox key value)]
                     [:td {:style {:padding "0.5rem"}} label]
-                    [:td {} (common/render-info-box {:text description})]
+                    [:td {} (dropdown/render-info-box {:text description})]
                     [:td {} (when-let [pending (get pending key)]
                               (case pending
                                 :error
-                                (icons/icon {:style {:color (:exception-state style/colors)}}
-                                            :error)
+                                (icons/render-icon {:style {:color (:exception-state style/colors)}}
+                                                   :error)
                                 :done
-                                (icons/icon {:style {:color (:success-state style/colors)}}
-                                            :done)
-                                (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
+                                (icons/render-icon {:style {:color (:success-state style/colors)}}
+                                                   :done)
+                                (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
        [:table {:style {:fontSize "90%"}}
         [:tbody {}
          (map row notifications)]]))

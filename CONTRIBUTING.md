@@ -88,6 +88,10 @@ We avoid using CSS files. Instead, we define styles for components in place, alo
 
 Our reasons for this are [outlined in this slide deck](https://speakerdeck.com/vjeux/react-css-in-js).
 
+### Prefer `let`
+
+If you're creating a function or value that's only used in one place, for instance inside of only one method on a component, rather than creating a method on the component, `let` it at the top of the function. If that makes things too crowded, consider putting it in a private function in the namespace.
+
 ### Avoid passing state
 
 A React component's state is considered private to that component. Do not pass the `state` atom to another component.
@@ -171,7 +175,7 @@ use the new value directly:
 or wait until after the re-render:
 
 ```clojure
-(react/call :some-state-modifying-method this)
+(this :some-state-modifying-method)
 (after-update #(some-func (:some-key @state))))
 ```
 

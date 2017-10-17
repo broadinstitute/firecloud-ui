@@ -166,15 +166,15 @@
                                 :as-text (constantly "Delete")
                                 :render
                                 (fn [{:keys [key index]}]
-                                  (icons/icon {:data-test-id (str key "-delete")
-                                               :style {:color (:text-lightest style/colors)
-                                                       :verticalAlign "middle" :fontSize 22
-                                                       :cursor "pointer"}
-                                               :onClick (fn [_]
-                                                          (swap! state #(-> %
-                                                                            (assoc :table-key (gensym))
-                                                                            (update :attributes utils/delete index))))}
-                                              :remove))}
+                                  (icons/render-icon {:data-test-id (str key "-delete")
+                                                      :style {:color (:text-lightest style/colors)
+                                                              :verticalAlign "middle" :fontSize 22
+                                                              :cursor "pointer"}
+                                                      :onClick (fn [_]
+                                                                 (swap! state #(-> %
+                                                                                   (assoc :table-key (gensym))
+                                                                                   (update :attributes utils/delete index))))}
+                                                     :remove))}
                                {:id "key" :header (header "Key") :initial-width 300
                                 :as-text (constantly nil)
                                 :render

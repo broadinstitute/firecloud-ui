@@ -2,10 +2,10 @@ package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
-import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
 import scala.concurrent.duration.DurationLong
@@ -13,7 +13,7 @@ import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
-class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with CleanUp with Matchers {
+class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
@@ -26,11 +26,12 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
       "without required library attributes" - {
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
-            val wsList = signIn(Config.Users.curator)
-            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-            page.ui.clickPublishButton()
-            val messageModal = MessageModal()
-            messageModal.validateLocation shouldBe true
+            withSignIn(Config.Users.curator) { wsList =>
+              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+              page.ui.clickPublishButton()
+              val messageModal = MessageModal()
+              messageModal.validateLocation shouldBe true
+            }
           }
         }
       }
@@ -38,10 +39,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         "publish button should be visible " in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
-
-            val wsList = signIn(Config.Users.curator)
-            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-            page.ui.hasPublishButton shouldBe true
+            withSignIn(Config.Users.curator) { wsList =>
+              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+              page.ui.hasPublishButton shouldBe true
+            }
           }
         }
       }
@@ -54,10 +55,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             api.library.setLibraryAttributes(namespace, wsName, data)
             register cleanUp api.library.unpublishWorkspace(namespace, wsName)
             api.library.publishWorkspace(namespace, wsName)
-
-            signIn(Config.Users.curator)
-            val page = new DataLibraryPage().open
-            page.ui.hasDataset(wsName) shouldBe true
+            withSignIn(Config.Users.curator) { _ =>
+              val page = new DataLibraryPage().open
+              page.ui.hasDataset(wsName) shouldBe true
+            }
           }
         }
       }
@@ -68,23 +69,24 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             api.library.setLibraryAttributes(namespace, wsName, data)
             register cleanUp api.library.unpublishWorkspace(namespace, wsName)
             api.library.publishWorkspace(namespace, wsName)
+            withSignIn(Config.Users.curator) { _ =>
+              val wspage = new WorkspaceSummaryPage(namespace, wsName).open
+              wspage.unpublishWorkspace()
 
-            signIn(Config.Users.curator)
-            val wspage = new WorkspaceSummaryPage(namespace, wsName).open
-            wspage.unpublishWorkspace()
+              // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
+              //            Thread sleep 500
 
-            // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
-            //            Thread sleep 500
-
-            retry[Boolean](100.milliseconds, 1.minute)({
-              val libraryPage = new DataLibraryPage().open
-              if (libraryPage.ui.hasDataset(wsName))
-                None
-              else Some(false)
-            }) match {
-              case None => fail()
-              case Some(s) => s shouldBe false
+              retry[Boolean](100.milliseconds, 1.minute)({
+                val libraryPage = new DataLibraryPage().open
+                if (libraryPage.ui.hasDataset(wsName))
+                  None
+                else Some(false)
+              }) match {
+                case None => fail()
+                case Some(s) => s shouldBe false
+              }
             }
+
           }
         }
       }
@@ -97,10 +99,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         "should not see publish button " in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(ronAuthToken)
-
-            val wsList = signIn(Config.Users.ron)
-            val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-            page.ui.hasPublishButton shouldBe false
+            withSignIn(Config.Users.ron) { wsList =>
+              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
+              page.ui.hasPublishButton shouldBe false
+            }
           }(ronAuthToken)
         }
       }

@@ -86,8 +86,8 @@
   [OKCancelForm
    {:data-test-id "error-modal"
     :header [:div {:style {:display "inline-flex" :align-items "center"}}
-             (icons/icon {:style {:color ((or icon-color :exception-state) style/colors)
-                                  :marginRight "0.5rem"}} :error)
+             (icons/render-icon {:style {:color ((or icon-color :exception-state) style/colors)
+                                         :marginRight "0.5rem"}} :error)
              (or header "Error")]
     :content [:div {:style {:width 500}} text]
     :dismiss on-dismiss

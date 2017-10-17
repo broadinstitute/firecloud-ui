@@ -12,6 +12,7 @@
    [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -81,16 +82,14 @@
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:display "flex" :justifyContent "flex-end"}}
-           (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
-                                         :width 150
-                                         :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
-                                         :items [{:href (config/user-guide-url) :target "_blank"
-                                                  :text [:span {} "User Guide" icons/external-link-icon]}
-                                                 {:href (config/forum-url) :target "_blank"
-                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
-           (header/create-account-dropdown)]
-          (when (= :registered (:registration-status @state))
-            [header/GlobalSubmissionStatus])]]
+           (dropdown/render-dropdown-menu {:label (icons/render-icon {:style style/secondary-icon-style} :help)
+                                           :width 150
+                                           :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
+                                           :items [{:href (config/user-guide-url) :target "_blank"
+                                                    :text [:span {} "User Guide" icons/external-link-icon]}
+                                                   {:href (config/forum-url) :target "_blank"
+                                                    :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
+           (header/create-account-dropdown)]]]
         (let [original-destination (aget js/window "location" "hash")
               on-done (fn [fall-through]
                         (when (empty? original-destination)
@@ -149,9 +148,9 @@
 
 (defn- show-js-exception [e]
   (comps/push-ok-cancel-modal
-   {:header [:span {} (icons/icon {:style {:color (:warning-state style/colors)
+   {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
                                            :marginRight "1rem"}}
-                                  :warning)
+                                         :warning)
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
               "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
@@ -248,7 +247,7 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (old-modal/set-instance! (@refs "modal"))
-     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
            (fn [] (js/setTimeout #(throw (js/Error. "You told me to do this.")) 100) nil)))

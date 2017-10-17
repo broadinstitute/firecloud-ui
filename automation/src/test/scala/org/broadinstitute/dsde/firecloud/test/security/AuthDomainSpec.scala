@@ -3,11 +3,13 @@ package org.broadinstitute.dsde.firecloud.test.security
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+import org.broadinstitute.dsde.firecloud.test.Tags
+
 
 /*
  * This test SHOULD be able to run with ParallelTestExecution. However, Rawls
@@ -21,7 +23,8 @@ import org.scalatest._
  */
 class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures
-  with GroupFixtures {
+  with GroupFixtures
+  with UserFixtures {
 
   val projectName: String = Config.Projects.common
 
@@ -33,13 +36,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "can be created" in withWebDriver { implicit driver =>
         withGroup("AuthDomain") { authDomainName =>
           withCleanUp {
-            val workspaceListPage = signIn(Config.Users.fred)
+            withSignIn(Config.Users.fred) { listPage =>
+              val workspaceName = "AuthDomainSpec_create_" + randomUuid
+              register cleanUp api.workspaces.delete(projectName, workspaceName)
+              val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
 
-            val workspaceName = "AuthDomainSpec_create_" + randomUuid
-            register cleanUp api.workspaces.delete(projectName, workspaceName)
-            val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(authDomainName)).awaitLoaded()
+              workspaceSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
+            }
 
-            workspaceSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
           }
         }
       }
@@ -48,23 +52,25 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
             withCleanUp {
-              val listPage = signIn(Config.Users.george)
-              val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+              withSignIn(Config.Users.george) { listPage =>
+                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
-              val cloneWorkspaceName = workspaceName + "_clone"
-              val cloneModal = summaryPage.ui.clickCloneButton()
-              cloneModal.ui.readLockedAuthDomainGroups() should contain(authDomainName)
+                val cloneWorkspaceName = workspaceName + "_clone"
+                val cloneModal = summaryPage.ui.clickCloneButton()
+                cloneModal.ui.readLockedAuthDomainGroups() should contain(authDomainName)
 
-              register cleanUp {
-                api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                register cleanUp {
+                  api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                }
+                cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+                cloneModal.cloneWorkspaceWait()
+                summaryPage.cloneWorkspaceWait()
+
+                val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
+                cloneSummaryPage.validateWorkspace shouldEqual true
+                cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
               }
-              cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
-              cloneModal.cloneWorkspaceWait()
-              summaryPage.cloneWorkspaceWait()
 
-              val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-              cloneSummaryPage.validateWorkspace shouldEqual true
-              cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
             }
           }
         }
@@ -74,14 +80,16 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { authDomainName =>
-              withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                val workspaceListPage = signIn(Config.Users.ron)
-                workspaceListPage.filter(workspaceName)
+              withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+                withSignIn(Config.Users.draco) { workspaceListPage =>
+                  workspaceListPage.filter(workspaceName)
 
-                workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                workspaceListPage.ui.showsRequestAccessModal shouldEqual true
-                workspaceListPage.validateLocation()
-                // TODO: add assertions for the new "request access" modal
+                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                  workspaceListPage.validateLocation()
+                  // TODO: add assertions for the new "request access" modal
+                  // TODO: end test somewhere we can access the sign out button
+                }
               }
             }
           }
@@ -90,17 +98,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
-                val workspaceListPage = signIn(Config.Users.ron)
+                withSignIn(Config.Users.draco) { workspaceListPage =>
+                  workspaceListPage.filter(workspaceName)
+                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
 
-                workspaceListPage.filter(workspaceName)
-                workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
-
-                val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                go to workspaceSummaryPage
-                workspaceSummaryPage.awaitLoaded()
-                workspaceSummaryPage.ui.readError() should include(projectName)
-                workspaceSummaryPage.ui.readError() should include(workspaceName)
-                workspaceSummaryPage.ui.readError() should include("does not exist")
+                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                  go to workspaceSummaryPage
+                  workspaceSummaryPage.awaitLoaded()
+                  workspaceSummaryPage.ui.readError() should include(projectName)
+                  workspaceSummaryPage.ui.readError() should include(workspaceName)
+                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                }
               }
             }
           }
@@ -112,11 +120,12 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "can be seen and is accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                val listPage = signIn(Config.Users.george)
-                listPage.filter(workspaceName)
+                withSignIn(Config.Users.george) { listPage =>
+                  listPage.filter(workspaceName)
 
-                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                summaryPage.ui.readAuthDomainGroups should include(authDomainName)
+                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                  summaryPage.ui.readAuthDomainGroups should include(authDomainName)
+                }
               }
             }
           }
@@ -125,16 +134,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain", List(Config.Users.george.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
-                val workspaceListPage = signIn(Config.Users.george)
-                workspaceListPage.filter(workspaceName)
-                workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+                withSignIn(Config.Users.george) { workspaceListPage =>
+                  workspaceListPage.filter(workspaceName)
+                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
 
-                val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                go to workspaceSummaryPage
-                workspaceSummaryPage.awaitLoaded()
-                workspaceSummaryPage.ui.readError() should include(projectName)
-                workspaceSummaryPage.ui.readError() should include(workspaceName)
-                workspaceSummaryPage.ui.readError() should include("does not exist")
+                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                  go to workspaceSummaryPage
+                  workspaceSummaryPage.awaitLoaded()
+                  workspaceSummaryPage.ui.readError() should include(projectName)
+                  workspaceSummaryPage.ui.readError() should include(workspaceName)
+                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                }
               }
             }
           }
@@ -142,15 +152,16 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         //TCGA controlled access workspaces use-case
         "when the workspace is shared with the group" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val listPage = signIn(Config.Users.harry)
-                  listPage.filter(workspaceName)
+                  withSignIn(Config.Users.draco) { listPage =>
+                    listPage.filter(workspaceName)
 
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                  }
                 }
               }
             }
@@ -166,14 +177,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain") { groupOneName =>
           withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
-              val workspaceListPage = signIn(Config.Users.fred)
+              withSignIn(Config.Users.fred) { workspaceListPage =>
+                val workspaceName = "AuthDomainSpec_create_" + randomUuid
+                register cleanUp api.workspaces.delete(projectName, workspaceName)
+                val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
 
-              val workspaceName = "AuthDomainSpec_create_" + randomUuid
-              register cleanUp api.workspaces.delete(projectName, workspaceName)
-              val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
-
-              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
-              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+              }
             }
           }
         }
@@ -183,25 +194,26 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withGroup("AuthDomain", List(Config.Users.george.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
               withCleanUp {
-                val listPage = signIn(Config.Users.george)
-                val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                withSignIn(Config.Users.george) { listPage =>
+                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
 
-                val cloneWorkspaceName = workspaceName + "_clone"
-                val cloneModal = summaryPage.ui.clickCloneButton()
-                cloneModal.ui.readLockedAuthDomainGroups() should contain(groupOneName)
-                cloneModal.ui.readLockedAuthDomainGroups() should contain(groupTwoName)
+                  val cloneWorkspaceName = workspaceName + "_clone"
+                  val cloneModal = summaryPage.ui.clickCloneButton()
+                  cloneModal.ui.readLockedAuthDomainGroups() should contain(groupOneName)
+                  cloneModal.ui.readLockedAuthDomainGroups() should contain(groupTwoName)
 
-                register cleanUp {
-                  api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                  register cleanUp {
+                    api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                  }
+                  cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+                  cloneModal.cloneWorkspaceWait()
+                  summaryPage.cloneWorkspaceWait()
+
+                  val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
+                  cloneSummaryPage.validateWorkspace shouldEqual true
+                  cloneSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                  cloneSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
                 }
-                cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
-                cloneModal.cloneWorkspaceWait()
-                summaryPage.cloneWorkspaceWait()
-
-                val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
-                cloneSummaryPage.validateWorkspace shouldEqual true
-                cloneSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                cloneSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
               }
             }
           }
@@ -213,19 +225,20 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withGroup("AuthDomain", List(Config.Users.george.email)) { groupThreeName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.george.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                 withCleanUp {
-                  val listPage = signIn(Config.Users.george)
-                  val cloneWorkspaceName = workspaceName + "_clone"
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
+                  withSignIn(Config.Users.george) { listPage =>
+                    val cloneWorkspaceName = workspaceName + "_clone"
+                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
-                  summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
+                    summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
 
-                  register cleanUp {
-                    api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                    register cleanUp {
+                      api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
+                    }
+
+                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupThreeName)
                   }
-
-                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                  summaryPage.ui.readAuthDomainGroups should include(groupThreeName)
                 }
               }
             }
@@ -237,10 +250,10 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withGroup("AuthDomain") { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
               withCleanUp {
-                val workspaceListPage = signIn(Config.Users.fred)
-
-                workspaceListPage.open.filter(workspaceName)
-                workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
+                withSignIn(Config.Users.fred) { workspaceListPage =>
+                  workspaceListPage.open.filter(workspaceName)
+                  workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
+                }
               }
             }
           }
@@ -250,14 +263,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain") { groupOneName =>
           withGroup("AuthDomain") { groupTwoName =>
             withCleanUp {
-              val workspaceListPage = signIn(Config.Users.fred)
+              withSignIn(Config.Users.fred) { workspaceListPage =>
+                val workspaceName = "AuthDomainSpec_create_" + randomUuid
+                register cleanUp api.workspaces.delete(projectName, workspaceName)
+                val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
 
-              val workspaceName = "AuthDomainSpec_create_" + randomUuid
-              register cleanUp api.workspaces.delete(projectName, workspaceName)
-              val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName)).awaitLoaded()
-
-              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
-              workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                workspaceSummaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                workspaceSummaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+              }
             }
           }
         }
@@ -268,14 +281,16 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.ron)
-                  workspaceListPage.filter(workspaceName)
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
 
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
-                  workspaceListPage.validateLocation()
-                  // TODO: add assertions for the new "request access" modal
+                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.validateLocation()
+                    // TODO: add assertions for the new "request access" modal
+                    // TODO: finish this test somewhere we can access the sign out button
+                  }
                 }
               }
             }
@@ -286,17 +301,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.ron)
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
+                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
 
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
-
-                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-                  workspaceSummaryPage.awaitLoaded()
-                  workspaceSummaryPage.ui.readError() should include(projectName)
-                  workspaceSummaryPage.ui.readError() should include(workspaceName)
-                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                    val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                    go to workspaceSummaryPage
+                    workspaceSummaryPage.awaitLoaded()
+                    workspaceSummaryPage.ui.readError() should include(projectName)
+                    workspaceSummaryPage.ui.readError() should include(workspaceName)
+                    workspaceSummaryPage.ui.readError() should include("does not exist")
+                  }
                 }
               }
             }
@@ -308,15 +323,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.ron.email)) { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.ron.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.ron)
-                  workspaceListPage.filter(workspaceName)
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
+                withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
 
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
-                  workspaceListPage.validateLocation()
-                  // TODO: add assertions for the new "request access" modal
+                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.validateLocation()
+                    // TODO: add assertions for the new "request access" modal
+                    // TODO: finish this test somewhere we can access the sign out button
+                  }
                 }
               }
             }
@@ -325,12 +342,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.hermione)
-                  workspaceListPage.filter(workspaceName)
+                  withSignIn(Config.Users.hermione) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
 
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
-                  workspaceListPage.validateLocation()
+                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.validateLocation()
+                    // TODO: finish this test somewhere we can access the sign out button
+                  }
                 }
               }
             }
@@ -339,19 +358,19 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             withGroup("AuthDomain") { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.ron.email)) { groupTwoName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.ron)
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
+                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
 
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
-
-                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-                  workspaceSummaryPage.awaitLoaded()
-                  workspaceSummaryPage.ui.readError() should include(projectName)
-                  workspaceSummaryPage.ui.readError() should include(workspaceName)
-                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                    val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                    go to workspaceSummaryPage
+                    workspaceSummaryPage.awaitLoaded()
+                    workspaceSummaryPage.ui.readError() should include(projectName)
+                    workspaceSummaryPage.ui.readError() should include(workspaceName)
+                    workspaceSummaryPage.ui.readError() should include("does not exist")
+                  }
                 }
               }
             }
@@ -360,12 +379,13 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.hermione)
-                  workspaceListPage.filter(workspaceName)
+                  withSignIn(Config.Users.hermione) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
 
-                  workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
-                  workspaceListPage.ui.showsRequestAccessModal shouldEqual true
-                  workspaceListPage.validateLocation()
+                    workspaceListPage.ui.clickWorkspaceInList(projectName, workspaceName)
+                    workspaceListPage.ui.showsRequestAccessModal shouldEqual true
+                    workspaceListPage.validateLocation()
+                  }
                 }
               }
             }
@@ -376,30 +396,32 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       "when the user is in all of the groups" - {
         "when shared with them" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val listPage = signIn(Config.Users.harry)
-                  listPage.filter(workspaceName)
+            withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
+                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  withSignIn(Config.Users.draco) { listPage =>
+                    listPage.filter(workspaceName)
 
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                    val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                    summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                    summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                  }
                 }
               }
             }
           }
           "and given writer access" - {
             "the user has correct permissions" in withWebDriver { implicit driver =>
-              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
-                withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
-                  withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.harry.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
+                withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
+                  withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName), List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
                     withCleanUp {
-                      val workspaceListPage = signIn(Config.Users.harry)
-                      workspaceListPage.filter(workspaceName)
+                      withSignIn(Config.Users.draco) { workspaceListPage =>
+                        workspaceListPage.filter(workspaceName)
 
-                      val summaryPage = workspaceListPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                      summaryPage.ui.readAccessLevel() should be(WorkspaceAccessLevel.Writer)
+                        val summaryPage = workspaceListPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                        summaryPage.ui.readAccessLevel() should be(WorkspaceAccessLevel.Writer)
+                      }
                     }
                   }
                 }
@@ -411,7 +433,25 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupOneName =>
                 withGroup("AuthDomain", List(Config.Users.hermione.email)) { groupTwoName =>
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
-                    val listPage = signIn(Config.Users.hermione)
+                    withSignIn(Config.Users.hermione) { listPage =>
+                      listPage.filter(workspaceName)
+
+                      val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
+                      summaryPage.ui.readAuthDomainGroups should include(groupOneName)
+                      summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        "when shared with one of the groups in the auth domain" - {
+          "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
+            withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
+                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
+                  withSignIn(Config.Users.draco) { listPage =>
                     listPage.filter(workspaceName)
 
                     val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
@@ -422,36 +462,21 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               }
             }
           }
-        }
-        "when shared with one of the groups in the auth domain" - {
-          "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
-            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
-                withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val listPage = signIn(Config.Users.harry)
-                  listPage.filter(workspaceName)
-
-                  val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-                  summaryPage.ui.readAuthDomainGroups should include(groupOneName)
-                  summaryPage.ui.readAuthDomainGroups should include(groupTwoName)
-                }
-              }
-            }
-          }
-          "can be seen but is not accessible by group member who is a member of only one auth domain group" in withWebDriver { implicit driver =>
-            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
+          "can be seen but is not accessible by group member who is a member of only one auth domain group"in withWebDriver { implicit driver =>
+            withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.harry)
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual true
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
+                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual true
 
-                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-                  workspaceSummaryPage.awaitLoaded()
-                  workspaceSummaryPage.ui.readError() should include(projectName)
-                  workspaceSummaryPage.ui.readError() should include(workspaceName)
-                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                    val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                    go to workspaceSummaryPage
+                    workspaceSummaryPage.awaitLoaded()
+                    workspaceSummaryPage.ui.readError() should include(projectName)
+                    workspaceSummaryPage.ui.readError() should include(workspaceName)
+                    workspaceSummaryPage.ui.readError() should include("does not exist")
+                  }
                 }
               }
             }
@@ -459,19 +484,20 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
-            withGroup("AuthDomain", List(Config.Users.harry.email)) { groupOneName =>
-              withGroup("AuthDomain", List(Config.Users.harry.email)) { groupTwoName =>
+            withGroup("AuthDomain", List(Config.Users.draco.email)) { groupOneName =>
+              withGroup("AuthDomain", List(Config.Users.draco.email)) { groupTwoName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
-                  val workspaceListPage = signIn(Config.Users.harry)
-                  workspaceListPage.filter(workspaceName)
-                  workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+                  withSignIn(Config.Users.draco) { workspaceListPage =>
+                    workspaceListPage.filter(workspaceName)
+                    workspaceListPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
 
-                  val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
-                  go to workspaceSummaryPage
-                  workspaceSummaryPage.awaitLoaded()
-                  workspaceSummaryPage.ui.readError() should include(projectName)
-                  workspaceSummaryPage.ui.readError() should include(workspaceName)
-                  workspaceSummaryPage.ui.readError() should include("does not exist")
+                    val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
+                    go to workspaceSummaryPage
+                    workspaceSummaryPage.awaitLoaded()
+                    workspaceSummaryPage.ui.readError() should include(projectName)
+                    workspaceSummaryPage.ui.readError() should include(workspaceName)
+                    workspaceSummaryPage.ui.readError() should include("does not exist")
+                  }
                 }
               }
             }
