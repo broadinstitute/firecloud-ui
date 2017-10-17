@@ -41,7 +41,13 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     private val importMetadataButtonQuery = testId("import-metadata-button")
     private val columnEditorButtonQuery= testId("columns-button")
     private val columnHeaderQuery: CssSelectorQuery = testId("column-header")
+    private val filterField = testId("filter-input")
 
+    def clearFilterField() = {
+      await enabled filterField
+      searchField(filterField).value = ""
+      pressKeys("\n")
+    }
     def hasimportMetadataButton(): Boolean = {
       find(importMetadataButtonQuery).isDefined
     }
@@ -105,6 +111,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val confirmUploadMetadataButtonQuery: Query = testId("confirm-upload-metadata-button")
     private val xButtonQuery: Query = testId("x-button")
     private val uploadSuccessMessageQuery = testId("upload-success-message")
+
 
     def clickXButton() = {
       click on (await enabled xButtonQuery)

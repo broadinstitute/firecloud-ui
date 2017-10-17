@@ -6,9 +6,9 @@ import java.util.UUID
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
-import org.broadinstitute.dsde.firecloud.fixture._
+import org.broadinstitute.dsde.firecloud.fixture.{SimpleMethodConfig, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.{SubmissionDetailsPage, WorkspaceMonitorPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
@@ -68,6 +68,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
     val outputs = Map("test.hello.response" -> "workspace.result", "test.hello.name" -> "participant.name")
   }
 
+  val configNs = SimpleMethodConfig.configNamespace
+  val configName = SimpleMethodConfig.configName
+
   "Writer and reader should see new columns" - {
     "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
       implicit val authToken: AuthToken = AuthTokens.hermione
@@ -83,7 +86,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         api.submissions.launchWorkflow(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName, SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, null, false)
         Thread sleep 2000
-        val submissionDetailsTab = new SubmissionDetailsPage(billingProject, workspaceName)
+        val submissionDetailsTab = new SubmissionDetailsPage(billingProject, workspaceName).open
         submissionDetailsTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "output")
@@ -91,6 +94,68 @@ class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
         signIn(Config.Users.draco)
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "output")
+      }
+    }
+
+    "with local preferences but no defaults when analysis run" in withWebDriver { implicit driver =>
+      implicit val authToken: AuthToken = AuthTokens.hermione
+      withWorkspace(billingProject, "DataSpec_launchAnalysis_local", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+        api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2" )
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+        signIn(Config.Users.hermione)
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+        workspaceDataTab.hideColumn("test1")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.draco)
+        workspaceDataTab.open
+        workspaceDataTab.hideColumn("test2")
+        workspaceDataTab.signOut()
+        api.submissions.launchWorkflow(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName, SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, null, false)
+        signIn(Config.Users.hermione)
+        val submissionDetailsTab = new SubmissionDetailsPage(billingProject, workspaceName)
+        submissionDetailsTab.waitUntilSubmissionCompletes()
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.draco)
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+      }
+    }
+
+    "with defaults but no local preferences when analysis run" in withWebDriver { implicit driver =>
+      implicit val authToken: AuthToken = AuthTokens.hermione
+      withWorkspace(billingProject, "DataSpec_launchAnalysis_defaults", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+        api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2" )
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+        signIn(Config.Users.hermione)
+        val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
+        workspaceSummaryTab.ui.beginEditing
+        workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")
+        workspaceSummaryTab.ui.save
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.draco)
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.hermione)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+        submissionTab.waitUntilSubmissionCompletes()
+        workspaceDataTab.open
+        workspaceDataTab.ui.clearFilterField()
+        workspaceDataTab.signOut()
+        signIn(Config.Users.draco)
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.hermione)
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
       }
     }
   }
