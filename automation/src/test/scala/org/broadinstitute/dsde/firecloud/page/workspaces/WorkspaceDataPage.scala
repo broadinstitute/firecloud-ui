@@ -47,7 +47,13 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     private val importMetadataButtonQuery = testId("import-metadata-button")
     private val columnEditorButtonQuery= testId("columns-button")
     private val columnHeaderQuery: CssSelectorQuery = testId("column-header")
+    private val filterField = testId("filter-input")
 
+    def clearFilterField() = {
+      await enabled filterField
+      searchField(filterField).value = ""
+      pressKeys("\n")
+    }
     def hasimportMetadataButton(): Boolean = {
       find(importMetadataButtonQuery).isDefined
     }
@@ -103,6 +109,52 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
     confirmUploadMetadataButton.doClick()
     uploadSuccessMessage.awaitVisible()
     xOut()
+  }
+
+  object ui {
+
+    private val importFromFileButtonQuery: Query = testId("import-from-file-button")
+    private val copyFromAnotherWorkspaceButtonQuery: Query = testId("copy-from-another-workspace-button")
+    private val chooseFileButton: Query = testId("choose-file-button")
+    private val fileUploadInputQuery: Query = testId("data-upload-input")
+    private val fileUploadContainerQuery: Query = testId("data-upload-container")
+    private val confirmUploadMetadataButtonQuery: Query = testId("confirm-upload-metadata-button")
+    private val xButtonQuery: Query = testId("x-button")
+    private val uploadSuccessMessageQuery = testId("upload-success-message")
+
+
+    def clickXButton() = {
+      click on (await enabled xButtonQuery)
+    }
+
+    def clickImportFromFileButton() = {
+      click on importFromFileButtonQuery
+    }
+
+    def clickCopyFromAnotherWorkspaceButton() = {
+      click on (await enabled copyFromAnotherWorkspaceButtonQuery)
+    }
+
+    def clickChooseFileButton() = {
+      click on (await enabled chooseFileButton)
+    }
+
+    def uploadData(filePath: String) = {
+      executeScript("var field = document.getElementsByName('entities'); field[0].style.display = '';")
+      val webElement = find(fileUploadInputQuery).get.underlying
+      webElement.clear()
+      webElement.sendKeys(filePath)
+    }
+
+    def clickUploadMetaData() = {
+      click on (await enabled confirmUploadMetadataButtonQuery)
+    }
+
+    def isUploadSuccessMessagePresent(): Boolean = {
+      await enabled uploadSuccessMessageQuery
+      // this seems like a terrible way to do this
+      find(uploadSuccessMessageQuery).size == 1
+    }
   }
 }
 
