@@ -70,6 +70,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     }
 
     def readColumnHeaders: List[String] = {
+      await notVisible spinner
       readAllText(columnHeaderQuery)
     }
 

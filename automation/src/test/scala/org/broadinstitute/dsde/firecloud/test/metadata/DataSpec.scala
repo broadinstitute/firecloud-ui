@@ -1,16 +1,20 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
 import java.io.{File, PrintWriter}
+import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
-import org.broadinstitute.dsde.firecloud.fixture.WorkspaceFixtures
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config, Credentials}
+import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
+import org.broadinstitute.dsde.firecloud.fixture._
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 
 class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
-  with ShouldMatchers with WorkspaceFixtures with CleanUp {
+  with ShouldMatchers with WorkspaceFixtures with MethodFixtures with CleanUp {
 
   "A workspace owner should be able to import a participants file" in withWebDriver { implicit driver =>
     implicit val authToken: AuthToken = AuthTokens.snape
@@ -48,6 +52,47 @@ class DataSpec extends FreeSpec with WebBrowserSpec with ParallelTestExecution
     }
     val file = makeTempMetadataFile(fileName, headers, List(data))
     dataTab.importFile(file.getAbsolutePath)
+  }
+
+
+  val billingProject: String = Config.Projects.default
+  val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
+  val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
+
+  object SimpleMethodConfig {
+    val configName = "DO_NOT_CHANGE_test1_config"
+    val configNamespace = "automationmethods"
+    val snapshotId = 1
+    val rootEntityType = "participant"
+    val inputs = Map("test.hello.name" -> "\"a\"") // shouldn't be needed for config
+    val outputs = Map("test.hello.response" -> "workspace.result", "test.hello.name" -> "participant.name")
+  }
+
+  "Writer and reader should see new columns" - {
+    "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
+      implicit val authToken: AuthToken = AuthTokens.hermione
+      withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+        api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+
+        signIn(Config.Users.hermione)
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+        val headers1 = List("participant_id")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        api.submissions.launchWorkflow(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName, SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, null, false)
+        Thread sleep 2000
+        val submissionDetailsTab = new SubmissionDetailsPage(billingProject, workspaceName)
+        submissionDetailsTab.waitUntilSubmissionCompletes()
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "output")
+        workspaceDataTab.signOut()
+        signIn(Config.Users.draco)
+        workspaceDataTab.open
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "output")
+      }
+    }
   }
 
   "Writer and reader should see new columns" - {
