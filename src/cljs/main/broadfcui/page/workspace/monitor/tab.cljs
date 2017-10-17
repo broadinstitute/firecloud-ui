@@ -3,11 +3,12 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
+   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -56,7 +57,10 @@
        :render (fn [submission-id]
                  (links/create-external {:href (str moncommon/google-cloud-context
                                                     bucketName "/" submission-id "/")}
-                                        submission-id))}]}}])
+                                        submission-id))}]}
+    :toolbar
+    {:style {:alignItems "flex-end"}
+     :get-items (constantly [flex/spring [QueueStatus]])}}])
 
 
 (react/defc- SubmissionsList

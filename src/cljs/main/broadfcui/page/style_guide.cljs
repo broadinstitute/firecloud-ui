@@ -130,7 +130,7 @@
 
 (defn- render-icon-sample [icon]
   [:div {:style {:padding "0.5rem 1rem" :border style/standard-line :width 175}}
-   (icons/icon {:style {:marginRight "0.5rem"} :className "fa-fw"} icon) (name icon)])
+   (icons/render-icon {:style {:marginRight "0.5rem"} :className "fa-fw"} icon) (name icon)])
 
 (def ^:private styles
   [:section {}
@@ -149,7 +149,7 @@
    [:div {:style {:display "flex" :flexWrap "wrap"}}
     (map render-icon-sample (sort (keys icons/icon-keys)))]
    [:p {} "Use them like this:"]
-   (create-code-block "(icons/icon {} :icon-name)")])
+   (create-code-block "(icons/render-icon {} :icon-name)")])
 
 (def ^:private components
   [:section {}

@@ -8,6 +8,6 @@
 
 (def methods-repo-group-alert
   [:p {:style {:fontSize "100%"}}
-   (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
-               :warning)
+   (icons/render-icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
+                      :warning)
    "Note: Sharing with user-groups is not yet supported."])

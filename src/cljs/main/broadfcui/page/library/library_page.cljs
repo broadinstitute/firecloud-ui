@@ -38,7 +38,7 @@
    [:a {:target "_blank"
         :href (str "mailto:" (:library:contactEmail data))}
     (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
-    (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
+    (icons/render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
    " and request access for the "
    (:namespace data) "/" (:name data) " workspace."])
 
@@ -64,10 +64,10 @@
                                    "You must request access to this dataset."))
                       :render (fn [data]
                                 (when (= (:workspaceAccess data) "NO ACCESS")
-                                  (icons/icon (merge
+                                  (icons/render-icon (merge
                                                {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
                                                (this :-get-link-props data))
-                                              :shield)))}
+                                                     :shield)))}
                      {:id "library:datasetName"
                       :header (:title (:library:datasetName attributes)) :initial-width 250
                       :sort-initial :asc :sort-by :library:datasetName
