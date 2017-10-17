@@ -2,6 +2,8 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.utils :as utils]
    ))
 
@@ -23,8 +25,7 @@
                               :autoHeight (when bam? false)}))
                          tracks)}))
 
-
-(react/defc IGVContainer
+(react/defc- IGVElement
   {:render
    (fn [{:keys []}]
      [:div {:ref "container"}])
@@ -38,3 +39,18 @@
    :refresh
    (fn [{:keys [props refs]}]
      (.createBrowser js/igv (@refs "container") (options (:tracks props))))})
+
+(react/defc IGVContainer
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [loaded? error?]} @state]
+       [:div {}
+        [:link {:rel "stylesheet" :type "text/css" :href "https://igv.org/web/release/1.0.6/igv-1.0.6.css"}]
+        (cond
+          error? (style/create-server-error-message "Unable to load IGV.")
+          loaded? [IGVElement props]
+          :else
+          [ScriptLoader
+           {:on-error #(swap! state assoc :error? true)
+            :on-load #(swap! state assoc :loaded? true)
+            :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}])]))})

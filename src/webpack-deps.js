@@ -3,6 +3,7 @@ window.ReactDOM = require('react-dom');
 window.createReactClass = require('create-react-class');
 
 exports.ReactAutosuggest = require('react-autosuggest');
+exports.ReactLoadScript = require('react-load-script');
 
 window.jQuery = require('jquery');
 window.$ = window.jQuery;

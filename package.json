@@ -16,6 +16,7 @@
     "react": "~15.5.4",
     "react-autosuggest": "~9.3.2",
     "react-dom": "~15.5.4",
+    "react-load-script": "~0.0.6",
     "select2": "~4.0.3"
   },
   "devDependencies": {
