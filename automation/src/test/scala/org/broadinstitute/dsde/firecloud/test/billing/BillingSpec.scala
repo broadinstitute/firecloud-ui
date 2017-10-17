@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
 import org.scalatest.{FreeSpec, Ignore, Matchers}
 
 /**

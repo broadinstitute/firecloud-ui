@@ -3,11 +3,12 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
+   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -56,14 +57,17 @@
        :render (fn [submission-id]
                  (links/create-external {:href (str moncommon/google-cloud-context
                                                     bucketName "/" submission-id "/")}
-                                        submission-id))}]}}])
+                                        submission-id))}]}
+    :toolbar
+    {:style {:alignItems "flex-end"}
+     :get-items (constantly [flex/spring [QueueStatus]])}}])
 
 
 (react/defc- SubmissionsList
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     (react/call :load-submissions this))
+     (this :load-submissions))
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
@@ -76,7 +80,7 @@
          (render-submissions-table (:workspace-id props) submissions (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-submissions this))
+     (this :load-submissions))
    :load-submissions
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -91,7 +95,7 @@
   {:refresh
    (fn [{:keys [props refs]}]
      (when-not (:submission-id props)
-       (react/call :reload (@refs "submissions-list"))))
+       ((@refs "submissions-list") :reload)))
    :render
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props

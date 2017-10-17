@@ -77,7 +77,7 @@
                     (links/create-internal
                      {:style {:color (:exception-state style/colors)}
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
-                     (icons/icon {} :delete))))}]}
+                     (icons/render-icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly
@@ -96,8 +96,8 @@
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
                  (fn [response]
-                    (swap! state assoc :delete-response response)
-                    (this :-load-data)))}))
+                   (swap! state assoc :delete-response response)
+                   (this :-load-data)))}))
    :-render-confirmation
    (fn [{:keys [state this]}]
      (modals/render-message

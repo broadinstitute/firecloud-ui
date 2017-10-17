@@ -24,6 +24,7 @@ object AuthTokens {
   val lunaTemp = AuthToken(Config.Users.lunaTemp)
   val nevilleTemp = AuthToken(Config.Users.nevilleTemp)
   val ron = AuthToken(Config.Users.ron)
+  val draco = AuthToken(Config.Users.draco)
 }
 
 case class AuthToken(user: Credentials) {

@@ -68,7 +68,7 @@
                                 (:border-light style/colors))
                        :cursor (when allow-prev "pointer")}
                :onClick (when allow-prev #(page-selected (dec page-number)))}
-         (icons/icon {:style {:alignSelf "center" :paddingRight "0.5rem"}} :angle-left)
+         (icons/render-icon {:style {:alignSelf "center" :paddingRight "0.5rem"}} :angle-left)
          "Prev"]
         [:span {:style {:whiteSpace "nowrap"}}
          (map (fn [n]
@@ -93,7 +93,7 @@
                        :cursor (when allow-next "pointer")}
                :onClick (when allow-next #(page-selected (inc page-number)))}
          "Next"
-         (icons/icon {:style {:alignSelf "center" :paddingLeft "0.5rem"}} :angle-right)])))
+         (icons/render-icon {:style {:alignSelf "center" :paddingLeft "0.5rem"}} :angle-right)])))
    :-render-rows-component
    (fn [{:keys [props]}]
      (let [{:keys [rows-per-page per-page-options per-page-selected]} props]

@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.links :as links]
@@ -10,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
@@ -39,7 +39,7 @@
             [comps/Breadcrumbs {:crumbs (map #(select-keys % [:text :onClick :id])
                                              (:crumbs @state))}]]
            (when-not last-crumb-id
-             (common/render-info-box
+             (dropdown/render-info-box
               {:text [:div {} "For more information about importing files, see our "
                       (links/create-external {:href (config/user-guide-url)} "user guide.")]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}

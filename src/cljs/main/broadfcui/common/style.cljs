@@ -1,7 +1,7 @@
 (ns broadfcui.common.style
   (:require
    [clojure.string :as string]
-   [broadfcui.config :as config]
+   [broadfcui.common :as common]
    [broadfcui.utils :as utils]
    ))
 
@@ -129,7 +129,7 @@
 
 (defn create-validation-error-message [fails]
   [:div {:style {:color (:exception-state colors)}}
-   (map (fn [fail] [:div {} fail]) fails)])
+   (common/mapwrap :div fails)])
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)

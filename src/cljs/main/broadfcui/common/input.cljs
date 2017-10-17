@@ -11,7 +11,7 @@
      (common/get-text refs "textfield"))
    :validate
    (fn [{:keys [props state this]}]
-     (let [text (react/call :get-text this)
+     (let [text (this :get-text)
            fails (keep (fn [p] (when-not ((:test p) text) (:message p)))
                        (filter some? (:predicates props)))]
        (when (seq fails)
@@ -34,11 +34,11 @@
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))
-    (react/call :get-text (@refs (first ids)))
-    (map #(react/call :get-text (@refs %)) ids)))
+    ((@refs (first ids)) :get-text)
+    (map #((@refs %) :get-text) ids)))
 
 (defn validate [refs & ids]
-  (not-empty (distinct (flatten (keep #(react/call :validate (@refs %)) ids)))))
+  (not-empty (distinct (flatten (keep #((@refs %) :validate) ids)))))
 
 ;; usage: (let [[field1 field2 & fails] (get-and-validate refs "field1-ref" "field2-ref")]
 ;;          (if fails

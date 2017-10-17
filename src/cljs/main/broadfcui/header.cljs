@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.style :as style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -36,7 +37,7 @@
 
 (defn create-account-dropdown []
   (let [auth2 @utils/auth2-atom]
-    (common/render-dropdown-menu
+    (dropdown/render-dropdown-menu
      {:label [:div {:style {:borderRadius 2 :display "inline-block"
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
@@ -51,36 +52,3 @@
               {:href (nav/get-link :billing) :text "Billing"}
               {:href (nav/get-link :notifications) :text "Notifications"}
               {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id "sign-out"}]})))
-
-(react/defc GlobalSubmissionStatus
-  {:render
-   (fn [{:keys [state]}]
-     (let [{:keys [status-error status-code status-counts]} @state
-           {:keys [queued active queue-position]} status-counts]
-       (when-not (= status-code 401) ; to avoid displaying "Workflows: Unauthorized"
-         [:div {}
-          (str "Workflows: "
-               (cond status-error status-error
-                     status-counts (str queued " Queued; " active " Active; "
-                                        queue-position " ahead of yours")
-                     :else "loading..."))])))
-   :component-did-mount
-   (fn [{:keys [this locals]}]
-     ;; Call once for initial load
-     (this :load-data)
-     ;; Add a long-polling call for continuous updates
-     (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-data) (config/submission-status-refresh))))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (js/clearInterval (:interval-id @locals)))
-   :load-data
-   (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/submissions-queue-status)
-       :on-done (fn [{:keys [success? status-text status-code get-parsed-response]}]
-                  (if success?
-                    (swap! state assoc :status-error nil :status-code nil
-                           :status-counts (common/queue-status-counts (get-parsed-response false)))
-                    (swap! state assoc :status-error status-text :status-code status-code
-                           :status-counts nil)))}))})

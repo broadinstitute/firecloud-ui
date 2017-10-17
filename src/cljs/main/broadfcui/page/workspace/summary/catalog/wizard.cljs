@@ -63,7 +63,7 @@
         (style/create-identity-select {:value selected
                                        :disabled (not editable?)
                                        :style {:marginTop "0.5rem"}
-                                       :onChange #(react/call :set-groups this (.. % -target -value))}
+                                       :onChange #(this :set-groups (.. % -target -value))}
                                       (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
          "N.B. The Dataset will be visible to these users in the library, but users will still
@@ -177,14 +177,14 @@
                            :disabled? (zero? page-num)}]
           (flex/strut 27)
           [buttons/Button {:text "Next"
-                           :onClick #(react/call :next-page this)
+                           :onClick #(this :next-page)
                            :disabled? (> page-num (-> library-schema :wizard count))
                            :style {:width 80}}]
           flex/spring
           (let [save-permissions (or editable? set-discoverable?)
                 last-page (> page-num (-> library-schema :wizard count))]
             [buttons/Button {:text (if published? "Republish" "Submit")
-                             :onClick #(react/call :submit this editable? set-discoverable?)
+                             :onClick #(this :submit editable? set-discoverable?)
                              :disabled? (or (and published? (not-empty invalid-properties))
                                             (not (and save-permissions last-page)))
                              :style {:width 80}}]))]]))
@@ -198,14 +198,14 @@
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
      (when-not (= (:page-num prev-state) (:page-num @state))
-       (react/call :scroll-to (@refs "scroller") 0)))
+       ((@refs "scroller") :scroll-to 0)))
    :next-page
    (fn [{:keys [state refs this locals after-update props]}]
      (swap! state dissoc :validation-error)
-     (if-let [error-message (react/call :validate (@refs "wizard-page"))]
+     (if-let [error-message ((@refs "wizard-page") :validate)]
        (swap! state assoc :validation-error error-message)
        (let [{:keys [working-attributes pages-stack required-attributes page-num]} @state
-             attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
+             attributes-from-page ((@refs "wizard-page") :get-attributes)
              all-attributes (merge working-attributes attributes-from-page)
              invalid-attributes (atom #{})]
          (swap! state assoc :working-attributes all-attributes)
@@ -217,7 +217,7 @@
              (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
          (after-update (fn [_]
-                         (let [next-page (react/call :find-next-page this)]
+                         (let [next-page (this :find-next-page)]
                            (swap! state #(-> %
                                              (update :pages-seen conj next-page)
                                              (update :pages-stack conj page-num)

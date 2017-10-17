@@ -14,11 +14,11 @@
 ;; Deprecated. Use broadfcui.components.modals instead.
 (defn push-modal [child]
   ;; Forces create-element so the caller can refer to refs in the dialog.
-  (react/call :push-modal @instance (react/create-element child)))
+  (@instance :push-modal (react/create-element child)))
 
 ;; Deprecated. Use broadfcui.components.modals instead.
 (defn pop-modal []
-  (react/call :pop-modal @instance))
+  (@instance :pop-modal))
 
 
 (react/defc Component
