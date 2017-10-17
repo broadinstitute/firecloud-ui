@@ -31,7 +31,6 @@
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
-                     :data-test-id "create-workspace-button"
                      :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")

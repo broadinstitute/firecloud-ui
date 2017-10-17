@@ -18,7 +18,6 @@
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Create Billing Project"
-       :data-test-id "create-billing-project-modal"
        :content
        (react/create-element
         (let [{:keys [billing-accounts error]} @state]
@@ -73,7 +72,7 @@
                            [:tr {:style {:borderTop style/standard-line}}
                             [:td {:style {:borderTop style/standard-line}}
                              [:input {:type "radio" :value (account "accountName")
-                                      :data-test-id (account "displayName")
+                                      :data-test-id (str (account "displayName") "-radio")
                                       :name "billing-account-select"
                                       :disabled (not (account "firecloudHasAccess"))
                                       :id (account "accountName")
@@ -93,8 +92,7 @@
                          billing-accounts)]]
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
-       :ok-button {:data-test-id "create-project-button"
-                   :onClick (when (seq (:billing-accounts @state))
+       :ok-button {:onClick (when (seq (:billing-accounts @state))
                               #(this :create-billing-project))}}])
    :component-did-mount
    (fn [{:keys [this]}]

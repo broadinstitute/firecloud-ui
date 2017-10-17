@@ -21,8 +21,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         val filename = "src/test/resources/participants.txt"
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         workspaceDataTab.importFile(filename)
-        assert(workspaceDataTab.getNumberOfParticipants() == 1)
-
+        workspaceDataTab.getNumberOfParticipants shouldBe 1
       }
     }
     //more checks should be added here

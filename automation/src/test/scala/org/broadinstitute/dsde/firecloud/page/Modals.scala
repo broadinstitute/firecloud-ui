@@ -1,26 +1,47 @@
 package org.broadinstitute.dsde.firecloud.page
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.component.Button
 import org.openqa.selenium.WebDriver
 
 abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudView {
+  protected val okButton = Button("ok-button")
+  protected val cancelButton = Button("cancel-button")
+  protected val xButton = Button("x-button")
 
-  def clickOk()(implicit webDriver: WebDriver): Unit = {
-    ui.clickOkButton()
+  def clickOk(): Unit = {
+    okButton.doClick()
   }
 
-  def clickCancel()(implicit webDriver: WebDriver): Unit = {
-    ui.clickCancelButton()
+  def clickCancel(): Unit = {
+    cancelButton.doClick()
   }
 
-  object ui {
-    private val okButton: Query = testId("ok-button")
-    private val cancelButton: Query = testId("cancel-button")
-    def clickOkButton(): Unit = {
-      click on (await enabled okButton)
-    }
-    def clickCancelButton(): Unit = {
-      click on (await enabled cancelButton)
-    }
+  def clickXButton(): Unit = {
+    xButton.doClick()
+  }
+
+  override def awaitReady(): Unit = {
+    okButton.awaitVisible()
+  }
+
+  def awaitDismissed(): Unit = {
+    okButton.awaitNotVisible()
+  }
+
+  def submit(): Unit = {
+    clickOk()
+    awaitDismissed()
+  }
+
+  def cancel(): Unit = {
+    clickCancel()
+    awaitDismissed()
+  }
+
+  def xOut(): Unit = {
+    clickXButton()
+    awaitDismissed()
   }
 }
 
@@ -29,9 +50,11 @@ case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
     testId("error-modal").element != null
   }
 
-  def getErrorText(): String = {
+  def getErrorText: String = {
     readText(testId("message-modal-content"))
   }
+
+  override def awaitReady(): Unit = cancelButton.awaitVisible()
 
 }
 
