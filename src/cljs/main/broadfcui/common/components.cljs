@@ -405,7 +405,8 @@
                                          (.focus (get-first)))))))))})
 
 (defn no-billing-projects-message []
-  [:div {:style {:textAlign "center"}}
+  [:div {:data-test-id "no-billing-projects-message"
+         :style {:textAlign "center"}}
    "You must have a billing project associated with your account to create a new workspace."
    (links/create-external {:href (config/billing-guide-url)
                            :style {:display "block"}}
