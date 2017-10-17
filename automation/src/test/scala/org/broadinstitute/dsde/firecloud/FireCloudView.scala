@@ -11,9 +11,6 @@ abstract class FireCloudView(implicit webDriver: WebDriver)
   extends WebBrowser with WebBrowserUtil {
   def awaitReady(): Unit
 
-  /** Query for the FireCloud Spinner component */
-  val spinner: CssSelectorQuery = testId("spinner")
-
   def readText(q: Query): String = {
     find(q) map { _.text } getOrElse ""
   }

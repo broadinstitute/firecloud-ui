@@ -93,7 +93,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         launchModal.filterRootEntityType("participant")
         launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
         launchModal.clickLaunchButton()
-        launchModal.verifyWrongEntityError(wrongRootEntityErrorText)  shouldBe true
+        launchModal.verifyErrorText(wrongRootEntityErrorText)  shouldBe true
         launchModal.xOut()
       }
     }
@@ -117,7 +117,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         launchModal.filterRootEntityType("sample_set")
         launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
         launchModal.clickLaunchButton()
-        launchModal.verifyWrongEntityError(noExpressionErrorText) shouldBe true
+        launchModal.verifyErrorText(noExpressionErrorText) shouldBe true
         launchModal.xOut()
       }
     }
@@ -138,7 +138,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         launchModal.filterRootEntityType(method.rootEntityType)
         launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
         launchModal.clickLaunchButton()
-        launchModal.verifyMissingInputsError(missingInputsErrorText) shouldBe true
+        launchModal.verifyErrorText(missingInputsErrorText) shouldBe true
         launchModal.xOut()
       }
     }

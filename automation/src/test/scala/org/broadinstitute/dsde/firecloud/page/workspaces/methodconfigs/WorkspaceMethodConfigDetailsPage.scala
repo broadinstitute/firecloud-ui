@@ -162,11 +162,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
     numberOfWorkflowsWarning.isVisible
   }
 
-  def verifyWrongEntityError(errorText: String): Boolean = {
-    isErrorTextPresent(errorText)
-  }
-
-  def verifyMissingInputsError(errorText: String): Boolean = {
+  def verifyErrorText(errorText: String): Boolean = {
     isErrorTextPresent(errorText)
   }
 

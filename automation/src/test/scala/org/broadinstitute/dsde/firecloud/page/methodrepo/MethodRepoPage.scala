@@ -27,8 +27,6 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage wi
     private def methodLink(namespace: String, name: String) = Link(s"method-link-$namespace-$name")
 
     def hasMethod(namespace: String, name: String): Boolean = {
-      val link = methodLink(namespace, name)
-      link.isVisible
       methodLink(namespace, name).isVisible
     }
 
