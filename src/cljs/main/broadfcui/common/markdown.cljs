@@ -6,7 +6,7 @@
    [broadfcui.utils :as utils]
    ))
 
-(def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
+(def ^:private MarkdownIt-js (aget js/window "webpackDeps" "MarkdownIt"))
 (def ^:private markdown-it (MarkdownIt-js. #js{:linkify true}))
 
 (react/defc MarkdownView

@@ -57,7 +57,7 @@
 
 (defn integer [field-name & {:keys [min max]}]
   (let [parses (partial re-matches #"\-?[0-9]+")
-        in-range #(<= (or min -Infinity) (int %) (or max Infinity))]
+        in-range #(<= (or min js/-Infinity) (int %) (or max js/Infinity))]
     {:test (every-pred parses in-range)
      :message (str field-name " must be an integer"
                    (cond (and min max) (str " between " min " and " max)

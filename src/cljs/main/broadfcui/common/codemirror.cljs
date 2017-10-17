@@ -5,7 +5,7 @@
    [broadfcui.utils :as utils]
    ))
 
-(def ^:private CodeMirror-js (aget js/window "webpack-deps" "CodeMirror"))
+(def ^:private CodeMirror-js (aget js/window "webpackDeps" "CodeMirror"))
 
 (defn- regex-escape [s]
   (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))

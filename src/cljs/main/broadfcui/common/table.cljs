@@ -214,7 +214,7 @@
            (merge
             {:query-params (select-keys
                             {:page-number 1
-                             :rows-per-page (if (= :none (:paginator props)) Infinity 20)
+                             :rows-per-page (if (= :none (:paginator props)) js/Infinity 20)
                              :filter-text ""
                              :sort-column (some-> initial-sort-column table-utils/resolve-id)
                              :sort-order initial-sort-order}

@@ -2,11 +2,10 @@
   :dependencies
   [
    [inflections "0.13.0"]
-   [dmohs/react "1.2.4+15.5.4-1"]
+   [dmohs/react "1.2.4+provided-alpha-2"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
    [org.clojure/clojure "1.8.0"]
-   [org.clojure/clojurescript "1.9.293"]
-   [cljsjs/react-autosuggest "9.3.2-0"]
+   [org.clojure/clojurescript "1.9.946"]
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
             ; [lein-ancient "0.6.12"] ; check for outdated dependencies, uncomment and run `lein ancient` to use
@@ -42,7 +41,7 @@
                   :static-fns true
                   :fn-invoke-direct true
                   :elide-asserts true
-                  :language-out :ecmascript6
+                  :language-out :ecmascript5
                   :optimize-constants true
                   :output-dir "build"}}}}}}
   :target-path "resources/public/target"

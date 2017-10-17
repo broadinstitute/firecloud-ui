@@ -43,7 +43,7 @@
                                              [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
                                                        {:value v})]))
                              ;; throw out decimals and out of range values:
-                             (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
+                             (keep (fn [[k {:keys [value minimum maximum] :or {minimum js/-Infinity maximum js/Infinity}}]]
                                      (when-not (and (or
                                                      (= value (str (int value)))
                                                      (= value (int value)))
@@ -132,7 +132,7 @@
                              [:div {:style {:clear "both"}}]]))
        :highlightFirstSuggestion false
        :onSuggestionSelected (fn [_ suggestion]
-                               (let [suggestion (utils/log (js->clj (.-suggestion suggestion) :keywordize-keys true))
+                               (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
                                      {:keys [id label]} suggestion
                                      [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
                                  (swap! state update :attributes assoc
