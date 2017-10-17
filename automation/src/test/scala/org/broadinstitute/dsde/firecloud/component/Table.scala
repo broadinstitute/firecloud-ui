@@ -8,14 +8,16 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   private val tableBody = findInner("table-body")
 
+  // TODO: figure out how to do sub-components properly
+
   private val filterField = findInner("filter-input")
   private val filterButton = findInner("filter-button")
 
   private def tab(name: String) = findInner(s"$name-tab")
 
-  private val prevPageButton = Button("prev-page")
-  private val nextPageButton = Button("next-page")
-  private def pageButton(page: Int) = Button(s"page-$page")
+  private val prevPageButton = findInner("prev-page")
+  private val nextPageButton = findInner("next-page")
+  private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
 
   override def awaitReady(): Unit = {
@@ -35,22 +37,21 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   }
 
   def readDisplayedTabCount(tabName: String): Int = {
-    awaitReady()
     readText(tab(tabName)).replaceAll("\\D+","").toInt
   }
 
   def goToPreviousPage(): Unit = {
-    prevPageButton.doClick()
+    click on prevPageButton
     awaitReady()
   }
 
   def goToNextPage(): Unit = {
-    nextPageButton.doClick()
+    click on nextPageButton
     awaitReady()
   }
 
   def goToPage(page: Int): Unit = {
-    pageButton(page).doClick()
+    click on pageButton(page)
     awaitReady()
   }
 
