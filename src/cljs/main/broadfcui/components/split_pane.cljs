@@ -35,9 +35,9 @@
                                       :mouse-pos (if left (.-clientX e) (.-clientY e))
                                       :text-selection (common/disable-text-selection)))}
           [:div {:style {:display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
-           (icons/icon {:className (when left "fa-rotate-90")
-                        :style {:padding slider-padding
-                                :color (:text-lightest style/colors)}} :resize)]]
+           (icons/render-icon {:className (when left "fa-rotate-90")
+                               :style {:padding slider-padding
+                                       :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
    (utils/with-window-listeners

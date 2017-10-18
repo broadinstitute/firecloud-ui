@@ -25,13 +25,13 @@
         text (table-utils/canonical-name resolved)]
     (when-not hidden?
       [:div {}
-       (icons/icon {:className "grab-icon"
+       (icons/render-icon {:className "grab-icon"
                     :style {:visibility (when fixed? "hidden")
                             :color (style/colors :text-light) :fontSize 16
                             :verticalAlign "middle" :marginRight "0.5rem"}
                     :draggable false
                     :onMouseDown on-drag-mouse-down}
-                   :reorder)
+                          :reorder)
        [:label {:style {:cursor (when-not (or dragging? fixed?) "pointer")}}
         [:input {:type "checkbox" :checked (or fixed? visible?)
                  :disabled fixed?
@@ -57,7 +57,7 @@
                 :onClick (fn [_]
                            (update-column-display (table-utils/build-column-display columns))
                            (dismiss))}
-          (icons/icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)
+          (icons/render-icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)
           [:span {:style {:fontSize 14 :flexGrow 1 :textAlign "center"}}
            "Reset Columns"]]
          "Show:"

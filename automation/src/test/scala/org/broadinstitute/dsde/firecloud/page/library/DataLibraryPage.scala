@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
+import org.broadinstitute.dsde.firecloud.component.Link
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
 import org.openqa.selenium.WebDriver
@@ -11,9 +12,8 @@ import org.scalatest.selenium.Page
 class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage with Page with PageUtil[DataLibraryPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
-  override def awaitLoaded(): DataLibraryPage = {
+  override def awaitReady(): Unit = {
     await text "Data Use Limitation"
-    this
   }
 
   def validateLocation(): Unit = {
@@ -21,11 +21,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage w
     await text "Matching Cohorts"
   }
 
-  trait UI extends super.UI {
-    private def datasetTestId(n: String) = { s"dataset-$n" }
-    def hasDataset(name: String): Boolean = {
-      find(testId(datasetTestId(name))).isDefined
-    }
+  def hasDataset(name: String): Boolean = {
+    // TODO: need to search the table to get here
+    Link(s"dataset-$name").isVisible
   }
-  object ui extends UI
 }

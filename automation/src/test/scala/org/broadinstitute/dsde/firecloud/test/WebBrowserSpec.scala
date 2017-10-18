@@ -110,7 +110,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     */
   def signIn(credentials: Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
     signIn(credentials.email, credentials.password)
-    new WorkspaceListPage
+    await ready new WorkspaceListPage
   }
 
   /**

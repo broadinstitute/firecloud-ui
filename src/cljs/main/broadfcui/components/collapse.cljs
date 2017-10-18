@@ -19,8 +19,8 @@
                 :data-test-state (if visible? "expanded" "collapsed")
                 :style {:display "flex" :cursor "pointer" :alignItems "baseline"}
                 :onClick #(swap! state update :visible? not)}
-          (icons/icon {:className "fa-fw" :style {:flexShrink 0}}
-                      (if visible? :disclosure-opened :disclosure-closed))
+          (icons/render-icon {:className "fa-fw" :style {:flexShrink 0}}
+                             (if visible? :disclosure-opened :disclosure-closed))
           title]
          (when visible? title-expand)]
         [:div {:style {:display (when-not visible? "none") :paddingLeft icons/fw-icon-width}}

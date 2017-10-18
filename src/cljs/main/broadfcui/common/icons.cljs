@@ -36,6 +36,7 @@
    :move-right "fa-angle-double-right"
    :new-window "fa-external-link"
    :publish "fa-upload"
+   :refresh "fa-refresh"
    :remove "fa-minus-circle"
    :reorder "fa-reorder"
    :resize "fa-bars"
@@ -52,13 +53,13 @@
    :warning "fa-exclamation-triangle"
    })
 
-(defn icon [attributes key]
+(defn render-icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa " (:className attributes)))])
 
 (def fw-icon-width "1.28571429rem")
 
 (def external-link-icon
-  (icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
+  (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
 
 (react/defc CompleteIcon
   {:get-default-props
@@ -66,7 +67,7 @@
      {:size 32})
    :render
    (fn [{:keys [props]}]
-     (icon {:style {:color "white" :fontSize (:size props)}} :done-circle))})
+     (render-icon {:style {:color "white" :fontSize (:size props)}} :done-circle))})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -100,7 +101,7 @@
       :color "white"})
    :render
    (fn [{:keys [props]}]
-     (icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})
+     (render-icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})
 
 (react/defc UnknownIcon
   {:get-default-props
@@ -109,4 +110,4 @@
       :color "white"})
    :render
    (fn [{:keys [props]}]
-     (icon {:style {:color (:color props) :fontSize (:size props)}} :unknown))})
+     (render-icon {:style {:color (:color props) :fontSize (:size props)}} :unknown))})

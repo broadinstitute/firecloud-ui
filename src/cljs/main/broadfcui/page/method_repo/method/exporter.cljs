@@ -158,7 +158,7 @@
        {:onClick #(swap! state dissoc :selected-config)}
        (flex/box
         {:style {:alignItems "center"}}
-        (icons/icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+        (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
         "Choose Another Configuration"))
       flex/spring
       [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")

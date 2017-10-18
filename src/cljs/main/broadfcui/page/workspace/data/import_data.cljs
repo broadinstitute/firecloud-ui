@@ -61,7 +61,7 @@
           (if (:success? upload-result)
             (style/create-flexbox
              {:style {:justifyContent "center" :paddingTop "1em"}}
-             (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
+             (icons/render-icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
              [:span {:style {:marginLeft "1em"} :data-test-id "upload-success-message"} "Success!"])
             [:div {:style {:paddingTop "1em"}}
              [comps/ErrorViewer {:error (:error upload-result)}]]))]))
