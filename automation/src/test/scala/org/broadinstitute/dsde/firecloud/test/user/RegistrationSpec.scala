@@ -63,7 +63,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
     }
   }
 
-  "should give instructions to create a new billing project to a newly registered user" in withWebDriver { implicit driver =>
+  "should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
 
     signIn(email, password)
     val registrationPage = await ready new RegistrationPage
@@ -88,7 +88,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
     val listPage = new WorkspaceListPage()
     listPage.open
     listPage.validateLocation()
-    listPage.clickCreateWorkspaceButton()
+    listPage.clickCreateWorkspaceButton(true)
 
     listPage.showsNoBillingProjectsModal() shouldBe true
   }

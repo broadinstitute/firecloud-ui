@@ -25,9 +25,10 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   private def workspaceLink(ns: String, n: String) = Link(s"$ns-$n-workspace-link")
   private def restrictedWorkspaceLabel(ns: String, n: String) = Label(s"restricted-$ns-$n")
 
-  def clickCreateWorkspaceButton(): CreateWorkspaceModal = {
+  def clickCreateWorkspaceButton(expectDisabled: Boolean = false): Option[CreateWorkspaceModal] = {
+    if(expectDisabled) assert(createWorkspaceButton.isStateDisabled)
     createWorkspaceButton.doClick()
-    await ready new CreateWorkspaceModal
+    if(!expectDisabled) Option(await ready new CreateWorkspaceModal) else None
   }
 
   /**
@@ -40,7 +41,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
                       authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    clickCreateWorkspaceButton().createWorkspace(billingProjectName, workspaceName, authDomain)
+    clickCreateWorkspaceButton().get.createWorkspace(billingProjectName, workspaceName, authDomain)
     await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
