@@ -8,16 +8,14 @@ import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
-import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData, UserFixtures, WorkspaceFixtures}
 import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
-import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
-import org.broadinstitute.dsde.firecloud.fixture.{SimpleMethodConfig, _}
+import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.{SubmissionDetailsPage, WorkspaceMonitorPage}
-import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceDataPage, WorkspaceSummaryPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 
-class DataSpec extends FlatSpec with WebBrowserSpec
+class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures with ParallelTestExecution
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
@@ -25,6 +23,8 @@ class DataSpec extends FlatSpec with WebBrowserSpec
   val defaultUser: Credentials = UserPool.chooseStudent
   implicit val authToken: AuthToken = AuthToken(defaultUser)
   it should "import a participants file" in withWebDriver { implicit driver =>
+
+  "import a participants file" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_import_participants_file_") { workspaceName =>
       withSignIn(defaultUser) { _ =>
         val filename = "src/test/resources/participants.txt"
@@ -37,9 +37,6 @@ class DataSpec extends FlatSpec with WebBrowserSpec
   implicit lazy val authToken: AuthToken = AuthTokens.hermione
   val owner = Config.Users.hermione
   val reader = Config.Users.draco
-
-    }
-  }
 
   object SimpleMethodConfig {
     val configName = "DO_NOT_CHANGE_test1_config"
@@ -140,9 +137,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
         signIn(owner)
         val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
-        workspaceSummaryTab.ui.beginEditing
-        workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")
-        workspaceSummaryTab.ui.save
+        workspaceSummaryTab.edit(workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")))
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()

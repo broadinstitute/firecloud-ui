@@ -3,7 +3,6 @@ package org.broadinstitute.dsde.firecloud.page.workspaces
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
 import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.{Keys, WebDriver}
 import org.openqa.selenium.interactions.Actions
 import org.scalatest.selenium.Page
@@ -15,16 +14,6 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 
   override def awaitReady(): Unit = {
-    dataTable.awaitReady()
-  }
-
-  private val dataTable = Table("entity-table")
-  private val importMetadataButton = Button("import-metadata-button")
-
-  def importFile(file: String) = {
-    importMetadataButton.doClick()
-    val importModal = await ready new ImportMetadataModal
-    importModal.importFile(file)
     dataTable.awaitReady()
   }
 
@@ -43,11 +32,6 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     dataTable.readDisplayedTabCount("participant")
   }
 
-  def getNumberOfParticipants(): Int = {
-    // TODO: click on the tab and read the actual table size
-    dataTable.readDisplayedTabCount("participant")
-  }
-
   def hideColumn(header: String) = {
     if (ui.readColumnHeaders.contains(header)) {
       ui.showColumnEditor()
@@ -57,7 +41,6 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   }
 
   trait UI extends super.UI {
-    private val dataTable = Table("entity-table")
 
     private val importMetadataButtonQuery = testId("import-metadata-button")
     private val columnEditorButtonQuery= testId("columns-button")
@@ -69,6 +52,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       searchField(filterField).value = ""
       pressKeys("\n")
     }
+
     def hasimportMetadataButton(): Boolean = {
       find(importMetadataButtonQuery).isDefined
     }
@@ -96,11 +80,12 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     }
 
     def readColumnHeaders: List[String] = {
-      await notVisible spinner
+      awaitReady
       readAllText(columnHeaderQuery)
     }
 
   }
+  object ui extends UI
 }
 
 /**
