@@ -58,6 +58,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def saveEdits(expectSuccess: Boolean = true): Unit = {
     // The button can sometimes scroll off the page and become unclickable. Therefore we need to scroll it into view.
+    await spinner "Updating..."
     saveEditedMethodConfigButton.scrollToVisible()
     saveEditedMethodConfigButton.doClick()
     if (expectSuccess)
