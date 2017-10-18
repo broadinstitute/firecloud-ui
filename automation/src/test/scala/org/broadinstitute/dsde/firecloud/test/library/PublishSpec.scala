@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
@@ -27,8 +27,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
             withSignIn(Config.Users.curator) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.clickPublishButton()
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.clickPublishButton()
               val messageModal = MessageModal()
               messageModal.validateLocation shouldBe true
             }
@@ -40,8 +40,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
             withSignIn(Config.Users.curator) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.hasPublishButton shouldBe true
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.hasPublishButton shouldBe true
             }
           }
         }
@@ -57,7 +57,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             api.library.publishWorkspace(namespace, wsName)
             withSignIn(Config.Users.curator) { _ =>
               val page = new DataLibraryPage().open
-              page.ui.hasDataset(wsName) shouldBe true
+              page.hasDataset(wsName) shouldBe true
             }
           }
         }
@@ -78,7 +78,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
               retry[Boolean](100.milliseconds, 1.minute)({
                 val libraryPage = new DataLibraryPage().open
-                if (libraryPage.ui.hasDataset(wsName))
+                if (libraryPage.hasDataset(wsName))
                   None
                 else Some(false)
               }) match {
@@ -100,8 +100,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(ronAuthToken)
             withSignIn(Config.Users.ron) { wsList =>
-              val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
-              page.ui.hasPublishButton shouldBe false
+              val page = new WorkspaceSummaryPage(namespace, wsName).open
+              page.hasPublishButton shouldBe false
             }
           }(ronAuthToken)
         }

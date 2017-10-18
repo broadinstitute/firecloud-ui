@@ -101,7 +101,7 @@
 (defn render-icon-dropdown [{:keys [position icon-name icon-color icon-title] :as props}]
   [FoundationDropdown
    (merge {:dropdown-class position
-           :button-contents (icons/icon
+           :button-contents (icons/render-icon
                              {:title icon-title :style {:color icon-color}} icon-name)}
           props)])
 

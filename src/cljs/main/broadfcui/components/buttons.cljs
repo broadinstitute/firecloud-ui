@@ -65,7 +65,7 @@
         (when (:show-message? @state)
           (show-message disabled? #(swap! state dissoc :show-message?)))
         text
-        (some->> icon (icons/icon {:style (if text
+        (some->> icon (icons/render-icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
                                             {:fontSize 18})}))]))})
 
@@ -97,7 +97,7 @@
                          onClick)}
         (when (:show-message? @state)
           (show-message disabled? #(swap! state dissoc :show-message?)))
-        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} icon)
+        (icons/render-icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} icon)
         [:div {:style {:textAlign "center" :margin "auto"}}
          text]]))})
 
@@ -108,4 +108,4 @@
         :style {:color (:text-light style/colors)}
         :href "javascript:;"
         :onClick dismiss}
-    (icons/icon {:style {:fontSize "80%"}} :close)]])
+    (icons/render-icon {:style {:fontSize "80%"}} :close)]])

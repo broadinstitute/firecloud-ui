@@ -1,12 +1,14 @@
-package org.broadinstitute.dsde.firecloud.page.components
+package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.page.Stateful
+import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.{By, WebDriver}
 
 case class Table(private val id: String)(implicit webDriver: WebDriver)
   extends Component(id) with Stateful {
 
   private val tableBody = findInner("table-body")
+
+  // TODO: figure out how to do sub-components properly
 
   private val filterField = findInner("filter-input")
   private val filterButton = findInner("filter-button")
@@ -18,45 +20,44 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
 
-  def awaitReady(): Unit = {
-    awaitEnabled()
+  override def awaitReady(): Unit = {
+    awaitVisible()
     await condition { getState == "ready" }
   }
 
   def filter(text: String): Unit = {
-    awaitReady()
     searchField(filterField).value = text
     click on filterButton
+    awaitReady()
   }
 
   def goToTab(tabName: String): Unit = {
-    awaitReady()
     click on tab(tabName)
+    awaitReady()
   }
 
   def readDisplayedTabCount(tabName: String): Int = {
-    awaitReady()
     readText(tab(tabName)).replaceAll("\\D+","").toInt
   }
 
   def goToPreviousPage(): Unit = {
-    awaitReady()
     click on prevPageButton
+    awaitReady()
   }
 
   def goToNextPage(): Unit = {
-    awaitReady()
     click on nextPageButton
+    awaitReady()
   }
 
   def goToPage(page: Int): Unit = {
-    awaitReady()
     click on pageButton(page)
+    awaitReady()
   }
 
   def selectPerPage(perPage: Int): Unit = {
-    awaitReady()
     singleSel(perPageSelector).value = perPage.toString
+    awaitReady()
   }
 
   def getData: List[List[String]] = {

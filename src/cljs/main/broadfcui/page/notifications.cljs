@@ -116,11 +116,11 @@
                           :onClick #(this :-save)}]
          [:div {:style {:marginLeft "1rem"}}
           (cond
-            (:saving? @state) (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
-            (:error? @state) (icons/icon {:style {:color (:state-exception style/colors)}}
-                                         :error)
-            (:saved? @state) (icons/icon {:style {:color (:state-success style/colors)}}
-                                         :done))]]]))
+            (:saving? @state) (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
+            (:error? @state) (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                                :error)
+            (:saved? @state) (icons/render-icon {:style {:color (:state-success style/colors)}}
+                                                :done))]]]))
    :-save
    (fn [{:keys [state after-update] :as m}]
      (swap! state assoc :saving? true :error? false)
@@ -180,12 +180,12 @@
                     [:td {} (when-let [pending (get pending key)]
                               (case pending
                                 :error
-                                (icons/icon {:style {:color (:state-exception style/colors)}}
-                                            :error)
+                                (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                                   :error)
                                 :done
-                                (icons/icon {:style {:color (:state-success style/colors)}}
-                                            :done)
-                                (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
+                                (icons/render-icon {:style {:color (:state-success style/colors)}}
+                                                   :done)
+                                (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
        [:table {:style {:fontSize "90%"}}
         [:tbody {}
          (map row notifications)]]))

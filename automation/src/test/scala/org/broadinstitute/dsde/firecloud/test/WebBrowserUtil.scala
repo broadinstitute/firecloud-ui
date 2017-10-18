@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.openqa.selenium.support.ui.{ExpectedCondition, WebDriverWait}
 import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
 import org.scalatest.selenium.WebBrowser
@@ -80,6 +81,11 @@ trait WebBrowserUtil extends WebBrowser {
       withWaitForElement(timeOutInSeconds) {
         find(query).filter(_.isEnabled).orNull
       }
+    }
+
+    def ready[A <: FireCloudView](element: A, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): A = {
+      element.awaitReady()
+      element
     }
 
     def writable(query: Query, timeoutInSeconds: Long = defaultTimeOutInSeconds)

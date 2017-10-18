@@ -20,7 +20,7 @@
                     :padding "1rem"}}
       (when cleared?
         [:div {:style {:float "right"}}
-         (icons/icon {:style {:fontSize "80%" :cursor "pointer"} :on-click dismiss} :close)])
+         (icons/render-icon {:style {:fontSize "80%" :cursor "pointer"} :on-click dismiss} :close)])
       [:div {:style {:display "flex" :align-items "baseline"}}
        [icons/ExceptionIcon {:size 18 :color text-color}]
        [:span {:style {:margin-left "0.5rem" :font-weight "bold" :vertical-align "middle"}}

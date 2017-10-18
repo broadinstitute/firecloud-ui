@@ -22,7 +22,7 @@
    (fn [{:keys [props]}]
      [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
              :data-test-id "spinner"}
-      (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
+      (icons/render-icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       [:span {:data-test-id "spinner-text"} (:text props)]])})
 
 
@@ -173,7 +173,7 @@
          [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
           (when redacted?
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
-             (icons/icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
+             (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
@@ -241,19 +241,19 @@
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
-                                  (icons/icon {:style {:color (:state-exception style/colors)}}
-                                              :warning)]
+                                  (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                                     :warning)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
-                                   (icons/icon {:style {:color (:state-exception style/colors)}}
-                                               :warning)]
+                                   (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                                      :warning)]
                                   (str "Error: " message))
             (if (:expanded? @state)
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
-                                      (icons/icon {:className "fa-fw"} :disclosure-opened)
+                                      (icons/render-icon {:className "fa-fw"} :disclosure-opened)
                                       "Hide Details")
                [:div {:style {:overflowX "auto" :paddingLeft icons/fw-icon-width}}
                 [:div {} (str "Code: " status-code)]
@@ -274,14 +274,14 @@
                   [StackTraceViewer {:lines stack-trace}])]]
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? true)}
-                                      (icons/icon {:className "fa-fw"} :disclosure-closed)
+                                      (icons/render-icon {:className "fa-fw"} :disclosure-closed)
                                       "Show Details")])]))))})
 
 
 (react/defc Breadcrumbs
   {:render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"}} :angle-right)
+     (let [sep (icons/render-icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
@@ -427,7 +427,7 @@
 (defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
-             (icons/icon {:style {:color (:state-exception style/colors)
+             (icons/render-icon {:style {:color (:state-exception style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
     :data-test-id "push-error"
@@ -613,6 +613,6 @@
          [:span {}
           (:label props) " "
           (links/create-internal {:onClick #(swap! state update :collapsed? not)}
-                                 (icons/icon {} (if (:collapsed? @state) :expand :collapse)))
+                                 (icons/render-icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})

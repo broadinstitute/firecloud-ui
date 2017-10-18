@@ -45,7 +45,7 @@
                         (fn [index]
                           (links/create-internal {:onClick #(swap! state update :selected
                                                                    (if source? conj disj) index)}
-                                                 (icons/icon {} (if source? :add :remove))))}
+                                                 (icons/render-icon {} (if source? :add :remove))))}
                        {:header (:id-name props) :initial-width 150
                         :column-data second
                         :as-text :name :sort-by :text}]
@@ -78,14 +78,14 @@
                               :get-items
                               (constantly
                                [(links/create-internal
-                                  {:style {:margin "0.3rem 0 0 auto"}
-                                   :onClick #(swap! state assoc :selected
-                                                    (if source?
-                                                      (-> (:entities props) count range set)
-                                                      #{}))}
-                                  (when-not source? (icons/icon {:style {:marginRight "0.5rem"}} :move-left))
-                                  (str (if source? "Add all " "Remove all ") (:type props) "s")
-                                  (when source? (icons/icon {:style {:marginLeft "0.5rem"}} :move-right)))])}}]])]
+                                 {:style {:margin "0.3rem 0 0 auto"}
+                                  :onClick #(swap! state assoc :selected
+                                                   (if source?
+                                                     (-> (:entities props) count range set)
+                                                     #{}))}
+                                 (when-not source? (icons/render-icon {:style {:marginRight "0.5rem"}} :move-left))
+                                 (str (if source? "Add all " "Remove all ") (:type props) "s")
+                                 (when source? (icons/render-icon {:style {:marginLeft "0.5rem"}} :move-right)))])}}]])]
        [:div {}
         [:div {:style {:width box-width :paddingBottom "0.5rem" :display "inline-block"
                        :fontWeight 500}}

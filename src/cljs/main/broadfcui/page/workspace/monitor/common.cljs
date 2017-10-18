@@ -43,10 +43,10 @@
 ;; Icons are functions so that config/when-debug is evaluated at render
 
 (defn render-success-icon []
-  (icons/icon {:style {:color (:state-success style/colors) :marginRight 4
+  (icons/render-icon {:style {:color (:state-success style/colors) :marginRight 4
                        :width table-style/table-icon-size :height table-style/table-icon-size}
                :data-test-id "status-icon" :data-test-value "success"}
-              :done))
+                     :done))
 (defn render-running-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:state-running style/colors)

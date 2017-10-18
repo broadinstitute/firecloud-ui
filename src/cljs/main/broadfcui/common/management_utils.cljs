@@ -20,7 +20,7 @@
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm
       {:header (str "Add user to " (:group-name props))
-       :ok-button {:text "Add User" :data-test-id "billing-project-add-user-modal-confirm-button" :onClick #(this :-add-user)}
+       :ok-button {:text "Add User" :onClick #(this :-add-user)}
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element

@@ -127,8 +127,8 @@
                                   (fn [{:keys [optional? error-message]}]
                                     (when (and error-message (not optional?))
                                       [:div {:style (clip table-style/default-cell-left)}
-                                       (icons/icon {:style {:marginRight "0.5rem"
-                                                            :color (:state-exception style/colors)}}
-                                                   :error)
+                                       (icons/render-icon {:style {:marginRight "0.5rem"
+                                                                   :color (:state-exception style/colors)}}
+                                                          :error)
                                        error-message]))}]))}
                :paginator :none}]))})

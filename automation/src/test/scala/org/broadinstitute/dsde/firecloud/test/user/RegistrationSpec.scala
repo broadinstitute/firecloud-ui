@@ -38,7 +38,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
     "should allow a person to register" in withWebDriver { implicit driver =>
 
       signIn(email, password)
-      val registrationPage = new RegistrationPage
+      val registrationPage = await ready new RegistrationPage
 
       registerCleanUpForDeleteUser(subjectId)
 
@@ -54,7 +54,6 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
         city = "Cambridge",
         state = "MA",
         country = "USA")
-      registrationPage.registerWait()
 
       new DataLibraryPage().validateLocation()
     }

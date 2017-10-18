@@ -1,4 +1,4 @@
-package org.broadinstitute.dsde.firecloud.page.components
+package org.broadinstitute.dsde.firecloud.component
 
 import org.openqa.selenium.WebDriver
 
@@ -6,7 +6,7 @@ case class TabBar(private val id: String = "tabs")(implicit webDriver: WebDriver
   private def tab(name: String) = findInner(s"$name-tab")
 
   def goToTab(name: String): Unit = {
-    awaitEnabled()
+    awaitReady()
     click on tab(name)
   }
 }

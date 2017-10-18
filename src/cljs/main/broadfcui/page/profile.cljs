@@ -209,8 +209,8 @@
             (style/create-flexbox
              {}
              [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:state-exception style/colors)}}
-                          :warning)]
+              (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                 :warning)]
              "Validation Errors:")
             [:ul {}
              (common/mapwrap :li (:validation-errors @state))]])

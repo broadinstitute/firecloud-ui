@@ -60,7 +60,7 @@
                                    "The method snapshot referenced by this config has been redacted."))
                       :render (fn [config]
                                 (when (:redacted config)
-                                  (icons/icon {:style {:alignSelf "center" :color (:state-warning style/colors)}} :warning)))}
+                                  (icons/render-icon {:style {:alignSelf "center" :color (:state-warning style/colors)}} :warning)))}
                      {:header "Name" :initial-width 240
                       :as-text :name :sort-by :text
                       :sort-initial :asc
@@ -77,8 +77,8 @@
 (def PHI-warning
   [:div {:style {:display "flex" :marginBottom ".5rem" :alignItems "center" :justifyContent "space-around"
                  :padding "1rem" :backgroundColor (:background-light style/colors)}}
-   (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
-               :alert)
+   (icons/render-icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
+                      :alert)
    [:span {:style {:fontWeight 500}}
     "FireCloud is not intended to host personally identifiable information. Do not use any patient
      identifier, including name, social security number, or medical record number."]])
