@@ -166,7 +166,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         //TCGA controlled access workspaces use-case
         "when the workspace is shared with the group" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
-            logger.info("User: " + user.email)
+            val user = UserPool.chooseAuthDomainUser().head
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
