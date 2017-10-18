@@ -35,6 +35,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val defaultUser: Credentials = UserPool.chooseCurator().head
   val authTokenDefault: AuthToken = AuthToken(defaultUser)
 
+  logger.info("default user auth token is : " + defaultUser.email)
+
   "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
