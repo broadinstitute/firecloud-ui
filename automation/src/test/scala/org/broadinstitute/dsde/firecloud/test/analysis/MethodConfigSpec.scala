@@ -22,7 +22,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner().head
+    val user = Config.Users.owner
     implicit val authToken: AuthToken = AuthToken(user)
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -193,7 +193,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   }
 
   "launch a method config from the method repo" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner().head
+    val user = Config.Users.owner
     implicit val authToken: AuthToken = AuthToken(user)
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_config_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -211,7 +211,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   }
 
   "launch a method from the method repo" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner().head
+    val user = Config.Users.owner
     implicit val authToken: AuthToken = AuthToken(user)
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
