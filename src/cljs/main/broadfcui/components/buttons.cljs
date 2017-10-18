@@ -14,14 +14,12 @@
 (defn- show-message [disabled? on-dismiss]
   (cond (true? disabled?)
         (@modal-constructor :message {:header "Disabled" :text "This action is disabled" :on-dismiss on-dismiss})
-        (string? disabled?)
+        (common/renderable? disabled?)
         (@modal-constructor :message {:header "Disabled" :text disabled? :on-dismiss on-dismiss})
         (map? disabled?)
         (@modal-constructor
          (if (= (:type disabled?) :error) :error :message)
-         (assoc disabled? :on-dismiss on-dismiss))
-        :else
-        (@modal-constructor :message {:header "Disabled" :text disabled? :on-dismiss on-dismiss})))
+         (assoc disabled? :on-dismiss on-dismiss))))
 
 
 (defn- make-default-test-id [{:keys [text icon]}]

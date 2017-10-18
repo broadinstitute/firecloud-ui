@@ -85,9 +85,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
     await ready new DataLibraryPage()
 
-    val listPage = new WorkspaceListPage()
-    listPage.open
-    listPage.validateLocation()
+    val listPage = new WorkspaceListPage().open
     listPage.clickCreateWorkspaceButton(true)
 
     listPage.showsNoBillingProjectsModal() shouldBe true
