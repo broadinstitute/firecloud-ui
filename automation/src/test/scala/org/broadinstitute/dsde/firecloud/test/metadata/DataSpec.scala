@@ -32,18 +32,11 @@ class DataSpec extends FlatSpec with WebBrowserSpec
         workspaceDataTab.importFile(filename)
         workspaceDataTab.getNumberOfParticipants shouldBe 1
       }
+    }
+  }
   implicit lazy val authToken: AuthToken = AuthTokens.hermione
   val owner = Config.Users.hermione
   val reader = Config.Users.draco
-
-  "A workspace owner should be able to import a participants file" in withWebDriver { implicit driver =>
-    withWorkspace(Config.Projects.default, "DataSpec_import_participants_file") { workspaceName =>
-      val filename = "src/test/resources/participants.txt"
-
-      signIn(owner)
-      val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
-      workspaceDataTab.importFile(filename)
-      assert(workspaceDataTab.getNumberOfParticipants() == 1)
 
     }
   }

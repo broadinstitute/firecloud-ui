@@ -21,6 +21,16 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   private val dataTable = Table("entity-table")
   private val importMetadataButton = Button("import-metadata-button")
 
+  def importFile(file: String) = {
+    importMetadataButton.doClick()
+    val importModal = await ready new ImportMetadataModal
+    importModal.importFile(file)
+    dataTable.awaitReady()
+  }
+
+  private val dataTable = Table("entity-table")
+  private val importMetadataButton = Button("import-metadata-button")
+
   def importFile(file: String): Unit = {
     importMetadataButton.doClick()
     val importModal = await ready new ImportMetadataModal
@@ -29,6 +39,11 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   }
 
   def getNumberOfParticipants: Int = {
+    // TODO: click on the tab and read the actual table size
+    dataTable.readDisplayedTabCount("participant")
+  }
+
+  def getNumberOfParticipants(): Int = {
     // TODO: click on the tab and read the actual table size
     dataTable.readDisplayedTabCount("participant")
   }
@@ -64,7 +79,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     }
 
     def getNumberOfParticipants(): Int = {
-      getNumberOfParticipants
+      getNumberOfParticipants()
     }
 
     def hideColumnEditor() = {
