@@ -6,7 +6,10 @@
    [broadfcui.utils :as utils]
    ))
 
-(def ^:private CodeMirror-js (aget js/window "webpackDeps" "CodeMirror"))
+(defonce ^:private wdl-defined? (atom false))
+
+(defn- get-codemirror []
+  (aget js/window "webpackDeps" "CodeMirror"))
 
 (defn- regex-escape [s]
   (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))
@@ -20,32 +23,34 @@
                                   (interpose "|")
                                   (apply str)))
 
-(js-invoke
- CodeMirror-js "defineMode" "wdl"
- (fn []
-   #js{:token (fn [stream]
-                (.eatSpace stream)
-                (cond
-                  (.match stream #"#.*")
-                  "comment"
-                  (or (.match stream #"\"(?:[^\"\\]|\\.)*\"") (.match stream "'(?:[^'\\]|\\.)*'"))
-                  "string"
-                  (.match stream (re-pattern (str "(?:" all-ops-regex ")")))
-                  "operator"
-                  (.match stream #"(?:import|as|true|false|input|output|call|command|output|runtime|task|workflow)\b")
-                  "keyword"
-                  (.match stream #"(?:Array|Boolean|File|Float|Int|Map|Object|String|Uri)\b")
-                  "builtin"
-                  (.match stream #"[A-Za-z_][A-Za-z0-9_]*")
-                  "variable"
-                  (.match stream #"\$\{.*?\}")
-                  "variable-3"
-                  (.match stream #"[\{\}]")
-                  "bracket"
-                  (.match stream #"[0-9]*\.?[0-9]+")
-                  "number"
-                  :else
-                  (do (.next stream) nil)))}))
+(defn- define-wdl []
+  (js-invoke
+   (get-codemirror) "defineMode" "wdl"
+   (fn []
+     #js{:token (fn [stream]
+                  (.eatSpace stream)
+                  (cond
+                    (.match stream #"#.*")
+                    "comment"
+                    (or (.match stream #"\"(?:[^\"\\]|\\.)*\"") (.match stream "'(?:[^'\\]|\\.)*'"))
+                    "string"
+                    (.match stream (re-pattern (str "(?:" all-ops-regex ")")))
+                    "operator"
+                    (.match stream #"(?:import|as|true|false|input|output|call|command|output|runtime|task|workflow)\b")
+                    "keyword"
+                    (.match stream #"(?:Array|Boolean|File|Float|Int|Map|Object|String|Uri)\b")
+                    "builtin"
+                    (.match stream #"[A-Za-z_][A-Za-z0-9_]*")
+                    "variable"
+                    (.match stream #"\$\{.*?\}")
+                    "variable-3"
+                    (.match stream #"[\{\}]")
+                    "bracket"
+                    (.match stream #"[0-9]*\.?[0-9]+")
+                    "number"
+                    :else
+                    (do (.next stream) nil)))}))
+  (reset! wdl-defined? true))
 
 (react/defc- CodeMirrorComponent
   {:add-listener
@@ -76,7 +81,7 @@
    (fn [{:keys [refs props locals]}]
      (let [{:keys [mode line-numbers? read-only?]} props]
        (swap! locals assoc :code-mirror-component
-              (js-invoke CodeMirror-js "fromTextArea" (@refs "code-text")
+              (js-invoke (get-codemirror) "fromTextArea" (@refs "code-text")
                          #js{:mode mode :lineNumbers line-numbers? :readOnly read-only?
                              :viewportMargin js/Infinity}))))
    :component-will-receive-props
@@ -96,5 +101,8 @@
          :else
          [ScriptLoader
           {:on-error #(swap! state assoc :error? true)
-           :on-load #(swap! state assoc :loaded? true)
+           :on-load (fn []
+                      (when-not @wdl-defined?
+                        (define-wdl))
+                      (swap! state assoc :loaded? true))
            :path "codemirror-deps.bundle.js"}])))})

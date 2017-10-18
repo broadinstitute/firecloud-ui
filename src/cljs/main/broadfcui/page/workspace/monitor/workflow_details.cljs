@@ -16,7 +16,6 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
-   [goog.dom :as gdom]
    ))
 
 (defn- create-field [label & contents]

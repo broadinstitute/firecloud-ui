@@ -1,5 +1,7 @@
 const path = require('path');
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
+const maybeUglify = JSON.parse(process.env.NODE_ENV === 'production' || 'false') ? [new UglifyJSPlugin()] : [];
 
 module.exports = {
     entry: {
@@ -17,29 +19,26 @@ module.exports = {
         rules: [
             {
                 test: /\.css$/,
-                use: ExtractTextPlugin.extract({use: "css-loader"})
+                use: ["style-loader", "css-loader"]
             },
             {
                 test: /\.scss$/,
-                use: ExtractTextPlugin.extract({
-                    use: [
-                        "css-loader",
-                        {
-                            loader: "sass-loader?sourceMap",
-                            options: {
-                                includePaths: ['node_modules/foundation-sites/scss/']
-                            }
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            includePaths: ['node_modules/foundation-sites/scss/']
                         }
-                    ]
-                })
+                    }
+                ]
             },
             { test: /\.png$/, use: "url-loader?limit=100000" },
             { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, use: "file-loader" }
         ]
     },
-    plugins: [
-        new ExtractTextPlugin({filename: "webpack-deps.css"})
-    ],
+    plugins: maybeUglify,
     watchOptions: {
         ignored: /node_modules/
     }
