@@ -1,8 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.workspace
 
 import java.util.UUID
-
-import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
@@ -14,14 +12,11 @@ import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures
-  with CleanUp with Matchers with LazyLogging {
+  with CleanUp with Matchers {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString + "Config"
   val projectOwner: Credentials = UserPool.chooseProjectOwner().head
   val authTokenOwner: AuthToken = AuthToken(projectOwner)
-
-  logger.debug("Project owner for WorkspaceSpec:  " + projectOwner.email)
-
   val billingProject: String = Config.Projects.default
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
@@ -30,7 +25,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = AuthToken(user)
         withSignIn(user) { listPage =>
 
@@ -49,7 +43,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should be able to clone a workspace" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = AuthToken(user)
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
           withSignIn(user) { listPage =>
@@ -71,7 +64,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "who owns a workspace" - {
       "should be able to delete the workspace" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = AuthToken(user)
         withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
           withSignIn(user) { listPage =>
@@ -89,7 +81,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudent(2)
         val user1 = users.head
         val user2 = users(1)
-        logger.debug("User: " + user1.email + "   " + user2.email)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -108,7 +99,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudent(2)
         val user1 = users.head
         val user2 = users(1)
-        logger.debug("User: " + user1.email + "   " + user2.email)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
           withSignIn(user1) { listPage =>
@@ -127,7 +117,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudent(2)
         val user1 = users.head
         val user2 = users(1)
-        logger.debug("User: " + user1.email + "   " + user2.email)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -144,7 +133,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudent(2)
         val user1 = users.head
         val user2 = users(1)
-        logger.debug("User: " + user1.email + "   " + user2.email)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -181,7 +169,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should be able to enter workspace attributes" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = AuthToken(user)
         withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
           withSignIn(user) { listPage =>
@@ -204,7 +191,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to correctly delete workspace attributes" - {
         "from the top" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent().head
-          logger.debug("User: " + user.email)
           implicit val authToken: AuthToken = AuthToken(user)
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(user) { listPage =>
@@ -222,7 +208,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         "from the middle" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent().head
-          logger.debug("User: " + user.email)
           implicit val authToken: AuthToken = AuthToken(user)
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(user) { listPage =>
@@ -240,7 +225,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         "from the bottom" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent().head
-          logger.debug("User: " + user.email)
           implicit val authToken: AuthToken = AuthToken(user)
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
             withSignIn(user) { listPage =>
@@ -258,7 +242,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
         "after adding them" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent().head
-          logger.debug("User: " + user.email)
           implicit val authToken: AuthToken = AuthToken(user)
           withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
             withSignIn(user) { listPage =>
@@ -299,7 +282,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should see launch analysis button disabled" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           withSignIn(user) { listPage =>
@@ -317,7 +299,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should see import config button disabled" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent().head
-        logger.debug("User: " + user.email)
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
@@ -328,12 +309,11 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     "who has writer access" - {
       "and does not have canCompute permission" - {
-        "should see launch analysis button disabled" in withWebDriver { implicit driver =>
+        "should see launch analysis button disabled" ignore withWebDriver { implicit driver =>
           val users = UserPool.chooseStudent(2)
           val user1 = users.head
           val user2 = users(1)
-          logger.debug("User: " + user1.email + "   " + user2.email)
-          implicit val authToken: AuthToken = authTokenOwner
+          implicit val authToken: AuthToken = AuthToken(Config.Users.owner)
           withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
             withSignIn(user1) { listPage =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
@@ -357,7 +337,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           val users = UserPool.chooseStudent(2)
           val user1 = users.head
           val user2 = users(1)
-          logger.debug("User: " + user1.email + "   " + user2.email)
           implicit val authToken: AuthToken = AuthToken(user1)
           withWorkspace(billingProject, "WorkspaceSpec_writerAccess") { workspaceName =>
             withMethod("MethodinWorkspaceSpec", MethodData.SimpleMethod) { methodName =>
