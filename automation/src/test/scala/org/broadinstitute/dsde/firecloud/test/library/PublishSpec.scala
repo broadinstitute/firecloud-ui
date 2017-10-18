@@ -18,20 +18,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
-  val curatorUser: Credentials = UserPool.chooseCurator().head
-  implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
-  val studentUser: Credentials = UserPool.chooseStudent().head
-  val studentAuthToken: AuthToken = AuthToken(studentUser)
-  logger.info("Curator auth token user: " + curatorUser.email)
-
 
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
       "without required library attributes" - {
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
-
+          val curatorUser = UserPool.chooseCurator().head
+          logger.info("Curator user: " + curatorUser.email)
+          implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
-            withSignIn(Config.Users.curator) { wsList =>
+            withSignIn(curatorUser) { wsList =>
               val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
               page.ui.clickPublishButton()
               val messageModal = MessageModal()
@@ -42,9 +38,12 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
       "with required library attributes" - {
         "publish button should be visible " in withWebDriver { implicit driver =>
+          val curatorUser = UserPool.chooseCurator().head
+          logger.info("Curator user: " + curatorUser.email)
+          implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
           withWorkspace(namespace, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)
-            withSignIn(Config.Users.curator) { wsList =>
+            withSignIn(curatorUser) { wsList =>
               val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
               page.ui.hasPublishButton shouldBe true
             }
@@ -54,13 +53,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
     }
     "a published workspace" - {
       "should be visible in the library table" in withWebDriver { implicit driver =>
+        val curatorUser = UserPool.chooseCurator().head
+        logger.info("Curator user: " + curatorUser.email)
+        implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
         withWorkspace(namespace, "PublishSpec_curator_publish_") { wsName =>
           withCleanUp {
             val data = LibraryData.metadata + ("library:datasetName" -> wsName)
             api.library.setLibraryAttributes(namespace, wsName, data)
             register cleanUp api.library.unpublishWorkspace(namespace, wsName)
             api.library.publishWorkspace(namespace, wsName)
-            withSignIn(Config.Users.curator) { _ =>
+            withSignIn(curatorUser) { _ =>
               val page = new DataLibraryPage().open
               page.ui.hasDataset(wsName) shouldBe true
             }
@@ -68,13 +70,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
         }
       }
       "should be able to be unpublished" in withWebDriver { implicit driver =>
+        val curatorUser = UserPool.chooseCurator().head
+        logger.info("Curator user: " + curatorUser.email)
+        implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
         withWorkspace(namespace, "PublishSpec_curator_unpublish_") { wsName =>
           withCleanUp {
             val data = LibraryData.metadata + ("library:datasetName" -> wsName)
             api.library.setLibraryAttributes(namespace, wsName, data)
             register cleanUp api.library.unpublishWorkspace(namespace, wsName)
             api.library.publishWorkspace(namespace, wsName)
-            withSignIn(Config.Users.curator) { _ =>
+            withSignIn(curatorUser) { _ =>
               val wspage = new WorkspaceSummaryPage(namespace, wsName).open
               wspage.unpublishWorkspace()
 
@@ -102,13 +107,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
     "an unpublished workspace" - {
       "with required library attributes" - {
         "should not see publish button " in withWebDriver { implicit driver =>
+          val studentUser = UserPool.chooseStudent().head
+          logger.info("Student user: " + studentUser.email)
+          implicit val studentAuthToken: AuthToken = AuthToken(studentUser)
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
             api.library.setLibraryAttributes(namespace, wsName, LibraryData.metadata)(studentAuthToken)
             withSignIn(studentUser) { wsList =>
               val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()
               page.ui.hasPublishButton shouldBe false
             }
-          }(studentAuthToken)
+          }
         }
       }
     }
