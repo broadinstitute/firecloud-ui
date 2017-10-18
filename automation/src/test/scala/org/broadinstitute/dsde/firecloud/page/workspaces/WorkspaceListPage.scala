@@ -58,7 +58,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   }
 
   def showsNoBillingProjectsModal(): Boolean = {
-    find(noBillingProjectsMessage).isDefined
+    find(noBillingProjectsModal).isDefined
   }
 
   def looksRestricted(namespace: String, name: String): Boolean = {
