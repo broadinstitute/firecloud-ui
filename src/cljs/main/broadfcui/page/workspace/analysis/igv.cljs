@@ -43,14 +43,19 @@
 (react/defc IGVContainer
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [loaded? error?]} @state]
+     (let [{:keys [deps-loaded? igv-loaded? error?]} @state]
        [:div {}
         [:link {:rel "stylesheet" :type "text/css" :href "https://igv.org/web/release/1.0.6/igv-1.0.6.css"}]
         (cond
           error? (style/create-server-error-message "Unable to load IGV.")
-          loaded? [IGVElement props]
-          :else
-          [ScriptLoader
-           {:on-error #(swap! state assoc :error? true)
-            :on-load #(swap! state assoc :loaded? true)
-            :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}])]))})
+          igv-loaded? [IGVElement props]
+          deps-loaded? [ScriptLoader
+                        {:key "igv"
+                         :on-error #(swap! state assoc :error? true)
+                         :on-load #(swap! state assoc :igv-loaded? true)
+                         :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}]
+          :else [ScriptLoader
+                 {:key "igv-deps"
+                  :on-error #(swap! state assoc :error? true)
+                  :on-load #(swap! state assoc :deps-loaded? true)
+                  :path "igv-deps.bundle.js"}])]))})
