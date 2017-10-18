@@ -1,15 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.methodrepo
 
-<<<<<<< HEAD
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Credentials}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, UserFixtures, MethodFixtures}
-import org.broadinstitute.dsde.firecloud.page.components.Table
-import org.broadinstitute.dsde.firecloud.page.methodrepo.{CreateMethodModal, MethodRepoPage}
-=======
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
->>>>>>> develop
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 

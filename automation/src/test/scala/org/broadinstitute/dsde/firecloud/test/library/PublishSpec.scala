@@ -4,13 +4,8 @@ import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
-<<<<<<< HEAD
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-=======
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
->>>>>>> develop
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
 
