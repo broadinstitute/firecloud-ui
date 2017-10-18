@@ -82,13 +82,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
   }
 
-  def launch(workspaceName: String): Unit = {
-    signIn(owner)
-    val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-    val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
-    submissionTab.waitUntilSubmissionCompletes()
-  }
-  
   "Writer and reader should see new columns" - {
     "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -98,7 +91,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id")
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
-        launch(workspaceName)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+    submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.ui.clearFilterField()
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "output")
@@ -121,7 +116,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         workspaceDataTab.hideColumn("test2")
         workspaceDataTab.signOut()
         signIn(owner)
-        launch(workspaceName)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+    submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.ui.clearFilterField()
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
@@ -137,7 +134,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
         signIn(owner)
         val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
-        workspaceSummaryTab.edit(workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")))
+        workspaceSummaryTab.edit{
+          workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")
+        }
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
@@ -145,7 +144,10 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         workspaceDataTab.open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
-        launch(workspaceName)
+        signIn(owner)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+    submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.ui.clearFilterField()
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
@@ -159,10 +161,10 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       withWorkspace(billingProject, "DataSpec_localDefaults_analysis", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
         signIn(owner)
-        val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
-        workspaceSummaryTab.ui.beginEditing
-        workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}")
-        workspaceSummaryTab.ui.save
+        val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
+        workspaceSummaryTab.edit{
+          workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}")
+        }
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
         workspaceDataTab.hideColumn("test1")
@@ -173,7 +175,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         workspaceDataTab.hideColumn("test3")
         workspaceDataTab.signOut()
         signIn(owner)
-        launch(workspaceName)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+        val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+        submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.ui.clearFilterField()
         workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
@@ -190,7 +194,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       withWorkspace(billingProject, "DataSpec_column_display", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
-        val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.ui.readColumnHeaders shouldEqual headers1
@@ -208,7 +212,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       withWorkspace(billingProject, "DataSpec_col_display_w_preferences", aclEntries = List(AclEntry(Config.Users.draco.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
-        val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.hideColumn("test1")
@@ -241,9 +245,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
           signIn(owner)
           val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-          workspaceSummaryTab.ui.beginEditing
-          workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}")
-          workspaceSummaryTab.ui.save
+          workspaceSummaryTab.edit{
+            workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}")
+          }
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           val headers1 = List("participant_id", "test1", "test2", "test3")
           createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
@@ -272,11 +276,11 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       withWorkspace(billingProject, "DataSpec_col_display_w_defaults_and_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
-        val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
-        workspaceSummaryTab.ui.beginEditing
-        workspaceSummaryTab.ui.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\" \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
-        workspaceSummaryTab.ui.save
-        val workspaceDataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
+        workspaceSummaryTab.edit{
+          workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
+        }
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2", "test3", "test4")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.hideColumn("test1")
