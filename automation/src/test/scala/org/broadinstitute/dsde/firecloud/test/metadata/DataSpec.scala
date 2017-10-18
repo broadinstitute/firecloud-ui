@@ -284,25 +284,25 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val headers1 = List("participant_id", "test1", "test2", "test3", "test4")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
         workspaceDataTab.hideColumn("test1")
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test4")
         workspaceDataTab.signOut()
 
         signIn(reader)
         workspaceDataTab.open
         workspaceDataTab.hideColumn("test4")
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
 
         signIn(owner)
         workspaceDataTab.open
         val headers2 = headers1 :+ "test5"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test4", "test5")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
         workspaceDataTab.signOut
 
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test2", "test3", "test5")
+        workspaceDataTab.ui.readColumnHeaders shouldEqual List("participant_id", "test1", "test5")
       }
     }
   }
