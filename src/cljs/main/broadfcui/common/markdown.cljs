@@ -2,18 +2,31 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.style :as style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.split-pane :refer [SplitPane]]
-   [broadfcui.utils :as utils]
-   ))
+   [broadfcui.utils :as utils]))
 
 (def ^:private MarkdownIt-js (aget js/window "webpackDeps" "MarkdownIt"))
 (def ^:private markdown-it (MarkdownIt-js. #js{:linkify true}))
 
-(react/defc MarkdownView
+(react/defc- MarkdownViewElement
   {:render
    (fn [{:keys [props]}]
      [:div {:className "markdown-body firecloud-markdown"
             :dangerouslySetInnerHTML #js{"__html" (.render markdown-it (or (:text props) ""))}}])})
+
+(react/defc MarkdownView
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [loaded? error?]} @state]
+       (cond
+         error? [:p {} (:text props)]
+         loaded? [MarkdownViewElement props]
+         :else
+         [ScriptLoader
+          {:on-error #(swap! state assoc :error? true)
+           :on-load #(swap! state assoc :loaded? true)
+           :path "markdown-deps.js"}])))})
 
 (react/defc MarkdownEditor
   {:get-text

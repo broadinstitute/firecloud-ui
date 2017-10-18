@@ -7,6 +7,7 @@
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
@@ -45,7 +46,7 @@
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [loaded-method error redacted?]} @state]
-       (cond loaded-method [comps/EntityDetails
+       (cond loaded-method [EntityDetails
                             (merge {:ref "methodDetails"
                                     :entity loaded-method
                                     :redacted? redacted?}

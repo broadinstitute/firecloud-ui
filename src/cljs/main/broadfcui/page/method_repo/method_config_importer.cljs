@@ -7,6 +7,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
@@ -136,7 +137,7 @@
      (when (and any-actions? (:allow-edit props))
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
-      [comps/EntityDetails {:entity entity}]
+      [EntityDetails {:entity entity}]
       (when config?
         (let [{:keys [method payloadObject]} entity]
           [method-common/IOView

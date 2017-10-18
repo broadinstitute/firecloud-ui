@@ -2,26 +2,39 @@ const path = require('path');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
-    entry: "./src/webpack-deps.js",
+    entry: {
+        base: "./src/base-deps.js",
+        codemirror: "./src/codemirror-deps.js",
+        igv: "./src/igv-deps.js",
+        markdown: "./src/markdown-deps.js"
+    },
     output: {
+        filename: '[name]-deps.bundle.js',
         path: path.join(__dirname, "resources/public/"),
-        library: 'webpackDeps',
-        libraryTarget: 'this',
-        filename: 'webpack-deps.js'
+        library: 'webpackDeps'
     },
     module: {
         rules: [
-            { test: /\.css$/, loader: ExtractTextPlugin.extract("css-loader") },
-            { test: /\.scss$/, loader: ExtractTextPlugin.extract({
-                use: [{loader: "css-loader"}, {
-                    loader: "sass-loader?sourceMap",
-                    options: {
-                        includePaths: ['node_modules/foundation-sites/scss/']
-                    }
-                }]
-            })},
-            { test: /\.png$/, loader: "url-loader?limit=100000" },
-            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, loader: "file-loader" }
+            {
+                test: /\.css$/,
+                use: ExtractTextPlugin.extract({use: "css-loader"})
+            },
+            {
+                test: /\.scss$/,
+                use: ExtractTextPlugin.extract({
+                    use: [
+                        "css-loader",
+                        {
+                            loader: "sass-loader?sourceMap",
+                            options: {
+                                includePaths: ['node_modules/foundation-sites/scss/']
+                            }
+                        }
+                    ]
+                })
+            },
+            { test: /\.png$/, use: "url-loader?limit=100000" },
+            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, use: "file-loader" }
         ]
     },
     plugins: [

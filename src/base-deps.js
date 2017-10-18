@@ -8,24 +8,6 @@ exports.ReactLoadScript = require('react-load-script');
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
 
-require('jquery-ui/ui/core');
-require('jquery-ui/ui/widgets/draggable');
-require('jquery-ui/themes/base/core.css');
-require('jquery-ui/themes/base/theme.css');
-require('jquery-ui/themes/base/draggable.css');
-
-exports.CodeMirror = require('codemirror');
-require('codemirror/mode/clojure/clojure');
-require('codemirror/lib/codemirror.css');
-require('./styles/codemirror.scss');
-
-exports.MarkdownIt = require('markdown-it');
-require('github-markdown-css/github-markdown.css');
-require('./styles/markdown.css');
-
-require('./js/timingDiagram');
-require('./js/igvPatch');
-
 require('any-resize-event');
 
 require('what-input');

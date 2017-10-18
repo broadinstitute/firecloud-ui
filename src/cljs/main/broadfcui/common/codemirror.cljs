@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.style :as style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.utils :as utils]
    ))
 
@@ -46,7 +47,7 @@
                   :else
                   (do (.next stream) nil)))}))
 
-(react/defc CodeMirror
+(react/defc- CodeMirrorComponent
   {:add-listener
    (fn [{:keys [this]} event-type listener]
      (this :call-method "on" event-type listener))
@@ -84,3 +85,16 @@
        (-> (@locals :code-mirror-component)
            (js-invoke "getDoc")
            (js-invoke "setValue" (:text next-props)))))})
+
+(react/defc CodeMirror
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [loaded? error?]} @state]
+       (cond
+         error? (style/create-code-sample (:text props))
+         loaded? [CodeMirrorComponent props]
+         :else
+         [ScriptLoader
+          {:on-error #(swap! state assoc :error? true)
+           :on-load #(swap! state assoc :loaded? true)
+           :path "codemirror-deps.js"}])))})
