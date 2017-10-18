@@ -97,4 +97,4 @@
          [ScriptLoader
           {:on-error #(swap! state assoc :error? true)
            :on-load #(swap! state assoc :loaded? true)
-           :path "codemirror-deps.js"}])))})
+           :path "codemirror-deps.bundle.js"}])))})

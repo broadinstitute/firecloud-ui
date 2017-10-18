@@ -26,7 +26,7 @@
          [ScriptLoader
           {:on-error #(swap! state assoc :error? true)
            :on-load #(swap! state assoc :loaded? true)
-           :path "markdown-deps.js"}])))})
+           :path "markdown-deps.bundle.js"}])))})
 
 (react/defc MarkdownEditor
   {:get-text
