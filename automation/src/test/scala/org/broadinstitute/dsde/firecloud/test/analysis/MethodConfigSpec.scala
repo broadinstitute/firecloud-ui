@@ -2,15 +2,16 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Config, Credentials}
+import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, Tags}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, Tags, WebBrowserSpec}
 import org.scalatest._
 
 
-class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with UserFixtures with MethodFixtures with Matchers {
+class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with UserFixtures with MethodFixtures with Matchers with LazyLogging {
 
   val billingProject: String = Config.Projects.default
   val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
@@ -20,6 +21,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
   val uiUser: Credentials = UserPool.chooseProjectOwner().head
+  logger.info("Method Config UIUser is: " + uiUser.email)
   implicit val authToken: AuthToken = AuthToken(uiUser)
 
   // todo: is this necessarily a proj owner?

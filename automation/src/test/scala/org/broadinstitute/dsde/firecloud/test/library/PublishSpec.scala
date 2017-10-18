@@ -1,19 +1,20 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.page._
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool, Credentials}
-import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, WorkspaceFixtures, UserFixtures}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.scalatest._
-import scala.concurrent.duration.DurationLong
 
+import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
-class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
+class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers with LazyLogging {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
@@ -21,12 +22,14 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val curatorAuthToken: AuthToken = AuthToken(curatorUser)
   val studentUser: Credentials = UserPool.chooseStudent().head
   val studentAuthToken: AuthToken = AuthToken(studentUser)
+  logger.info("Curator auth token user: " + curatorUser.email)
 
 
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
       "without required library attributes" - {
         "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
+
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
             withSignIn(Config.Users.curator) { wsList =>
               val page = wsList.openWorkspaceDetails(namespace, wsName).awaitLoaded()

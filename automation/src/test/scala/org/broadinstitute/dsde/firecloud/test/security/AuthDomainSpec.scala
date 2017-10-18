@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.test.security
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool, Credentials}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceSummaryPage
@@ -25,7 +26,8 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures
   with GroupFixtures
-  with UserFixtures {
+  with UserFixtures
+  with LazyLogging {
 
   val projectName: String = Config.Projects.common
 
@@ -37,6 +39,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>
           withCleanUp {
@@ -55,6 +58,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -87,6 +91,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -106,6 +111,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
@@ -130,6 +136,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is shared with them" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseAuthDomainUser().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
@@ -146,6 +153,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseAuthDomainUser().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { authDomainName =>
               withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
@@ -168,6 +176,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when the workspace is shared with the group" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -192,6 +201,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     "with multiple groups inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -242,6 +252,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "can be cloned and have a group added to the auth domain" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -270,6 +281,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = AuthToken(user)
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -286,6 +298,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "contains the list of auth domain groups in the workspace summary page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser().head
+        logger.info("User: " + user.email)
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -307,6 +320,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
@@ -328,6 +342,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
@@ -354,6 +369,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when shared with them" - {
           "can be seen but is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -374,6 +390,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "when the user is a billing project owner" - {
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
               val user = UserPool.chooseProjectOwner().head
+              logger.info("User: " + user.email)
               implicit val authToken: AuthToken = authTokenDefault
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
@@ -393,6 +410,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain") { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -415,6 +433,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "when the user is a billing project owner" - {
             "can be seen but is not accessible" in withWebDriver { implicit driver =>
               val user = UserPool.chooseProjectOwner().head
+              logger.info("User: " + user.email)
               implicit val authToken: AuthToken = authTokenDefault
               withGroup("AuthDomain") { authDomainName =>
                 withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
@@ -436,6 +455,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when shared with them" - {
           "can be seen and is accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -454,6 +474,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "and given writer access" - {
             "the user has correct permissions" in withWebDriver { implicit driver =>
               val user = UserPool.chooseStudent().head
+              logger.info("User: " + user.email)
               implicit val authToken: AuthToken = authTokenDefault
               withGroup("AuthDomain", List(user.email)) { groupOneName =>
                 withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -474,6 +495,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           "when the user is a billing project owner" - {
             "can be seen and is accessible" in withWebDriver { implicit driver =>
               val user = UserPool.chooseProjectOwner().head
+              logger.info("User: " + user.email)
               implicit val authToken: AuthToken = authTokenDefault
               withGroup("AuthDomain", List(user.email)) { groupOneName =>
                 withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -494,6 +516,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when shared with one of the groups in the auth domain" - {
           "can be seen and is accessible by group member who is a member of both auth domain groups" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
@@ -511,6 +534,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
           "can be seen but is not accessible by group member who is a member of only one auth domain group"in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain") { groupTwoName =>
@@ -534,6 +558,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         "when not shared with them" - {
           "cannot be seen and is not accessible" in withWebDriver { implicit driver =>
             val user = UserPool.chooseStudent().head
+            logger.info("User: " + user.email)
             implicit val authToken: AuthToken = authTokenDefault
             withGroup("AuthDomain", List(user.email)) { groupOneName =>
               withGroup("AuthDomain", List(user.email)) { groupTwoName =>
