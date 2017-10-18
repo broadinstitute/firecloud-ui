@@ -20,7 +20,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  val uiUser: Credentials = UserPool.chooseProjectOwner().head
+  val uiUser: Credentials = Config.Users.owner //UserPool.chooseProjectOwner().head
   logger.info("Method Config UIUser is: " + uiUser.email)
   implicit val authToken: AuthToken = AuthToken(uiUser)
 
