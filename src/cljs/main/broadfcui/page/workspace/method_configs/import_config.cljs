@@ -13,7 +13,8 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
-   [broadfcui.utils :as utils]))
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- wrap [& components]
