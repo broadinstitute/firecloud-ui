@@ -8,6 +8,8 @@ exports.ReactLoadScript = require('react-load-script');
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
 
+require('./js/timingDiagram'); // loaded here because it's small and is the only non-google-loader timeline dep
+
 require('any-resize-event');
 
 require('what-input');

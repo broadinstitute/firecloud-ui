@@ -1,7 +1,12 @@
 const path = require('path');
+const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-const maybeUglify = JSON.parse(process.env.NODE_ENV === 'production' || 'false') ? [new UglifyJSPlugin()] : [];
+const CommonsChunkPlugin = new webpack.optimize.CommonsChunkPlugin({name: "base"});
+const plugins = [CommonsChunkPlugin];
+if (JSON.parse(process.env.NODE_ENV === 'production' || 'false')) {
+    plugins.push(new UglifyJSPlugin());
+}
 
 module.exports = {
     entry: {
@@ -38,7 +43,7 @@ module.exports = {
             { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, use: "file-loader" }
         ]
     },
-    plugins: maybeUglify,
+    plugins: plugins,
     watchOptions: {
         ignored: /node_modules/
     }
