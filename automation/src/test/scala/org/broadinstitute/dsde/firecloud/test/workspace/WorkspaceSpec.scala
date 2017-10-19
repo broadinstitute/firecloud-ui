@@ -117,10 +117,36 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
             aclEditor.canComputeEnabled shouldBe true
-            aclEditor.canComputeChecked shouldBe false
+            aclEditor.canComputeChecked shouldBe true
           }
         }
 
+      }
+
+      "should see can compute permission change for users when role changed from writer to reader" in withWebDriver {implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_canCompute") { workspaceName =>
+          withSignIn(Config.Users.draco) {listPage =>
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
+            aclEditor.updateAccess("READER")
+            aclEditor.canComputeChecked shouldBe false
+            aclEditor.canComputeEnabled shouldBe false
+          }
+        }
+      }
+
+      "should see can compute and can share permission change for users when role changed to no access" in withWebDriver {implicit driver =>
+        withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
+          withSignIn(Config.Users.draco) {listPage =>
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "Writer")
+            aclEditor.updateAccess("NO ACCESS")
+            aclEditor.canComputeChecked shouldBe false
+            aclEditor.canComputeEnabled shouldBe false
+            aclEditor.canShareChecked shouldBe false
+            aclEditor.canShareEnabled shouldBe false
+          }
+        }
       }
 
       "should not be able to set/change can compute permissions for other owners" in withWebDriver {implicit driver =>

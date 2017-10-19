@@ -41,6 +41,14 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
     roleDropdown.select(accessLevel.toString)
   }
 
+  def updateAccess(accessLevel: String): Unit = {
+    roleDropdown.select(accessLevel)
+  }
+
+  def canShareChecked: Boolean = canShareBox.isChecked
+
+  def canShareEnabled: Boolean = canShareBox.isEnabled
+
   def canComputeEnabled: Boolean = canComputeBox.isEnabled
 
   def canComputeChecked: Boolean = canComputeBox.isChecked
