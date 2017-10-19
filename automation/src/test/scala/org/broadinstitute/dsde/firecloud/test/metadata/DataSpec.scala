@@ -12,7 +12,7 @@ class DataSpec extends FlatSpec with WebBrowserSpec
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   val billingProject = Config.Projects.default
-  val defaultUser: Credentials = UserPool.chooseStudent().head
+  val defaultUser: Credentials = UserPool.chooseStudent
   implicit val authToken: AuthToken = AuthToken(defaultUser)
   behavior of "Data"
 

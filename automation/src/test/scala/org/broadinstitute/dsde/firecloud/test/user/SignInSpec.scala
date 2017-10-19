@@ -12,7 +12,7 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cle
     "with a registered account" - {
 
       "should be able to log in and out multiple times as multiple users" in withWebDriver { implicit driver =>
-        val users = UserPool.chooseStudent(2)
+        val users = UserPool.chooseStudents(2)
         val user1 = users.head
         val user2 = users(1)
         withSignIn(user1) { listPage =>

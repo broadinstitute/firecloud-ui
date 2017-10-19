@@ -6,8 +6,7 @@ import com.google.api.client.json.jackson2.JacksonFactory
 
 import scala.collection.JavaConverters._
 
-// todo: maybe make all auth tokens and map them to their credentials?  so when we grab random creds we grab pre-populated auth token?
-// is it expensive to make auth tokens?
+// Note: we are creating a new auth token from google every time we call this case class
 
 case class AuthToken(user: Credentials) {
 

@@ -9,7 +9,7 @@ import org.scalatest._
 
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WebBrowserSpec with Matchers with CleanUp {
 
-  val ownerUser: Credentials = UserPool.chooseProjectOwner().head
+  val ownerUser: Credentials = UserPool.chooseProjectOwner
   implicit val ownerAuthToken: AuthToken = AuthToken(ownerUser)
 
   "A user" - {
