@@ -27,8 +27,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   with UserFixtures {
 
   val projectName: String = Config.Projects.common
-
-  // Unless otherwise declared, this auth token will be used for API calls.
+  /*
+   * Unless otherwise declared, this auth token will be used for API calls.
+   * We are using a curator to prevent collisions with users in tests (who are Students and AuthDomainUsers), not
+   *  because we specifically need a curator.
+   */
   val defaultUser: Credentials = UserPool.chooseCurator
   val authTokenDefault: AuthToken = AuthToken(defaultUser)
 

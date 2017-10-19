@@ -46,7 +46,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-add-user-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin)
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           withSignIn(ownerUser) { _ =>
@@ -68,7 +68,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-make-ws-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin)
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           // create workspace and verify
@@ -88,7 +88,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-method-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin)
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           // create workspace
