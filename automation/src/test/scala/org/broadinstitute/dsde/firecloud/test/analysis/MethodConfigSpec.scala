@@ -230,7 +230,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   }
 
   "abort a workflow" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner
+    val user = Config.Users.owner
     implicit val authToken: AuthToken = AuthToken(user)
     withWorkspace(billingProject, "TestSpec_FireCloud_abort_workflow") { workspaceName =>
       val shouldUseCallCaching = false
