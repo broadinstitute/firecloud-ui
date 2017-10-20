@@ -126,10 +126,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
 
       "should see can compute permission change for users when role changed from writer to reader" in withWebDriver {implicit driver =>
+        val users = UserPool.chooseStudents(2)
+        val user1 = users.head
+        val user2 = users(1)
         withWorkspace(billingProject, "WorkspaceSpec_canCompute") { workspaceName =>
-          withSignIn(Config.Users.draco) {listPage =>
+          withSignIn(user1) {listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
+            val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
             aclEditor.canComputeChecked shouldBe true
             aclEditor.updateAccess("READER")
             aclEditor.canComputeChecked shouldBe false
@@ -139,10 +142,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
 
       "should see can compute and can share permission change for users when role changed to no access" in withWebDriver {implicit driver =>
+        val users = UserPool.chooseStudents(2)
+        val user1 = users.head
+        val user2 = users(1)
         withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
-          withSignIn(Config.Users.draco) {listPage =>
+          withSignIn(user1) {listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
+            val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
             aclEditor.canComputeChecked shouldBe true
             aclEditor.updateAccess("NO ACCESS")
             aclEditor.canComputeChecked shouldBe false
