@@ -3,8 +3,14 @@ const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const CommonsChunkPlugin = new webpack.optimize.CommonsChunkPlugin({name: "base"});
-const plugins = [CommonsChunkPlugin];
-if (JSON.parse(process.env.NODE_ENV === 'production' || 'false')) {
+const DefinePlugin = new webpack.DefinePlugin({
+    'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV) // to make sure it's parseable
+    }
+});
+const plugins = [CommonsChunkPlugin, DefinePlugin];
+
+if (process.env.NODE_ENV === 'production') {
     plugins.push(new UglifyJSPlugin());
 }
 
