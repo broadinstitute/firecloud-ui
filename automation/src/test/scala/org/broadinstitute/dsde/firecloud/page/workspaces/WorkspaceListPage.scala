@@ -11,7 +11,7 @@ import org.scalatest.selenium.Page
   * Page class for the Workspace List page.
   */
 class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
-    with Page with PageUtil[WorkspaceListPage] {
+  with Page with PageUtil[WorkspaceListPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces"
 
   override def awaitReady(): Unit = {
@@ -21,12 +21,14 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   private val workspacesTable = Table("workspace-list")
   private val createWorkspaceButton = Button("open-create-workspace-modal-button")
   private val requestAccessModal = testId("request-access-modal")
+  private val noBillingProjectsModal = testId("no-billing-projects-message")
   private def workspaceLink(ns: String, n: String) = Link(s"$ns-$n-workspace-link")
   private def restrictedWorkspaceLabel(ns: String, n: String) = Label(s"restricted-$ns-$n")
 
-  def clickCreateWorkspaceButton(): CreateWorkspaceModal = {
+  def clickCreateWorkspaceButton(expectDisabled: Boolean = false): Option[CreateWorkspaceModal] = {
+    if(expectDisabled) assert(createWorkspaceButton.isStateDisabled)
     createWorkspaceButton.doClick()
-    await ready new CreateWorkspaceModal
+    if(!expectDisabled) Option(await ready new CreateWorkspaceModal) else None
   }
 
   /**
@@ -39,7 +41,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
                       authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    clickCreateWorkspaceButton().createWorkspace(billingProjectName, workspaceName, authDomain)
+    clickCreateWorkspaceButton().get.createWorkspace(billingProjectName, workspaceName, authDomain)
     await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
@@ -54,6 +56,10 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
 
   def showsRequestAccessModal(): Boolean = {
     find(requestAccessModal).isDefined
+  }
+
+  def showsNoBillingProjectsModal(): Boolean = {
+    find(noBillingProjectsModal).isDefined
   }
 
   def looksRestricted(namespace: String, name: String): Boolean = {

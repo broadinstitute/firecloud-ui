@@ -1,14 +1,37 @@
 package org.broadinstitute.dsde.firecloud.config
 
 import com.typesafe.config.ConfigFactory
+import scala.util.Random
+import scala.util.parsing.json.JSON
+
+
+/**
+  * Set of users mapping name -> Credential
+  * Used by UserPool to select a user for a particular function
+  */
+case class UserSet(userMap: Map[String, Credentials]) {
+
+  def getAllCredentials: Iterable[Credentials] = {
+    userMap.values
+  }
+  def getUserCredential(username: String): Credentials = {
+    userMap(username)
+  }
+
+  def getRandomCredentials(n: Int): Seq[Credentials] = {
+    Random.shuffle(userMap.values.toVector).take(n)
+  }
+}
 
 object Config {
   private val config = ConfigFactory.load()
+
   private val fireCloud = config.getConfig("fireCloud")
   private val users = config.getConfig("users")
   private val chromeSettings = config.getConfig("chromeSettings")
   private val gcsConfig = config.getConfig("gcs")
   private val methodsConfig = config.getConfig("methods")
+
 
   object GCS {
     val pathToQAPem = gcsConfig.getString("qaPemFile")
@@ -25,37 +48,34 @@ object Config {
   }
 
   object Users {
-    val notSoSecretPassword = users.getString("notSoSecretPassword")
+    private val notSoSecretPassword = users.getString("notSoSecretPassword")
+    private val userDataJson = JSON.parseFull(scala.io.Source.fromFile(users.getString("userDataPath")).getLines.mkString).get.asInstanceOf[Map[String, Map[String,String]]]
 
-    val dumbledore = Credentials(users.getString("dumbledore"), notSoSecretPassword)
-    val voldemort = Credentials(users.getString("voldemort"), notSoSecretPassword)
-    val admin = dumbledore
+    def makeCredsMap(jsonMap: Map[String, String]): Map[String, Credentials] = {
+      for((k,v) <- jsonMap) yield (k, Credentials(v, notSoSecretPassword))
+    }
 
-    val hermione = Credentials(users.getString("hermione"), notSoSecretPassword)
-    val owner = hermione
+    val Admins = UserSet(makeCredsMap(userDataJson("admins")))
+    val Owners = UserSet(makeCredsMap(userDataJson("owners")))
+    val Curators = UserSet(makeCredsMap(userDataJson("curators")))
+    val Temps = UserSet(makeCredsMap(userDataJson("temps")))
+    val AuthDomainUsers = UserSet(makeCredsMap(userDataJson("authdomains")))
+    val Students = UserSet(makeCredsMap(userDataJson("students")))
 
-    val mcgonagall = Credentials(users.getString("mcgonagall"), notSoSecretPassword)
-    val snape = Credentials(users.getString("snape"), notSoSecretPassword)
-    val curator = mcgonagall
+    // defaults
+    val owner = Owners.getUserCredential("hermione")
+    val curator = Curators.getUserCredential("mcgonagall")
+    val admin = Admins.getUserCredential("dumbledore")
+    val testUser = Students.getUserCredential("harry")
+    val temp = Temps.getUserCredential("luna")
 
-    val harry = Credentials(users.getString("harry"), notSoSecretPassword)
-    val ron = Credentials(users.getString("ron"), notSoSecretPassword)
-    val draco = Credentials(users.getString("draco"), notSoSecretPassword)
-
-    val fred = Credentials(users.getString("fred"), notSoSecretPassword)
-    val george = Credentials(users.getString("george"), notSoSecretPassword)
-    val bill = Credentials(users.getString("bill"), notSoSecretPassword)
-
-    val lunaTemp = Credentials(users.getString("luna"), notSoSecretPassword)
-    val lunaTempSubjectId = users.getString("lunaSubjectId")
-    val nevilleTemp = Credentials(users.getString("neville"), notSoSecretPassword)
-    val testUser = harry
-    val dominique = harry
-    val elvin = fred
+    val tempSubjectId = users.getString("tempSubjectId")
 
     val smoketestpassword = users.getString("smoketestpassword")
     val smoketestuser = Credentials(users.getString("smoketestuser"), smoketestpassword)
   }
+
+
 
   object Methods {
     val testMethod = methodsConfig.getString("testMethod")
