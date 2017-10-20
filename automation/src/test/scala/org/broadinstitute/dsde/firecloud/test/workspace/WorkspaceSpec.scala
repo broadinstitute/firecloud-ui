@@ -118,6 +118,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
             aclEditor.canComputeEnabled shouldBe true
             aclEditor.canComputeChecked shouldBe true
+            aclEditor.removeCanCompute
+            aclEditor.canComputeChecked shouldBe false
           }
         }
 
@@ -140,7 +142,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
           withSignIn(Config.Users.draco) {listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "Writer")
+            val aclEditor = detailPage.openShareDialog(Config.Users.ron.email, "WRITER")
             aclEditor.canComputeChecked shouldBe true
             aclEditor.updateAccess("NO ACCESS")
             aclEditor.canComputeChecked shouldBe false
