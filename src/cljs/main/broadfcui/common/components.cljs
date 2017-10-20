@@ -407,7 +407,7 @@
 (defn no-billing-projects-message []
   [:div {:data-test-id "no-billing-projects-message" :style {:textAlign "center"}}
    "You must have a billing project associated with your account to create a new workspace."
-   (links/create-external {:href "https://gatkforums.broadinstitute.org/firecloud/discussion/9763/howto-create-a-new-firecloud-billing-project"
+   (links/create-external {:href (config/billing-project-guide-url)
                            :style {:display "block"}}
                           "Learn how to create a billing project.")])
 
