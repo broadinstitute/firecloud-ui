@@ -19,8 +19,9 @@
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"isDebug" :boolean "shibbolethUrlRoot" :string
                   "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string "featuredJsonUrl" :string
-                  "workflowCountWarningThreshold" :integer "billingGuideUrl" :string "dbGapAuthorizationDomain" :string
-                  "callCachingGuideUrl" :string "alertsPollInterval" :integer "forumUrl" :string "authDomainGuideUrl" :string}
+                  "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
+                  "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
+                  "forumUrl" :string "authDomainGuideUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (set/difference config-keys (set (keys all)))
@@ -48,7 +49,8 @@
 (defn max-retry-attempts [] (get @config "maxRetryAttempts" 6)) ;; 6 exponential retries = ~ 2 minutes
 (defn user-guide-url [] (get @config "userGuideUrl"))
 (defn forum-url [] (get @config "forumUrl"))
-(defn billing-guide-url [] (get @config "billingGuideUrl"))
+(defn billing-project-guide-url [] (get @config "billingProjectGuideUrl"))
+(defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn alerts-json-url [] (get @config "alertsJsonUrl"))
 (defn featured-json-url [] (get @config "featuredJsonUrl"))

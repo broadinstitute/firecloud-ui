@@ -405,9 +405,9 @@
                                          (.focus (get-first)))))))))})
 
 (defn no-billing-projects-message []
-  [:div {:style {:textAlign "center"}}
+  [:div {:data-test-id "no-billing-projects-message" :style {:textAlign "center"}}
    "You must have a billing project associated with your account to create a new workspace."
-   (links/create-external {:href (config/billing-guide-url)
+   (links/create-external {:href (config/billing-project-guide-url)
                            :style {:display "block"}}
                           "Learn how to create a billing project.")])
 
@@ -445,19 +445,8 @@
     :content [:div {:style {:maxWidth 500}} text]
     :ok-button on-confirm}))
 
-(defn renderable? [thing]
-  (or (react/valid-element? thing)
-      (string? thing)
-      (and (vector? thing)
-           (pos? (count thing))
-           (keyword? (first thing))
-           (or (and (= 1 (count thing)))
-               (let [[_ attr & rest] thing]
-                 (and (map? attr)
-                      (every? renderable? rest)))))))
-
 (defn create-error-message [thing]
-  (when (renderable? thing)
+  (when (common/renderable? thing)
     #(push-error thing)))
 
 
