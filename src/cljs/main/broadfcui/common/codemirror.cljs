@@ -52,7 +52,7 @@
                     (do (.next stream) nil)))}))
   (reset! wdl-defined? true))
 
-(react/defc- CodeMirrorComponent
+(react/defc CodeMirror
   {:add-listener
    (fn [{:keys [this]} event-type listener]
      (this :call-method "on" event-type listener))
@@ -68,15 +68,24 @@
       :read-only? true
       :mode "wdl"})
    :render
-   (fn [{:keys [props]}]
-     [:div {:data-test-id (:data-test-id props)
-            :style {:border style/standard-line}}
-      [:textarea {:ref "code-text" :defaultValue (:text props)}]])
-   :component-did-mount
-   (fn [{:keys [props this]}]
-     (this :display-code)
-     (when-let [init (:initialize props)]
-       (init this)))
+   (fn [{:keys [props state this]}]
+     (let [{:keys [loaded? error?]} @state]
+       [:div {}
+        (cond
+          error? (style/create-code-sample (:text props))
+          (not loaded?) [ScriptLoader
+                         {:on-error #(swap! state assoc :error? true)
+                          :on-load (fn []
+                                     (when-not @wdl-defined?
+                                       (define-wdl))
+                                     (this :display-code)
+                                     (when-let [init (:initialize props)]
+                                       (init this))
+                                     (swap! state assoc :loaded? true))
+                          :path "codemirror-deps.bundle.js"}])
+        [:div {:data-test-id (:data-test-id props)
+               :style {:border style/standard-line}}
+         [:textarea {:ref "code-text" :defaultValue (:text props)}]]]))
    :display-code
    (fn [{:keys [refs props locals]}]
      (let [{:keys [mode line-numbers? read-only?]} props]
@@ -85,24 +94,8 @@
                          #js{:mode mode :lineNumbers line-numbers? :readOnly read-only?
                              :viewportMargin js/Infinity}))))
    :component-will-receive-props
-   (fn [{:keys [props next-props locals]}]
-     (when (:read-only? props)
+   (fn [{:keys [props next-props state locals]}]
+     (when (and (:read-only? props) ())
        (-> (@locals :code-mirror-component)
            (js-invoke "getDoc")
            (js-invoke "setValue" (:text next-props)))))})
-
-(react/defc CodeMirror
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [loaded? error?]} @state]
-       (cond
-         error? (style/create-code-sample (:text props))
-         loaded? [CodeMirrorComponent props]
-         :else
-         [ScriptLoader
-          {:on-error #(swap! state assoc :error? true)
-           :on-load (fn []
-                      (when-not @wdl-defined?
-                        (define-wdl))
-                      (swap! state assoc :loaded? true))
-           :path "codemirror-deps.bundle.js"}])))})
