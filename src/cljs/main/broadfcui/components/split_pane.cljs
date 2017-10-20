@@ -27,7 +27,7 @@
          [:div {:style {:flex "0 0 10px"
                         :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
                         :backgroundColor (:background-light style/colors)
-                        :margin (if top (str slider-padding " 0") (str "0 " slider-padding))
+                        :margin (if top (str slider-padding " 0px") (str "0px " slider-padding))
                         :cursor (if left "ew-resize" "ns-resize")}
                 :onMouseDown (fn [e]
                                (swap! state assoc
