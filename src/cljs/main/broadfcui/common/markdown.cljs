@@ -9,27 +9,25 @@
 
 (defonce ^:private markdown-instance (atom false))
 
-(react/defc- MarkdownViewElement
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:className "markdown-body firecloud-markdown"
-            :dangerouslySetInnerHTML #js{"__html" (.render @markdown-instance (or (:text props) ""))}}])})
-
 (react/defc MarkdownView
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [loaded? error?]} @state]
        (cond
          error? [:p {} (:text props)]
-         loaded? [MarkdownViewElement props]
+         loaded? [:div {:className "markdown-body firecloud-markdown"
+                        :dangerouslySetInnerHTML #js{"__html"
+                                                     (if-let [text (:text props)]
+                                                       (.render @markdown-instance text)
+                                                       "")}}]
          :else
          [ScriptLoader
           {:on-error #(swap! state assoc :error? true)
            :on-load (fn []
                       (when-not @markdown-instance
                         (let [markdown-it (aget js/window "webpackDeps" "MarkdownIt")]
-                          (reset! markdown-instance (markdown-it. #js{:linkify true})))
-                        (swap! state assoc :loaded? true)))
+                          (reset! markdown-instance (markdown-it. #js{:linkify true}))))
+                      (swap! state assoc :loaded? true))
            :path "markdown-deps.bundle.js"}])))})
 
 (react/defc MarkdownEditor
