@@ -129,6 +129,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudents(2)
         val user1 = users.head
         val user2 = users(1)
+        implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_canCompute") { workspaceName =>
           withSignIn(user1) {listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -145,6 +146,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val users = UserPool.chooseStudents(2)
         val user1 = users.head
         val user2 = users(1)
+        implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
           withSignIn(user1) {listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
