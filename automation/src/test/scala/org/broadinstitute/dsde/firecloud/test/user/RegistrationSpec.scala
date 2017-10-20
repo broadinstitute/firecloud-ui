@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, AuthTokens, Config}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -12,16 +13,18 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 /**
   * Tests for new user registration scenarios.
   */
-class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec with CleanUp {
+class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec with CleanUp with LazyLogging {
 
-  val email: String = Config.Users.lunaTemp.email
-  val password: String = Config.Users.lunaTemp.password
-  val subjectId: String = Config.Users.lunaTempSubjectId
+  val email: String = Config.Users.temp.email
+  val password: String = Config.Users.temp.password
+  val subjectId: String = Config.Users.tempSubjectId
 
-  implicit val authToken: AuthToken = AuthTokens.admin
+  val adminUser: Credentials = UserPool.chooseAdmin
+  implicit val authToken: AuthToken = AuthToken(adminUser)
 
   // Clean-up anything left over from any previous failures.
   before {
+    logger.debug(adminUser.email)
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
       try { Sam.admin.deleteUser(subjectId) } catch nonFatalAndLog("Error deleting user before test but will try running the test anyway")
     }
