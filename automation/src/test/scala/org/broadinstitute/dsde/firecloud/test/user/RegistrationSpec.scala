@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
@@ -60,6 +61,34 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
       new DataLibraryPage().validateLocation()
     }
+  }
+
+  "should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
+
+    signIn(email, password)
+    val registrationPage = await ready new RegistrationPage
+
+    registerCleanUpForDeleteUser(subjectId)
+
+    registrationPage.register(
+      firstName = "Test",
+      lastName = "Dummy",
+      title = "Tester",
+      contactEmail = Some("test@firecloud.org"),
+      institute = "Broad",
+      institutionalProgram = "DSDE",
+      nonProfitStatus = true,
+      principalInvestigator = "Nobody",
+      city = "Cambridge",
+      state = "MA",
+      country = "USA")
+
+    await ready new DataLibraryPage()
+
+    val listPage = new WorkspaceListPage().open
+    listPage.clickCreateWorkspaceButton(true)
+
+    listPage.showsNoBillingProjectsModal() shouldBe true
   }
 
 /*

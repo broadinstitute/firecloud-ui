@@ -27,6 +27,12 @@
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
+(defn renderable? [thing]
+  (or (react/valid-element? thing)
+      (string? thing)
+      (and (vector? thing)
+           (keyword? (first thing)))))
+
 ;; Smooth step from https://en.wikipedia.org/wiki/Smoothstep
 (defn- smooth-step [start end point]
   (let [x (/ (- point start) (- end start))]
