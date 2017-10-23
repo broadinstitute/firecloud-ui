@@ -1,73 +1,69 @@
 #!/bin/bash
 
+if [ -z ${1+x} ]; then
+  echo "Must specify where Firecloud is running."
+  exit 1
+fi
+
+# Defaults
+WORKING_DIR=$PWD
+ENV=dev
+VAULT_TOKEN=$(cat ~/.vault-token)
+NUM_NODES=2
+TEST_ENTRYPOINT="testOnly -- -l ProdTest"
+TEST_CONTAINER="$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+
 # Parameters
-NUM_NODES="${1:-4}"  # default to 4
-ENV="${2:-dev}"  # default to dev
-export ENV=$ENV
-HUB_COMPOSE=hub-compose-fiab.yml
+FC_INSTANCE=${1}
+ENV=${2:-$ENV}
+VAULT_TOKEN=${3:-$VAULT_TOKEN}
+WORKING_DIR=${4:-$WORKING_DIR}
 
-#if test runs against a remote FIAB on a GCE node, put IP in param 3
-#if test runs against a local FIAB on a Docker, put "local" in param 3
-#else leave blank (test runs against a non FIAB host, such as real dev)
-DOCKERHOST="127.0.0.1"
-DOCKERHOST=${3:-$DOCKERHOST}
-if [ $DOCKERHOST = "alpha" -o $DOCKERHOST = "prod" ];
-  then
-    DOCKERHOST=
-    HUB_COMPOSE=hub-compose.yml
-fi
-export DOCKERHOST=$DOCKERHOST
-TEST_CONTAINER=${4:-automation}
-VAULT_TOKEN=$5
-WORKING_DIR=${6:-$PWD}
-export WORKING_DIR=$WORKING_DIR
+export FC_INSTANCE WORKING_DIR ENV
 
-if [ -z $VAULT_TOKEN ]; then
-    VAULT_TOKEN=$(cat ~/.vault-token)
+if [ "$ENV" = "prod" ]; then
+  TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi
 
-if [ "$DOCKERHOST" = "local" ]
-  then
-    docker pull chickenmaru/nettools
-    export DOCKERHOST=`docker run --net=docker_default -it --rm chickenmaru/nettools sh -c "ip route|grep default|cut -d' ' -f 3"`
-    echo "Docker Host from Docker Perspective: $DOCKERHOST"
+if [ "$FC_INSTANCE" = "local" ]; then
+  FC_INSTANCE="172.19.0.1"
 fi
 
-# define some colors to use for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
+if [ "$FC_INSTANCE" = "fiab" ]; then
+  FC_INSTANCE="$(grep 'firecloud-fiab.dsde-dev.broadinstitute.org' /etc/hosts | awk '{print $1}')"
+fi
 
-# start up
-startup() {
-    containers=$(docker ps | grep python_chrome_*)
-    if [[ -z $containers ]]; then
-        # cleanup old containers
-        docker rm -v $(docker ps -a -q -f status=exited)
-    else
-        echo "Tests are already running on this host.  Kill current tests or try again later."
-        exit 1
-    fi
-    rm -rf $WORKING_DIR/target/ $WORKING_DIR/failure_screenshots/
-}
-# kill and remove any running containers
+if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then
+  HUB_COMPOSE=hub-compose.yml
+else
+  HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
+  HUB_COMPOSE=hub-compose-fiab.yml
+fi
+
+
+echo "Building test image..."
+TEST_IMAGE=$(docker build -f ../Dockerfile-tests -q ..)
+
 cleanup () {
-  docker-compose -f ${HUB-COMPOSE} stop
-  docker stop $TEST_CONTAINER
+  # kill and remove any running containers
+  docker-compose -f ${HUB_COMPOSE} stop
+  docker stop "$TEST_IMAGE"
+  docker image rm -f "$TEST_IMAGE"
+  printf "$(tput setaf 1)Tests Failed For Unexpected Reasons$(tput setaf 0)\n"
 }
-
-# cleanup old containers
-docker rm -v $(docker ps -a -q -f status=exited)
 
 # catch unexpected failures, do cleanup and output an error message
-trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
-  HUP INT QUIT PIPE TERM
+trap cleanup EXIT HUP INT QUIT PIPE TERM 0 20
+
+printf "FIRECLOUD LOCATION: $FC_INSTANCE\n"
+docker-compose -f ${HUB_COMPOSE} pull
+docker-compose -f ${HUB_COMPOSE} up -d --scale chrome=$NUM_NODES
 
 # build and run the composed services
-echo "HOST IP: $DOCKERHOST"
-docker-compose -f ${HUB_COMPOSE} pull
-docker-compose -f ${HUB_COMPOSE} up -d
-docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
+if [ $? -ne 0 ]; then
+  printf "$(tput setaf 1)Docker Compose Failed$(tput setaf 0)\n"
+  exit -1
+fi
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
@@ -76,18 +72,9 @@ docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     -e OUT_PATH=/working/target -e INPUT_PATH=/working -e LOCAL_UI=false \
     broadinstitute/dsde-toolbox:dev render-templates.sh
 
-if [ "$DOCKERHOST" != "" ]; then
-    HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
-fi
-
-TEST_ENTRYPOINT="testOnly -- -l ProdTest"
-if [ $ENV = "prod" ]; then
-    TEST_ENTRYPOINT="testOnly -- -n ProdTest"
-fi
-echo $TEST_ENTRYPOINT
 
 # run tests
-docker run -e DOCKERHOST=$DOCKERHOST \
+docker run -e FC_INSTANCE=$FC_INSTANCE \
     --net=docker_default \
     -e ENV=$ENV \
     -P --rm -t -e CHROME_URL="http://hub:4444/" ${HOST_MAPPING} \
@@ -98,22 +85,18 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
-    ${TEST_CONTAINER}:latest "${TEST_ENTRYPOINT}"
+    ${TEST_IMAGE} "${TEST_ENTRYPOINT}"
 
 
-# Grab exit code of tests
+# Grab exit code
 TEST_EXIT_CODE=$?
 
-if [ $? -ne 0 ] ; then
-  printf "${RED}Docker Compose Failed${NC}\n"
-  exit -1
-fi
 
 # inspect the output of the test and display respective message
-if [ -z ${TEST_EXIT_CODE+x} ] || [ "$TEST_EXIT_CODE" -ne 0 ] ; then
-  printf "${RED}Tests Failed${NC} - Exit Code: $TEST_EXIT_CODE\n"
+if [ -z ${TEST_EXIT_CODE+x} ] || [ $TEST_EXIT_CODE -ne 0 ]; then
+  printf "$(tput setaf 1)Tests Failed$(tput setaf 0) - Exit Code: $TEST_EXIT_CODE\n"
 else
-  printf "${GREEN}Tests Passed${NC}\n"
+  printf "$(tput setaf 2)Tests Passed$(tput setaf 0)\n"
 fi
 
 # call the cleanup fuction
