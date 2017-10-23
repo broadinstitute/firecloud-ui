@@ -73,19 +73,15 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     dataTab.importFile(file.getAbsolutePath)
   }
 
-  def setupWithApi(workspaceName: String, fileString: String): Unit = {
-    api.importMetaData(billingProject, workspaceName, "entities", fileString)
-    api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-      SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-  }
-
   "Writer and reader should see new columns" - {
     "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-        setupWithApi(workspaceName, TestData.SingleParticipant.participantEntity)
+        api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
         signIn(owner)
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -109,7 +105,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_launchAnalysis_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-        setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
+        api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
         signIn(owner)
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         workspaceDataTab.hideColumn("test1")
@@ -137,7 +135,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_launchAnalysis_defaults", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-        setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
+        api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
         signIn(owner)
         val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
         workspaceSummaryTab.edit{
@@ -168,7 +168,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_localDefaults_analysis", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-        setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
+        api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
+        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
+          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
         signIn(owner)
         val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
         workspaceSummaryTab.edit{
