@@ -1,12 +1,12 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool, Credentials}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import java.io.{File, PrintWriter}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, TestData, UserFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture._
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
@@ -33,15 +33,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         workspaceDataTab.getNumberOfParticipants shouldBe 1
       }
     }
-  }
-
-  object SimpleMethodConfig {
-    val configName = "DO_NOT_CHANGE_test1_config"
-    val configNamespace = "automationmethods"
-    val snapshotId = 1
-    val rootEntityType = "participant"
-    val inputs = Map("test.hello.name" -> "\"a\"") // shouldn't be needed for config
-    val outputs = Map("test.hello.response" -> "workspace.result", "test.hello.name" -> "participant.name")
   }
 
   val configNs = SimpleMethodConfig.configNamespace
