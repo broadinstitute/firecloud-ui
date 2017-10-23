@@ -18,12 +18,13 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   val billingProject = Config.Projects.default
-  val users = UserPool.chooseStudents(2)
-  val owner: Credentials = users.head
-  val reader: Credentials = users(1)
-  implicit lazy val authToken: AuthToken = AuthToken(owner)
+//  val owner: Credentials = UserPool.chooseProjectOwner
+//  val reader: Credentials = UserPool.chooseStudent
+//  implicit lazy val authToken: AuthToken = AuthToken(owner)
 
   "import a participants file" in withWebDriver { implicit driver =>
+    val owner = UserPool.chooseProjectOwner
+    implicit val authToken: AuthToken = AuthToken(owner)
     withWorkspace(billingProject, "TestSpec_FireCloud_import_participants_file_") { workspaceName =>
       withSignIn(owner) { _ =>
         val filename = "src/test/resources/participants.txt"
@@ -80,6 +81,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Writer and reader should see new columns" - {
     "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         setupWithApi(workspaceName, TestData.SingleParticipant.participantEntity)
 
@@ -89,7 +93,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         workspaceDataTab.readColumnHeaders shouldEqual headers1
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
-    submissionTab.waitUntilSubmissionCompletes()
+        submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
         workspaceDataTab.clearFilter
         workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "output")
@@ -101,6 +105,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with local preferences but no defaults when analysis run" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_launchAnalysis_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
         signIn(owner)
@@ -126,6 +133,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with defaults but no local preferences when analysis run" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_launchAnalysis_defaults", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
         signIn(owner)
@@ -154,6 +164,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
     }
     "with defaults and local preferences when analysis is run" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_localDefaults_analysis", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         setupWithApi(workspaceName, "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
         signIn(owner)
@@ -187,6 +200,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Writer and reader should see new columns" - {
     "With no defaults or local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_column_display", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
@@ -205,6 +221,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With local preferences, but no defaults when writer imports metadata with new column" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_preferences", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
@@ -236,6 +255,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With defaults on workspace, but no local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_defaults", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) {
         workspaceName =>
 
@@ -269,6 +291,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With defaults on workspace and local preferences for reader and writer when writer imports metadata with new column" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
+      implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_defaults_and_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
         signIn(owner)
