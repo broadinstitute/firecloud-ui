@@ -8,6 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
@@ -38,7 +39,7 @@
                 [:strong {} (:rootEntityType loaded-config)]]
                [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
                 "Referenced Method:"]
-               (cond loaded-method [comps/EntityDetails {:entity loaded-method}]
+               (cond loaded-method [EntityDetails {:entity loaded-method}]
                      method-load-error (style/create-server-error-message
                                         (if (= method-load-error "Not Found")
                                           "The referenced method snapshot could not be found.

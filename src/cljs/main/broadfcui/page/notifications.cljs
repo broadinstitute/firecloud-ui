@@ -49,7 +49,7 @@
 (defn- render-ajax-or-continue [{:keys [state]} f]
   (let [{:keys [general-response profile-response]} @state
         show-error (fn [message]
-                     [:div {:style {:color (:exception-state style/colors)}}
+                     [:div {:style {:color (:state-exception style/colors)}}
                       "Error when retrieving notifications: " message])]
     (cond
       (not (and general-response profile-response))
@@ -117,9 +117,9 @@
          [:div {:style {:marginLeft "1rem"}}
           (cond
             (:saving? @state) (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
-            (:error? @state) (icons/render-icon {:style {:color (:exception-state style/colors)}}
+            (:error? @state) (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                 :error)
-            (:saved? @state) (icons/render-icon {:style {:color (:success-state style/colors)}}
+            (:saved? @state) (icons/render-icon {:style {:color (:state-success style/colors)}}
                                                 :done))]]]))
    :-save
    (fn [{:keys [state after-update] :as m}]
@@ -180,10 +180,10 @@
                     [:td {} (when-let [pending (get pending key)]
                               (case pending
                                 :error
-                                (icons/render-icon {:style {:color (:exception-state style/colors)}}
+                                (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                    :error)
                                 :done
-                                (icons/render-icon {:style {:color (:success-state style/colors)}}
+                                (icons/render-icon {:style {:color (:state-success style/colors)}}
                                                    :done)
                                 (icons/render-icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
        [:table {:style {:fontSize "90%"}}

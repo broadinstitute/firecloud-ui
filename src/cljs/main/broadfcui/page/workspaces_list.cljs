@@ -47,7 +47,7 @@
            error
            (case (:code error)
              (:unknown :parse-error)
-             [:div {:style {:color (:exception-state style/colors)}}
+             [:div {:style {:color (:state-exception style/colors)}}
               "Error:" [:div {} (:details error)]]
              [comps/ErrorViewer {:error (:details error)}])
            :else
@@ -310,7 +310,7 @@
           :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domain-groups))
           :style {:display "block" :position "relative"
                   :backgroundColor (if no-access?
-                                     (:disabled-state style/colors)
+                                     (:state-disabled style/colors)
                                      (style/color-for-status status))
                   :margin "2px 0 2px 2px" :height (- row-height-px 4)}
           :title hover-text}
@@ -331,7 +331,7 @@
                     (nav/get-link :workspace-summary workspace-id))
             :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domain-groups))
             :style {:display "flex" :alignItems "center"
-                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
+                    :backgroundColor (if no-access? (:state-disabled style/colors) color)
                     :color "white" :textDecoration "none"
                     :height (- row-height-px 4)
                     :margin "2px 0"}

@@ -2,18 +2,33 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.style :as style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
    ))
 
-(def ^:private MarkdownIt-js (aget js/window "webpack-deps" "MarkdownIt"))
-(def ^:private markdown-it (MarkdownIt-js. #js{:linkify true}))
+(defonce ^:private markdown-instance (atom false))
 
 (react/defc MarkdownView
   {:render
-   (fn [{:keys [props]}]
-     [:div {:className "markdown-body firecloud-markdown"
-            :dangerouslySetInnerHTML #js{"__html" (.render markdown-it (or (:text props) ""))}}])})
+   (fn [{:keys [props state]}]
+     (let [{:keys [loaded? error?]} @state]
+       (cond
+         error? [:p {} (:text props)]
+         loaded? [:div {:className "markdown-body"
+                        :dangerouslySetInnerHTML #js{"__html"
+                                                     (if-let [text (:text props)]
+                                                       (.render @markdown-instance text)
+                                                       "")}}]
+         :else
+         [ScriptLoader
+          {:on-error #(swap! state assoc :error? true)
+           :on-load (fn []
+                      (when-not @markdown-instance
+                        (let [markdown-it (aget js/window "webpackDeps" "MarkdownIt")]
+                          (reset! markdown-instance (markdown-it. #js{:linkify true}))))
+                      (swap! state assoc :loaded? true))
+           :path "markdown-deps.bundle.js"}])))})
 
 (react/defc MarkdownEditor
   {:get-text

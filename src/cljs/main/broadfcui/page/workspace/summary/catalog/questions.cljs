@@ -43,7 +43,7 @@
                                              [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
                                                        {:value v})]))
                              ;; throw out decimals and out of range values:
-                             (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
+                             (keep (fn [[k {:keys [value minimum maximum] :or {minimum js/-Infinity maximum js/Infinity}}]]
                                      (when-not (and (or
                                                      (= value (str (int value)))
                                                      (= value (int value)))
@@ -77,7 +77,7 @@
               [:div {:style {:display "flex" :alignItems "center"
                              :margin "0.5rem 0" :padding "1em"
                              :border style/standard-line :borderRadius 8
-                             :backgroundColor (cond disabled (:disabled-state style/colors) selected? (:button-primary style/colors))
+                             :backgroundColor (cond disabled (:state-disabled style/colors) selected? (:button-primary style/colors))
                              :cursor "pointer"}
                      :onClick #(when-not disabled (set-property option))}
                [:input {:type "radio" :readOnly true :checked selected? :disabled disabled
@@ -132,7 +132,7 @@
                              [:div {:style {:clear "both"}}]]))
        :highlightFirstSuggestion false
        :onSuggestionSelected (fn [_ suggestion]
-                               (let [suggestion (utils/log (js->clj (.-suggestion suggestion) :keywordize-keys true))
+                               (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
                                      {:keys [id label]} suggestion
                                      [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
                                  (swap! state update :attributes assoc
@@ -217,8 +217,8 @@
            (let [current-value (get attributes property)
                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
                  error? (or (contains? invalid-properties property) (contains? missing-properties property))
-                 colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
-                                                  :color (:exception-state style/colors)}))
+                 colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
+                                                  :color (:state-exception style/colors)}))
                  data (merge (utils/restructure prop state property library-schema colorize current-value)
                              {:value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)

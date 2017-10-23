@@ -72,10 +72,10 @@
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
    (if (not-empty invalid-attributes)
-     [:div {:style {:color (:exception-state style/colors) :border (str "1px solid " (:exception-state style/colors))
+     [:div {:style {:color (:state-exception style/colors) :border (str "1px solid " (:state-exception style/colors))
                     :padding "1rem"}}
       [:div {:style {:paddingBottom "0.5rem" :marginBottom "0.5rem"
-                     :borderBottom (str "1px solid " (:exception-state style/colors))}}
+                     :borderBottom (str "1px solid " (:state-exception style/colors))}}
        "The following additional attributes are required to publish:"]
       [:div {:style {:fontSize 14}}
        (map (fn [attribute]
@@ -159,7 +159,7 @@
                    (select-keys props [:library-schema]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
-           [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
+           [:div {:style {:marginTop "1em" :color (:state-exception style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
          (flex/box

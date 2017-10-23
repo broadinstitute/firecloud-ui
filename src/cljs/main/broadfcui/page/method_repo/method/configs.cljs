@@ -43,7 +43,7 @@
               (:config-snapshot-id props))]])]
         (cond
           config-error
-          [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
+          [:div {:style {:textAlign "center" :color (:state-exception style/colors)}}
            "Error loading config: " config-error]
           (not config)
           [:div {:style {:textAlign "center" :padding "1rem"}}
@@ -82,7 +82,7 @@
              :text "Permissions..." :icon :settings :margin :bottom
              :onClick #(swap! state assoc :sharing? true)}]
            [buttons/SidebarButton
-            {:style :light :color :exception-state
+            {:style :light :color :state-exception
              :text "Redact" :icon :delete :margin :bottom
              :onClick #(swap! state assoc :deleting? true)}]]}]]))
    :-render-main
@@ -114,7 +114,7 @@
                                                          {:config-ns namespace :config-name name} snapshotId)})]
        [:div {:style {:margin "2.5rem 1.5rem"}}
         (cond
-          configs-error [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
+          configs-error [:div {:style {:textAlign "center" :color (:state-exception style/colors)}}
                          "Error loading configs: " configs-error]
           config-id [ConfigViewer (utils/restructure config-id config-snapshot-id)]
           (not configs) [:div {:style {:textAlign "center" :padding "1rem"}}

@@ -234,7 +234,7 @@
                                  (comps/push-error error)
                                  (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
                 [buttons/SidebarButton
-                 {:style :light :color :exception-state :margin :top
+                 {:style :light :color :state-exception :margin :top
                   :text "Cancel Editing" :icon :cancel
                   :onClick #(swap! state dissoc :editing?)}]]))
            (when-not editing?
@@ -255,12 +255,12 @@
                    publisher? (and curator? (or catalog-with-read? owner?))]
                [buttons/SidebarButton
                 {:data-test-id "delete-workspace-button"
-                 :style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                 :style :light :margin :top :color (if isLocked :text-lighter :state-exception)
                  :text "Delete" :icon :delete
                  :disabled? (cond isLocked
                                   "This workspace is locked."
                                   (and published? (not publisher?))
-                                  {:type :error :header "Alert" :icon-color :warning-state
+                                  {:type :error :header "Alert" :icon-color :state-warning
                                    :text [:div {}
                                           [:p {:style {:margin 0}}
                                            "This workspace is published in the Data Library and cannot be deleted. "

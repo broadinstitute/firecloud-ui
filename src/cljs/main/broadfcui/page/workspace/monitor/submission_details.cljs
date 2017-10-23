@@ -21,9 +21,9 @@
 
 
 (defn- color-for-submission [submission]
-  (cond (contains? moncommon/sub-running-statuses (:status submission)) (:running-state style/colors)
-        (moncommon/all-success? submission) (:success-state style/colors)
-        :else (:exception-state style/colors)))
+  (cond (contains? moncommon/sub-running-statuses (:status submission)) (:state-running style/colors)
+        (moncommon/all-success? submission) (:state-success style/colors)
+        :else (:state-exception style/colors)))
 
 (defn- icon-for-submission [submission]
   (cond (contains? moncommon/sub-running-statuses (:status submission)) [icons/RunningIcon {:size 36}]
@@ -121,7 +121,7 @@
                [comps/Blocker {:banner "Aborting submission..."}])
              [buttons/SidebarButton
               {:data-test-id "submission-abort-button"
-               :color :exception-state :style :light :margin :top
+               :color :state-exception :style :light :margin :top
                :text "Abort" :icon :warning
                :onClick (fn [_]
                           (comps/push-confirm

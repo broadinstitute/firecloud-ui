@@ -1,7 +1,6 @@
 (ns broadfcui.components.autosuggest
   (:require
    [dmohs.react :as react]
-   [cljsjs.react-autosuggest]
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -9,6 +8,7 @@
    [broadfcui.utils :as utils]
    ))
 
+(def ^:private ReactAutosuggest (aget js/window "webpackDeps" "ReactAutosuggest"))
 
 (react/defc Autosuggest
   "One of
@@ -73,7 +73,7 @@
        (assert (fn? on-change)
                "Must provide :on-change callback")
 
-       [js/Autosuggest
+       [ReactAutosuggest
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
