@@ -79,7 +79,7 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   def hideColumn(header: String) = {
     if (readAllText(columnHeaders).contains(header)) {
-      columnEditorButton.click
+      columnEditorButton.doClick
       val colToBeHidden = Checkbox(s"$header-column-toggle")
       colToBeHidden.ensureUnchecked()
       val action = new Actions(webDriver)
