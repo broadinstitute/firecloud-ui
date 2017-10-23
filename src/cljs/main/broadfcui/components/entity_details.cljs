@@ -4,9 +4,10 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
-   [broadfcui.common.style :as style]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.icons :as icons]))
+   [broadfcui.common.style :as style]
+   ))
 
 (react/defc EntityDetails
   {:get-fields

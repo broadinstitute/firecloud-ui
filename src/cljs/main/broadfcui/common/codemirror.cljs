@@ -62,11 +62,6 @@
    :call-method
    (fn [{:keys [locals]} method & args]
      (apply js-invoke (aget (:code-mirror-component @locals) "doc") method args))
-   :get-default-props
-   (fn []
-     {:line-numbers? true
-      :read-only? true
-      :mode "wdl"})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [loaded? error?]} @state]
@@ -91,11 +86,11 @@
      (let [{:keys [mode line-numbers? read-only?]} props]
        (swap! locals assoc :code-mirror-component
               (js-invoke (get-codemirror) "fromTextArea" (@refs "code-text")
-                         #js{:mode mode :lineNumbers line-numbers? :readOnly read-only?
+                         #js{:mode (or mode "wdl") :lineNumbers (or line-numbers? true) :readOnly (or read-only? true)
                              :viewportMargin js/Infinity}))))
    :component-will-receive-props
-   (fn [{:keys [props next-props state locals]}]
-     (when (and (:read-only? props) ())
+   (fn [{:keys [props next-props locals]}]
+     (when (:read-only? props)
        (-> (@locals :code-mirror-component)
            (js-invoke "getDoc")
            (js-invoke "setValue" (:text next-props)))))})

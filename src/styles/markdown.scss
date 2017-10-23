@@ -1,13 +1,10 @@
-/*
-These styles override github-markdown.css, originally from:
-https://github.com/sindresorhus/github-markdown-css
-*/
+@import '~github-markdown-css/github-markdown.css';
 
-.markdown-body.firecloud-markdown {
-    font-size: inherit;
-    font-family: inherit;
+.markdown-body {
+  font-size: inherit;
+  font-family: inherit;
 
-    a {
-        color: #6690c5;
-    }
+  a {
+    color: #6690c5;
+  }
 }

@@ -15,7 +15,7 @@
      (let [{:keys [loaded? error?]} @state]
        (cond
          error? [:p {} (:text props)]
-         loaded? [:div {:className "markdown-body firecloud-markdown"
+         loaded? [:div {:className "markdown-body"
                         :dangerouslySetInnerHTML #js{"__html"
                                                      (if-let [text (:text props)]
                                                        (.render @markdown-instance text)
