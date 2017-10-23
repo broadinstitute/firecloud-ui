@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt
+FROM digitalgenius/alpine-scala-sbt
 
 RUN mkdir /app
 
