@@ -16,7 +16,7 @@
   :path
   :attributes (optional) - additional html attributes to be placed on the script tag"
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state after-update]}]
      (let [{:keys [on-create on-error on-load path attributes]} props
            {:keys [loaded?]} @state]
        [:div {}
@@ -29,7 +29,7 @@
             :onLoad (fn []
                       (when-not on-create
                         (swap! state assoc :loaded? true))
-                      (on-load))
+                      (after-update on-load)) ; after-update ensures that parent's children are rendered
             :url path
             :attributes attributes}))]
         (when (and (not on-create) (not loaded?))
