@@ -1,14 +1,23 @@
 #!/bin/bash
 
+# Get script location, via https://stackoverflow.com/a/12197227
+pushd . > /dev/null
+WORKING_DIR="${BASH_SOURCE[0]}";
+  while([ -h "${WORKING_DIR}" ]) do
+    cd "`dirname "${WORKING_DIR}"`"
+    WORKING_DIR="$(readlink "`basename "${WORKING_DIR}"`")";
+  done
+cd "`dirname "${WORKING_DIR}"`" > /dev/null
+WORKING_DIR="`pwd`";
+popd  > /dev/null
+
 if [ -z ${1+x} ]; then
-  echo "Must specify where Firecloud is running: 'fiab', 'local', 'alpha', 'prod', or ip."
+  printf "Must specify where Firecloud is running: 'fiab', 'local', 'alpha', 'prod', or ip."
   exit 1
 fi
 
 # Defaults
-WORKING_DIR=$PWD
 ENV=dev
-VAULT_TOKEN=$(cat ~/.vault-token)
 NUM_NODES=2
 TEST_ENTRYPOINT="testOnly -- -l ProdTest"
 TEST_CONTAINER="automation-$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 8 | head -n 1)"
@@ -16,8 +25,7 @@ TEST_CONTAINER="automation-$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' |
 # Parameters
 FC_INSTANCE=${1}
 ENV=${2:-$ENV}
-VAULT_TOKEN=${3:-$VAULT_TOKEN}
-WORKING_DIR=${4:-$WORKING_DIR}
+VAULT_TOKEN=${3:-$(cat ~/.vault-token)}
 
 export FC_INSTANCE WORKING_DIR ENV
 
@@ -40,16 +48,18 @@ else
   HUB_COMPOSE=hub-compose-fiab.yml
 fi
 
+HUB_COMPOSE="$WORKING_DIR/$HUB_COMPOSE"
 
-echo "Building test image..."
+printf "Building test image..."
 docker build -f $WORKING_DIR/../Dockerfile-tests -t $TEST_CONTAINER $WORKING_DIR/..
 
 cleanup () {
   # kill and remove any running containers
+  printf "\n"
   docker-compose -f ${HUB_COMPOSE} stop
   docker stop "$TEST_CONTAINER"
   docker image rm -f "$TEST_CONTAINER"
-  printf "$(tput setaf 1)Tests Failed For Unexpected Reasons$(tput setaf 0)\n"
+  printf "$(tput setaf 1)Tests Stopped For Unexpected Reasons$(tput setaf 0)\n"
 }
 
 # catch unexpected failures, do cleanup and output an error message
@@ -103,4 +113,5 @@ fi
 cleanup
 
 # exit the script with the same code as the test service code
+trap - EXIT HUP INT QUIT PIPE TERM 0 20
 exit $TEST_EXIT_CODE
