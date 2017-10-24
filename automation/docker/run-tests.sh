@@ -42,7 +42,7 @@ fi
 
 
 echo "Building test image..."
-docker build -f ../Dockerfile-tests -t $TEST_CONTAINER ..
+docker build -f $WORKING_DIR/../Dockerfile-tests -t $TEST_CONTAINER $WORKING_DIR/..
 
 cleanup () {
   # kill and remove any running containers
