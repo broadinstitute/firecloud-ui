@@ -122,7 +122,8 @@
                  :value (:accessLevel acl-entry)
                  :onChange (fn [event]
                              (let [new-access-level (aget event "target" "value")]
-                               (swap! state update-in [:non-project-owner-acl-vec i] assoc  :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
+                               (swap! state update-in [:non-project-owner-acl-vec i] assoc
+                                      :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
                 (if disabled? access-levels available-access-levels)))
              (if (common/access-greater-than-equal-to? user-access-level "OWNER")
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
