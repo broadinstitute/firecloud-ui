@@ -47,7 +47,7 @@ TEST_IMAGE=$(docker build -f ../Dockerfile-tests -q ..)
 cleanup () {
   # kill and remove any running containers
   docker-compose -f ${HUB_COMPOSE} stop
-  docker stop "$TEST_IMAGE"
+  docker stop "$TEST_CONTAINER"
   docker image rm -f "$TEST_IMAGE"
   printf "$(tput setaf 1)Tests Failed For Unexpected Reasons$(tput setaf 0)\n"
 }
