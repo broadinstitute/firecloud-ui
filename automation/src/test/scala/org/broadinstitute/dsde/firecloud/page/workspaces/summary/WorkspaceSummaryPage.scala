@@ -32,7 +32,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
 
-  private val sidebar = new Component("sidebar") with Stateful {
+  private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = getState == "ready"
 
     val editButton = Button("edit-button")

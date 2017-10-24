@@ -4,12 +4,10 @@ import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.{By, Keys, WebDriver}
 
-case class Table(private val id: String)(implicit webDriver: WebDriver)
-  extends Component(id) with Stateful {
+case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
+  extends Component(queryString) with Stateful {
 
   private val tableBody = findInner("table-body")
-
-  // TODO: figure out how to do sub-components properly
 
   private val filterField = SearchField("filter-input" inside this)
   private val filterButton = Button("filter-button" inside this)

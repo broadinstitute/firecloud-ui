@@ -8,8 +8,6 @@ case class TestId(id: String) extends QueryString
 case class CSSQuery(text: String) extends QueryString
 
 abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver) extends FireCloudView {
-  def this(testId: String)(implicit webDriver: WebDriver) = this(TestId(testId))
-
   val query: CssSelectorQuery = queryString match {
     case TestId(id) => testId(id)
     case CSSQuery(text) => CssSelectorQuery(text)

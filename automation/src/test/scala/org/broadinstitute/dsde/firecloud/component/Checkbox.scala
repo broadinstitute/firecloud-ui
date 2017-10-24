@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.openqa.selenium.WebDriver
 
-case class Checkbox(id: String)(implicit webDriver: WebDriver) extends Component(id) {
+case class Checkbox(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) {
   def isChecked: Boolean = checkbox(query).isSelected
 
   def ensureChecked(): Unit = {

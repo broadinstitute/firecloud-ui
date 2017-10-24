@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
-import org.broadinstitute.dsde.firecloud.component.{Label, TabBar}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.BaseFireCloudPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
