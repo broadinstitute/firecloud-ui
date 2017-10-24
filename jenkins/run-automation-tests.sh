@@ -13,8 +13,7 @@ fi
 VAULT_TOKEN=$(cat /etc/vault-token-dsde)
 
 # run tests
-cd docker
-./run-tests.sh $HOST_IP $ENV $VAULT_TOKEN
+../automation/docker/run-tests.sh $HOST_IP $ENV $VAULT_TOKEN ../automation
 TEST_EXIT_CODE=$?
 
 # do some cleanup after
