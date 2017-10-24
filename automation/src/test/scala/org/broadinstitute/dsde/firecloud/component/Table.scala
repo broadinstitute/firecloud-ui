@@ -11,18 +11,17 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   // TODO: figure out how to do sub-components properly
 
-  private val filterField = findInner("filter-input")
+  private val filterField = SearchField("filter-input" inside this)
   private val filterButton = Button("filter-button" inside this)
 
   private def tab(name: String) = findInner(s"$name-tab")
 
-  private val prevPageButton = findInner("prev-page")
-  private val nextPageButton = findInner("next-page")
-  private def pageButton(page: Int) = findInner(s"page-$page")
-  private val perPageSelector = findInner("per-page")
+  private val prevPageButton = Button("prev-page" inside this)
+  private val nextPageButton = Button("next-page" inside this)
+  private def pageButton(page: Int) = Button(s"page-$page" inside this)
+  private val perPageSelector = Select("per-page" inside this)
   private val columnHeaders = testId("column-header")
   private val columnEditorButton = Button("columns-button")
-
 
   override def awaitReady(): Unit = {
     awaitVisible()
@@ -30,7 +29,7 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   }
 
   def filter(text: String): Unit = {
-    searchField(filterField).value = text
+    filterField.setText(text)
     filterButton.doClick()
     awaitReady()
   }
@@ -45,22 +44,22 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   }
 
   def goToPreviousPage(): Unit = {
-    click on prevPageButton
+    prevPageButton.doClick()
     awaitReady()
   }
 
   def goToNextPage(): Unit = {
-    click on nextPageButton
+    nextPageButton.doClick()
     awaitReady()
   }
 
   def goToPage(page: Int): Unit = {
-    click on pageButton(page)
+    pageButton(page).doClick()
     awaitReady()
   }
 
   def selectPerPage(perPage: Int): Unit = {
-    singleSel(perPageSelector).value = perPage.toString
+    perPageSelector.select(perPage.toString)
     awaitReady()
   }
 
