@@ -16,7 +16,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     dataTable.awaitReady()
   }
 
-  private val dataTable = Table("entity-table")
+  val dataTable = Table("entity-table")
   private val importMetadataButton = Button("import-metadata-button")
 
   def importFile(file: String): Unit = {
@@ -29,18 +29,6 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   def getNumberOfParticipants: Int = {
     // TODO: click on the tab and read the actual table size
     dataTable.readDisplayedTabCount("participant")
-  }
-
-  def hideColumn(header: String) = {
-    dataTable.hideColumn(header)
-  }
-
-  def readColumnHeaders = {
-    dataTable.readColumnHeaders
-  }
-
-  def clearFilter = {
-    dataTable.filter("")
   }
 
 }

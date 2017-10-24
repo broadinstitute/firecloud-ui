@@ -77,17 +77,19 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         signIn(owner)
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id")
-        workspaceDataTab.readColumnHeaders shouldEqual headers1
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
         submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
-        workspaceDataTab.clearFilter
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "output")
+        //there is at least one filter bug - possibly two that was breaking the tests
+        //this clear filter fixes the problem. Can be removed when filter bug fixed
+        workspaceDataTab.dataTable.clearFilter
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "output")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "output")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "output")
       }
     }
 
@@ -101,23 +103,23 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
         signIn(owner)
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-        workspaceDataTab.hideColumn("test1")
+        workspaceDataTab.dataTable.hideColumn("test1")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.hideColumn("test2")
+        workspaceDataTab.dataTable.hideColumn("test2")
         workspaceDataTab.signOut()
         signIn(owner)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
     submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
-        workspaceDataTab.clearFilter
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
+        workspaceDataTab.dataTable.filter("")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
       }
     }
 
@@ -135,23 +137,23 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")
         }
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
         signIn(owner)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
     submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
-        workspaceDataTab.clearFilter
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+        workspaceDataTab.dataTable.filter("")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
       }
     }
     "with defaults and local preferences when analysis is run" in withWebDriver { implicit driver =>
@@ -168,25 +170,25 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}")
         }
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
-        workspaceDataTab.hideColumn("test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
+        workspaceDataTab.dataTable.hideColumn("test1")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
-        workspaceDataTab.hideColumn("test3")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
+        workspaceDataTab.dataTable.hideColumn("test3")
         workspaceDataTab.signOut()
         signIn(owner)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
         submissionTab.waitUntilSubmissionCompletes()
         workspaceDataTab.open
-        workspaceDataTab.clearFilter
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
+        workspaceDataTab.dataTable.filter("")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
       }
     }
   }
@@ -202,14 +204,14 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
-        workspaceDataTab.readColumnHeaders shouldEqual headers1
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
         val headers2 = headers1 :+ "test2"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-        workspaceDataTab.readColumnHeaders shouldEqual headers2
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2
         workspaceDataTab.signOut()
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual headers2
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2
       }
     }
 
@@ -223,27 +225,27 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
-        workspaceDataTab.hideColumn("test1")
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test2")
+        workspaceDataTab.dataTable.hideColumn("test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2")
         workspaceDataTab.signOut()
 
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual headers1
-        workspaceDataTab.hideColumn("test2")
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
+        workspaceDataTab.dataTable.hideColumn("test2")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
 
         signIn(owner)
         workspaceDataTab.open
         val headers2 = List("participant_id", "test1", "test2", "test3")
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
         workspaceDataTab.signOut()
 
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
       }
     }
 
@@ -262,24 +264,24 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           val headers1 = List("participant_id", "test1", "test2", "test3")
           createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
-          workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+          workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
           workspaceDataTab.signOut()
 
           signIn(reader)
           workspaceDataTab.open
-          workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+          workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
           workspaceDataTab.signOut()
 
           signIn(owner)
           workspaceDataTab.open
           val headers2 = headers1 :+ "test4"
           createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-          workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
+          workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
           workspaceDataTab.signOut()
 
           signIn(reader)
           workspaceDataTab.open
-          workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
+          workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
       }
     }
 
@@ -297,26 +299,26 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
         val headers1 = List("participant_id", "test1", "test2", "test3", "test4")
         createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
-        workspaceDataTab.hideColumn("test1")
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test4")
+        workspaceDataTab.dataTable.hideColumn("test1")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4")
         workspaceDataTab.signOut()
 
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.hideColumn("test4")
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1")
+        workspaceDataTab.dataTable.hideColumn("test4")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
         workspaceDataTab.signOut()
 
         signIn(owner)
         workspaceDataTab.open
         val headers2 = headers1 :+ "test5"
         createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
         workspaceDataTab.signOut
 
         signIn(reader)
         workspaceDataTab.open
-        workspaceDataTab.readColumnHeaders shouldEqual List("participant_id", "test1", "test5")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test5")
       }
     }
   }

@@ -77,6 +77,12 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
     readAllText(columnHeaders)
   }
 
+  def clearFilter: Unit = {
+    searchField(filterField).value = ""
+    click on filterButton
+    awaitReady()
+  }
+
   def hideColumn(header: String) = {
     if (readAllText(columnHeaders).contains(header)) {
       columnEditorButton.doClick

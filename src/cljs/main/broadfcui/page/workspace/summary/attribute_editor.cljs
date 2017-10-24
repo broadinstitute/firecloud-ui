@@ -113,7 +113,7 @@
          :style {:marginBottom "2rem"}
          :default-hidden? true
          :title
-         [:div {:style {:flexShrink 0} :data-test-id "expand-workspace-attributes"} (style/create-section-header "Workspace Attributes")]
+         [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
          :title-expand
          [:div {:style {:flexGrow 1 :fontSize "125%" :fontWeight 500}}
           (when-not editing?
