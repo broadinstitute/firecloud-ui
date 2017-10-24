@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
-WORKING_DIR=${1-$(pwd)}
-VAULT_TOKEN=$2
-ENV=$3
+# Defaults
+WORKING_DIR=$PWD
+VAULT_TOKEN=$(cat ~/.vault-token)
+ENV=dev
 LOCAL_UI=false
-LOCAL_UI_PARAM=$4
-if [ "$LOCAL_UI_PARAM" = "local_ui" ]; then
+
+# Parameters
+WORKING_DIR=${1:-$WORKING_DIR}
+VAULT_TOKEN=${2:-$VAULT_TOKEN}
+ENV=${3:-$ENV}
+if [ "$4" = "local_ui" ]; then
   LOCAL_UI=true 
 fi
 

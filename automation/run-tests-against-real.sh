@@ -9,4 +9,4 @@ echo ""
 
 docker build -f Dockerfile-tests -t automation .
 cd docker
-./run-tests.sh 4 ${ENV} ${ENV} automation ${VAULT_TOKEN}
+./run-tests.sh ${ENV} ${ENV} ${VAULT_TOKEN}

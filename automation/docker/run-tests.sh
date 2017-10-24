@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z ${1+x} ]; then
-  echo "Must specify where Firecloud is running."
+  echo "Must specify where Firecloud is running: 'fiab', 'local', 'alpha', 'prod', or ip."
   exit 1
 fi
 
