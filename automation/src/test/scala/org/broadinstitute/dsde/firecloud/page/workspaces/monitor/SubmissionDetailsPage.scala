@@ -24,6 +24,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   private val submissionIdLabel = Label("submission-id")
   private val submissionAbortButton = Button("submission-abort-button")
   private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
+  private val statusMessage = Label("status-message")
 
   private val WAITING_STATES = Array("Queued","Launching")
   private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
@@ -44,6 +45,10 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
 
   def readWorkflowStatus(): String = {
     workflowStatusLabel.getText
+  }
+
+  def readStatusMessage(): String = {
+    statusMessage.getText
   }
 
   def verifyWorkflowSucceeded(): Boolean = {

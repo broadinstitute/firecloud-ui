@@ -81,6 +81,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
         submissionTab.waitUntilSubmissionCompletes()
+        if (submissionTab.readWorkflowStatus() != "Succeeded") {
+          submissionTab.readStatusMessage() shouldEqual ""
+        }
         workspaceDataTab.open
         //there is at least one filter bug - possibly two that was breaking the tests
         //this clear filter fixes the problem. Can be removed when filter bug fixed
@@ -112,7 +115,10 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         signIn(owner)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
-    submissionTab.waitUntilSubmissionCompletes()
+        submissionTab.waitUntilSubmissionCompletes()
+        if (submissionTab.readWorkflowStatus() != "Succeeded") {
+          submissionTab.readStatusMessage() shouldEqual ""
+        }
         workspaceDataTab.open
         workspaceDataTab.dataTable.filter("")
         workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
@@ -146,7 +152,10 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         signIn(owner)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
-    submissionTab.waitUntilSubmissionCompletes()
+        submissionTab.waitUntilSubmissionCompletes()
+        if (submissionTab.readWorkflowStatus() != "Succeeded") {
+          submissionTab.readStatusMessage() shouldEqual ""
+        }
         workspaceDataTab.open
         workspaceDataTab.dataTable.filter("")
         workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
@@ -182,6 +191,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
         submissionTab.waitUntilSubmissionCompletes()
+        if (submissionTab.readWorkflowStatus() != "Succeeded") {
+          submissionTab.readStatusMessage() shouldEqual ""
+        }
         workspaceDataTab.open
         workspaceDataTab.dataTable.filter("")
         workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
