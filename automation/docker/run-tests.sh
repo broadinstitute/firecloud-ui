@@ -11,7 +11,7 @@ ENV=dev
 VAULT_TOKEN=$(cat ~/.vault-token)
 NUM_NODES=2
 TEST_ENTRYPOINT="testOnly -- -l ProdTest"
-TEST_CONTAINER="$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+TEST_CONTAINER="automation-$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 8 | head -n 1)"
 
 # Parameters
 FC_INSTANCE=${1}
@@ -42,13 +42,13 @@ fi
 
 
 echo "Building test image..."
-TEST_IMAGE=$(docker build -f ../Dockerfile-tests -q ..)
+docker build -f ../Dockerfile-tests -t $TEST_CONTAINER ..
 
 cleanup () {
   # kill and remove any running containers
   docker-compose -f ${HUB_COMPOSE} stop
   docker stop "$TEST_CONTAINER"
-  docker image rm -f "$TEST_IMAGE"
+  docker image rm -f "$TEST_CONTAINER"
   printf "$(tput setaf 1)Tests Failed For Unexpected Reasons$(tput setaf 0)\n"
 }
 
@@ -85,7 +85,7 @@ docker run -e FC_INSTANCE=$FC_INSTANCE \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
-    ${TEST_IMAGE} "${TEST_ENTRYPOINT}"
+    ${TEST_CONTAINER} "${TEST_ENTRYPOINT}"
 
 
 # Grab exit code
