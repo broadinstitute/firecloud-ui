@@ -128,7 +128,7 @@
                                     (when (and error-message (not optional?))
                                       [:div {:style (clip table-style/default-cell-left)}
                                        (icons/render-icon {:style {:marginRight "0.5rem"
-                                                                   :color (:exception-state style/colors)}}
+                                                                   :color (:state-exception style/colors)}}
                                                           :error)
                                        error-message]))}]))}
                :paginator :none}]))})

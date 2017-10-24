@@ -60,7 +60,7 @@
                [:div {:style {:flex "0 0 12rem"}} (str (:name whitelist) " Authorization:")]
                [:div {:style {:flex "0 0 auto"}}
                 (if (:authorized whitelist)
-                  [:span {:style {:color (:success-state style/colors)}} "Authorized"]
+                  [:span {:style {:color (:state-success style/colors)}} "Authorized"]
                   [:span {:style {:color (:text-light style/colors)}}
                    "Not Authorized"
                    (dropdown/render-info-box
@@ -209,14 +209,14 @@
             (style/create-flexbox
              {}
              [:span {:style {:paddingRight "1ex"}}
-              (icons/render-icon {:style {:color (:exception-state style/colors)}}
+              (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                  :warning)]
              "Validation Errors:")
             [:ul {}
              (common/mapwrap :li (:validation-errors @state))]])
          (cond
            (:done? @state)
-           [:div {:style {:color (:success-state style/colors)}} "Profile saved!"]
+           [:div {:style {:color (:state-success style/colors)}} "Profile saved!"]
            (:in-progress? @state)
            [components/Spinner {:text "Saving..."}]
            :else

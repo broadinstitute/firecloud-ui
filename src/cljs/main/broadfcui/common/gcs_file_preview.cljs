@@ -86,7 +86,7 @@
                (links/create-internal {:onClick #(swap! state assoc :show-details? true)} "More info"))])
           (when error
             [:div {:style {:marginTop "1em"}}
-             [:span {:style {:color (:exception-state style/colors)}} "Error! "]
+             [:span {:style {:color (:state-exception style/colors)}} "Error! "]
              (case status
                404 "This file was not found."
                403 "You do not have access to this file."

@@ -40,7 +40,7 @@
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [type color icon href disabled? onClick text style class-name data-test-id]} props
-           color (if disabled? (:disabled-state style/colors) color)]
+           color (if disabled? (:state-disabled style/colors) color)]
        (assert (or text icon) "Button must have text and/or icon")
        [:a {:data-test-id (or data-test-id (make-default-test-id props))
             :data-test-state (if disabled? "disabled" "enabled")
@@ -89,7 +89,7 @@
                       :borderRadius 5
                       :padding "0.75rem 0"
                       :cursor (if disabled? "default" "pointer")
-                      :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
+                      :backgroundColor (if disabled? (:state-disabled style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :fontSize "106%"}
               :onClick (if disabled?

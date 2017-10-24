@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
@@ -116,82 +115,6 @@
        (:text props)]])})
 
 
-(react/defc EntityDetails
-  {:get-fields
-   (fn [{:keys [refs]}]
-     {"methodVersion" (int (common/get-text refs "snapshotId"))})
-   :clear-redacted-snapshot
-   (fn [{:keys [state]}]
-     (swap! state dissoc :redacted-snapshot))
-   :get-initial-state
-   (fn [{:keys [props]}]
-     (when (:redacted? props) {:redacted-snapshot (get-in props [:entity :snapshotId])}))
-   :render
-   (fn [{:keys [props state this]}]
-     [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
-      (let [{:keys [entity redacted?]} props
-            config? (contains? entity :method)]
-        [:div {:style {:backgroundColor (:background-light style/colors)
-                       :borderRadius 8 :border style/standard-line
-                       :padding "1rem"}}
-         (this :render-details entity)
-         (when-not redacted?
-           [:div {:style {:paddingTop "0.5rem"}}
-            [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
-            (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-                                   (if (:payload-expanded @state) "Collapse" "Expand"))
-            (when (:payload-expanded @state)
-              (if config?
-                [:div {:style {:margin "0.5rem 0 0 1rem"}}
-                 (this :render-details (:method entity))
-                 [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
-                 [CodeMirror {:text (get-in entity [:method :payload])}]]
-                [CodeMirror {:text (:payload entity)}]))])])])
-   :render-details
-   (fn [{:keys [props refs state]} entity]
-     (let [{:keys [editing? redacted?]} props
-           {:keys [redacted-snapshot]} @state
-           make-field
-           (fn [key label & {:keys [dropdown? wrap? render width]}]
-             [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
-              [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (or width "100px")) :fontWeight 500} } (str label ":")]
-              [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
-                             :whiteSpace (when-not wrap? "nowrap")}}
-               (if (and editing? dropdown?)
-                 (style/create-identity-select-name {:ref key
-                                                     :data-test-id "edit-method-config-snapshot-id-select"
-                                                     :style {:width 120}
-                                                     :defaultValue (if redacted-snapshot -1 (key entity))
-                                                     :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                 #(f (int (common/get-text refs "snapshotId"))))}
-                                                    (:snapshots props)
-                                                    redacted-snapshot)
-                 (let [rendered ((or render identity) (key entity))]
-                   [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
-       [:div {}
-        [:div {:style {:display "flex"}}
-         [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
-          (when redacted?
-            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
-             (icons/render-icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
-          (make-field :namespace "Namespace")
-          (make-field :name "Name")
-          (make-field :snapshotId "Snapshot ID" :dropdown? true)
-          (make-field :entityType "Entity Type")]
-         (when-not redacted?
-           [:div {:style {:flex "1 1 60%" :overflow "hidden"}}
-            (make-field :createDate "Created" :render common/format-date :width "150px")
-            (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true :width "150px")
-            (make-field :synopsis "Synopsis" :width "150px")
-            (make-field :snapshotComment "Snapshot Comment" :wrap? true :width "150px")])]
-        (when-not redacted?
-          [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
-           "Documentation:"
-           (if (string/blank? (:documentation entity))
-             [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-             [:div {:style {:fontSize "90%"}} (:documentation entity)])])]))})
-
-
 (react/defc StackTraceViewer
   {:render
    (fn [{:keys [props state]}]
@@ -241,13 +164,13 @@
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
-                                  (icons/render-icon {:style {:color (:exception-state style/colors)}}
+                                  (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                      :warning)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
-                                   (icons/render-icon {:style {:color (:exception-state style/colors)}}
+                                   (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                       :warning)]
                                   (str "Error: " message))
             (if (:expanded? @state)
@@ -427,7 +350,7 @@
 (defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
-             (icons/render-icon {:style {:color (:exception-state style/colors)
+             (icons/render-icon {:style {:color (:state-exception style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
     :data-test-id "push-error"
@@ -569,7 +492,7 @@
 (react/defc Tree
   ":start-collapsed? (optional [false]) - Start with branches collapsed
   :label (optional) - Label into which whole tree can be collapsed, must display inline
-  :highlight-ends? (optional) - Highlight the ends of the tree as :warning-state
+  :highlight-ends? (optional) - Highlight the ends of the tree as :state-warning
   :data - Vector of maps to display in tree, any value can be a nested vector of maps.
   NOTE: no current support for keys leading directly to nested maps."
   {:get-initial-state
@@ -584,7 +507,7 @@
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)
                                                            (is-leaf-node? node))
-                                                    (:warning-state style/colors)
+                                                    (:state-warning style/colors)
                                                     "rgba(0,0,0,0.1)")
                                  :borderRadius 8}}
                     (map-node

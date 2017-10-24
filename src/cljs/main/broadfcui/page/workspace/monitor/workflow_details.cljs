@@ -12,10 +12,10 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
-   [goog.dom :as gdom]
    ))
 
 (defn- create-field [label & contents]
@@ -80,30 +80,33 @@
                     :columns (if (:call-detail? props) columns (cons task-column columns))}}])])])})
 
 (react/defc- WorkflowTiming
-  {:get-initial-state
-   (fn []
-     {:expanded false})
-   :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (create-field
-       (:label props)
-       (if (empty? (:data props))
-         "Not Available"
-         (links/create-internal {:onClick #(swap! state update :expanded not)}
-                                (if (:expanded @state) "Hide" "Show"))))
-      [:div {:ref "chart-container" :style {:padding "0.25em 0 0 0"}}]])
-   :component-did-mount #((:this %) :-update-element)
-   :component-did-update #((:this %) :-update-element)
-   :-update-element
+  {:render
    (fn [{:keys [props state refs]}]
-     (if (:expanded @state)
-       (do
-         (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) 100)
-         (let [height (getTimingDiagramHeight (get @refs "chart-container"))]
-           (gdom/removeChildren "chart-container")
-           (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 75 height))))
-       (gdom/removeChildren (get @refs "chart-container"))))})
+     (let [{:keys [error? expanded?]} @state
+           {:keys [label data]} props]
+       [:div {}
+        (create-field
+         label
+         (if (empty? data)
+           "Not Available"
+           (links/create-internal {:onClick #(swap! state update :expanded? not)}
+                                  (if expanded? "Hide" "Show"))))
+        (when expanded?
+          [:div {}
+           (if error?
+             (style/create-server-error-message "Error loading charts.")
+             [ScriptLoader
+              {:on-error #(swap! state assoc :error? true)
+               :on-load (fn []
+                          (js/google.charts.load "current" (clj->js {"packages" ["timeline"]}))
+                          (js/google.charts.setOnLoadCallback
+                           (fn []
+                             (let [chart-container (@refs "chart-container")]
+                               (.timingDiagram js/window chart-container data workflow-name 100)
+                               (let [height (getTimingDiagramHeight chart-container)]
+                                 (.timingDiagram js/window chart-container data workflow-name (+ 75 height)))))))
+               :path "https://www.gstatic.com/charts/loader.js"}])
+           [:div {:ref "chart-container" :style {:paddingTop "0.5rem"}}]])]))})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
