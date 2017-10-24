@@ -3,10 +3,10 @@ package org.broadinstitute.dsde.firecloud
 import org.openqa.selenium.WebDriver
 
 trait Stateful { this: FireCloudView =>
-  val element: Query
+  val query: Query
 
   def getState(implicit webDriver: WebDriver): String = {
-    stateOf(element)
+    stateOf(query)
   }
 
   def stateOf(query: Query)(implicit webDriver: WebDriver): String = {

@@ -12,7 +12,7 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   // TODO: figure out how to do sub-components properly
 
   private val filterField = findInner("filter-input")
-  private val filterButton = findInner("filter-button")
+  private val filterButton = Button("filter-button" inside this)
 
   private def tab(name: String) = findInner(s"$name-tab")
 
@@ -31,7 +31,7 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
 
   def filter(text: String): Unit = {
     searchField(filterField).value = text
-    click on filterButton
+    filterButton.doClick()
     awaitReady()
   }
 

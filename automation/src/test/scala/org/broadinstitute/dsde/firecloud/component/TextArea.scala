@@ -4,10 +4,10 @@ import org.openqa.selenium.WebDriver
 
 case class TextArea(id: String)(implicit webDriver: WebDriver) extends Component(id) {
   def setText(text: String): Unit = {
-    textArea(element).value = text
+    textArea(query).value = text
   }
 
   def getText: String = {
-    textArea(element).value
+    textArea(query).value
   }
 }

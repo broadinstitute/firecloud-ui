@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
-import org.broadinstitute.dsde.firecloud.component.{Button, TextField}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.openqa.selenium.WebDriver
 

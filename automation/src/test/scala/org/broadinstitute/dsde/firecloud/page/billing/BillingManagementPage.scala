@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
 import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry

@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, EmailField, Select}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.OKCancelModal
 import org.openqa.selenium.WebDriver
 
