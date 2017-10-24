@@ -14,13 +14,10 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
     val listPage = signIn(user)
     val userEmail: String = user.email
 
+    testCode(listPage)
     try {
-      testCode(listPage)
-    } finally {
-      try {
-        listPage.signOut()
-      } catch nonFatalAndLog(s"Error logging out user: $userEmail")
-    }
+      listPage.signOut()
+    } catch nonFatalAndLog(s"Error logging out user: $userEmail")
 
   }
 
