@@ -112,7 +112,7 @@
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]
-        [:div {:style {:color (:exception-state style/colors)}}
+        [:div {:style {:color (:state-exception style/colors)}}
          "Error loading user information. Please try again later."])])
    :component-did-mount
    (fn [{:keys [props state]}]

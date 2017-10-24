@@ -26,7 +26,7 @@
       (merge {:ref "textfield"
               :style (merge (or (:style props) {})
                             (when (:invalid @state)
-                              {:borderColor (:exception-state style/colors)}))
+                              {:borderColor (:state-exception style/colors)}))
               :onChange #(do (swap! state dissoc :invalid)
                              (when-let [x (:onChange props)]
                                (x %)))}
@@ -57,7 +57,7 @@
 
 (defn integer [field-name & {:keys [min max]}]
   (let [parses (partial re-matches #"\-?[0-9]+")
-        in-range #(<= (or min -Infinity) (int %) (or max Infinity))]
+        in-range #(<= (or min js/-Infinity) (int %) (or max js/Infinity))]
     {:test (every-pred parses in-range)
      :message (str field-name " must be an integer"
                    (cond (and min max) (str " between " min " and " max)

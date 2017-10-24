@@ -50,7 +50,7 @@
 (defn render-warning [{:keys [title message link]}]
   (let [text-color "#eee"]
     (render
-     [:div {:style {:color text-color :background-color (:exception-state style/colors)
+     [:div {:style {:color text-color :background-color (:state-exception style/colors)
                     :padding "1rem"}}
       [:div {:style {:display "flex" :align-items "baseline"}}
        [icons/ExceptionIcon {:size 18 :color text-color}]

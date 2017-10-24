@@ -2,9 +2,17 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.utils :as utils]
    ))
 
+(defonce ^:private igv-styles-loaded? (atom false))
+
+(defn- load-igv-styles []
+  (.. (js/$ "head") ; IGV uses jQuery, so I'm using it here too.
+      (append "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://igv.org/web/release/1.0.1/igv-1.0.1.css\">"))
+  (reset! igv-styles-loaded? true))
 
 (defn- options [tracks]
   (clj->js
@@ -23,17 +31,33 @@
                               :autoHeight (when bam? false)}))
                          tracks)}))
 
-
 (react/defc IGVContainer
-  {:render
-   (fn [{:keys []}]
-     [:div {:ref "container"}])
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (this :refresh))
+  {:component-will-mount
+   (fn []
+     (when-not @igv-styles-loaded?
+       (load-igv-styles)))
+   :render
+   (fn [{:keys [this state]}]
+     (let [{:keys [deps-loaded? error?]} @state]
+       [:div {}
+        [:div {:ref "container"}]
+        (cond
+          error? (style/create-server-error-message "Unable to load IGV.")
+          deps-loaded? [ScriptLoader
+                        {:key "igv"
+                         :on-error #(swap! state assoc :error? true)
+                         :on-load #(do
+                                     (swap! state assoc :igv-loaded? true)
+                                     (this :refresh))
+                         :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}]
+          :else [ScriptLoader
+                 {:key "igv-deps"
+                  :on-error #(swap! state assoc :error? true)
+                  :on-load #(swap! state assoc :deps-loaded? true)
+                  :path "igv-deps.bundle.js"}])]))
    :component-did-update
-   (fn [{:keys [props prev-props this]}]
-     (when (not= (:tracks props) (:tracks prev-props))
+   (fn [{:keys [props state prev-props this]}]
+     (when (and (not= (:tracks props) (:tracks prev-props)) (:igv-loaded? @state))
        (this :refresh)))
    :refresh
    (fn [{:keys [props refs]}]

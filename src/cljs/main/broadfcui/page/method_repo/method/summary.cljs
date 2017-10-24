@@ -80,7 +80,7 @@
            (when owner?
              [buttons/SidebarButton
               {:data-test-id "redact-button"
-               :style :light :color :exception-state
+               :style :light :color :state-exception
                :text "Redact" :icon :delete :margin :bottom
                :onClick #(swap! state assoc :deleting? true)}])]}]]))
    :-render-main

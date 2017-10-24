@@ -1,13 +1,17 @@
+window.React = require('react');
+window.ReactDOM = require('react-dom');
+window.createReactClass = require('create-react-class');
+
+exports.ReactAutosuggest = require('react-autosuggest');
+exports.ReactLoadScript = require('react-load-script');
+
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
-require('jquery-ui/ui/core');
-require('jquery-ui/ui/widgets/draggable');
-exports.CodeMirror = require('codemirror');
-require('codemirror/mode/clojure/clojure');
-exports.MarkdownIt = require('markdown-it');
-require('./js/timingDiagram');
-require('./js/igvPatch');
+
+require('./js/timingDiagram'); // loaded here because it's small and is the only non-google-loader timeline dep
+
 require('any-resize-event');
+
 require('what-input');
 require('foundation-sites/js/foundation.core');
 require('foundation-sites/js/foundation.util.mediaQuery');
@@ -18,17 +22,12 @@ require('foundation-sites/js/foundation.dropdown');
 require('foundation-sites/js/foundation.magellan');
 require('foundation-sites/js/foundation.sticky');
 require('foundation-sites/js/foundation.tooltip');
+require('./styles/foundation.scss');
+
 require('select2');
 require('./js/select2MonkeyPatch');
-
-require('jquery-ui/themes/base/core.css');
-require('jquery-ui/themes/base/theme.css');
-require('jquery-ui/themes/base/draggable.css');
-require('codemirror/lib/codemirror.css');
-require('github-markdown-css/github-markdown.css');
-require('font-awesome/css/font-awesome.css');
-require('./styles/codemirror.scss');
-require('./styles/markdown.css');
-require('./styles/foundation.scss');
 require('./styles/select2.scss');
+
+require('font-awesome/css/font-awesome.css');
+
 require('./styles/react-shims.scss');

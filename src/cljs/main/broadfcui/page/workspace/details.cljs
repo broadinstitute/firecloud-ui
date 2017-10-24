@@ -115,7 +115,7 @@
                                    (utils/restructure request-refresh refresh-tab)))
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
-           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
+           [:div {:style {:textAlign "center" :color (:state-exception style/colors)}
                   :data-test-id "workspace-details-error"}
             "Error loading workspace: " error]
            (if-not workspace

@@ -43,20 +43,20 @@
 ;; Icons are functions so that config/when-debug is evaluated at render
 
 (defn render-success-icon []
-  (icons/render-icon {:style {:color (:success-state style/colors) :marginRight 4
+  (icons/render-icon {:style {:color (:state-success style/colors) :marginRight 4
                        :width table-style/table-icon-size :height table-style/table-icon-size}
                :data-test-id "status-icon" :data-test-value "success"}
                      :done))
 (defn render-running-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :backgroundColor (:running-state style/colors)
+                  :backgroundColor (:state-running style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
           :data-test-id "status-icon" :data-test-value "running"}
    [icons/RunningIcon {:size 12}]])
 (defn render-failure-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :backgroundColor (:exception-state style/colors)
+                  :backgroundColor (:state-exception style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
           :data-test-id "status-icon" :data-test-value "failure"}

@@ -1,36 +1,55 @@
 const path = require('path');
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const webpack = require('webpack');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
+const CommonsChunkPlugin = new webpack.optimize.CommonsChunkPlugin({name: "base"});
+const DefinePlugin = new webpack.DefinePlugin({
+    'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV) // to make sure it's parseable
+    }
+});
+const plugins = [CommonsChunkPlugin, DefinePlugin];
+
+if (process.env.NODE_ENV === 'production') {
+    plugins.push(new UglifyJSPlugin());
+}
 
 module.exports = {
-    entry: "./src/webpack-deps.js",
-    externals: {
-        "react": "React",
-        "react-dom": "ReactDOM"
+    entry: {
+        base: "./src/base-deps.js",
+        codemirror: "./src/codemirror-deps.js",
+        igv: "./src/igv-deps.js",
+        markdown: "./src/markdown-deps.js"
     },
     output: {
+        filename: '[name]-deps.bundle.js',
         path: path.join(__dirname, "resources/public/"),
-        library: 'webpack-deps',
-        libraryTarget: 'this',
-        filename: 'webpack-deps.js'
+        library: 'webpackDeps'
     },
     module: {
         rules: [
-            { test: /\.css$/, loader: ExtractTextPlugin.extract("css-loader") },
-            { test: /\.scss$/, loader: ExtractTextPlugin.extract({
-                use: [{loader: "css-loader"}, {
-                    loader: "sass-loader?sourceMap",
-                    options: {
-                        includePaths: ['node_modules/foundation-sites/scss/']
+            {
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"]
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            includePaths: ['node_modules/foundation-sites/scss/']
+                        }
                     }
-                }]
-            })},
-            { test: /\.png$/, loader: "url-loader?limit=100000" },
-            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, loader: "file-loader" }
+                ]
+            },
+            { test: /\.png$/, use: "url-loader?limit=100000" },
+            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, use: "file-loader" }
         ]
     },
-    plugins: [
-        new ExtractTextPlugin({filename: "webpack-deps.css"})
-    ],
+    plugins: plugins,
     watchOptions: {
         ignored: /node_modules/
     }

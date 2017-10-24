@@ -26,7 +26,7 @@
             error
             (case (:code error)
               (:unknown :parse-error)
-              [:div {:style {:color (:exception-state style/colors)}}
+              [:div {:style {:color (:state-exception style/colors)}}
                "Error:" [:br] (:details error)]
               [comps/ErrorViewer {:error (:details error)}])
             :else
@@ -48,7 +48,7 @@
                                               {:test #(and (not (string/blank? %)) (re-matches #"[a-z]" (first %))) :message "Name must start with a letter"}]}]
                (style/create-validation-error-message (:validation-errors @state))
                [:div {:style {:marginBottom "1.5em"
-                              :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
+                              :color (if (:validation-errors @state) (:state-exception style/colors) (:text-lighter style/colors))
                               :fontSize "0.8em"}}
                 "Lowercase letters, numbers, and hypens only, 6-30 characters, must start with a letter."]
                [:div {:style {:fontSize "120%"}}
