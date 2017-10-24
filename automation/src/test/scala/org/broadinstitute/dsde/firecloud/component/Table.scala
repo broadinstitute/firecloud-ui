@@ -89,7 +89,7 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
       val colToBeHidden = Checkbox(s"$header-column-toggle")
       colToBeHidden.ensureUnchecked()
       val action = new Actions(webDriver)
-      action.sendKeys(Keys.ESCAPE)
+      action.sendKeys(Keys.ESCAPE).perform()
     }
   }
 }
