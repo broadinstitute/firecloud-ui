@@ -1,5 +1,6 @@
 (ns broadfcui.persistence
   (:require
+   [cljs.reader :as reader]
    [broadfcui.utils :as utils]
    ))
 
@@ -16,7 +17,7 @@
          :else @state)))
 
 (defn try-restore [{:keys [key initial validator]}]
-  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
+  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read reader/read-string)]
     (if (and saved-state
              (or (not validator) (validator saved-state)))
       saved-state

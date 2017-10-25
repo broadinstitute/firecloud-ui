@@ -185,6 +185,7 @@
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
+                                  :column-defaults (:workspace-column-defaults workspace-attributes)
                                   :root-entity-type rootEntityType
                                   :disabled? (cond locked?
                                                    "This workspace is locked."

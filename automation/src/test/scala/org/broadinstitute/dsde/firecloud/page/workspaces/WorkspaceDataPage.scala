@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
+import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table, Checkbox}
 import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -16,7 +16,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     dataTable.awaitReady()
   }
 
-  private val dataTable = Table("entity-table")
+  val dataTable = Table("entity-table")
   private val importMetadataButton = Button("import-metadata-button")
 
   def importFile(file: String): Unit = {
@@ -30,6 +30,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     // TODO: click on the tab and read the actual table size
     dataTable.readDisplayedTabCount("participant")
   }
+
 }
 
 /**
@@ -54,5 +55,6 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
     uploadSuccessMessage.awaitVisible()
     xOut()
   }
+
 }
 

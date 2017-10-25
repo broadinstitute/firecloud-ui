@@ -81,7 +81,7 @@
                    :column-data :messages
                    :as-text (partial string/join "\n")
                    :render (fn [message-list]
-                             [:div {} (common/mapwrap :div message-list)])}
+                             [:div {:data-test-id "status-message"} (common/mapwrap :div message-list)])}
                   {:header "Workflow ID" :initial-width 300
                    :as-text :workflowId :sort-by :text
                    :render

@@ -185,6 +185,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     action
 
     if (isEditing) {
+      sidebar.saveButton.scrollToVisible()
       sidebar.saveButton.doClick()
       awaitReady()
     }

@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.Stateful
-import org.openqa.selenium.{By, WebDriver}
+import org.openqa.selenium.interactions.Actions
+import org.openqa.selenium.{By, Keys, WebDriver}
 
 case class Table(private val id: String)(implicit webDriver: WebDriver)
   extends Component(id) with Stateful {
@@ -19,6 +20,9 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
   private val nextPageButton = findInner("next-page")
   private def pageButton(page: Int) = findInner(s"page-$page")
   private val perPageSelector = findInner("per-page")
+  private val columnHeaders = testId("column-header")
+  private val columnEditorButton = Button("columns-button")
+
 
   override def awaitReady(): Unit = {
     awaitVisible()
@@ -66,5 +70,26 @@ case class Table(private val id: String)(implicit webDriver: WebDriver)
     awaitReady()
     val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
     rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
+  }
+
+  def readColumnHeaders: List[String] = {
+    awaitReady()
+    readAllText(columnHeaders)
+  }
+
+  def clearFilter: Unit = {
+    searchField(filterField).value = ""
+    click on filterButton
+    awaitReady()
+  }
+
+  def hideColumn(header: String) = {
+    if (readAllText(columnHeaders).contains(header)) {
+      columnEditorButton.doClick
+      val colToBeHidden = Checkbox(s"$header-column-toggle")
+      colToBeHidden.ensureUnchecked()
+      val action = new Actions(webDriver)
+      action.sendKeys(Keys.ESCAPE).perform()
+    }
   }
 }

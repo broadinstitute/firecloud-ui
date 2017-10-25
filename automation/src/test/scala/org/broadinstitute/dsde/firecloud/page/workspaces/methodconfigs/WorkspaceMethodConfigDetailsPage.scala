@@ -80,6 +80,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def changeSnapshotId(newSnapshotId: Int): Unit = {
     editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
+    await spinner "Updating..."
   }
 
   private def changeInputsOutputs(fields: Map[String, String]): Unit = {
