@@ -233,7 +233,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val headers1 = List("participant_id", "test1", "test2")
         val headers2 = List("participant_id", "test1", "test2", "test3")
 
-        signIn(owner) { _ =>
+        withSignIn(owner) { _ =>
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
           workspaceDataTab.dataTable.hideColumn("test1")
