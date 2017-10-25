@@ -66,7 +66,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Writer and reader should see new columns" - {
     "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -96,7 +97,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with local preferences but no defaults when analysis run" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_launchAnalysis_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
         api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\nparticipant1\t1\t2")
@@ -116,7 +118,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.filter("")
+          workspaceDataTab.dataTable.clearFilter
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
         }
         withSignIn(reader) { _ =>
@@ -152,7 +154,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.filter("")
+          workspaceDataTab.dataTable.clearFilter
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
         }
         withSignIn(reader) { _ =>
@@ -192,7 +194,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
             submissionTab.readStatusMessage() shouldEqual ""
           }
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.filter("")
+          workspaceDataTab.dataTable.clearFilter
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
         }
         withSignIn(reader) { _ =>
@@ -205,7 +207,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Writer and reader should see new columns" - {
     "With no defaults or local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_column_display", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
@@ -226,7 +229,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With local preferences, but no defaults when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_preferences", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
@@ -258,7 +262,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With defaults on workspace, but no local preferences when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_defaults", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) {
         workspaceName =>
@@ -292,7 +297,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "With defaults on workspace and local preferences for reader and writer when writer imports metadata with new column" in withWebDriver { implicit driver =>
-      val Seq(owner, reader) = Seq(UserPool.chooseProjectOwner, UserPool.chooseStudent)
+      val owner = UserPool.chooseProjectOwner
+      val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = AuthToken(owner)
       withWorkspace(billingProject, "DataSpec_col_display_w_defaults_and_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
 
