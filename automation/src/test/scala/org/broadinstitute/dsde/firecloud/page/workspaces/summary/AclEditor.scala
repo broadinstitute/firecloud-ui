@@ -12,8 +12,8 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
   private val addNewAclButton = Button("add-new-acl-button")
   private val newAclEmailField = EmailField("acl-add-email")
   private val roleDropdown = Select("role-dropdown-true")
-  private val canShareBox = Checkbox("acl-share-true")
-  private val canComputeBox = Checkbox("acl-compute-true")
+  val canShareBox = Checkbox("acl-share-true")
+  val canComputeBox = Checkbox("acl-compute-true")
 
   /**
     * Shares workspace being viewed.
@@ -41,7 +41,7 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
     roleDropdown.select(accessLevel.toString)
   }
 
-  def canComputeEnabled: Boolean = canComputeBox.isEnabled
-
-  def canComputeChecked: Boolean = canComputeBox.isChecked
+  def updateAccess(accessLevel: String): Unit = {
+    roleDropdown.select(accessLevel)
+  }
 }

@@ -14,6 +14,7 @@
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
    ))
 
@@ -45,6 +46,8 @@
       [EntityTable
        {:workspace-id (:workspace-id props)
         :initial-entity-type (:root-entity-type props)
+        :column-defaults
+        (data-utils/get-column-defaults (:column-defaults props))
         :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
                                 (let [entity-name (or name entityName)]
                                   (links/create-internal
@@ -147,7 +150,7 @@
        :text "Launch Analysis..."
        :disabled? (:disabled? props)
        :onClick #(modal/push-modal
-                  [Form (select-keys props [:config-id :workspace-id
+                  [Form (select-keys props [:config-id :workspace-id :column-defaults
                                             :root-entity-type :on-success :cromwell-version])])}])})
 
 

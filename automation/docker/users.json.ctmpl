@@ -66,8 +66,8 @@
     "draco": "draco.malfoy@test.firecloud.org"
   },
   "temps": {
-    "luna": "luna.temp@quality.firecloud.org",
-    "neville": "neville.temp@quality.firecloud.org"
+    "luna": "luna.temp@test.firecloud.org",
+    "neville": "neville.temp@test.firecloud.org"
   }
 }
 {{end}}

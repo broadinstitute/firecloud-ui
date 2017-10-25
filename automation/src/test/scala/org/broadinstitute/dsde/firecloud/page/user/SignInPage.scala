@@ -11,7 +11,7 @@ import org.scalatest.selenium.{Page, WebBrowser}
   * Page class for the page displayed when accessing FireCloud when not signed in.
   */
 class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends FireCloudView with Page with PageUtil[SignInPage] {
-  override def awaitReady(): Unit = Unit
+  override def awaitReady(): Unit = signInButton awaitReady()
 
   override val url: String = baseUrl
 

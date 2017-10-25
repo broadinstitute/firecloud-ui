@@ -120,7 +120,10 @@
                  :disabled disabled?
                  :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
                  :value (:accessLevel acl-entry)
-                 :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel] (.. % -target -value))}
+                 :onChange (fn [event]
+                             (let [new-access-level (aget event "target" "value")]
+                               (swap! state update-in [:non-project-owner-acl-vec i] assoc
+                                      :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
                 (if disabled? access-levels available-access-levels)))
              (if (common/access-greater-than-equal-to? user-access-level "OWNER")
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
@@ -128,7 +131,7 @@
                          :style {:verticalAlign "middle" :float "none"}
                          :data-test-id (str "acl-share-" (not (:read-only? acl-entry)))
                          :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
-                         :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
+                         :disabled (or (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER") (common/access-equal-to? (:accessLevel acl-entry) "NO ACCESS"))
                          :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
              (if (common/access-greater-than-equal-to? user-access-level "OWNER")
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
@@ -136,7 +139,7 @@
                          :style {:verticalAlign "middle" :float "none"}
                          :data-test-id (str "acl-compute-" (not (:read-only? acl-entry)))
                          :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canCompute] (.. % -target -checked))
-                         :disabled (or (common/access-equal-to? (:accessLevel acl-entry) "READER") (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER"))
+                         :disabled (not (common/access-equal-to? (:accessLevel acl-entry) "WRITER"))
                          :checked (or (:canCompute acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
              (when (:pending? acl-entry)
                [:span {:style {:fontStyle "italic" :color (:text-light style/colors) :marginLeft "1rem"}}
