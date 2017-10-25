@@ -3,7 +3,7 @@
 # Get script location, via https://stackoverflow.com/a/12197227
 pushd . > /dev/null
 WORKING_DIR="${BASH_SOURCE[0]}";
-  while([ -h "${WORKING_DIR}" ]) do
+  while([ -h "${WORKING_DIR}" ]); do
     cd "`dirname "${WORKING_DIR}"`"
     WORKING_DIR="$(readlink "`basename "${WORKING_DIR}"`")";
   done
@@ -21,6 +21,7 @@ ENV=dev
 NUM_NODES=2
 TEST_ENTRYPOINT="testOnly -- -l ProdTest"
 TEST_CONTAINER="automation-$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 8 | head -n 1)"
+DOCKERHOST_ADDRESS="172.19.0.1" # default address of localhost in Docker
 
 # Parameters
 FC_INSTANCE=${1}
@@ -34,11 +35,11 @@ if [ "$ENV" = "prod" ]; then
 fi
 
 if [ "$FC_INSTANCE" = "local" ]; then
-  FC_INSTANCE="172.19.0.1"
+  FC_INSTANCE=$DOCKERHOST_ADDRESS
 fi
 
 if [ "$FC_INSTANCE" = "fiab" ]; then
-  FC_INSTANCE="$(grep 'firecloud-fiab.dsde-dev.broadinstitute.org' /etc/hosts | awk '{print $1}')"
+  FC_INSTANCE="$(cat /etc/hosts | grep -v '#' | grep 'firecloud-fiab.dsde-dev.broadinstitute.org' | awk '{print $1}')"
 fi
 
 if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then
@@ -59,11 +60,16 @@ cleanup () {
   docker-compose -f ${HUB_COMPOSE} stop
   docker stop "$TEST_CONTAINER"
   docker image rm -f "$TEST_CONTAINER"
+  trap - EXIT HUP INT QUIT PIPE TERM 0 20
+}
+
+cleanup-error () {
+  cleanup
   printf "$(tput setaf 1)Tests Stopped For Unexpected Reasons$(tput setaf 0)\n"
 }
 
 # catch unexpected failures, do cleanup and output an error message
-trap cleanup EXIT HUP INT QUIT PIPE TERM 0 20
+trap cleanup-error EXIT HUP INT QUIT PIPE TERM 0 20
 
 printf "FIRECLOUD LOCATION: $FC_INSTANCE\n"
 docker-compose -f ${HUB_COMPOSE} pull
@@ -109,9 +115,8 @@ else
   printf "$(tput setaf 2)Tests Passed$(tput setaf 0)\n"
 fi
 
-# call the cleanup fuction
+# call the cleanup function
 cleanup
 
 # exit the script with the same code as the test service code
-trap - EXIT HUP INT QUIT PIPE TERM 0 20
 exit $TEST_EXIT_CODE
