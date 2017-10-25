@@ -116,7 +116,7 @@
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 
-(defonce ^:private recent-ajax-urls (atom #{}))
+(defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 500)
 
 (defn ajax [arg-map]
@@ -132,11 +132,11 @@
 
     (when (config/debug?)
       (let [request (restructure url data)]
-        (when (contains? @recent-ajax-urls request)
+        (when (contains? @recent-ajax-calls request)
           (js/console.warn (str "WARNING: repeated ajax calls to " url
                                 (when data (str " with payload " data)))))
-        (swap! recent-ajax-urls conj request)
-        (js/setTimeout #(swap! recent-ajax-urls disj request) double-call-threshold)))
+        (swap! recent-ajax-calls conj request)
+        (js/setTimeout #(swap! recent-ajax-calls disj request) double-call-threshold)))
 
     (let [xhr (if-not canned-response-params
                 (js/XMLHttpRequest.)
