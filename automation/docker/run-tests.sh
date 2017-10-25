@@ -12,7 +12,7 @@ WORKING_DIR="`pwd`";
 popd  > /dev/null
 
 if [ -z ${1+x} ]; then
-  printf "Must specify where Firecloud is running: 'fiab', 'local', 'alpha', 'prod', or ip."
+  printf "Must specify where Firecloud is running: 'fiab', 'local', 'alpha', 'prod', or ip.\n"
   exit 1
 fi
 
@@ -73,7 +73,8 @@ trap cleanup-error EXIT HUP INT QUIT PIPE TERM 0 20
 
 printf "FIRECLOUD LOCATION: $FC_INSTANCE\n"
 docker-compose -f ${HUB_COMPOSE} pull
-docker-compose -f ${HUB_COMPOSE} up -d --scale chrome=$NUM_NODES
+docker-compose -f ${HUB_COMPOSE} up -d
+docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
 
 # build and run the composed services
 if [ $? -ne 0 ]; then
