@@ -128,7 +128,9 @@
                              (filter :visible?)
                              (map :id)
                              (string/join ","))}]
-        [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
+        [:input {:data-test-id "download-metadata-button"
+                 :data-entity-type selected-entity-type
+                 :style {:border "none" :backgroundColor "transparent" :cursor "pointer"
                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
                  :type "submit"
                  :value (str "Download '" selected-entity-type "' metadata")}]]))
