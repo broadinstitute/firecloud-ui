@@ -49,6 +49,15 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
   def downloadMetadata(downloadPath: Option[String] = None): Option[String] = {
+
+    def archiveDownloadedFile(sourcePath: String): String = {
+      val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
+      val destFile = new File(sourcePath).getName + s".$date"
+      val destPath = s"downloads/$destFile"
+      Util.moveFile(sourcePath, destPath)
+      destPath
+    }
+
     downloadMetadataButton.doClick()
     /*
      * Downloading a file will open another window while the download is in progress and
@@ -60,14 +69,6 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       path <- downloadPath
       entityType <- find(CssSelectorQuery(downloadMetadataButton.element.queryString)).get.attribute("data-entity-type")
     } yield archiveDownloadedFile(s"$path/$entityType.txt")
-
-    def archiveDownloadedFile(sourcePath: String): String = {
-      val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
-      val destFile = new File(sourcePath).getName + s".$date"
-      val destPath = s"downloads/$destFile"
-      Util.moveFile(sourcePath, destPath)
-      destPath
-    }
   }
 
   def getNumberOfParticipants: Int = {
