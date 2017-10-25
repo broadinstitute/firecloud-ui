@@ -72,9 +72,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
 
       "should be able to share the workspace" in withWebDriver { implicit driver =>
-        val users = UserPool.chooseStudents(2)
-        val user1 = users.head
-        val user2 = users(1)
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -90,9 +88,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
 
       "should be able to set can share permissions for other (non-owner) users" in withWebDriver {implicit driver =>
-        val users = UserPool.chooseStudents(2)
-        val user1 = users.head
-        val user2 = users(1)
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
           withSignIn(user1) { listPage =>
@@ -108,25 +104,55 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
 
       "should be able to set can compute permissions for users that are writers" in withWebDriver {implicit driver =>
-        val users = UserPool.chooseStudents(2)
-        val user1 = users.head
-        val user2 = users(1)
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
-            aclEditor.canComputeEnabled shouldBe true
-            aclEditor.canComputeChecked shouldBe false
+            aclEditor.canComputeBox.isEnabled shouldBe true
+            aclEditor.canComputeBox.isChecked shouldBe true
+            aclEditor.canComputeBox.ensureUnchecked()
+            aclEditor.canComputeBox.isChecked shouldBe false
           }
         }
 
       }
 
+      "should see can compute permission change for users when role changed from writer to reader" in withWebDriver {implicit driver =>
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
+        implicit val authToken: AuthToken = AuthToken(user1)
+        withWorkspace(billingProject, "WorkspaceSpec_canCompute") { workspaceName =>
+          withSignIn(user1) {listPage =>
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+            val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
+            aclEditor.canComputeBox.isChecked shouldBe true
+            aclEditor.updateAccess("READER")
+            aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.canComputeBox.isEnabled shouldBe false
+          }
+        }
+      }
+
+      "should see can compute and can share permission change for users when role changed to no access" in withWebDriver {implicit driver =>
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
+        implicit val authToken: AuthToken = AuthToken(user1)
+        withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
+          withSignIn(user1) {listPage =>
+            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+            val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
+            aclEditor.canComputeBox.isChecked shouldBe true
+            aclEditor.updateAccess("NO ACCESS")
+            aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.canComputeBox.isEnabled shouldBe false
+            aclEditor.canShareBox.isChecked shouldBe false
+            aclEditor.canShareBox.isEnabled shouldBe false
+          }
+        }
+      }
+
       "should not be able to set/change can compute permissions for other owners" in withWebDriver {implicit driver =>
-        val users = UserPool.chooseStudents(2)
-        val user1 = users.head
-        val user2 = users(1)
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -135,17 +161,15 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(user2.email, "OWNER")
-            aclEditor.canComputeEnabled shouldBe false
-            aclEditor.canComputeChecked shouldBe true
+            aclEditor.canComputeBox.isEnabled shouldBe false
+            aclEditor.canComputeBox.isChecked shouldBe true
           }
         }
 
       }
       //reader permissions should always be false
       "should not be able to set/change compute permissions for readers" ignore withWebDriver { implicit driver =>
-        val users = UserPool.chooseStudents(2)
-        val user1 = users.head
-        val user2 = users(1)
+        val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = AuthToken(user1)
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
           withSignIn(user1) { listPage =>
@@ -154,8 +178,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val aclEditor = detailPage.openShareDialog(user2.email, "READER")
-            aclEditor.canComputeEnabled shouldBe false
-            aclEditor.canComputeChecked shouldBe false
+            aclEditor.canComputeBox.isEnabled shouldBe false
+            aclEditor.canComputeBox.isChecked shouldBe false
           }
         }
 
@@ -305,9 +329,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "who has writer access" - {
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" ignore withWebDriver { implicit driver =>
-          val users = UserPool.chooseStudents(2)
-          val user1 = users.head
-          val user2 = users(1)
+          val Seq(user1, user2) = UserPool.chooseStudents(2)
           implicit val authToken: AuthToken = AuthToken(Config.Users.owner)
           withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
             withSignIn(user1) { listPage =>
@@ -329,9 +351,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
       "and does have canCompute permission" - {
         "should be able to launch analysis" ignore withWebDriver { implicit driver =>
-          val users = UserPool.chooseStudents(2)
-          val user1 = users.head
-          val user2 = users(1)
+          val Seq(user1, user2) = UserPool.chooseStudents(2)
           implicit val authToken: AuthToken = AuthToken(user1)
           withWorkspace(billingProject, "WorkspaceSpec_writerAccess") { workspaceName =>
             withMethod("MethodinWorkspaceSpec", MethodData.SimpleMethod) { methodName =>
