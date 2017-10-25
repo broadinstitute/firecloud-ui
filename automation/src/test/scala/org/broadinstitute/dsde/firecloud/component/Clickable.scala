@@ -5,7 +5,7 @@ import org.openqa.selenium.WebDriver
 /**
   * Mix in for Components which can be clicked to do something arbitrary (such as navigate
   * somewhere, open a modal, etc.). Should not be used for self-contained widgets like
-  * checkboxes that don't really
+  * checkboxes that represent their own state
   */
 trait Clickable { this: Component =>
   /**
