@@ -36,9 +36,14 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   }
 
   /**
-    * Downloads the metadata currently being viewed. If downloadPath is given, the file is given a
-    * timestamped name and moved from that location into the "downloads" directory off the current
-    * working directory.
+    * Downloads the metadata currently being viewed.
+    *
+    * If downloadPath is given, the file is given a timestamped name and moved from that location
+    * into the "downloads" directory off the current working directory. This serves two purposes:
+    *
+    * 1. Archiving the file for later inspection when tests fail
+    * 2. Keeping the browser download directory clean so that it doesn't auto-rename subsequent
+    * downloads with the same filename
     *
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
