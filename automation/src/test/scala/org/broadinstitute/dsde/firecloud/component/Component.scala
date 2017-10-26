@@ -71,5 +71,6 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   * Components with String data-test-ids directly
   */
 object Component {
+  import scala.language.implicitConversions
   implicit def string2QueryString(s: String) = TestId(s)
 }
