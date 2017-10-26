@@ -8,6 +8,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful {
 
   private val tableBody = findInner("table-body")
+  private val columnHeaders = findInner("column-header")
 
   private val filterField = SearchField("filter-input" inside this)
   private val filterButton = Button("filter-button" inside this)
@@ -18,8 +19,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   private val nextPageButton = Button("next-page" inside this)
   private def pageButton(page: Int) = Button(s"page-$page" inside this)
   private val perPageSelector = Select("per-page" inside this)
-  private val columnHeaders = testId("column-header")
-  private val columnEditorButton = Button("columns-button")
+  private val columnEditorButton = Button("columns-button" inside this)
 
   override def awaitReady(): Unit = {
     awaitVisible()
@@ -63,27 +63,22 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
 
   def getData: List[List[String]] = {
     import scala.collection.JavaConversions._
-
-    awaitReady()
     val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
     rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
   }
 
   def readColumnHeaders: List[String] = {
-    awaitReady()
     readAllText(columnHeaders)
   }
 
-  def clearFilter: Unit = {
-    searchField(filterField).value = ""
-    click on filterButton
-    awaitReady()
+  def clearFilter(): Unit = {
+    filter("")
   }
 
-  def hideColumn(header: String) = {
+  def hideColumn(header: String): Unit = {
     if (readAllText(columnHeaders).contains(header)) {
       columnEditorButton.doClick
-      val colToBeHidden = Checkbox(s"$header-column-toggle")
+      val colToBeHidden = Checkbox(s"$header-column-toggle" inside this)
       colToBeHidden.ensureUnchecked()
       val action = new Actions(webDriver)
       action.sendKeys(Keys.ESCAPE).perform()
