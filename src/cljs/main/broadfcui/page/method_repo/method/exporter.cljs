@@ -135,7 +135,8 @@
                           :defaultValue (if (= selected-config :blank)
                                           method-name
                                           (:name selected-config))
-                          :predicates [(input/nonempty "Name")]}]
+                          :predicates [(input/nonempty "Name")
+                                       (input/alphanumeric_-period "Name")]}]
         (when (= selected-config :blank)
           (list
            (style/create-form-label "Root Entity Type")
@@ -165,14 +166,16 @@
                        :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs this]}]
-     (swap! state assoc :validation-errors nil :banner "Resolving...")
      (let [[name & errors] (input/get-and-validate refs "name-field")
            new-id (assoc (select-keys (:method-id props) [:namespace])
                     :name name)
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
              (= :blank selected-config) (this :-create-template new-id)
-             :else (this :-export-loaded-config (merge (:payloadObject selected-config) new-id)))))
+             :else (do
+                     (this :-export-loaded-config (merge (:payloadObject selected-config) new-id))
+                     (swap! state assoc :banner "Resolving...")))))
+
    :-create-template
    (fn [{:keys [props state refs this]} new-id]
      (swap! state assoc :banner "Creating template...")
