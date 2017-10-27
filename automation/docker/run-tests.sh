@@ -30,22 +30,26 @@ VAULT_TOKEN=${3:-$(cat ~/.vault-token)}
 
 export FC_INSTANCE WORKING_DIR ENV
 
-if [ "$ENV" = "prod" ]; then
-  TEST_ENTRYPOINT="testOnly -- -n ProdTest"
+if [ "$FC_INSTANCE" = "local" ] || [ "$FC_INSTANCE" = "fiab" ]; then
+  FC_INSTANCE="$(cat /etc/hosts | grep -v '#' | grep 'firecloud-fiab.dsde-dev.broadinstitute.org' | awk '{print $1}')"
 fi
 
 if [ "$FC_INSTANCE" = "local" ]; then
-  FC_INSTANCE=$DOCKERHOST_ADDRESS
+  UI_LOCATION=$DOCKERHOST_ADDRESS
 fi
 
 if [ "$FC_INSTANCE" = "fiab" ]; then
-  FC_INSTANCE="$(cat /etc/hosts | grep -v '#' | grep 'firecloud-fiab.dsde-dev.broadinstitute.org' | awk '{print $1}')"
+  UI_LOCATION=$FC_INSTANCE
+fi
+
+if [ "$ENV" = "prod" ]; then
+  TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi
 
 if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then
   HUB_COMPOSE=hub-compose.yml
 else
-  HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
+  HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${UI_LOCATION} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
   HUB_COMPOSE=hub-compose-fiab.yml
 fi
 

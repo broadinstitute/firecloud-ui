@@ -45,7 +45,7 @@ To generate a Docker container automatically and run the tests inside of it:
 **Arguments:** (arguments are positional)
 
 * FireCloud location (required)
-	* One of `fiab`, `local`, `alpha`, `prod`, or an IP address. `fiab` will pull the IP from your `etc/hosts`.
+	* One of `fiab`, `local` (local UI, FIAB backend), `alpha`, `prod`, or an IP address. `fiab` and `local` will pull the IP from your `etc/hosts`.
 * `dev` or `qa`
 	* Environment of your FiaB. Defaults to `dev`.
 * Vault auth token
@@ -84,6 +84,15 @@ Also run the config render script. If you are planning on running the firecloud 
 * Local UI
 	* Enter `local_ui` here to run against a local UI stack.
 
+#### Using a local UI
+
+Be sure you used the `local_ui` param when you rendered your configs (see above). When starting your UI, run:
+
+```bash
+FIAB=true [ENV=qa] ./config/docker-rsync-local-ui.sh
+```
+
+If you don't provide `ENV`, it will default to `dev`.
 
 #### Running tests
 
@@ -120,13 +129,3 @@ sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z
 ```
 
 For more information see [SBT's documentation](http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments).
-
-##### Against a local UI
-
-Be sure you used the `local_ui` param when you rendered your configs (see above). When starting your UI, run:
-
-```bash
-FIAB=true [ENV=qa] ./config/docker-rsync-local-ui.sh
-```
-
-If you don't provide `ENV`, it will default to `dev`.
