@@ -17,6 +17,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   override def awaitReady(): Unit = {
     // TODO: wait on the table, once we're testing that
     submissionIdLabel.awaitVisible()
+    workflowStatusLabel.awaitVisible()
     submissionId = submissionIdLabel.getText
   }
 
@@ -53,15 +54,15 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   }
 
   def verifyWorkflowSucceeded(): Boolean = {
-    SUCCESS_STATUS.contains(workflowStatusLabel.getText)
+    SUCCESS_STATUS.contains(readWorkflowStatus())
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    FAILED_STATUS.contains(workflowStatusLabel.getText)
+    FAILED_STATUS.contains(readWorkflowStatus())
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    ABORTED_STATUS.contains(workflowStatusLabel.getText)
+    ABORTED_STATUS.contains(readWorkflowStatus())
   }
 
   def waitUntilSubmissionCompletes(): Unit = {
