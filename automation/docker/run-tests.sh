@@ -52,7 +52,7 @@ startup() {
 }
 # kill and remove any running containers
 cleanup () {
-  docker-compose -f ${HUB-COMPOSE} stop
+  docker-compose -f ${HUB_COMPOSE} stop
   docker stop $TEST_CONTAINER
 }
 
