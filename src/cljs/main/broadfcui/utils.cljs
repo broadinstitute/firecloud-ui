@@ -117,7 +117,7 @@
 (def content-type=json {"Content-Type" "application/json"})
 
 (defonce ^:private recent-ajax-calls (atom #{}))
-(def ^:private double-call-threshold 500)
+(def ^:private double-call-threshold 2000)
 
 (defn ajax [{:keys [url on-done method headers data with-credentials? canned-response] :as arg-map}]
   (let [method (if method (string/upper-case (name method)) "GET")
@@ -126,9 +126,9 @@
     (assert on-done (str "Missing on-done callback: " arg-map))
 
     (when (config/debug?)
-      (let [request (restructure url data)]
+      (let [request (restructure method url data)]
         (when (contains? @recent-ajax-calls request)
-          (js/console.warn (str "WARNING: repeated ajax calls to " url
+          (js/console.warn (str "WARNING: repeated ajax calls to " method " " url
                                 (when data (str " with payload " data)))))
         (swap! recent-ajax-calls conj request)
         (js/setTimeout #(swap! recent-ajax-calls disj request) double-call-threshold)))
