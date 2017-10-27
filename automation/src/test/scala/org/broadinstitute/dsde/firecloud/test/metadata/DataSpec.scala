@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import java.io.{File, PrintWriter}
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
@@ -21,7 +21,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures with ParallelTestExecution
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
-  val downloadPath = Files.createTempDirectory("firecloud-ui-tmp").toString
+  val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads").toString
   val billingProject = Config.Projects.default
 
   "import a participants file" in withWebDriver { implicit driver =>
@@ -341,20 +341,20 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Download should reflect visible columns" - {
     "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))
     }
 
     "no workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         userHidden = Some("foo"),
         expectedColumns = List("participant_id"))
     }
 
     "no workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         userHidden = Some("foo"),
         importColumns = Some(List("participant_id", "foo", "bar")),
@@ -362,7 +362,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with workspace defaults, no user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
         defaultHidden = Some(List("bar")),
@@ -370,7 +370,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with workspace defaults, no user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
         defaultHidden = Some(List("bar")),
@@ -379,7 +379,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
         defaultHidden = Some(List("bar")),
@@ -388,7 +388,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
 
     "with workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testFileDownload(
+      testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
         defaultHidden = Some(List("bar")),
@@ -398,13 +398,13 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
   }
 
-  private def testFileDownload(initialColumns: List[String],
-                               defaultShown: Option[List[String]] = None,
-                               defaultHidden: Option[List[String]] = None,
-                               userHidden: Option[String] = None,
-                               importColumns: Option[List[String]] = None,
-                               expectedColumns: List[String])
-                              (implicit webDriver: WebDriver): Unit = {
+  private def testMetadataDownload(initialColumns: List[String],
+                                   defaultShown: Option[List[String]] = None,
+                                   defaultHidden: Option[List[String]] = None,
+                                   userHidden: Option[String] = None,
+                                   importColumns: Option[List[String]] = None,
+                                   expectedColumns: List[String])
+                                  (implicit webDriver: WebDriver): Unit = {
     val owner = UserPool.chooseProjectOwner
     val writer = UserPool.chooseStudent
     implicit val authToken: AuthToken = AuthToken(owner)
