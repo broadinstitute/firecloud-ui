@@ -116,16 +116,23 @@
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 
-(defn ajax [arg-map]
-  (let [url (:url arg-map)
-        on-done (:on-done arg-map)
-        method (if-let [method (:method arg-map)] (string/upper-case (name method)) "GET")
-        headers (:headers arg-map)
-        data (:data arg-map)
-        with-credentials? (:with-credentials? arg-map)
-        canned-response-params (when-not @use-live-data? (:canned-response arg-map))]
+(defonce ^:private recent-ajax-calls (atom #{}))
+(def ^:private double-call-threshold 2000)
+
+(defn ajax [{:keys [url on-done method headers data with-credentials? canned-response] :as arg-map}]
+  (let [method (if method (string/upper-case (name method)) "GET")
+        canned-response-params (when-not @use-live-data? canned-response)]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
+
+    (when (config/debug?)
+      (let [request (restructure method url data)]
+        (when (contains? @recent-ajax-calls request)
+          (js/console.warn (str "WARNING: repeated ajax calls to " method " " url
+                                (when data (str " with payload " data)))))
+        (swap! recent-ajax-calls conj request)
+        (js/setTimeout #(swap! recent-ajax-calls disj request) double-call-threshold)))
+
     (let [xhr (if-not canned-response-params
                 (js/XMLHttpRequest.)
                 (let [xhr (js-obj)]
