@@ -19,7 +19,7 @@ docker build -f Dockerfile-tests -t $SCALATESTS .
 
 # run tests
 cd docker
-./run-tests.sh 2 $ENV $HOST_IP $SCALATESTS $VAULT_TOKEN
+./run-tests.sh 1 $ENV $HOST_IP $SCALATESTS $VAULT_TOKEN
 TEST_EXIT_CODE=$?
 
 # do some cleanup after
