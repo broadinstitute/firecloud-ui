@@ -63,6 +63,9 @@ docker rm -v $(docker ps -a -q -f status=exited)
 trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
   HUP INT QUIT PIPE TERM
 
+# make sure ${WORKING_DIR}/target exists before mapping it into a docker container
+mkdir $WORKING_DIR/target
+
 # build and run the composed services
 echo "HOST IP: $DOCKERHOST"
 docker-compose -f ${HUB_COMPOSE} pull
