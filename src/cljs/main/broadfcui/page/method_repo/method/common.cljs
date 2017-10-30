@@ -9,11 +9,8 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
    [broadfcui.net :as net]
-   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.utils :as utils]
    ))
 
@@ -112,18 +109,6 @@
                {:keys [on-load]} props]
            (when on-load (on-load resolved-configs))
            (swap! state assoc :resolved-configs resolved-configs)))))})
-
-
-(defn render-post-export-dialog [{:keys [workspace-id config-id dismiss]}]
-  [modals/OKCancelForm
-   {:header "Export successful"
-    :content "Would you like to go to the edit page now?"
-    :cancel-text "No, stay here"
-    :dismiss dismiss
-    :ok-button
-    {:text "Yes"
-     :onClick #(mc-sync/flag-synchronization)
-     :href (nav/get-link :workspace-method-config workspace-id config-id)}}])
 
 
 (defn render-config-details [{:keys [managers method payloadObject snapshotComment]}]
