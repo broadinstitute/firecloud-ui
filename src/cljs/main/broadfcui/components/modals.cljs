@@ -7,7 +7,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.common.flex-utils :as flex]))
 
 
 (defn show-modals [state m]
@@ -29,12 +29,14 @@
        (modal/render
         {:content
          [:div {}
-          [:div {:style {:borderBottom style/standard-line
-                         :padding "1rem 3rem 1rem"
-                         :fontSize "140%" :fontWeight 400 :lineHeight 1}
-                 :data-test-id data-test-id}
+          (flex/box
+           {:style {:alignItems "flex-start"
+                    :borderBottom style/standard-line
+                    :padding "1rem 3rem 1rem"
+                    :fontSize "140%" :fontWeight 400 :lineHeight 1}}
            header
-           (when show-close? (buttons/x-button dismiss))]
+           flex/spring
+           (when show-close? (buttons/x-button dismiss)))
           [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)} :data-test-id (str data-test-id "-content")}
            content

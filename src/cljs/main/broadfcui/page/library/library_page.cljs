@@ -16,6 +16,7 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
+   [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
@@ -312,7 +313,7 @@
                          {:aggregate-properties (get aggregate-properties aggregate-field)
                           :expanded? (contains? expanded-aggregates aggregate-field)
                           :selected-items (set (get facet-filters aggregate-field))})])
-                          (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
+         (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
@@ -353,6 +354,8 @@
                                 :on-filter (fn [text]
                                              (swap! state assoc :search-text text)
                                              (after-update #((@refs "dataset-table") :execute-search true)))})
+        (when (config/debug?)
+          [ResearchPurposeSection {}])
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)
