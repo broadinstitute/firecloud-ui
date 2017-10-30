@@ -102,39 +102,16 @@
    (fn [{:keys [this]}]
      (this :refresh))
    :component-did-update
-   (fn [{:keys [prev-state state]}]
+   (fn [{:keys [props prev-state state]}]
      (let [has-both? (fn [s] (and (:associated-configs s) (:compatible-configs s)))]
        (when (and (not (has-both? prev-state))
                   (has-both? @state))
-         (swap! state assoc :resolved-configs
-                (mapv (fn [config]
-                        (assoc config :compatible? (contains? (:compatible-configs @state) config)))
-                      (:associated-configs @state))))))})
-
-
-(defn render-config-table [{:keys [make-config-link-props configs style]}]
-  [Table
-   {:data configs
-    :body {:empty-message "You don't have access to any published configurations for this method."
-           :style (utils/deep-merge table-style/table-light
-                                    {:table {:backgroundColor "white"}}
-                                    style)
-           :behavior {:reorderable-columns? false}
-           :columns [{:header "Configuration" :initial-width 400
-                      :as-text (fn [{:keys [name namespace snapshotId]}]
-                                 (str namespace "/" name " snapshot " snapshotId))
-                      :sort-by #(replace % [:namespace :name :snapshotId])
-                      :render (fn [{:keys [name namespace snapshotId] :as config}]
-                                (links/create-internal
-                                  (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
-                                         (make-config-link-props config))
-                                  (style/render-name-id (str namespace "/" name) snapshotId)))}
-                     {:header "Method Snapshot" :initial-width 135 :filterable? false
-                      :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
-                     {:header "Synopsis" :initial-width :auto
-                      :column-data :synopsis}]}
-    :toolbar {:style {:padding 2} ;; gives room for highlight around filter field
-              :filter-bar {:inner {:width 300}}}}])
+         (let [resolved-configs (mapv (fn [config]
+                                        (assoc config :compatible? (contains? (:compatible-configs @state) config)))
+                                      (:associated-configs @state))
+               {:keys [on-load]} props]
+           (when on-load (on-load resolved-configs))
+           (swap! state assoc :resolved-configs resolved-configs)))))})
 
 
 (defn render-post-export-dialog [{:keys [workspace-id config-id dismiss]}]
