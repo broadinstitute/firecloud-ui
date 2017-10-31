@@ -355,7 +355,10 @@
                                              (swap! state assoc :search-text text)
                                              (after-update #((@refs "dataset-table") :execute-search true)))})
         (when (config/debug?)
-          [ResearchPurposeSection {}])
+          [ResearchPurposeSection
+           {:research-purpose-values (:research-purpose @state)
+            :on-search (fn [options]
+                         (swap! state assoc :research-purpose (utils/filter-values identity options)))}])
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)

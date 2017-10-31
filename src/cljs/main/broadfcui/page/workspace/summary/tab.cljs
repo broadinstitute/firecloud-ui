@@ -337,11 +337,7 @@
            (cond editing? (react/create-element [comps/TagAutocomplete
                                                  {:tags processed-tags :ref "tags-autocomplete"}])
                  (empty? processed-tags) [:em {} "No tags provided"]
-                 :else [:div {}
-                        (for [tag processed-tags]
-                          [:div {:style {:display "inline-block" :background (:tag-background style/colors)
-                                         :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
+                 :else [:div {} (map style/render-tag processed-tags)])]}]
 
         (when editing? [:div {:style {:marginBottom "10px"}} ws-common/PHI-warning])
 
