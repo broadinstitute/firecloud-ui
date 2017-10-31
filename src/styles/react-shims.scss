@@ -22,3 +22,25 @@ body.modal-open {
 iframe {
   box-sizing: border-box;
 }
+
+
+.custom-checkbox {
+  input[type=checkbox] {
+    display: none;
+
+    + label::before {
+      width: 1.28571429em;
+      display: inline-block;
+      text-align: left;
+      font-family: FontAwesome;
+    }
+
+    &:checked + label::before {
+      content: "\f14a";
+    }
+
+    &:not(:checked) + label::before {
+      content: "\f096";
+    }
+  }
+}

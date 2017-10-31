@@ -15,6 +15,8 @@
    :bell "fa-bell-o"
    :cancel "fa-times-circle"
    :catalog "fa-tag"
+   :checkbox-checked "fa-check-square"
+   :checkbox-unchecked "fa-square-o"
    :clone "fa-clone"
    :close "fa-close"
    :collapse "fa-minus-square-o"
