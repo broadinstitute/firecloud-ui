@@ -35,6 +35,10 @@
    (fn [{:keys [this props]}]
      (let [{:keys [entity-type entity-name]} props]
        (this :-update-and-load entity-type entity-name)))
+   :component-will-receive-props
+   (fn [{:keys [this next-props]}]
+     (let [{:keys [entity-type entity-name]} next-props]
+       (this :-update-and-load entity-type entity-name)))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [update-parent-state]} props
