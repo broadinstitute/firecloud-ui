@@ -57,7 +57,7 @@
                      (swap! state assoc :configs-error (:message parsed-response)))))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [style make-config-link-props]} props
+     (let [{:keys [style make-config-link-props snapshot-id]} props
            {:keys [resolved-configs configs-error]} @state]
        (cond configs-error
              [:div {:style {:textAlign "center" :color (:state-exception style/colors)}}
@@ -77,9 +77,9 @@
                       :behavior {:reorderable-columns? false}
                       :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false
                                  :column-data :compatible?
-                                 :as-text (fn [c] (if c "Compatible" "Incompatible"))
-                                 :render (fn [c] (if c (icons/render-icon {:style {:color (:state-success style/colors)}} :done)
-                                                       (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning)))}
+                                 :as-text (fn [c] (when-not c "Incompatible with method snapshot " snapshot-id))
+                                 :render (fn [c] (when-not c
+                                                   (icons/render-icon {:style {:color (:state-warning style/colors)}} :error)))}
                                 {:header "Configuration" :initial-width 400
                                  :as-text (fn [{:keys [name namespace snapshotId]}]
                                             (str namespace "/" name " snapshot " snapshotId))
