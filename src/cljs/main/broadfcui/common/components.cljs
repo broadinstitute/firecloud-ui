@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
@@ -10,7 +11,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
-   [broadfcui.common.flex-utils :as flex]))
+   ))
 
 
 (declare push-error)

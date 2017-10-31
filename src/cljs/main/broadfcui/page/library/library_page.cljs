@@ -66,8 +66,8 @@
                       :render (fn [data]
                                 (when (= (:workspaceAccess data) "NO ACCESS")
                                   (icons/render-icon (merge
-                                               {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
-                                               (this :-get-link-props data))
+                                                      {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
+                                                      (this :-get-link-props data))
                                                      :shield)))}
                      {:id "library:datasetName"
                       :header (:title (:library:datasetName attributes)) :initial-width 250
@@ -75,9 +75,9 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (links/create-internal
-                                 (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
-                                        (this :-get-link-props data))
-                                 (:library:datasetName data)))}
+                                  (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
+                                         (this :-get-link-props data))
+                                  (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
