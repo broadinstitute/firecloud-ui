@@ -25,7 +25,7 @@
         :content [:div {}
                   (->> (:research-purpose-values props)
                        keys
-                       (map (comp style/render-tag name)))]})])
+                       (map (comp style/render-tag string/upper-case name)))]})])
    :-render-modal
    (fn [{:keys [state this locals]}]
      [modals/OKCancelForm
@@ -37,7 +37,7 @@
        :ok-button {:text "Search" :onClick #(this :-search @locals)}
        :content
        [:div {}
-        [:div {:style {:marginBottom "0.75rem"}}
+        [:div {:style {:marginBottom "1rem"}}
          "The datasets will be used for the following purposes:"]
         (this :-render-checkbox "Disease focused research" :disabled? true)
         (this :-render-checkbox "Methods development/Validation study" :disabled? true :code :methods)
@@ -45,20 +45,20 @@
         (this :-render-checkbox "Aggregate analysis to understand variation in the general population" :code :pop-var)
         (this :-render-checkbox "Study population origins or ancestry" :code :origins)
         (this :-render-checkbox "Commercial purpose/by a commercial entity" :code :commercial)
-        (this :-render-checkbox "Restricted to a specific population" :disabled? true)
-        (this :-render-checkbox "Other purpose" :disabled? true :code :other)]}])
+        #_(this :-render-checkbox "Restricted to a specific population")
+        #_(this :-render-checkbox "Other purpose" :code :other)]}])
    :-render-checkbox
    (fn [{:keys [props locals]} label & {:keys [disabled? code]}]
-     [:div {:style {:margin "0.5rem 0"}}
-      [Checkbox {:label [:span {}
-                         label
-                         [:span {:style {:marginLeft "0.3rem" :fontSize "66%" :verticalAlign "middle"}}
-                          (some-> code name string/upper-case style/render-tag)]]
-                 :disabled? disabled?
-                 :initial-checked? (contains? (:research-purpose-values props) code)
-                 :on-change (fn [new-val]
-                              (when code
-                                (swap! locals assoc code new-val)))}]])
+     [Checkbox {:style {:margin "0.75rem 0"}
+                :label [:span {}
+                        label
+                        [:span {:style {:marginLeft "0.3rem" :fontSize "66%" :verticalAlign "middle"}}
+                         (some-> code name string/upper-case style/render-tag)]]
+                :disabled? disabled?
+                :initial-checked? (contains? (:research-purpose-values props) code)
+                :on-change (fn [new-val]
+                             (when code
+                               (swap! locals assoc code new-val)))}])
    :-show-modal
    (fn [{:keys [props state locals]}]
      (reset! locals (:research-purpose-values props))

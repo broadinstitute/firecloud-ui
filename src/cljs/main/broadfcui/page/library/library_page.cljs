@@ -378,6 +378,7 @@
                           (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""
+                                                  :research-purpose {}
                                                   :facet-filters {}
                                                   :expanded-aggregates #{}}
                                         :except [:library-attributes :aggregates]})))
