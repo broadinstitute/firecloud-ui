@@ -175,9 +175,32 @@
    (fn []
      {:user-status #{}})
    :component-will-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [this state]}]
      (init-nav-paths)
-     (this :handle-hash-change))
+     (this :handle-hash-change)
+     (set! js/window.forceSignedIn
+           (fn [auth-token]
+             (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=" auth-token)
+                          :on-done
+                          (fn [{:keys [status-code success? get-parsed-response]}]
+                            (if success?
+                              (let [{:keys [email user_id]} (get-parsed-response)
+                                    instance (clj->js
+                                              {:currentUser
+                                               {:get
+                                                (fn []
+                                                  (clj->js {:getAuthResponse
+                                                            (fn [] (clj->js {:access_token auth-token}))
+                                                            :getBasicProfile
+                                                            (fn [] (clj->js
+                                                                    {:getEmail (fn [] email)
+                                                                     :getId (fn [] user_id)}))}))
+                                                :listen (fn [])}
+                                               :signOut
+                                               (fn [] (swap! state update :user-status disj :signed-in))})]
+                                (utils/set-google-auth2-instance! instance)
+                                (swap! state update :user-status conj :signed-in))
+                              (utils/log "Failed to validate token: " status-code)))}))))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state

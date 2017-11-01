@@ -43,7 +43,7 @@
                             :color "#000" :textDecoration "none"
                             :padding "0.5rem" :border style/standard-line}
                     :data-test-id "account-dropdown"}
-              [:span {:data-test-id "account-dropdown-email"} (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))]
+              [:span {:data-test-id "account-dropdown-email"} (utils/get-user-email)]
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
       :button-style {:height 32}

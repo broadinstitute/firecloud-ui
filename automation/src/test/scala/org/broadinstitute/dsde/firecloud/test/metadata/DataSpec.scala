@@ -14,7 +14,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 
 class DataSpec extends FreeSpec with WebBrowserSpec
-  with UserFixtures with WorkspaceFixtures with ParallelTestExecution
+  with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   val billingProject = Config.Projects.default

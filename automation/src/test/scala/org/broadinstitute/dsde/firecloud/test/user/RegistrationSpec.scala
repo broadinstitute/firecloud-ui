@@ -3,21 +3,20 @@ package org.broadinstitute.dsde.firecloud.test.user
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
-import org.broadinstitute.dsde.firecloud.test.Tags
 
 
 /**
   * Tests for new user registration scenarios.
   */
-class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec with CleanUp with LazyLogging {
+class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec
+  with UserFixtures with CleanUp with LazyLogging {
 
-  val email: String = Config.Users.temp.email
-  val password: String = Config.Users.temp.password
+  val testUser: Credentials = Config.Users.temp  // TODO: pull from user pool and fetch correct subject ID
   val subjectId: String = Config.Users.tempSubjectId
 
   val adminUser: Credentials = UserPool.chooseAdmin
@@ -41,9 +40,30 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
     "should allow a person to register" in withWebDriver { implicit driver =>
 
-      signIn(email, password)
-      val registrationPage = await ready new RegistrationPage
+      withSignInNewUserReal(testUser) { registrationPage =>
+        registerCleanUpForDeleteUser(subjectId)
 
+        registrationPage.register(
+          firstName = "Test",
+          lastName = "Dummy",
+          title = "Tester",
+          contactEmail = Some("test@firecloud.org"),
+          institute = "Broad",
+          institutionalProgram = "DSDE",
+          nonProfitStatus = true,
+          principalInvestigator = "Nobody",
+          city = "Cambridge",
+          state = "MA",
+          country = "USA")
+
+        new DataLibraryPage().validateLocation()
+      }
+    }
+  }
+
+  "should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
+
+    withSignInNewUserReal(testUser) { registrationPage =>
       registerCleanUpForDeleteUser(subjectId)
 
       registrationPage.register(
@@ -59,36 +79,13 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
         state = "MA",
         country = "USA")
 
-      new DataLibraryPage().validateLocation()
+      await ready new DataLibraryPage()
+
+      val listPage = new WorkspaceListPage().open
+      listPage.clickCreateWorkspaceButton(true)
+
+      listPage.showsNoBillingProjectsModal() shouldBe true
     }
-  }
-
-  "should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
-
-    signIn(email, password)
-    val registrationPage = await ready new RegistrationPage
-
-    registerCleanUpForDeleteUser(subjectId)
-
-    registrationPage.register(
-      firstName = "Test",
-      lastName = "Dummy",
-      title = "Tester",
-      contactEmail = Some("test@firecloud.org"),
-      institute = "Broad",
-      institutionalProgram = "DSDE",
-      nonProfitStatus = true,
-      principalInvestigator = "Nobody",
-      city = "Cambridge",
-      state = "MA",
-      country = "USA")
-
-    await ready new DataLibraryPage()
-
-    val listPage = new WorkspaceListPage().open
-    listPage.clickCreateWorkspaceButton(true)
-
-    listPage.showsNoBillingProjectsModal() shouldBe true
   }
 
 /*
