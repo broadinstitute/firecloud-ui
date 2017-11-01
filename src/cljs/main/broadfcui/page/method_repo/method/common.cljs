@@ -77,7 +77,7 @@
                       :behavior {:reorderable-columns? false}
                       :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false
                                  :column-data :compatible?
-                                 :as-text (fn [c] (when-not c "Incompatible with method snapshot " snapshot-id))
+                                 :as-text (fn [c] (when-not c (str "This configuration is not fully compatible with snapshot " snapshot-id)))
                                  :render (fn [c] (when-not c
                                                    (icons/render-icon {:style {:color (:state-warning style/colors)}} :error)))}
                                 {:header "Configuration" :initial-width 400
