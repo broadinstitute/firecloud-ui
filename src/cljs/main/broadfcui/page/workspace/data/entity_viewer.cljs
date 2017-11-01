@@ -33,11 +33,13 @@
      {:last-entity []})
    :component-will-mount
    (fn [{:keys [this props]}]
-     (let [{:keys [entity-type entity-name]} props]
-       (this :-update-and-load entity-type entity-name)))
+     (this :-handle-props props))
    :component-will-receive-props
    (fn [{:keys [this next-props]}]
-     (let [{:keys [entity-type entity-name]} next-props]
+     (this :-handle-props next-props))
+   :-handle-props
+   (fn [{:keys [this]} props]
+     (let [{:keys [entity-type entity-name]} props]
        (this :-update-and-load entity-type entity-name)))
    :render
    (fn [{:keys [props state this]}]
