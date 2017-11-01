@@ -37,10 +37,6 @@
    :component-will-receive-props
    (fn [{:keys [this next-props]}]
      (this :-handle-props next-props))
-   :-handle-props
-   (fn [{:keys [this]} props]
-     (let [{:keys [entity-type entity-name]} props]
-       (this :-update-and-load entity-type entity-name)))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [update-parent-state]} props
@@ -126,6 +122,10 @@
                                     :sort-by :for-sort
                                     :render :for-render}])}
                 :paginator :none}]]))
+   :-handle-props
+   (fn [{:keys [this]} props]
+     (let [{:keys [entity-type entity-name]} props]
+       (this :-update-and-load entity-type entity-name)))
    :-update-and-load
    (fn [{:keys [state props]} item-type item-name]
      (let [update-viewer-state (fn [& args]
