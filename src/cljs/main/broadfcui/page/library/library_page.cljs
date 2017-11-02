@@ -376,7 +376,10 @@
           [ResearchPurposeSection
            {:research-purpose-values (:research-purpose @state)
             :on-search (fn [options]
-                         (swap! state assoc :research-purpose options)
+                         (swap! state assoc :research-purpose
+                                ;; Throw out false/empty. Currently, the only codes in use are
+                                ;; true/false so this works for now.
+                                (utils/filter-values identity options))
                          (this :-refresh-table))}])
         (facet-section (merge
                         {:aggregates (:aggregates @state)
