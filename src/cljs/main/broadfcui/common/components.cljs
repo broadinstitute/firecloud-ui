@@ -352,6 +352,8 @@
     #(push-error thing)))
 
 
+;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
+;; :component-will-receive-props.
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]

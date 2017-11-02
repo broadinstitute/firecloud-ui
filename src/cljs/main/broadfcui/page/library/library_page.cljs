@@ -336,10 +336,14 @@
   (->>
    {:update-filter
     (fn [{:keys [state this]} facet-name facet-list]
-      (if (empty? facet-list)
-        (swap! state update :facet-filters dissoc facet-name)
-        (swap! state assoc-in [:facet-filters facet-name] facet-list))
-      (this :-refresh-table))
+      ;; NOTE: The TagAutocomplete used here is very touchy and fires extra on-change events.
+      ;; Check here that something is actually changing before firing off state updates and
+      ;; table refreshes.
+      (when (not= (not-empty facet-list) (not-empty (get-in @state [:facet-filters facet-name])))
+        (if (empty? facet-list)
+          (swap! state update :facet-filters dissoc facet-name)
+          (swap! state assoc-in [:facet-filters facet-name] facet-list))
+        (this :-refresh-table)))
     :set-expanded-aggregate
     (fn [{:keys [state this]} facet-name expanded?]
       (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
