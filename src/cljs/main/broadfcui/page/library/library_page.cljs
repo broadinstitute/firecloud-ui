@@ -43,6 +43,18 @@
    " and request access for the "
    (:namespace data) "/" (:name data) " workspace."])
 
+(defn- translate-research-purpose [research-purpose]
+  (->> research-purpose
+       (utils/map-keys {:pop-var "NAGR"
+                        :origins "POA"
+                        :commercial "NCU"})
+       (merge {"DS" []
+               "NDMS" false
+               "NCTRL" false
+               "NAGR" false
+               "POA" false
+               "NCU" false})))
+
 (react/defc- DatasetsTable
   {:render
    (fn [{:keys [state this props]}]
@@ -124,9 +136,10 @@
                                :anchor :right}}}]))
    :execute-search
    (fn [{:keys [refs]} reset-sort?]
-     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
-       (when-not ((@refs "table") :update-query-params query-params)
-         ((@refs "table") :refresh-rows))))
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))
+           {:strs [table]} @refs]
+       (when-not (table :update-query-params query-params)
+         (table :refresh-rows))))
    :-get-link-props
    (fn [_ data]
      (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
@@ -173,6 +186,7 @@
               {:endpoint endpoints/search-datasets
                :payload {:searchString (:filter-text props)
                          :filters ((:get-facets props))
+                         :researchPurpose (translate-research-purpose (:research-purpose props))
                          :from from
                          :size rows-per-page
                          :sortField sort-column
@@ -321,15 +335,15 @@
 (react/defc- Page
   (->>
    {:update-filter
-    (fn [{:keys [state after-update refs]} facet-name facet-list]
+    (fn [{:keys [state this]} facet-name facet-list]
       (if (empty? facet-list)
         (swap! state update :facet-filters dissoc facet-name)
         (swap! state assoc-in [:facet-filters facet-name] facet-list))
-      (after-update #((@refs "dataset-table") :execute-search false)))
+      (this :-refresh-table))
     :set-expanded-aggregate
-    (fn [{:keys [state refs after-update]} facet-name expanded?]
+    (fn [{:keys [state this]} facet-name expanded?]
       (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
-      (after-update #((@refs "dataset-table") :execute-search false)))
+      (this :-refresh-table))
     :component-did-mount
     (fn [{:keys [state]}]
       (endpoints/get-library-attributes
@@ -344,7 +358,7 @@
                     :facet-filters (select-keys facets aggs)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
-    (fn [{:keys [this refs state after-update]}]
+    (fn [{:keys [state this]}]
       [:div {:style {:display "flex"}}
        (apply
         filter/area {:style {:width 260 :boxSizing "border-box"}}
@@ -353,12 +367,13 @@
                                 :on-input #(swap! state assoc :search-text %)
                                 :on-filter (fn [text]
                                              (swap! state assoc :search-text text)
-                                             (after-update #((@refs "dataset-table") :execute-search true)))})
+                                             (this :-refresh-table true))})
         (when (config/debug?)
           [ResearchPurposeSection
            {:research-purpose-values (:research-purpose @state)
             :on-search (fn [options]
-                         (swap! state assoc :research-purpose (utils/filter-values identity options)))}])
+                         (swap! state assoc :research-purpose options)
+                         (this :-refresh-table))}])
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)
@@ -372,10 +387,14 @@
           [DatasetsTable (merge
                           {:ref "dataset-table"
                            :filter-text (:search-text @state)
+                           :research-purpose (:research-purpose @state)
                            :update-aggregates #(swap! state assoc :aggregates %)
                            :no-aggregates? (empty? (:aggregates @state))
                            :get-facets #(utils/map-keys name (:facet-filters @state))}
-                          (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
+                          (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])
+    :-refresh-table
+    (fn [{:keys [refs after-update]} & [reset-sort?]]
+      (after-update #((@refs "dataset-table") :execute-search reset-sort?)))}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""
                                                   :research-purpose {}
