@@ -56,14 +56,20 @@
                "NCU" false})))
 
 (react/defc- DatasetsTable
-  {:render
-   (fn [{:keys [state this props]}]
+  {:execute-search
+   (fn [{:keys [refs]} reset-sort?]
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))
+           {:strs [table]} @refs]
+       (when-not (table :update-query-params query-params)
+         (table :refresh-rows))))
+   :render
+   (fn [{:keys [props state this]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
-         :fetch-data (this :pagination)
+         :fetch-data (this :-pagination)
          :style {:content {:marginLeft "2rem"}}
          :body
          {:behavior {:allow-no-sort? true
@@ -134,12 +140,6 @@
                   :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
-   :execute-search
-   (fn [{:keys [refs]} reset-sort?]
-     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))
-           {:strs [table]} @refs]
-       (when-not (table :update-query-params query-params)
-         (table :refresh-rows))))
    :-get-link-props
    (fn [_ data]
      (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
@@ -164,7 +164,7 @@
                        [:p {} "After dbGaP approves your application please link your eRA
                        Commons ID in your FireCloud profile page."])])])]}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
-   :build-aggregate-fields
+   :-build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
       ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
@@ -175,8 +175,8 @@
                                5)))
       {}
       (:aggregate-fields props)))
-   :pagination
-   (fn [{:keys [this state props]}]
+   :-pagination
+   (fn [{:keys [props state this]}]
      (fn [{:keys [query-params on-done]}]
        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
          (when (seq (:aggregate-fields props))
@@ -192,7 +192,7 @@
                          :sortField sort-column
                          :sortDirection sort-order
                          :fieldAggregations (if update-aggregates?
-                                              (this :build-aggregate-fields)
+                                              (this :-build-aggregate-fields)
                                               {})}
                :headers utils/content-type=json
                :on-done
