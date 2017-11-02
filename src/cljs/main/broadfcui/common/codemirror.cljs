@@ -6,7 +6,7 @@
    [broadfcui.utils :as utils]
    ))
 
-(defonce ^:private codemirror-instance (atom false))
+(defonce ^:private codemirror-constructor (atom false))
 
 (defn- regex-escape [s]
   (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))
@@ -22,7 +22,7 @@
 
 (defn- define-wdl []
   (js-invoke
-   @codemirror-instance "defineMode" "wdl"
+   @codemirror-constructor "defineMode" "wdl"
    (fn []
      #js{:token (fn [stream]
                   (.eatSpace stream)
@@ -57,7 +57,7 @@
      (this :call-method "off" event-type listener))
    :call-method
    (fn [{:keys [locals]} method & args]
-     (apply js-invoke (aget @codemirror-instance "doc") method args))
+     (apply js-invoke (aget (:codemirror-instance @locals) "doc") method args))
    :get-default-props
    (fn []
      {:line-numbers? true
@@ -76,8 +76,8 @@
           (not loaded?) [ScriptLoader
                          {:on-error #(swap! state assoc :error? true)
                           :on-load (fn []
-                                     (when-not @codemirror-instance
-                                       (reset! codemirror-instance (aget js/window "webpackDeps" "CodeMirror"))
+                                     (when-not @codemirror-constructor
+                                       (reset! codemirror-constructor (aget js/window "webpackDeps" "CodeMirror"))
                                        (define-wdl))
                                      (this :-display-code)
                                      (when-let [init (:initialize props)]
@@ -90,8 +90,8 @@
    :-display-code
    (fn [{:keys [refs props locals]}]
      (let [{:keys [mode line-numbers? read-only? text]} props]
-       (swap! locals assoc :code-mirror-instance
-              (@codemirror-instance (react/find-dom-node (@refs "container"))
+       (swap! locals assoc :codemirror-instance
+              (@codemirror-constructor (react/find-dom-node (@refs "container"))
                (clj->js
                 (merge
                  (when text {:value text})
@@ -100,6 +100,6 @@
    :component-will-receive-props
    (fn [{:keys [props next-props locals]}]
      (when (:read-only? props)
-       (-> (@locals :code-mirror-instance)
+       (-> (@locals :codemirror-instance)
            (js-invoke "getDoc")
            (js-invoke "setValue" (:text next-props)))))})
