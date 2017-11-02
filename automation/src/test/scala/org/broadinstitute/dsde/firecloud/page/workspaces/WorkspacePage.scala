@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
-import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.component.{Label, TabBar}
+import org.broadinstitute.dsde.firecloud.page.BaseFireCloudPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
@@ -11,7 +11,7 @@ import org.openqa.selenium.WebDriver
 /*
 A Workspace Page is any page within the workspace (i.e. the Summary tab, Data tab)
  */
-abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends AuthenticatedPage {
+abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends BaseFireCloudPage {
 
   private val namespaceHeader = Label("header-namespace")
   private val nameHeader = Label("header-name")

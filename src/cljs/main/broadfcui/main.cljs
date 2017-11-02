@@ -184,7 +184,7 @@
                           :on-done
                           (fn [{:keys [status-code success? get-parsed-response]}]
                             (if success?
-                              (let [{:keys [email user_id]} (get-parsed-response)
+                              (let [{:keys [email sub]} (get-parsed-response)
                                     instance (clj->js
                                               {:currentUser
                                                {:get
@@ -194,7 +194,7 @@
                                                             :getBasicProfile
                                                             (fn [] (clj->js
                                                                     {:getEmail (fn [] email)
-                                                                     :getId (fn [] user_id)}))}))
+                                                                     :getId (fn [] sub)}))}))
                                                 :listen (fn [])}
                                                :signOut
                                                (fn [] (swap! state update :user-status disj :signed-in))})]
