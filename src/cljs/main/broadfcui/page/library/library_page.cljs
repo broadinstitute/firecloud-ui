@@ -20,7 +20,7 @@
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.components.modals :as modals]))
 
 (def ^:private tcga-access-instructions
   [:span {}
@@ -143,7 +143,12 @@
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
          {:get-items (constantly
-                      [[:div {:style {:fontSize "112%"}}
+                      [(when (:show-request-access? @state)
+                         (modals/render-message
+                          {:header "Request Access"
+                           :text (:request-access-message @state)
+                           :on-dismiss #(swap! state dissoc :show-request-access? :request-access-message)}))
+                       [:div {:style {:fontSize "112%"}}
                         ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
                         [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
                          "Matching Cohorts"]
@@ -161,30 +166,30 @@
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
    :-get-link-props
-   (fn [_ data]
+   (fn [{:keys [state]} data]
      (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
            ws-auth-domains (set (:authorizationDomain data))]
        (if (= (:workspaceAccess data) "NO ACCESS")
          {:onClick
           (fn [_]
-            (comps/push-message
-             {:header "Request Access"
-              :message
-              (cond (:library:dataAccessInstructions data)
-                    [markdown/MarkdownView {:text (:library:dataAccessInstructions data)}]
-                    (or (not-empty (set/difference ws-auth-domains built-in-groups))
-                        (empty? ws-auth-domains))
-                    (standard-access-instructions data)
-                    :else
-                    [:span {}
-                     (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
-                           target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
-                       [:div {}
-                        (when tcga? tcga-access-instructions)
-                        (when target? target-access-instructions)
-                        (when (or tcga? target?)
-                          [:p {} "After dbGaP approves your application please link your eRA
-                       Commons ID in your FireCloud profile page."])])])}))}
+            (swap! state assoc
+                   :show-request-access? true
+                   :request-access-message
+                   (cond (:library:dataAccessInstructions data)
+                         [markdown/MarkdownView {:text (:library:dataAccessInstructions data)}]
+                         (or (not-empty (set/difference ws-auth-domains built-in-groups))
+                             (empty? ws-auth-domains))
+                         (standard-access-instructions data)
+                         :else
+                         [:span {}
+                          (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
+                                target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
+                            [:div {}
+                             (when tcga? tcga-access-instructions)
+                             (when target? target-access-instructions)
+                             (when (or tcga? target?)
+                               [:p {} "After dbGaP approves your application please link your eRA
+                                       Commons ID in your FireCloud profile page."])])])))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :-build-aggregate-fields
    (fn [{:keys [props]}]

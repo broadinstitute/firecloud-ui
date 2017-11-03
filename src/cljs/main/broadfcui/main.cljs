@@ -263,14 +263,12 @@
       utils/server-down? :server-watcher
       (fn [_ _ _ down-now?]
         (when down-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false)
-          (show-system-status-dialog false))))
+          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
      (add-watch
       utils/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true)
-          (show-system-status-dialog true))))
+          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
      (old-modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
