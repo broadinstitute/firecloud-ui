@@ -6,9 +6,9 @@
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
@@ -120,8 +120,9 @@
      {:tracks (vec (:tracks props))})
    :render
    (fn [{:keys [props state]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header "Select IGV Tracks"
+       :dismiss (:dismiss props)
        :ok-button {:text "Load"
                    :onClick
                    (fn [_]
@@ -132,7 +133,7 @@
                               (some keyword?))
                        (swap! state assoc :index-error true)
                        (do ((:on-ok props) (:tracks @state))
-                           (modal/pop-modal))))}
+                           ((:dismiss props)))))}
        :content
        (react/create-element
         [:div {:style {:width "80vw"}}
