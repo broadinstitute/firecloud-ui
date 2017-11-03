@@ -13,6 +13,7 @@
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -178,29 +179,10 @@
    (fn [{:keys [this state]}]
      (init-nav-paths)
      (this :handle-hash-change)
-     (set! js/window.forceSignedIn
-           (fn [auth-token]
-             (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=" auth-token)
-                          :on-done
-                          (fn [{:keys [status-code success? get-parsed-response]}]
-                            (if success?
-                              (let [{:keys [email sub]} (get-parsed-response)
-                                    instance (clj->js
-                                              {:currentUser
-                                               {:get
-                                                (fn []
-                                                  (clj->js {:getAuthResponse
-                                                            (fn [] (clj->js {:access_token auth-token}))
-                                                            :getBasicProfile
-                                                            (fn [] (clj->js
-                                                                    {:getEmail (fn [] email)
-                                                                     :getId (fn [] sub)}))}))
-                                                :listen (fn [])}
-                                               :signOut
-                                               (fn [] (swap! state update :user-status disj :signed-in))})]
-                                (utils/set-google-auth2-instance! instance)
-                                (swap! state update :user-status conj :signed-in))
-                              (utils/log "Failed to validate token: " status-code)))}))))
+     (set! (.-forceSignedIn js/window)
+           (auth/force-signed-in {:on-sign-in #(swap! state update :user-status conj :signed-in)
+                                  :on-sign-out #(swap! state update :user-status disj :signed-in)
+                                  :on-error (fn [error] (swap! state assoc :force-sign-in-error error))})))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
@@ -209,6 +191,11 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (let [error (:force-sign-in-error @state)]
+          (when error
+            (modals/render-error {:header (str "Error validating access token")
+                                  :text (auth/render-forced-sign-in-error error)
+                                  :on-dismiss #(swap! state dissoc :force-sign-in-error)})))
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))
