@@ -6,6 +6,7 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
+import scala.concurrent.duration.DurationLong
 
 class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
@@ -65,6 +66,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
 
   def waitUntilSubmissionCompletes(): Unit = {
     while (!isSubmissionDone) {
+      Thread sleep 1000  // this is needed for tests to pass on alpha. if you want to change how this is done, make sure it passes on alpha env
       open
     }
   }
