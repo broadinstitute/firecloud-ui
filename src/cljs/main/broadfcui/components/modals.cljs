@@ -61,7 +61,7 @@
                     (string? ok-button)
                     [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
                     (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [buttons/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
+                    (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))]))]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))
