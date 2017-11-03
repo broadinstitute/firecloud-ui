@@ -45,8 +45,8 @@
 
 (defn- translate-research-purpose [research-purpose]
   (->> research-purpose
-       (utils/map-keys {:pop-var "NAGR"
-                        :origins "POA"
+       (utils/map-keys {:aggregates "NAGR"
+                        :poa "POA"
                         :commercial "NCU"})
        (merge {"DS" []
                "NDMS" false
