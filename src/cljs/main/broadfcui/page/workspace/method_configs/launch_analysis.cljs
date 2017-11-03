@@ -11,6 +11,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -74,7 +75,7 @@
                                :onChange #(let [text (-> % .-target .-value string/trim)]
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
-    [comps/Checkbox
+    [Checkbox
      {:ref "callCache-check"
       :label [:span {:data-test-id "call-cache-text" :style {:marginBottom "0.8em"}} "Use Call Caching "
               (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]

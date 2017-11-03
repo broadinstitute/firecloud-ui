@@ -16,6 +16,7 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
+   [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
@@ -42,15 +43,33 @@
    " and request access for the "
    (:namespace data) "/" (:name data) " workspace."])
 
+(defn- translate-research-purpose [research-purpose]
+  (->> research-purpose
+       (utils/map-keys {:aggregates "NAGR"
+                        :poa "POA"
+                        :commercial "NCU"})
+       (merge {"DS" []
+               "NDMS" false
+               "NCTRL" false
+               "NAGR" false
+               "POA" false
+               "NCU" false})))
+
 (react/defc- DatasetsTable
-  {:render
-   (fn [{:keys [state this props]}]
+  {:execute-search
+   (fn [{:keys [refs]} reset-sort?]
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))
+           {:strs [table]} @refs]
+       (when-not (table :update-query-params query-params)
+         (table :refresh-rows))))
+   :render
+   (fn [{:keys [props state this]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
-         :fetch-data (this :pagination)
+         :fetch-data (this :-pagination)
          :style {:content {:marginLeft "2rem"}}
          :body
          {:behavior {:allow-no-sort? true
@@ -65,8 +84,8 @@
                       :render (fn [data]
                                 (when (= (:workspaceAccess data) "NO ACCESS")
                                   (icons/render-icon (merge
-                                               {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
-                                               (this :-get-link-props data))
+                                                      {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
+                                                      (this :-get-link-props data))
                                                      :shield)))}
                      {:id "library:datasetName"
                       :header (:title (:library:datasetName attributes)) :initial-width 250
@@ -74,9 +93,9 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (links/create-internal
-                                 (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
-                                        (this :-get-link-props data))
-                                 (:library:datasetName data)))}
+                                  (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
+                                         (this :-get-link-props data))
+                                  (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -121,11 +140,6 @@
                   :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
-   :execute-search
-   (fn [{:keys [refs]} reset-sort?]
-     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
-       (when-not ((@refs "table") :update-query-params query-params)
-         ((@refs "table") :refresh-rows))))
    :-get-link-props
    (fn [_ data]
      (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
@@ -150,7 +164,7 @@
                        [:p {} "After dbGaP approves your application please link your eRA
                        Commons ID in your FireCloud profile page."])])])]}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
-   :build-aggregate-fields
+   :-build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
       ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
@@ -161,8 +175,8 @@
                                5)))
       {}
       (:aggregate-fields props)))
-   :pagination
-   (fn [{:keys [this state props]}]
+   :-pagination
+   (fn [{:keys [props state this]}]
      (fn [{:keys [query-params on-done]}]
        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
          (when (seq (:aggregate-fields props))
@@ -172,12 +186,13 @@
               {:endpoint endpoints/search-datasets
                :payload {:searchString (:filter-text props)
                          :filters ((:get-facets props))
+                         :researchPurpose (translate-research-purpose (:research-purpose props))
                          :from from
                          :size rows-per-page
                          :sortField sort-column
                          :sortDirection sort-order
                          :fieldAggregations (if update-aggregates?
-                                              (this :build-aggregate-fields)
+                                              (this :-build-aggregate-fields)
                                               {})}
                :headers utils/content-type=json
                :on-done
@@ -312,7 +327,7 @@
                          {:aggregate-properties (get aggregate-properties aggregate-field)
                           :expanded? (contains? expanded-aggregates aggregate-field)
                           :selected-items (set (get facet-filters aggregate-field))})])
-                          (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
+         (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
@@ -320,15 +335,19 @@
 (react/defc- Page
   (->>
    {:update-filter
-    (fn [{:keys [state after-update refs]} facet-name facet-list]
-      (if (empty? facet-list)
-        (swap! state update :facet-filters dissoc facet-name)
-        (swap! state assoc-in [:facet-filters facet-name] facet-list))
-      (after-update #((@refs "dataset-table") :execute-search false)))
+    (fn [{:keys [state this]} facet-name facet-list]
+      ;; NOTE: The TagAutocomplete used here is very touchy and fires extra on-change events.
+      ;; Check here that something is actually changing before firing off state updates and
+      ;; table refreshes.
+      (when (not= (not-empty facet-list) (not-empty (get-in @state [:facet-filters facet-name])))
+        (if (empty? facet-list)
+          (swap! state update :facet-filters dissoc facet-name)
+          (swap! state assoc-in [:facet-filters facet-name] facet-list))
+        (this :-refresh-table)))
     :set-expanded-aggregate
-    (fn [{:keys [state refs after-update]} facet-name expanded?]
+    (fn [{:keys [state this]} facet-name expanded?]
       (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
-      (after-update #((@refs "dataset-table") :execute-search false)))
+      (this :-refresh-table))
     :component-did-mount
     (fn [{:keys [state]}]
       (endpoints/get-library-attributes
@@ -343,7 +362,7 @@
                     :facet-filters (select-keys facets aggs)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
-    (fn [{:keys [this refs state after-update]}]
+    (fn [{:keys [state this]}]
       [:div {:style {:display "flex"}}
        (apply
         filter/area {:style {:width 260 :boxSizing "border-box"}}
@@ -352,7 +371,16 @@
                                 :on-input #(swap! state assoc :search-text %)
                                 :on-filter (fn [text]
                                              (swap! state assoc :search-text text)
-                                             (after-update #((@refs "dataset-table") :execute-search true)))})
+                                             (this :-refresh-table true))})
+        (when (config/debug?)
+          [ResearchPurposeSection
+           {:research-purpose-values (:research-purpose @state)
+            :on-search (fn [options]
+                         (swap! state assoc :research-purpose
+                                ;; Throw out false/empty. Currently, the only codes in use are
+                                ;; true/false so this works for now.
+                                (utils/filter-values identity options))
+                         (this :-refresh-table))}])
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)
@@ -366,12 +394,17 @@
           [DatasetsTable (merge
                           {:ref "dataset-table"
                            :filter-text (:search-text @state)
+                           :research-purpose (:research-purpose @state)
                            :update-aggregates #(swap! state assoc :aggregates %)
                            :no-aggregates? (empty? (:aggregates @state))
                            :get-facets #(utils/map-keys name (:facet-filters @state))}
-                          (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
+                          (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])
+    :-refresh-table
+    (fn [{:keys [refs after-update]} & [reset-sort?]]
+      (after-update #((@refs "dataset-table") :execute-search reset-sort?)))}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""
+                                                  :research-purpose {}
                                                   :facet-filters {}
                                                   :expanded-aggregates #{}}
                                         :except [:library-attributes :aggregates]})))

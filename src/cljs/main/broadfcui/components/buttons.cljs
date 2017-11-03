@@ -103,9 +103,8 @@
 
 
 (defn x-button [dismiss]
-  [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
-   [:a {:data-test-id "x-button"
-        :style {:color (:text-light style/colors)}
-        :href "javascript:;"
-        :onClick dismiss}
-    (icons/render-icon {:style {:fontSize "80%"}} :close)]])
+  [:a {:data-test-id "x-button"
+       :style {:color (:text-light style/colors) :marginRight "-1.5rem"}
+       :href "javascript:;"
+       :onClick dismiss}
+   (icons/render-icon {:style {:fontSize "80%"}} :close)])

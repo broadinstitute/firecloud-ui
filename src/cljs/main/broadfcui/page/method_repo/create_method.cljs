@@ -9,6 +9,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -143,8 +144,8 @@
                                     :style {:width "100%"}
                                     :rows 1})
            (when (:edit-mode? info)
-             [comps/Checkbox {:ref "redact-checkbox"
-                              :label (str "Redact Snapshot " (:snapshotId info))}])
+             [Checkbox {:ref "redact-checkbox"
+                        :label (str "Redact Snapshot " (:snapshotId info))}])
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])

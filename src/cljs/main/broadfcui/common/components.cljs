@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
@@ -43,30 +44,6 @@
    (fn [{:keys [this state locals]}]
      (swap! state update :dot-count #(mod (inc %) 4))
      (swap! locals assoc :-cycle (js/setTimeout #(this :-cycle) 600)))})
-
-
-(react/defc Checkbox
-  {:checked?
-   (fn [{:keys [refs]}]
-     (.-checked (@refs "check")))
-   :get-default-props
-   (fn []
-     {:initial-checked? false
-      :disabled? false})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [disabled? data-test-id]} props]
-       [:label {:style {:cursor (when-not disabled? "pointer")
-                        :color (when disabled? (:text-light style/colors))}
-                :title (when disabled? (:disabled-text props))
-                :onClick (when disabled?
-                           #(push-error
-                             (or (:disabled-text props) "This option is not available.")))}
-        [:input {:type "checkbox" :ref "check"
-                 :defaultChecked (:initial-checked? props)
-                 :disabled disabled? :data-test-id data-test-id
-                 :style {:cursor (when-not disabled? "pointer")}}]
-        [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
@@ -281,11 +258,13 @@
      (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
            cancel-text (or cancel-text "Cancel")]
        [:div {}
-        [:div {:style {:borderBottom style/standard-line
+        [:div {:style {:display "flex" :align-items "flex-start"
+                       :borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}
                :data-test-id data-test-id}
          header
+         flex/spring
          (when show-close? (buttons/x-button modal/pop-modal))]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
@@ -373,6 +352,8 @@
     #(push-error thing)))
 
 
+;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
+;; :component-will-receive-props.
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]
