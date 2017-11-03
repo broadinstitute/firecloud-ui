@@ -14,13 +14,14 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
-   [broadfcui.components.modals :as modals]))
+   ))
 
 (def ^:private tcga-access-instructions
   [:span {}
@@ -147,7 +148,7 @@
                          (modals/render-message
                           {:header "Request Access"
                            :text (:request-access-message @state)
-                           :on-dismiss #(swap! state dissoc :show-request-access? :request-access-message)}))
+                           :on-confirm #(swap! state dissoc :show-request-access? :request-access-message)}))
                        [:div {:style {:fontSize "112%"}}
                         ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
                         [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}

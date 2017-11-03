@@ -162,7 +162,8 @@
            status (common/compute-status workspace)
            published? (:library:published library-attributes)
            publisher? (and curator? (or catalog-with-read? owner?))
-           publishable? (and curator? (or catalog-with-read? owner?))]
+           publishable? (and curator? (or catalog-with-read? owner?))
+           show-publish-message (fn [p] (swap! state assoc :showing-publish-message? true :publish-message p))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:cloning? @state)
           [create/CreateDialog
@@ -174,6 +175,9 @@
         (when (:deleting? @state)
           [DeleteDialog (assoc (utils/restructure workspace-id published?)
                           :dismiss #(swap! state dissoc :deleting?))])
+        (when (:showing-publish-message? @state)
+          (modals/render-message (assoc (:publish-message @state)
+                                   :on-confirm #(swap! state dissoc :showing-publish-message? :publish-message))))
         [:span {:id label-id}
          [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
@@ -215,9 +219,9 @@
                                     (apply concat))
                      required-attributes (library-utils/find-required-attributes library-schema)]
                  (if (:library:published library-attributes)
-                   [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
+                   [publish/UnpublishButton (utils/restructure workspace-id request-refresh show-publish-message)]
                    [publish/PublishButton
-                    (merge (utils/restructure workspace-id request-refresh)
+                    (merge (utils/restructure workspace-id request-refresh show-publish-message)
                            {:disabled? (cond (empty? library-attributes)
                                              "Dataset attributes must be created before publishing."
                                              (seq (library-utils/validate-required

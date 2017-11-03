@@ -27,9 +27,9 @@
                      :on-done (fn [{:keys [success? get-parsed-response]}]
                                 (swap! state dissoc :publishing?)
                                 (if success?
-                                  (do (comps/push-message
+                                  (do ((:show-publish-message props)
                                        {:header "Success!"
-                                        :message "Successfully published to Library"})
+                                        :text "Successfully published to Library"})
                                       ((:request-refresh props)))
                                   (comps/push-error-response
                                    (get-parsed-response false))))}))}]])})
@@ -50,9 +50,9 @@
                      :on-done (fn [{:keys [success? get-parsed-response]}]
                                 (swap! state dissoc :unpublishing?)
                                 (if success?
-                                  (do (comps/push-message
+                                  (do ((:show-publish-message props)
                                        {:header "Success!"
-                                        :message "This dataset is no longer displayed in the Data Library catalog."})
+                                        :text "This dataset is no longer displayed in the Data Library catalog."})
                                       ((:request-refresh props)))
                                   (comps/push-error-response
                                    (get-parsed-response false))))}))}]])})

@@ -101,5 +101,6 @@
    {:data-test-id "message-modal"
     :header (or header "Confirm")
     :content [:div {:style {:width 500}} text]
+    :show-cancel? false
     :ok-button on-confirm
     :dismiss on-dismiss}])
