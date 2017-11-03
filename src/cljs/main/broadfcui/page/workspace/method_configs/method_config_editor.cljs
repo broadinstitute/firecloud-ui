@@ -14,7 +14,7 @@
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
-   [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
+   [broadfcui.page.workspace.method-configs.launch-analysis :refer [LaunchAnalysisButton]]
    [broadfcui.page.workspace.method-configs.publish :as publish]
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
@@ -189,7 +189,7 @@
        [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
-           (launch/render-button {:workspace-id (:workspace-id props)
+           [LaunchAnalysisButton {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
                                   :column-defaults (:workspace-column-defaults workspace-attributes)
                                   :root-entity-type rootEntityType
@@ -202,7 +202,7 @@
                                                         " to the Google Bucket associated with this workspace.")
                                                    redacted?
                                                    "The method snapshot this config references has been redacted.")
-                                  :on-success (:on-submission-success props)})])
+                                  :on-success (:on-submission-success props)}]])
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
