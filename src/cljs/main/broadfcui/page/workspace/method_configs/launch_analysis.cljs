@@ -114,11 +114,10 @@
        :data-test-id "launch-analysis-modal"}])
    :component-did-mount
    (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/cromwell-version)
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (when success?
-                    (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
+     (endpoints/cromwell-version
+      (fn [{:keys [success? get-parsed-response]}]
+        (when success?
+          (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))))
    :launch
    (fn [{:keys [props state refs]}]
      (if-let [entity (:selected-entity @state)]

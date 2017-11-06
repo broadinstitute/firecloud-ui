@@ -851,7 +851,10 @@
                 "Aborted" (rand-int 1000)
                 "Unknown" (rand-int 1000)}}})
 
-(defn cromwell-version []
-  {:path "/version/executionEngine"
-   :method :get
-   :mock-data {"cromwell" "25-489f66b"}})
+(defn cromwell-version [on-done]
+  (utils/ajax-orch
+   "/executionEngine"
+   {:method :get
+    :on-done on-done}
+   :service-prefix "/version"))
+
