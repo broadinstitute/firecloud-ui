@@ -127,9 +127,9 @@
         (modals/render-error {:text abort-error :dismiss #(swap! state dissoc :abort-error)}))
       (when (:confirming? @state)
         (modals/render-confirm {:text "Are you sure you want to abort this submission?"
-                                :confirm [buttons/Button {:data-test-id "submission-abort-modal-confirm-button"
-                                                          :text "Abort Submission"
-                                                          :onClick #(this :-abort-submission)}]
+                                :confirm {:data-test-id "submission-abort-modal-confirm-button"
+                                          :text "Abort Submission"
+                                          :onClick #(this :-abort-submission)}
                                 :dismiss #(swap! state dissoc :confirming?)}))
       [buttons/SidebarButton
        {:data-test-id "submission-abort-button"

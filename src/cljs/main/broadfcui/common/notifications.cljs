@@ -53,7 +53,7 @@
        [:div {}
         (when (:show-new-service-alert-message? @state)
           (modals/render-message {:header "New Service Alert" :text "See the page header for details."
-                                  :confirm #(swap! state dissoc :show-new-service-alert-message?)}))
+                                  :dismiss #(swap! state dissoc :show-new-service-alert-message?)}))
         (map #(render-alert % (partial this :-remove-alert %)) service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]

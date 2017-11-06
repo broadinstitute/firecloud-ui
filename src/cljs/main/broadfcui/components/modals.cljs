@@ -58,8 +58,7 @@
                    cancel-text])
                 (when ok-button
                   (cond
-                    (string? ok-button)
-                    [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                    (string? ok-button) [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
                     (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
                     (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))]))]]
@@ -100,14 +99,19 @@
   (render-error (assoc (dissoc params :error-response)
                   :text [comps/ErrorViewer {:error error-response}])))
 
-(defn render-message [{:keys [header text confirm dismiss]}]
+(defn render-message [{:keys [header text dismiss]}]
   [OKCancelForm
    {:data-test-id "message-modal"
     :header (or header "Confirm")
     :content [:div {:style {:width 500}} text]
     :show-cancel? false
-    :ok-button confirm
+    :ok-button dismiss
     :dismiss dismiss}])
 
-(defn render-confirm [props]
-  (render-message (merge {:data-test-id "confirmation-modal"} props)))
+(defn render-confirm [{:keys [header text confirm dismiss]}]
+  [OKCancelForm
+   {:data-test-id "confirmation-modal"
+    :header (or header "Confirm")
+    :content [:div {:style {:width 500}} text]
+    :ok-button confirm
+    :dismiss dismiss}])

@@ -99,9 +99,9 @@
                    (this :-load-data)))}))
    :-render-confirmation
    (fn [{:keys [state this]}]
-     (modals/render-message
+     (modals/render-confirm
       {:text (str "Are you sure you want to delete the group " (:group-name @state) "?")
-       :confirm #(this :-delete-group)
+       :confirm {:text "Delete" :onClick #(this :-delete-group)}
        :dismiss #(swap! state dissoc :delete-modal?)}))
    :-render-deletion-actions
    (fn [{:keys [state]}]
