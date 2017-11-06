@@ -310,6 +310,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
             val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
             errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
+            errorModal.clickCancel()
           }
         }
 
