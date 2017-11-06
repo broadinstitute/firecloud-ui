@@ -8,7 +8,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.common.components :as comps]))
 
 
 (defn show-modals [state m]
@@ -95,6 +95,10 @@
     :content [:div {:style {:width 500}} text]
     :dismiss dismiss
     :show-cancel? false :ok-button "OK"}])
+
+(defn render-error-response [{:keys [error-response] :as params}]
+  (render-error (assoc (dissoc params :error-response)
+                  :text [comps/ErrorViewer {:error error-response}])))
 
 (defn render-message [{:keys [header text confirm dismiss]}]
   [OKCancelForm

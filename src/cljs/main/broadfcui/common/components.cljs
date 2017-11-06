@@ -309,10 +309,6 @@
     :show-cancel? false :ok-button "OK"}))
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-error-response [error-response]
-  (push-error [ErrorViewer {:error error-response}]))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-confirm [{:keys [header text on-confirm]}]
   (push-ok-cancel-modal
    {:header (or header "Confirm")

@@ -173,6 +173,8 @@
         (blocker (:blocker @state))
         (when (:showing-error-popup? @state)
           (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
+        (when-let [error-response (:error-response @state)]
+          (modals/render-error-response {:error error-response :dismiss #(swap! state dissoc :error-response)}))
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
@@ -315,7 +317,7 @@
                           ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
                           (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
                                                    (dissoc :redacted?)))
-                      (comps/push-error-response (get-parsed-response false))))})))
+                      (swap! state assoc :error-response (get-parsed-response false))))})))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch

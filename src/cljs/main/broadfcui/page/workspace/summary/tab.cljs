@@ -119,6 +119,9 @@
                                      :else "ready")}
         (when popup-error
           (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
+        (when-let [error-response (:error-response @state)]
+          (modals/render-error-response {:error-response error-response
+                                         :dismiss #(swap! state dissoc :error-response)}))
         [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
         (if server-error
           (style/create-server-error-message server-error)
@@ -382,9 +385,7 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:request-refresh props))
-                    (do
-                      (swap! state dissoc :updating-attrs?)
-                      (comps/push-error-response (get-parsed-response false)))))}))
+                    (swap! state assoc :updating-attrs? nil :error-response (get-parsed-response false))))}))
    :-lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? (not locked-now?))

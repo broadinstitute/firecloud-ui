@@ -81,7 +81,7 @@
 
 (react/defc SyncContainer
   {:check-synchronization
-   (fn [{:keys [props this]} new-users]
+   (fn [{:keys [props state this]} new-users]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-permission-report (:workspace-id props))
        :payload {:users new-users}
@@ -89,10 +89,13 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (this :-perform-sync-logic (get-parsed-response))
-                    (comps/push-error-response (get-parsed-response false))))}))
+                    (swap! state assoc :error-response (get-parsed-response false))))}))
    :render
    (fn [{:keys [state]}]
      [:div {}
+      (when-let [error-response (:error-response @state)]
+        (modals/render-error-response {:error-response error-response
+                                       :dismiss #(swap! state dissoc :error-response)}))
       (when (:show-sync-modal? @state)
         [SyncModal (merge (select-keys @state [:owned-methods :unowned-methods])
                           {:dismiss #(swap! state dissoc :show-sync-modal?)})])])
