@@ -50,5 +50,5 @@
                       (swap! state dissoc :creating?)
                       (if success?
                         (do ((:on-success props))
-                            (modal/pop-modal))
+                            ((:dismiss props)))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))})
