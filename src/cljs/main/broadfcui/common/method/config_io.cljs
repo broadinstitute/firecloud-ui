@@ -30,8 +30,8 @@
    :save
    (fn [{:keys [props state locals]}]
      (swap! state dissoc :editing?)
-     {:inputs (select-keys (:inputs @locals) (map #(keyword (:name %)) (:inputs (:inputs-outputs props))))
-      :outputs (select-keys (:outputs @locals) (map #(keyword (:name %)) (:outputs (:inputs-outputs props))))})
+     {:inputs (select-keys (:inputs @locals) (map (comp keyword :name) (:inputs (:inputs-outputs props))))
+      :outputs (select-keys (:outputs @locals) (map (comp keyword :name) (:outputs (:inputs-outputs props))))})
    :component-will-mount
    (fn [{:keys [props locals]}]
      (swap! locals utils/deep-merge (:values props)))
