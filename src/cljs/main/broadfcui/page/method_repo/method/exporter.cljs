@@ -60,51 +60,46 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [method-name dismiss workspace-id]} props
-           {:keys [configs configs-error selected-config banner]} @state
+           {:keys [selected-config banner]} @state
            exporter [:div {}
                      (when banner
                        [comps/Blocker {:banner banner}])
-                     (cond configs-error (style/create-server-error-message configs-error)
-                           selected-config (this :-render-export-page)
-                           configs (this :-render-config-selector)
-                           :else [comps/Spinner {:text "Loading Method Configurations..."}])]]
+                     (if selected-config
+                       (this :-render-export-page)
+                       (this :-render-config-selector))]]
        (if workspace-id
-         [:div {} exporter (cond selected-config (this :-render-export-page-buttons)
-                                 configs (this :-render-config-selector-buttons))]
+         [:div {} exporter (if selected-config
+                             (this :-render-export-page-buttons)
+                             (this :-render-config-selector-buttons))]
          [modals/OKCancelForm
           {:header (str "Export " method-name " to Workspace")
            :content (react/create-element exporter)
-           :button-bar (cond selected-config (this :-render-export-page-buttons)
-                             configs (this :-render-config-selector-buttons))
+           :button-bar (if selected-config
+                         (this :-render-export-page-buttons)
+                         (this :-render-config-selector-buttons))
            :show-cancel? false
            :dismiss dismiss}])))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-compatible-configs (assoc (:method-id props) :snapshot-id (:selected-snapshot-id props)))
-       :on-done (net/handle-ajax-response
-                 (fn [{:keys [success? parsed-response]}]
-                   (if success?
-                     (let [configs (map #(assoc % :payload (utils/parse-json-string (:payload %) true)) parsed-response)]
-                       (swap! state assoc :configs configs :preview-config (utils/first-matching #(= (:preview-config-id @state) (config->id+snapshot %)) configs)))
-                     (swap! state assoc :configs-error (:message parsed-response)))))}))
    :-render-config-selector
-   (fn [{:keys [state]}]
-     (let [{:keys [configs preview-config]} @state]
+   (fn [{:keys [props state]}]
+     (let [{:keys [preview-config]} @state]
        [:div {:style {:backgroundColor "white" :padding "1rem" :width "100vw" :maxWidth "calc(100% - 2rem)"}}
         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
          "Select Method Configuration"]
         [:div {:style {:maxHeight 580}}
          [SplitPane
-          {:left (method-common/render-config-table
-                  {:configs configs
+          {:left [method-common/ConfigTable
+                  {:method-id (:method-id props)
+                   :snapshot-id (:selected-snapshot-id props)
                    :style {:body-row (fn [{:keys [row]}]
                                        {:borderTop style/standard-line :alignItems "baseline"
                                         :background-color (when (= (config->id+snapshot preview-config) (config->id+snapshot row))
                                                             (:tag-background style/colors))})}
                    :make-config-link-props
                    (fn [config]
-                     {:onClick #(swap! state assoc :preview-config config)})})
+                     {:onClick #(swap! state assoc :preview-config config)})
+                   :on-load (fn [configs]
+                              (swap! state assoc :preview-config
+                                     (utils/first-matching #(= (:preview-config-id @state) (config->id+snapshot %)) configs)))}]
            :right (if preview-config
                     [Preview {:preview-config preview-config}]
                     [:div {:style {:position "relative" :backgroundColor "white" :height "100%"}}
