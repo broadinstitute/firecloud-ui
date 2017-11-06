@@ -298,14 +298,6 @@
   (modal/push-modal [OKCancelForm props]))
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-message [{:keys [header message]}]
-  (push-ok-cancel-modal
-   {:header (or header "Message")
-    :data-test-id "push-message"
-    :content [:div {:style {:maxWidth 500}} message]
-    :show-cancel? false :ok-button "OK"}))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
