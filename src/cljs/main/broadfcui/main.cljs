@@ -198,7 +198,7 @@
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
                                 :text (auth/render-forced-sign-in-error error)
-                                :on-dismiss #(swap! state dissoc :force-sign-in-error)}))
+                                :dismiss #(swap! state dissoc :force-sign-in-error)}))
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))

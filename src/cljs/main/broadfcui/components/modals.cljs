@@ -85,7 +85,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(defn render-error [{:keys [header text on-dismiss icon-color]}]
+(defn render-error [{:keys [header text dismiss icon-color]}]
   [OKCancelForm
    {:data-test-id "error-modal"
     :header [:div {:style {:display "inline-flex" :align-items "center"}}
@@ -93,14 +93,14 @@
                                          :marginRight "0.5rem"}} :error)
              (or header "Error")]
     :content [:div {:style {:width 500}} text]
-    :dismiss on-dismiss
+    :dismiss dismiss
     :show-cancel? false :ok-button "OK"}])
 
-(defn render-message [{:keys [header text on-confirm on-dismiss]}]
+(defn render-message [{:keys [header text confirm dismiss]}]
   [OKCancelForm
    {:data-test-id "message-modal"
     :header (or header "Confirm")
     :content [:div {:style {:width 500}} text]
     :show-cancel? false
-    :ok-button on-confirm
-    :dismiss on-dismiss}])
+    :ok-button confirm
+    :dismiss dismiss}])

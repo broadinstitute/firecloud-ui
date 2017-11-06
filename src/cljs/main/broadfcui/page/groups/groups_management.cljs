@@ -101,8 +101,8 @@
    (fn [{:keys [state this]}]
      (modals/render-message
       {:text (str "Are you sure you want to delete the group " (:group-name @state) "?")
-       :on-confirm #(this :-delete-group)
-       :on-dismiss #(swap! state dissoc :delete-modal?)}))
+       :confirm #(this :-delete-group)
+       :dismiss #(swap! state dissoc :delete-modal?)}))
    :-render-deletion-actions
    (fn [{:keys [state]}]
      (net/render-with-ajax
@@ -116,7 +116,7 @@
           {:text (if (= 409 (:statusCode parsed-response))
                    "This group cannot be deleted because it is in use."
                    (:message parsed-response))
-           :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
+           :dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
 
 (react/defc- Page
   {:render

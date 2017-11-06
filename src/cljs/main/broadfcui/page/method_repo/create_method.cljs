@@ -52,7 +52,7 @@
           [:div {:style {:width "80vw"}}
            (blocker (:banner @state))
            (when-let [error-message (:complete-error @state)]
-             (modals/render-error {:text error-message :on-dismiss #(swap! state dissoc :complete-error)}))
+             (modals/render-error {:text error-message :dismiss #(swap! state dissoc :complete-error)}))
 
            [:div {:style {:display "flex" :justifyContent "space-between"}}
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}

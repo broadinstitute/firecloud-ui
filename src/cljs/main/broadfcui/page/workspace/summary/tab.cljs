@@ -177,7 +177,7 @@
                           :dismiss #(swap! state dissoc :deleting?))])
         (when (:showing-publish-message? @state)
           (modals/render-message (assoc (:publish-message @state)
-                                   :on-confirm #(swap! state dissoc :showing-publish-message? :publish-message))))
+                                   :confirm #(swap! state dissoc :showing-publish-message? :publish-message))))
         [:span {:id label-id}
          [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
