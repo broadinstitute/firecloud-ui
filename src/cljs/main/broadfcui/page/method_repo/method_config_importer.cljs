@@ -135,6 +135,8 @@
         body-id (gensym "form")]
     [:div {:style {:display "flex"}}
      (blocker (:blocking-text @state))
+     (when-let [msg (:error-popup @state)]
+       (modals/render-error {:text msg :dismiss #(swap! state dissoc :error-popup)}))
      (when (and any-actions? (:allow-edit props))
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
@@ -228,9 +230,8 @@
                         (let [response (get-parsed-response)]
                           (if-not success?
                             (do
-                              (swap! state dissoc :blocking-text)
-                              (modal/pop-modal)
-                              (comps/push-error (style/create-server-error-message (:message response))))
+                              (swap! state assoc :blocking-text nil :error-popup (:message response))
+                              (modal/pop-modal))
                             (endpoints/call-ajax-orch
                              {:endpoint (endpoints/post-workspace-method-config workspace-id)
                               :payload (assoc response

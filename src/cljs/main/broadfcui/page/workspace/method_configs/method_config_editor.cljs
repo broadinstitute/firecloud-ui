@@ -10,6 +10,7 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
@@ -170,6 +171,8 @@
            methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
        [:div {}
         (blocker (:blocker @state))
+        (when (:showing-error-popup? @state)
+          (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
@@ -354,7 +357,11 @@
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]
-                      (if success?
+                      (if-not success?
+                        (do
+                          (utils/multi-swap! state (assoc :redacted? true :wdl-parse-error (:message response))
+                                                   (dissoc :blocker))
+                          (comps/push-error (style/create-server-error-message (:message response))))
                         (endpoints/call-ajax-orch
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (:methodRepoMethod response)
@@ -371,8 +378,4 @@
                                                                  :validOutputs {})
                                                 :inputs-outputs (get-parsed-response)
                                                 :redacted? false)
-                                         (swap! state assoc :error (:message (get-parsed-response))))))})
-                        (do
-                          (utils/multi-swap! state (assoc :redacted? true :wdl-parse-error (:message response))
-                                                   (dissoc :blocker))
-                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
+                                         (swap! state assoc :error (:message (get-parsed-response))))))}))))})))})
