@@ -9,7 +9,6 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
@@ -254,7 +253,6 @@
             (:js-error @state)
             #(swap! state dissoc :showing-js-error-dialog? :js-error)))
          ;; As low as possible on the page so it will be the frontmost component when displayed.
-         [old-modal/Component {:ref "modal"}]
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [state this refs locals]}]
@@ -269,7 +267,6 @@
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
           (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
-     (old-modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
