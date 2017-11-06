@@ -114,7 +114,7 @@
        :data-test-id "launch-analysis-modal"}])
    :component-did-mount
    (fn [{:keys [state]}]
-     (endpoints/cromwell-version
+     (endpoints/get-cromwell-version
       (fn [{:keys [success? get-parsed-response]}]
         (when success?
           (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))))

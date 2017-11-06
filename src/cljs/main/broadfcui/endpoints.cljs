@@ -851,7 +851,7 @@
                 "Aborted" (rand-int 1000)
                 "Unknown" (rand-int 1000)}}})
 
-(defn cromwell-version [on-done]
+(defn get-cromwell-version [on-done]
   (utils/ajax-orch
    "/executionEngine"
    {:method :get
