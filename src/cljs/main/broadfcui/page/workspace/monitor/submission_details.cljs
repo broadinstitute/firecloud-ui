@@ -121,25 +121,25 @@
 (react/defc- AbortButton
   {:render
    (fn [{:keys [state this]}]
-     (when (:aborting-submission? @state)
-       (blocker "Aborting submission..."))
-     (when-let [abort-error (:abort-error @state)]
-       (modals/render-error {:text abort-error :dismiss #(swap! state dissoc :abort-error)}))
-     [buttons/SidebarButton
-      {:data-test-id "submission-abort-button"
-       :color :state-exception :style :light :margin :top
-       :text "Abort" :icon :warning
-       :onClick (fn [_]
-                  (comps/push-confirm
-                   {:text "Are you sure you want to abort this submission?"
-                    :on-confirm
-                    [buttons/Button {:data-test-id "submission-abort-modal-confirm-button"
-                                     :text "Abort Submission"
-                                     :onClick #(this :abort-submission)}]}))}])
-   :abort-submission
+     [:div {}
+      (when (:aborting-submission? @state)
+        (blocker "Aborting submission..."))
+      (when-let [abort-error (:abort-error @state)]
+        (modals/render-error {:text abort-error :dismiss #(swap! state dissoc :abort-error)}))
+      (when (:confirming? @state)
+        (modals/render-confirm {:text "Are you sure you want to abort this submission?"
+                                :confirm [buttons/Button {:data-test-id "submission-abort-modal-confirm-button"
+                                                          :text "Abort Submission"
+                                                          :onClick #(this :-abort-submission)}]
+                                :dismiss #(swap! state dissoc :confirming?)}))
+      [buttons/SidebarButton
+       {:data-test-id "submission-abort-button"
+        :color :state-exception :style :light :margin :top
+        :text "Abort" :icon :warning
+        :onClick #(swap! state assoc :confirming? true)}]])
+   :-abort-submission
    (fn [{:keys [props state]}]
-     (modal/pop-modal)
-     (swap! state assoc :aborting-submission? true)
+     (swap! state assoc :aborting-submission? true :confirming? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
        :headers utils/content-type=json

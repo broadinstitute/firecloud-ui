@@ -293,16 +293,6 @@
                            :style {:display "block"}}
                           "Learn how to create a billing project.")])
 
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-ok-cancel-modal [props]
-  (modal/push-modal [OKCancelForm props]))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-confirm [{:keys [header text on-confirm]}]
-  (push-ok-cancel-modal
-   {:header (or header "Confirm")
-    :content [:div {:style {:maxWidth 500}} text]
-    :ok-button on-confirm}))
 
 ;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
 ;; :component-will-receive-props.

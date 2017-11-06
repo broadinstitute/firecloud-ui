@@ -108,3 +108,6 @@
     :show-cancel? false
     :ok-button confirm
     :dismiss dismiss}])
+
+(defn render-confirm [props]
+  (render-message (merge {:data-test-id "confirmation-modal"} props)))
