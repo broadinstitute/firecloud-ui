@@ -182,7 +182,7 @@
      (set! (.-forceSignedIn js/window)
            (auth/force-signed-in {:on-sign-in #(swap! state update :user-status conj :signed-in)
                                   :on-sign-out #(swap! state update :user-status disj :signed-in)
-                                  :on-error (fn [error] (swap! state assoc :force-sign-in-error error))})))
+                                  :on-error #(swap! state assoc :force-sign-in-error %)})))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
@@ -191,11 +191,10 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
-        (let [error (:force-sign-in-error @state)]
-          (when error
-            (modals/render-error {:header (str "Error validating access token")
-                                  :text (auth/render-forced-sign-in-error error)
-                                  :on-dismiss #(swap! state dissoc :force-sign-in-error)})))
+        (when-let [error (:force-sign-in-error @state)]
+          (modals/render-error {:header (str "Error validating access token")
+                                :text (auth/render-forced-sign-in-error error)
+                                :on-dismiss #(swap! state dissoc :force-sign-in-error)}))
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))

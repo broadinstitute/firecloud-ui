@@ -161,7 +161,8 @@
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token]
-    (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=" auth-token)
+    (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
+                           (js/encodeURIComponent auth-token))
                  :on-done
                  (fn [{:keys [status-code success? get-parsed-response raw-response]}]
                    (if success?
@@ -176,7 +177,7 @@
                                        :getBasicProfile
                                        (constantly (clj->js {:getEmail (constantly email)
                                                              :getId (constantly sub)}))}))
-                                    :listen (fn [])}
+                                    :listen (constantly nil)}
                                    :signOut on-sign-out})]
                        (utils/set-google-auth2-instance! auth2)
                        (on-sign-in))
