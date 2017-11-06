@@ -298,27 +298,11 @@
   (modal/push-modal [OKCancelForm props]))
 
 ;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-error [content]
-  (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
-             (icons/render-icon {:style {:color (:state-exception style/colors)
-                                  :marginRight "0.5em"}} :error)
-             "Error"]
-    :data-test-id "push-error"
-    :content [:div {:style {:maxWidth "50vw"} :data-test-id "error-text"} content]
-    :show-cancel? false :ok-button "OK"}))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
 (defn push-confirm [{:keys [header text on-confirm]}]
   (push-ok-cancel-modal
    {:header (or header "Confirm")
     :content [:div {:style {:maxWidth 500}} text]
     :ok-button on-confirm}))
-
-(defn create-error-message [thing]
-  (when (common/renderable? thing)
-    #(push-error thing)))
-
 
 ;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
 ;; :component-will-receive-props.
