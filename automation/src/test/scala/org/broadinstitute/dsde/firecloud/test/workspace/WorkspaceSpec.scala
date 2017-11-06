@@ -319,9 +319,10 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
-          signIn(user)
-          val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-          methodConfigListPage.importConfigButtonEnabled() shouldBe false
+          withSignIn(user) { _ =>
+            val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+            methodConfigListPage.importConfigButtonEnabled() shouldBe false
+          }
         }
       }
     }

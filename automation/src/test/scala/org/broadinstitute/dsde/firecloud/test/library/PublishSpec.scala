@@ -82,7 +82,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               //            Thread sleep 500
 
               retry[Boolean](100.milliseconds, 1.minute)({
-                val libraryPage = new DataLibraryPage().open
+                val libraryPage = wspage.goToDataLibrary()
                 if (libraryPage.hasDataset(wsName))
                   None
                 else Some(false)

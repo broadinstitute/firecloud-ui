@@ -2,14 +2,14 @@ package org.broadinstitute.dsde.firecloud.page.library
 
 import org.broadinstitute.dsde.firecloud.component.Link
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 /**
   * Page class for the Data Library page.
   */
-class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage with Page with PageUtil[DataLibraryPage] {
+class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with Page with PageUtil[DataLibraryPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
   override def awaitReady(): Unit = {

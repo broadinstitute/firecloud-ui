@@ -15,15 +15,14 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cle
         val users = UserPool.chooseStudents(2)
         val user1 = users.head
         val user2 = users(1)
-        withSignIn(user1) { listPage =>
+        withSignInReal(user1) { listPage =>
           listPage.readUserEmail() shouldEqual user1.email
         }
-        withSignIn(user2) { listPage =>
+        withSignInReal(user2) { listPage =>
           listPage.readUserEmail() shouldEqual user2.email
         }
-        withSignIn(user1) { listPage =>
+        withSignInReal(user1) { listPage =>
           listPage.readUserEmail() shouldEqual user1.email
-
         }
       }
     }

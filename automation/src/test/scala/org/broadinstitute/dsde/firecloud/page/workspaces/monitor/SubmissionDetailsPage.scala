@@ -65,7 +65,10 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
 
   def waitUntilSubmissionCompletes(): Unit = {
     while (!isSubmissionDone) {
-      open
+      // No need to be too impatient... let's catch our breath before we check again.
+      Thread sleep 10000
+      val monitorPage = goToMonitorTab()
+      monitorPage.openSubmission(submissionId)
     }
   }
 
