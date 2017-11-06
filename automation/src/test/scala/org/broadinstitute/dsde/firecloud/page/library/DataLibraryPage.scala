@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
 import org.broadinstitute.dsde.firecloud.component.Link
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
