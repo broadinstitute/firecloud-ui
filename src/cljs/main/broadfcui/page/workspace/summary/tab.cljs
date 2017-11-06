@@ -7,7 +7,6 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
@@ -200,6 +199,11 @@
                    :style {:width 270}}
              (when-not ready?
                (blocker "Loading..."))
+             (when (:showing-catalog-wizard? @state)
+               [CatalogWizard
+                (assoc (utils/restructure library-schema workspace workspace-id can-share?
+                                          owner? curator? writer? catalog-with-read? request-refresh)
+                  :dismiss #(swap! state dissoc :showing-catalog-wizard?))])
              (when (and can-share? (not editing?))
                [buttons/SidebarButton
                 {:data-test-id "share-workspace-button"
@@ -211,9 +215,7 @@
                 {:data-test-id "catalog-button"
                  :style :light :color :button-primary :margin :top
                  :icon :catalog :text "Catalog Dataset..."
-                 :onClick #(modal/push-modal
-                            [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
-                                                              owner? curator? writer? catalog-with-read? request-refresh)])}])
+                 :onClick #(swap! state assoc :showing-catalog-wizard? true)}])
              (when (and publishable? (not editing?))
                (let [working-attributes (library-utils/get-initial-attributes workspace)
                      questions (->> (range (count (:wizard library-schema)))
