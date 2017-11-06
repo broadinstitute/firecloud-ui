@@ -226,65 +226,6 @@
               :more-above? (pos? scroll-top)
               :more-below? (< (+ scroll-top inner-height) scroll-height))))})
 
-;; Deprecated. If you are touching code that uses this, please migrate to use
-;; org.broadinstitute.uicomps.modal.OKCancelForm
-(react/defc OKCancelForm
-  {:get-default-props
-   (fn []
-     {:show-cancel? true
-      :show-close? true})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
-           cancel-text (or cancel-text "Cancel")]
-       [:div {}
-        [:div {:style {:display "flex" :align-items "flex-start"
-                       :borderBottom style/standard-line
-                       :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}
-               :data-test-id data-test-id}
-         header
-         flex/spring
-         (when show-close? (buttons/x-button modal/pop-modal))]
-        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
-         content
-         (when (or show-cancel? ok-button)
-           [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
-            (when show-cancel?
-              [:a {:className "cancel"
-                   :style {:marginRight (when ok-button 27) :marginTop 2
-                           :display "inline-block"
-                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                           :color (:button-primary style/colors)}
-                   :href "javascript:;"
-                   :data-test-id "cancel-button"
-                   :onClick modal/pop-modal
-                   :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
-               cancel-text])
-            (when ok-button
-              (cond (string? ok-button) [buttons/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
-                    (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
-                    :else ok-button))])]]))
-   :component-did-mount
-   (fn [{:keys [props refs]}]
-     (when-let [get-first (:get-first-element-dom-node props)]
-       (common/focus-and-select (get-first))
-       (when-let [get-last (or (:get-last-element-dom-node props)
-                               #(react/find-dom-node (@refs "ok-button")))]
-         (.addEventListener
-          (get-first) "keydown"
-          (common/create-key-handler [:tab] #(.-shiftKey %)
-                                     (fn [e] (.preventDefault e)
-                                       (when (:cycle-focus? props)
-                                         (.focus (get-last))))))
-         (.addEventListener
-          (get-last)
-          "keydown"
-          (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                     (fn [e] (.preventDefault e)
-                                       (when (:cycle-focus? props)
-                                         (.focus (get-first)))))))))})
 
 (defn no-billing-projects-message []
   [:div {:data-test-id "no-billing-projects-message" :style {:textAlign "center"}}
