@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.spinner :refer [spinner]]

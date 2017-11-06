@@ -7,7 +7,6 @@
    [broadfcui.common.duration :as duration]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]

@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.modals :as modals]

@@ -7,7 +7,6 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
