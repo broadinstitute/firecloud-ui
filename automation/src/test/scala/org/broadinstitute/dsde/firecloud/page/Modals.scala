@@ -60,7 +60,7 @@ case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
 case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
-    testId("message-modal").element != null
+    testId("message-modal-content").element != null
   }
 }
 
