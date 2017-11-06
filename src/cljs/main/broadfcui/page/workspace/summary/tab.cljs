@@ -110,7 +110,7 @@
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
    :render
    (fn [{:keys [state props this refs]}]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response popup-error]} @state
            {:keys [workspace workspace-id request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {:data-test-id "summary-tab"
@@ -118,6 +118,8 @@
                                      "updating"
                                      ;; TODO: "loading" state
                                      :else "ready")}
+        (when popup-error
+          (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
         [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
         (if server-error
           (style/create-server-error-message server-error)
@@ -244,7 +246,7 @@
                                    new-description ((@refs "description") :get-trimmed-text)
                                    new-tags ((@refs "tags-autocomplete") :get-tags)]
                                (if error
-                                 (comps/push-error error)
+                                 (swap! state assoc :popup-error error)
                                  (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
                 [buttons/SidebarButton
                  {:style :light :color :state-exception :margin :top
@@ -264,7 +266,6 @@
                :icon (if isLocked :unlock :lock)
                :onClick #(this :-lock-or-unlock isLocked)}])
            (when (and owner? (not editing?))
-
                [buttons/SidebarButton
                 {:data-test-id "delete-workspace-button"
                  :style :light :margin :top :color (if isLocked :text-lighter :state-exception)
@@ -390,9 +391,8 @@
        :on-done (fn [{:keys [success? status-text status-code]}]
                   (when-not success?
                     (if (and (= status-code 409) (not locked-now?))
-                      (comps/push-error
-                       "Could not lock workspace, one or more analyses are currently running")
-                      (comps/push-error (str "Error: " status-text))))
+                      (swap! state assoc :popup-error "Could not lock workspace, one or more analyses are currently running")
+                      (swap! state assoc :popup-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
                   ((:request-refresh props)))}))
    :refresh

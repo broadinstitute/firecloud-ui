@@ -13,6 +13,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -122,6 +123,8 @@
    (fn [{:keys [state this]}]
      (when (:aborting-submission? @state)
        (blocker "Aborting submission..."))
+     (when-let [abort-error (:abort-error @state)]
+       (modals/render-error {:text abort-error :dismiss #(swap! state dissoc :abort-error)}))
      [buttons/SidebarButton
       {:data-test-id "submission-abort-button"
        :color :state-exception :style :light :margin :top
@@ -144,8 +147,7 @@
                   (swap! state dissoc :aborting-submission?)
                   (if success?
                     ((:on-abort props))
-                    (comps/push-error
-                     (str "Error in aborting the job : " status-text))))}))})
+                    (swap! state assoc :abort-error (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page
