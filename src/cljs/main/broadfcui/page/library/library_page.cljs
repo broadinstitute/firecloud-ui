@@ -45,7 +45,9 @@
 
 (defn- translate-research-purpose [research-purpose]
   (->> research-purpose
-       (utils/map-keys {:aggregates "NAGR"
+       (utils/map-keys {:methods "NDMS"
+                        :control "NCTRL"
+                        :aggregates "NAGR"
                         :poa "POA"
                         :commercial "NCU"})
        (merge {"DS" []
