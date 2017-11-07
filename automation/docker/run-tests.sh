@@ -34,11 +34,11 @@ if [ "$FC_INSTANCE" = "local" ] || [ "$FC_INSTANCE" = "fiab" ]; then
   FC_INSTANCE="$(cat /etc/hosts | grep -v '#' | grep 'firecloud-fiab.dsde-dev.broadinstitute.org' | awk '{print $1}')"
 fi
 
-if [ "$FC_INSTANCE" = "local" ]; then
+if [ ${1} = "local" ]; then
   UI_LOCATION=$DOCKERHOST_ADDRESS
 fi
 
-if [ "$FC_INSTANCE" = "fiab" ]; then
+if [ ${1} = "fiab" ]; then
   UI_LOCATION=$FC_INSTANCE
 fi
 
