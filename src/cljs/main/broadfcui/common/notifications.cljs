@@ -1,17 +1,17 @@
 (ns broadfcui.common.notifications
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.page.profile :as profile]
    [broadfcui.utils :as utils]
-   [broadfcui.components.modals :as modals]))
+   ))
 
 (defn render-alert [{:keys [cleared? link message title]} dismiss]
   (let [text-color "#eee"]

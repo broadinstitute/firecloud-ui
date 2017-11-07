@@ -3,12 +3,13 @@
    [dmohs.react :as react]
    [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
-   [broadfcui.common.components :as comps]))
+   ))
 
 
 (defn show-modals [state m]
