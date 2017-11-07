@@ -13,10 +13,6 @@
    ))
 
 
-(declare push-error)
-(declare create-error-message)
-
-
 (react/defc AnimatedEllipsis
   {:get-initial-state
    (fn []
