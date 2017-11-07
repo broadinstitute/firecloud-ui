@@ -61,7 +61,7 @@
      [:div {:style {:position "relative"}}
       [Checkbox {:style {:margin "0.75rem 0"}
                  :label "Disease focused research"
-                 :checked? (:disease-checked? @state)
+                 :initial-checked? (:disease-checked? @state)
                  :on-change (fn [new-val]
                               (swap! state assoc :disease-checked? new-val))}]
       (when (:disease-checked? @state)
