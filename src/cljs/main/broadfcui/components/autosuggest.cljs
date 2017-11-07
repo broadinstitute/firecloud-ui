@@ -21,7 +21,7 @@
 
   :get-value (optional) - function to turn suggestion into string value
 
-  :on-change (required)
+  :on-change (optional)
   :on-submit (optional) - fires when hitting return or clear button
 
   :caching? (optional) - set true to have re-renders managed internally
@@ -70,8 +70,6 @@
 
        (assert (or (fn? (:get-suggestions props)) url (seq? data))
                "Must provide either seq-able :data, url, or :get-suggestions function")
-       (assert (fn? on-change)
-               "Must provide :on-change callback")
 
        [ReactAutosuggest
         (clj->js (utils/deep-merge
@@ -90,7 +88,8 @@
                                 (let [value (.-newValue value)]
                                   (when caching?
                                     (swap! state assoc :value value))
-                                  (on-change value)))
+                                  (when on-change
+                                    (on-change value))))
                     :type "search"}
                    :shouldRenderSuggestions (complement string/blank?)
                    :highlightFirstSuggestion true
