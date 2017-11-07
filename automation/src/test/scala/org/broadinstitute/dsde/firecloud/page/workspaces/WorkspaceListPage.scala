@@ -1,16 +1,17 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
-import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 /**
   * Page class for the Workspace List page.
   */
-class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
+class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   with Page with PageUtil[WorkspaceListPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces"
 

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
-import org.broadinstitute.dsde.firecloud.component.{Button, Label}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
@@ -16,6 +17,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   override def awaitReady(): Unit = {
     // TODO: wait on the table, once we're testing that
     submissionIdLabel.awaitVisible()
+    workflowStatusLabel.awaitVisible()
     submissionId = submissionIdLabel.getText
   }
 
@@ -52,20 +54,23 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   }
 
   def verifyWorkflowSucceeded(): Boolean = {
-    SUCCESS_STATUS.contains(workflowStatusLabel.getText)
+    SUCCESS_STATUS.contains(readWorkflowStatus())
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    FAILED_STATUS.contains(workflowStatusLabel.getText)
+    FAILED_STATUS.contains(readWorkflowStatus())
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    ABORTED_STATUS.contains(workflowStatusLabel.getText)
+    ABORTED_STATUS.contains(readWorkflowStatus())
   }
 
   def waitUntilSubmissionCompletes(): Unit = {
     while (!isSubmissionDone) {
-      open
+      // No need to be too impatient... let's catch our breath before we check again.
+      Thread sleep 10000
+      val monitorPage = goToMonitorTab()
+      monitorPage.openSubmission(submissionId)
     }
   }
 

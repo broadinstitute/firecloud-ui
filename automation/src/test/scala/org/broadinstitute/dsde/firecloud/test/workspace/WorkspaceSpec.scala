@@ -310,6 +310,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
             val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
             errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
+            errorModal.clickCancel()
           }
         }
 
@@ -319,9 +320,10 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
-          signIn(user)
-          val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-          methodConfigListPage.importConfigButtonEnabled() shouldBe false
+          withSignIn(user) { _ =>
+            val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+            methodConfigListPage.importConfigButtonEnabled() shouldBe false
+          }
         }
       }
     }

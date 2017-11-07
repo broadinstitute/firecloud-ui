@@ -2,12 +2,12 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.openqa.selenium.WebDriver
 
-case class EmailField(id: String)(implicit webDriver: WebDriver) extends Component(id) {
+case class EmailField(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) {
   def setText(text: String): Unit = {
-    emailField(element).value = text
+    emailField(query).value = text
   }
 
   def getText: String = {
-    emailField(element).value
+    emailField(query).value
   }
 }

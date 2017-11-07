@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.page
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component.Button
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.openqa.selenium.WebDriver
 
 abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudView {
@@ -60,7 +61,7 @@ case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
 case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
-    testId("message-modal").element != null
+    testId("message-modal-content").element != null
   }
 }
 

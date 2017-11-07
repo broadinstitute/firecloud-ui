@@ -24,9 +24,9 @@
      (let [{:keys [data-test-id label disabled? on-change style]} props
            {:keys [checked?]} @state
            {:keys [id]} @locals]
-       [:div {:data-test-id data-test-id
-              :style (merge {:color ((if disabled? :text-lightest :text-light) style/colors)} style)}
-        [:input {:id id :type "checkbox"
+       [:div {:style (merge {:color ((if disabled? :text-lightest :text-light) style/colors)} style)}
+        [:input {:data-test-id data-test-id
+                 :id id :type "checkbox"
                  :style {:cursor (if disabled? "not-allowed" "pointer")}
                  :checked checked? :disabled disabled?
                  :onChange #(let [new-value (not checked?)]
