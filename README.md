@@ -64,13 +64,13 @@ Now, each time that file is saved, Figwheel will reload it and the tests will au
 To compile the clojure project into the target directory, run 
 
 ```bash
-./script/build.sh compile
+./scripts/build.sh compile
 ```
 
 To compile and build the `broadinstitute/firecloud-ui` docker image, run
 
 ```bash
-./script/build.sh compile -d build
+./scripts/build.sh compile -d build
 ```
 
 ## IntelliJ
