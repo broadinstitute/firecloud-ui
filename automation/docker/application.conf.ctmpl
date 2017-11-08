@@ -13,16 +13,19 @@ fireCloud {
   rawlsApiUrl = "https://rawls.dsde-alpha.broadinstitute.org/"
   samApiUrl = "https://sam.dsde-alpha.broadinstitute.org/"
   thurloeApiUrl = "https://thurloe.dsde-alpha.broadinstitute.org/"
+  leonardoApiUrl = "https://leonardo.dsde-alpha.broadinstitute.org/"
   {{else if eq $environment "prod"}}
   orchApiUrl = "https://api.firecloud.org/"
   rawlsApiUrl = "https://rawls.dsde-prod.broadinstitute.org"
   samApiUrl = "https://sam.dsde-prod.broadinstitute.org/"
   thurloeApiUrl = "https://thurloe.dsde-prod.broadinstitute.org/"
+  leonardoApiUrl = "https://leonardo.dsde-prod.broadinstitute.org/"
   {{else}}
   orchApiUrl = "https://firecloud-orchestration-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
   rawlsApiUrl = "https://rawls-fiab.dsde-{{$environment}}.broadinstitute.org:24443/"
   samApiUrl = "https://sam-fiab.dsde-{{$environment}}.broadinstitute.org:29443/"
   thurloeApiUrl = "https://thurloe-fiab.dsde-{{$environment}}.broadinstitute.org:25443/"
+  leonardoApiUrl = "https://leonardo-fiab.dsde-{{$environment}}.broadinstitute.org:30443/"
   {{end}}
   fireCloudId = "{{$secrets.Data.firecloud_id}}"
 }

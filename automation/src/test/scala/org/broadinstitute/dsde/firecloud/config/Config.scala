@@ -91,6 +91,7 @@ object Config {
     val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
     val samApiUrl: String = fireCloud.getString("samApiUrl")
     val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
+    val leonardoApiUrl: String = fireCloud.getString("leonardoApiUrl")
   }
 
   object ChromeSettings {
