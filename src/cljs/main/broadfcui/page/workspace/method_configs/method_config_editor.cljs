@@ -201,7 +201,7 @@
         (create-section
           (if editing?
             [:div {}
-             (style/create-text-field {:ref "confname" :style {:maxWidth 500}
+             (style/create-text-field {:ref "confname" :style {:width "100%"}
                                        :data-test-id "edit-method-config-name-input"
                                        :defaultValue (:name config)
                                        :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
