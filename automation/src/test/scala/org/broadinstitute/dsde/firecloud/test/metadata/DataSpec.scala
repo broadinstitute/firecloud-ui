@@ -21,6 +21,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
+  logger.info("working dir: " + new File("").getAbsolutePath)
   val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "chrome_downloads").toString
   val billingProject = Config.Projects.default
 
