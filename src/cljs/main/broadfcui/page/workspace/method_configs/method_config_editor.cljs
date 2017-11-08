@@ -200,9 +200,12 @@
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
-           (style/create-text-field {:ref "confname" :style {:maxWidth 500}
-                                     :data-test-id "edit-method-config-name-input"
-                                     :defaultValue (:name config)})
+           [:div {}
+            (style/create-text-field {:ref "confname" :style {:width 500}
+                                      :data-test-id "edit-method-config-name-input"
+                                      :defaultValue (:name config)
+                                      :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
+            (style/create-textfield-hint "foo")]
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
