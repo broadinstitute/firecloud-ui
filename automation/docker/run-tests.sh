@@ -72,7 +72,7 @@ echo "HOST IP: $DOCKERHOST"
 docker-compose -f ${HUB_COMPOSE} pull
 docker-compose -f ${HUB_COMPOSE} up -d
 docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
-#docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod -R 777 /app/target
+docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/target
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
