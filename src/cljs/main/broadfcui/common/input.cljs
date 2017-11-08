@@ -8,7 +8,7 @@
 (react/defc TextField
   {:get-text
    (fn [{:keys [refs]}]
-     (common/get-text refs "textfield"))
+     (common/get-trimmed-text refs "textfield"))
    :validate
    (fn [{:keys [props state this]}]
      (let [text (this :get-text)
@@ -26,7 +26,7 @@
       (merge {:ref "textfield"
               :style (merge (or (:style props) {})
                             (when (:invalid @state)
-                              {:borderColor (:state-exception style/colors)}))
+                              {:outline (str (:state-exception style/colors) " auto 5px")}))
               :onChange #(do (swap! state dissoc :invalid)
                              (when-let [x (:onChange props)]
                                (x %)))}
@@ -74,8 +74,8 @@
   {:test #(<= (count %) max-length)
    :message (str field-name " must be no more than " max-length " characters.")})
 
-(defn alphanumeric_-period [field-name]
-  {:test #(re-matches #"[A-Za-z0-9_\-.]*" %)
+(defn nonempty-alphanumeric_-period [field-name]
+  {:test #(re-matches #"^[A-Za-z0-9_\-.]+$" %)
    :message (str field-name " may only contain letters, numbers, underscores, dashes, and periods.")})
 
 (def hint-alphanumeric_-period "Only letters, numbers, underscores, dashes, and periods allowed")

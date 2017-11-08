@@ -130,8 +130,7 @@
                           :defaultValue (if (= selected-config :blank)
                                           method-name
                                           (:name selected-config))
-                          :predicates [(input/nonempty "Name")
-                                       (input/alphanumeric_-period "Name")]}]
+                          :predicates [(input/nonempty-alphanumeric_-period "Name")]}]
         (when (= selected-config :blank)
           (list
            (style/create-form-label "Root Entity Type")

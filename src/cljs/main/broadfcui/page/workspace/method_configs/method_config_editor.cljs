@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -16,7 +17,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
-   [broadfcui.common.input :as input]))
+   ))
 
 (defn- filter-empty [coll]
   (->> coll (map string/trim) (remove string/blank?) vec))
@@ -172,7 +173,7 @@
                          {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
          (this :-render-main locked?)]]))
    :-render-main
-   (fn [{:keys [state this locals props]} locked?]
+   (fn [{:keys [state this locals props refs]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
@@ -201,12 +202,11 @@
         (create-section
          (if editing?
            [:div {}
-            (style/create-text-field {:ref "confname" :style {:maxWidth 500
-                                                              :width "100%"
-                                                              :fontSize "100%"}
-                                      :data-test-id "edit-method-config-name-input"
-                                      :defaultValue (:name config)
-                                      :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
+            [input/TextField {:data-test-id "edit-method-config-name-input"
+                              :ref "confname" :style {:maxWidth 500 :width "100%" :fontSize "100%"}
+                              :defaultValue (:name config)
+                              :predicates [(input/nonempty-alphanumeric_-period "Config name")]
+                              :onChange #((@refs "confname") :validate)}]
             (style/create-textfield-hint input/hint-alphanumeric_-period)]
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id "method-config-name"} (:name config)]))
@@ -284,9 +284,9 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
-           name (common/get-text refs "confname")
+           name (common/get-trimmed-text refs "confname")
            root-entity-type (if (seq (:entity-types @state))
-                              (common/get-text refs "rootentitytype")
+                              (common/get-trimmed-text refs "rootentitytype")
                               (:rootEntityType config))
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")

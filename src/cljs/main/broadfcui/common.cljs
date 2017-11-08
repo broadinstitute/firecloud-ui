@@ -17,7 +17,7 @@
                               (when (some #(= keycode (% keymap)) keys)
                                 (func e)))))))
 
-(defn get-text [refs & ids]
+(defn get-trimmed-text [refs & ids]
   (if (= 1 (count ids))
     (-> (react/find-dom-node (@refs (first ids))) .-value clojure.string/trim)
     (map

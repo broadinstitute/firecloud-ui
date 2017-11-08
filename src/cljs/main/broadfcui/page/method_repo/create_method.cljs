@@ -60,7 +60,7 @@
                                :defaultValue (:namespace info)
                                :disabled (contains? (:locked info) :namespace)
                                :predicates [(input/nonempty "Method namespace")
-                                            (input/alphanumeric_-period "Method namespace")]}]
+                                            (input/nonempty-alphanumeric_-period "Method namespace")]}]
              (style/create-textfield-hint input/hint-alphanumeric_-period)]
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
@@ -68,8 +68,7 @@
                                :ref "name" :style {:autoFocus true :width "100%"}
                                :defaultValue (:name info)
                                :disabled (contains? (:locked info) :name)
-                               :predicates [(input/nonempty "Method name")
-                                            (input/alphanumeric_-period "Method name")]}]
+                               :predicates [(input/nonempty-alphanumeric_-period "Method name")]}]
              (style/create-textfield-hint input/hint-alphanumeric_-period)]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
            (style/create-form-label "Synopsis (optional, 80 characters max)")
@@ -134,8 +133,8 @@
                         :ref "wdl-editor" :text (:payload info) :read-only? false
                         :initialize (fn [self]
                                       (self :add-listener "change"
-                                       #(swap! state assoc :undo-history
-                                               (js->clj (self :call-method "historySize")))))}]
+                                            #(swap! state assoc :undo-history
+                                                    (js->clj (self :call-method "historySize")))))}]
            [:div {:style {:padding "0.25rem"}}]
            (style/create-form-label "Snapshot Comment (optional)")
            (style/create-text-area {:data-test-id "snapshot-comment-field"
@@ -160,7 +159,7 @@
    :-create-method
    (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           [synopsis documentation snapshotComment] (common/get-text refs "synopsis" "documentation" "snapshot-comment")
+           [synopsis documentation snapshotComment] (common/get-trimmed-text refs "synopsis" "documentation" "snapshot-comment")
            wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
