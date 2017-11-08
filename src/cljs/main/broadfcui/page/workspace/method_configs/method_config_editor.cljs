@@ -16,6 +16,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
+   [broadfcui.common.input :as input]
    ))
 
 (defn- filter-empty [coll]
@@ -201,11 +202,11 @@
         (create-section
          (if editing?
            [:div {}
-            (style/create-text-field {:ref "confname" :style {:width 500}
+            (style/create-text-field {:ref "confname" :style {:maxWidth 500}
                                       :data-test-id "edit-method-config-name-input"
                                       :defaultValue (:name config)
                                       :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
-            (style/create-textfield-hint "foo")]
+            (style/create-textfield-hint input/hint-alphanumeric_-period)]
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
