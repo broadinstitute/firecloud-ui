@@ -61,7 +61,7 @@
      [:div {:style {:position "relative"}}
       [Checkbox {:style {:margin "0.75rem 0"}
                  :label "Disease focused research"
-                 :initial-checked? (:disease-checked? @state)
+                 :checked? (:disease-checked? @state)
                  :on-change (fn [new-val]
                               (swap! state assoc :disease-checked? new-val))}]
       (when (:disease-checked? @state)
@@ -103,13 +103,13 @@
                                   :remove))))
           (:selected-diseases @state)))
    :-render-checkbox
-   (fn [{:keys [props state]} label code]
+   (fn [{:keys [state]} label code]
      [Checkbox {:style {:margin "0.75rem 0"}
                 :label [:span {}
                         label
                         [:span {:style {:marginLeft "0.3rem" :fontSize "66%" :verticalAlign "middle"}}
                          (-> code name string/upper-case style/render-tag)]]
-                :initial-checked? (contains? (:research-purpose-values props) code)
+                :checked? (boolean (code (:research-purpose-values @state)))
                 :on-change (fn [new-val]
                              (swap! state assoc-in [:research-purpose-values code] new-val))}])
    :-show-modal
