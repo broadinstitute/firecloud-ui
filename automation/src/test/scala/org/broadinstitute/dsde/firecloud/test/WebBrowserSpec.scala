@@ -49,20 +49,25 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     * @param testCode the test code to run
     */
   def withWebDriver(downloadPath: String)(testCode: (WebDriver) => Any): Unit = {
-    val capabilities = getChromeIncognitoOption(downloadPath)
-    val headless = new SystemProperties().get("headless")
-    headless match {
-      case Some("false") => runLocalChrome(capabilities, testCode)
-      case _ => runHeadless(capabilities, testCode)
+    val headless = new SystemProperties().get("headless") match {
+      case Some("false") => false
+      case _ => true
+    }
+    val capabilities = getChromeIncognitoOption(downloadPath, headless)
+    if (headless) {
+      runHeadless(capabilities, testCode)
+    } else {
+      runLocalChrome(capabilities, testCode)
     }
   }
 
-  private def getChromeIncognitoOption(downloadPath: String): DesiredCapabilities = {
+  private def getChromeIncognitoOption(downloadPath: String, headless: Boolean): DesiredCapabilities = {
+    val fullDownloadPath = if (headless) s"/app/$downloadPath" else new File(downloadPath).getAbsolutePath
     val options = new ChromeOptions
     options.addArguments("--incognito")
     // Note that download.prompt_for_download will be ignored if download.default_directory is invalid or doesn't exist
     options.setExperimentalOptions("prefs", Map(
-      "download.default_directory" -> s"/app/$downloadPath",
+      "download.default_directory" -> fullDownloadPath,
       "download.prompt_for_download" -> "false").asJava)
     val capabilities = DesiredCapabilities.chrome
     capabilities.setCapability(ChromeOptions.CAPABILITY, options)

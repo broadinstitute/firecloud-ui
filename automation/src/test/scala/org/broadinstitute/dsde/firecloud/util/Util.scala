@@ -4,12 +4,13 @@ import java.io.File
 import java.nio.file.Files
 import java.util.UUID
 
-import scala.concurrent.duration.FiniteDuration
+import com.typesafe.scalalogging.LazyLogging
+
 import scala.util.Random
 
 /**
   */
-object Util {
+object Util extends LazyLogging {
 
   def appendUnderscore(string: String): String = {
     string match {
@@ -33,10 +34,13 @@ object Util {
     * @param destPath path to desired destination file
     */
   def moveFile(sourcePath: String, destPath: String): Unit = {
-    val dest = new File(destPath)
-    if (!dest.getParentFile.exists()) {
-      dest.getParentFile.mkdirs()
+    val destFile = new File(destPath)
+    if (!destFile.getParentFile.exists()) {
+      destFile.getParentFile.mkdirs()
     }
-    Files.move(new File(sourcePath).toPath, dest.toPath)
+    val source = new File(sourcePath).toPath
+    val dest = destFile.toPath
+    logger.info(s"Moving $source to $dest")
+    Files.move(source, dest)
   }
 }
