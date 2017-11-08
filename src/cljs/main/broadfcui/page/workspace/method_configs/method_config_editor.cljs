@@ -1,22 +1,22 @@
 (ns broadfcui.page.workspace.method-configs.method-config-editor
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.method.config-io :refer [IOTables]]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.buttons :as buttons]
-    [broadfcui.components.entity-details :refer [EntityDetails]]
-    [broadfcui.components.sticky :refer [Sticky]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.method-configs.delete-config :as delete]
-    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
-    [broadfcui.page.workspace.method-configs.publish :as publish]
-    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    [broadfcui.common.input :as input]))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.method.config-io :refer [IOTables]]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.method-configs.delete-config :as delete]
+   [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
+   [broadfcui.page.workspace.method-configs.publish :as publish]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   [broadfcui.common.input :as input]))
 
 (defn- filter-empty [coll]
   (->> coll (map string/trim) (remove string/blank?) vec))
@@ -148,15 +148,15 @@
        (when (and (not methods) loaded-config)
          (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
-              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                         (let [response (get-parsed-response)]
-                           (if success?
-                             (swap! state assoc
-                                    :methods-response response
-                                    :methods {[methodNamespace methodName] (mapv :snapshotId response)})
-                             ;; FIXME: :error-message is unused
-                             (swap! state assoc :error-message status-text))))})))))
+            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                        (let [response (get-parsed-response)]
+                          (if success?
+                            (swap! state assoc
+                                   :methods-response response
+                                   :methods {[methodNamespace methodName] (mapv :snapshotId response)})
+                            ;; FIXME: :error-message is unused
+                            (swap! state assoc :error-message status-text))))})))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -199,15 +199,15 @@
                                   :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
-          (if editing?
-            [:div {}
-             (style/create-text-field {:ref "confname" :style {:width "100%"}
-                                       :data-test-id "edit-method-config-name-input"
-                                       :defaultValue (:name config)
-                                       :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
-             (style/create-textfield-hint input/hint-alphanumeric_-period)]
-            [:div {:style {:padding "0.5em 0 1em 0"}
-                   :data-test-id "method-config-name"} (:name config)]))
+         (if editing?
+           [:div {}
+            (style/create-text-field {:ref "confname" :style {:width "100%"}
+                                      :data-test-id "edit-method-config-name-input"
+                                      :defaultValue (:name config)
+                                      :onKeyDown (common/create-key-handler [:space] #(.preventDefault %))})
+            (style/create-textfield-hint input/hint-alphanumeric_-period)]
+           [:div {:style {:padding "0.5em 0 1em 0"}
+                  :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
         (let [method (if (empty? methods-response)
                        {:name methodName :namespace methodNamespace :entityType "Workflow"}
@@ -223,21 +223,21 @@
                                   (utils/restructure redacted? config methods editing? wdl-parse-error))]))
         (create-section-header "Root Entity Type")
         (create-section
-          (if editing?
-            (if (seq entity-types)
-              (style/create-identity-select {:ref "rootentitytype"
-                                             :data-test-id "edit-method-config-root-entity-type-select"
-                                             :defaultValue rootEntityType
-                                             :style {:maxWidth 500}
-                                             :onChange #(swap! state assoc :autocomplete-list
-                                                               (build-autocomplete-list
-                                                                 {:workspace-attributes workspace-attributes
-                                                                  :entity-types entity-types
-                                                                  :selected-entity-type (.. % -target -value)}))}
-                                            (mapv #(name (first %)) entity-types))
-              [:select {:style (assoc style/select-style :width 500) :disabled true}
-               [:option {} "No entities in workspace. Import some in the Data tab."]])
-            [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
+         (if editing?
+           (if (seq entity-types)
+             (style/create-identity-select {:ref "rootentitytype"
+                                            :data-test-id "edit-method-config-root-entity-type-select"
+                                            :defaultValue rootEntityType
+                                            :style {:maxWidth 500}
+                                            :onChange #(swap! state assoc :autocomplete-list
+                                                              (build-autocomplete-list
+                                                               {:workspace-attributes workspace-attributes
+                                                                :entity-types entity-types
+                                                                :selected-entity-type (.. % -target -value)}))}
+                                           (mapv #(name (first %)) entity-types))
+             [:select {:style (assoc style/select-style :width 500) :disabled true}
+              [:option {} "No entities in workspace. Import some in the Data tab."]])
+           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
@@ -250,22 +250,22 @@
      (if-not (:entities-loaded? @locals)
        (do (swap! state assoc :blocker "Loading attributes...")
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/get-entity-types (:workspace-id props))
-              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                         (if success?
-                           (let [loaded-config (:loaded-config @state)
-                                 entity-types (get-parsed-response)
-                                 workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
-                                 selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
-                             (swap! locals assoc :entities-loaded? true)
-                             (swap! state assoc
-                                    :blocker nil
-                                    :entity-types entity-types
-                                    :autocomplete-list (build-autocomplete-list
-                                                         (utils/restructure workspace-attributes entity-types selected-entity-type)))
-                             (this :-begin-editing))
-                           ;; FIXME: :data-attribute-load-error is unused
-                           (swap! state assoc :data-attribute-load-error status-text)))}))
+            {:endpoint (endpoints/get-entity-types (:workspace-id props))
+             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                        (if success?
+                          (let [loaded-config (:loaded-config @state)
+                                entity-types (get-parsed-response)
+                                workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+                                selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
+                            (swap! locals assoc :entities-loaded? true)
+                            (swap! state assoc
+                                   :blocker nil
+                                   :entity-types entity-types
+                                   :autocomplete-list (build-autocomplete-list
+                                                       (utils/restructure workspace-attributes entity-types selected-entity-type)))
+                            (this :-begin-editing))
+                          ;; FIXME: :data-attribute-load-error is unused
+                          (swap! state assoc :data-attribute-load-error status-text)))}))
        (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
          ((@refs "IOTables") :start-editing)
          (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?))))
@@ -289,43 +289,43 @@
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/update-workspace-method-config workspace-id (ws-common/config->id config))
-          :payload (merge config
-                          selected-values
-                          {:name name
-                           :rootEntityType root-entity-type
-                           :methodRepoMethod (merge (:methodRepoMethod config)
-                                                    ((@refs "methodDetailsViewer") :get-fields))
-                           :workspaceName workspace-id})
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (swap! state dissoc :blocker :editing?)
-                     (if success?
-                       (do (swap! state dissoc :redacted?)
-                           ((:on-rename props) name)
-                           ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
-                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
-                       (comps/push-error-response (get-parsed-response false))))})))
+        {:endpoint (endpoints/update-workspace-method-config workspace-id (ws-common/config->id config))
+         :payload (merge config
+                         selected-values
+                         {:name name
+                          :rootEntityType root-entity-type
+                          :methodRepoMethod (merge (:methodRepoMethod config)
+                                                   ((@refs "methodDetailsViewer") :get-fields))
+                          :workspaceName workspace-id})
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state dissoc :blocker :editing?)
+                    (if success?
+                      (do (swap! state dissoc :redacted?)
+                          ((:on-rename props) name)
+                          ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
+                          (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
+                      (comps/push-error-response (get-parsed-response false))))})))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [response (get-parsed-response)
-                           fake-inputs-outputs (fn [data]
-                                                 (let [method-config (:methodConfiguration data)]
-                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-                                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-                       (endpoints/call-ajax-orch
-                         {:endpoint endpoints/get-inputs-outputs
-                          :payload (get-in response [:methodConfiguration :methodRepoMethod])
-                          :headers utils/content-type=json
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (if success?
-                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                       (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
-                     (swap! state assoc :error status-text)))}))
+      {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (let [response (get-parsed-response)
+                          fake-inputs-outputs (fn [data]
+                                                (let [method-config (:methodConfiguration data)]
+                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
+                      (endpoints/call-ajax-orch
+                       {:endpoint endpoints/get-inputs-outputs
+                        :payload (get-in response [:methodConfiguration :methodRepoMethod])
+                        :headers utils/content-type=json
+                        :on-done (fn [{:keys [success? get-parsed-response]}]
+                                   (if success?
+                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
+                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
+                    (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
      (let [[method-namespace method-name] (map (fn [key]
@@ -342,29 +342,29 @@
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
-         {:endpoint endpoints/create-template
-          :payload method-ref
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (let [response (get-parsed-response)]
-                       (if success?
-                         (endpoints/call-ajax-orch
-                           {:endpoint endpoints/get-inputs-outputs
-                            :payload (:methodRepoMethod response)
-                            :headers utils/content-type=json
-                            :on-done (fn [{:keys [success? get-parsed-response]}]
-                                       (swap! state dissoc :blocker :wdl-parse-error)
-                                       (let [template {:methodConfiguration (merge response config-namespace+name)}]
-                                         (if success?
-                                           (swap! state assoc
-                                                  :loaded-config (assoc template
-                                                                   :invalidInputs {}
-                                                                   :validInputs {}
-                                                                   :invalidOutputs {}
-                                                                   :validOutputs {})
-                                                  :inputs-outputs (get-parsed-response)
-                                                  :redacted? false)
-                                           (swap! state assoc :error (:message (get-parsed-response))))))})
-                         (do
-                           (swap! state assoc :redacted? true :blocker nil :wdl-parse-error (:message response))
-                           (comps/push-error (style/create-server-error-message (:message response)))))))})))})
+        {:endpoint endpoints/create-template
+         :payload method-ref
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (let [response (get-parsed-response)]
+                      (if success?
+                        (endpoints/call-ajax-orch
+                         {:endpoint endpoints/get-inputs-outputs
+                          :payload (:methodRepoMethod response)
+                          :headers utils/content-type=json
+                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                     (swap! state dissoc :blocker :wdl-parse-error)
+                                     (let [template {:methodConfiguration (merge response config-namespace+name)}]
+                                       (if success?
+                                         (swap! state assoc
+                                                :loaded-config (assoc template
+                                                                 :invalidInputs {}
+                                                                 :validInputs {}
+                                                                 :invalidOutputs {}
+                                                                 :validOutputs {})
+                                                :inputs-outputs (get-parsed-response)
+                                                :redacted? false)
+                                         (swap! state assoc :error (:message (get-parsed-response))))))})
+                        (do
+                          (swap! state assoc :redacted? true :blocker nil :wdl-parse-error (:message response))
+                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
