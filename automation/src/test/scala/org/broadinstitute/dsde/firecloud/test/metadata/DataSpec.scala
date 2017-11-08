@@ -346,7 +346,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       val wd = new File("")
       logger.info("working dir: " + wd.getAbsolutePath)
       logger.info("files: " + Files.list(wd.toPath).iterator.asScala.mkString(", "))
-      logger.info("chrome files: " + Files.list(new File("chrome").toPath).iterator.asScala.mkString(", "))
+//      logger.info("chrome files: " + Files.list(new File("chrome").toPath).iterator.asScala.mkString(", "))
       logger.info("download path files: " + Files.list(new File(downloadPath).toPath).iterator.asScala.mkString(", "))
 //      go to s"file://${new File(downloadPath).getAbsolutePath}"
 //      false shouldEqual true
