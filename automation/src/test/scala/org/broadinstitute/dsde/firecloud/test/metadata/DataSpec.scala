@@ -21,7 +21,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
-  val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "chrome_downloads").toString
+  val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads").toString
   val billingProject = Config.Projects.default
 
   "import a participants file" in withWebDriver { implicit driver =>
@@ -347,6 +347,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       logger.info("files: " + Files.list(wd.toPath).iterator.asScala.mkString(", "))
       logger.info("chrome files: " + Files.list(new File("chrome").toPath).iterator.asScala.mkString(", "))
       logger.info("download path files: " + Files.list(new File(downloadPath).toPath).iterator.asScala.mkString(", "))
+      go to "file:///app/chrome"
+      false shouldEqual true
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))
