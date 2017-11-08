@@ -21,8 +21,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
-//  val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads").toString
-  val downloadPath = "chrome"
+  val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads").toString
+//  val downloadPath = "chrome"
   val billingProject = Config.Projects.default
 
   "import a participants file" in withWebDriver { implicit driver =>
