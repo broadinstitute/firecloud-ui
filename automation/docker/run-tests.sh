@@ -65,7 +65,8 @@ trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
 
 # make sure ${WORKING_DIR}/target exists before mapping it into a docker container
 echo "WORKING_DIR: $WORKING_DIR"
-mkdir -p $WORKING_DIR/target
+mkdir -p $WORKING_DIR/chrome
+echo test > $WORKING_DIR/chrome/test
 
 # build and run the composed services
 echo "HOST IP: $DOCKERHOST"
