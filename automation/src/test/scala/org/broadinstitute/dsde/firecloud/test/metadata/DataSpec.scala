@@ -345,11 +345,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       val wd = new File("")
       logger.info("working dir: " + wd.getAbsolutePath)
       logger.info("files: " + Files.list(wd.toPath).iterator.asScala.mkString(", "))
-/*
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))
-*/
     }
 
     "no workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
