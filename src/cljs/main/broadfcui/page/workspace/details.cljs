@@ -6,6 +6,7 @@
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.tab-bar :as tab-bar]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -14,6 +15,7 @@
    [broadfcui.page.workspace.data.tab :as data-tab]
    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
+   [broadfcui.page.workspace.notebooks.tab :as notebooks-tab]
    [broadfcui.page.workspace.summary.tab :as summary-tab]
    [broadfcui.utils :as utils]
    ))
@@ -52,6 +54,7 @@
 (def ^:private ANALYSIS "Analysis")
 (def ^:private CONFIGS "Method Configurations")
 (def ^:private MONITOR "Monitor")
+(def ^:private NOTEBOOKS "Notebooks")
 
 (defn- process-workspace [raw-workspace]
   (let [attributes (get-in raw-workspace [:workspace :attributes])
@@ -72,6 +75,15 @@
         (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
+(defn checkIfWhitelisted []
+  (utils/log "calling get clusters")
+  (endpoints/call-ajax-leo
+   {:endpoint (endpoints/get-clusters-list {})
+    :headers utils/content-type=json
+    :on-done (fn [{:keys [success? get-parsed-response]}]
+               (utils/log success?))}))
+
+
 (react/defc- WorkspaceDetails
   {:render
    (fn [{:keys [props state locals refs this]}]
@@ -80,6 +92,7 @@
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-workspace)
            refresh-tab #((@refs %) :refresh)]
+          ; userEmail utils/get-user-email]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
@@ -109,7 +122,8 @@
                                            [DATA :workspace-data]
                                            [ANALYSIS :workspace-analysis]
                                            [CONFIGS :workspace-method-configs]
-                                           [MONITOR :workspace-monitor]]
+                                           [MONITOR :workspace-monitor]
+                                           [NOTEBOOKS :workspace-notebooks]]
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
@@ -142,7 +156,11 @@
                         [monitor-tab/Page
                          (merge {:ref MONITOR}
                                 (utils/restructure workspace-id workspace)
-                                (select-keys props [:submission-id :workflow-id]))]))))]]))
+                                (select-keys props [:submission-id :workflow-id]))])
+               NOTEBOOKS (react/create-element
+                          [notebooks-tab/Page
+                           (merge {:ref NOTEBOOKS}
+                                   (utils/restructure workspace-id workspace))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
@@ -234,4 +252,14 @@
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id :workflow-id workflow-id})
     :make-path (fn [workspace-id submission-id workflow-id]
-                 (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))}))
+                 (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))})
+  (nav/defpath
+   :workspace-notebooks
+   {:component WorkspaceDetails
+    :regex #"workspaces/([^/]+)/([^/]+)/notebooks"
+    :make-props (fn [namespace name]
+                  {:workspace-id (utils/restructure namespace name) :tab-name "Notebooks"})
+    :make-path (fn [workspace-id]
+                 (str (ws-path workspace-id) "/notebooks"))})
+
+  )
