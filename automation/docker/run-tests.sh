@@ -100,7 +100,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/target/users.json:/app/src/test/resources/users.json \
-    -v $WORKING_DIR/target:/app/target \
+    -v $WORKING_DIR/chrome:/app/chrome \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
