@@ -63,6 +63,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
 
   private def getChromeIncognitoOption(downloadPath: String, headless: Boolean): DesiredCapabilities = {
     val fullDownloadPath = if (headless) s"/app/$downloadPath" else new File(downloadPath).getAbsolutePath
+    logger.info(s"Chrome download path: $fullDownloadPath")
     val options = new ChromeOptions
     options.addArguments("--incognito")
     // Note that download.prompt_for_download will be ignored if download.default_directory is invalid or doesn't exist

@@ -18,7 +18,7 @@ import org.openqa.selenium.WebDriver
 import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
-  with UserFixtures with WorkspaceFixtures with ParallelTestExecution
+  with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads").toString

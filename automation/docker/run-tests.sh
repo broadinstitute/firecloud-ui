@@ -64,7 +64,8 @@ trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
   HUP INT QUIT PIPE TERM
 
 # make sure ${WORKING_DIR}/target exists before mapping it into a docker container
-mkdir $WORKING_DIR/target
+echo "WORKING_DIR: $WORKING_DIR"
+mkdir -p $WORKING_DIR/target
 
 # build and run the composed services
 echo "HOST IP: $DOCKERHOST"
@@ -83,7 +84,8 @@ if [ "$DOCKERHOST" != "" ]; then
     HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
 fi
 
-TEST_ENTRYPOINT="testOnly -- -l ProdTest"
+#TEST_ENTRYPOINT="testOnly -- -l ProdTest"
+TEST_ENTRYPOINT='testOnly *DataSpec -- -z "no workspace defaults or user preferences"'
 if [ $ENV = "prod" ]; then
     TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi

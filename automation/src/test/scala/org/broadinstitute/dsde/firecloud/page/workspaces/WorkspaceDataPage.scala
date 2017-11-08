@@ -95,6 +95,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def importFile(file: String): Unit = {
     importFromFileButton.doClick()
     fileUploadInput.selectFile(file)
+    confirmUploadMetadataButton.awaitVisible()
     confirmUploadMetadataButton.doClick()
     uploadSuccessMessage.awaitVisible()
     xOut()
