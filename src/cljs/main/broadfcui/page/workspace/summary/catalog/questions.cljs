@@ -204,9 +204,17 @@
            get-prop (fn [prop-key] (prop->string (get attributes prop-key
                                                       (get-in library-schema [:properties prop-key :default]))))]
        {:attributes
-        (reduce (fn [map prop-key] (assoc map prop-key (get-prop prop-key)))
+        (reduce (fn [map prop]
+                  (if (map? prop)
+                    (reduce (fn [map-inner prop-inner]
+                              (let [prop-inner-key (keyword prop-inner)]
+                                (assoc map-inner prop-inner-key (get-prop prop-inner-key))))
+                            map
+                            (:items prop))
+                    (let [prop-key (keyword prop)]
+                      (assoc map prop-key (get-prop prop-key)))))
                 {}
-                (map keyword questions))}))
+                questions)}))
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [questions enumerate]} props]
@@ -228,16 +236,16 @@
                                     (string? value) string/blank?
                                     (array? value) empty?
                                     :else boolean)) value))
-                             items)
+                             (map keyword items))
                         true)
                colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
                                                 :color (:state-exception style/colors)}))]
            [(if enumerate :li :div) {}
             [:div {}
              (render-header {:prop prop :required? required :colorize colorize})
-             [:small {} (:wording renderHint)]
-             [:ul {:style {:border (str (:line-default style/colors) " solid 1px") :borderRadius 3
-                           :margin "0 1rem" :padding "1rem"}}
+             [:small {:style (when error? {:color (:state-exception style/colors)})} (:wording renderHint)]
+             [:ul {:style {:border (str ((if error? :state-exception :line-default) style/colors) " solid 1px") :borderRadius 3
+                           :margin "0.5rem 0 1rem" :padding "0.75rem"}}
               (map #(this :-render-question % true) items)]]])
          (let [property (keyword property)
                current-value (get attributes property)
