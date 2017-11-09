@@ -13,11 +13,11 @@
   ([keys func] (create-key-handler keys (constantly true) func))
   ([keys modifier func] (fn [e]
                           (when (modifier e)
-                            (let [keycode (.-keyCode e)]
+                            (let [keycode (.-which e)]
                               (when (some #(= keycode (% keymap)) keys)
                                 (func e)))))))
 
-(defn get-text [refs & ids]
+(defn get-trimmed-text [refs & ids]
   (if (= 1 (count ids))
     (-> (react/find-dom-node (@refs (first ids))) .-value clojure.string/trim)
     (map
