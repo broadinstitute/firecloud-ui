@@ -208,42 +208,50 @@
                 {}
                 (map keyword questions))}))
    :render
-   (fn [{:keys [props state]}]
-     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable?]} props
-           {:keys [attributes invalid-properties]} @state]
+   (fn [{:keys [props this]}]
+     (let [{:keys [questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-         (fn [property]
-           (let [current-value (get attributes property)
-                 {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
-                 error? (or (contains? invalid-properties property) (contains? missing-properties property))
-                 colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
-                                                  :color (:state-exception style/colors)}))
-                 data (merge (utils/restructure prop state property library-schema colorize current-value)
-                             {:value-nullsafe (or current-value "") ;; avoids warning for nil value
-                              :required? (contains? required-attributes property)
-                              :update-property #(swap! state update :attributes assoc property (.. % -target -value))
-                              :set-property #(swap! state update :attributes assoc property %)
-                              :disabled (not editable?)
-                              :radio (fn [{:keys [val label property]}]
-                                       [:label {:style (colorize {:display "inline-flex" :alignItems "center"
-                                                                  :cursor "pointer" :marginRight "2em"})}
-                                        [:input {:type "radio" :readOnly true :checked (= val current-value)
-                                                 ;; looks like "library:RS-G-Male" or "library:requiresExternalApproval-Yes"
-                                                 :data-test-id (str (name property) "-" (or label (str val)))
-                                                 :style {:cursor "pointer"}
-                                                 :disabled (not editable?)
-                                                 :onChange #(swap! state update :attributes assoc property val)}]
-                                        [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
-                             prop
-                             renderHint)]
-             (when-not (:hidden prop)
-               [(if enumerate :li :div) {}
-                (render-header data)
-                (cond enum (render-enum data)
-                      (= type "boolean") (render-boolean data)
-                      (= (:datatype renderHint) "freetext") (render-freetext data)
-                      (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
-                      (= (:typeahead prop) "populate") (render-populate-typeahead data)
-                      :else (render-textfield data))])))
-         (map keyword questions))]))})
+         #(this :-render-question %)
+         questions)]))
+   :-render-question
+   (fn [{:keys [props state this]} property & [nested?]]
+     (let [{:keys [library-schema missing-properties required-attributes enumerate editable?]} props
+           {:keys [attributes invalid-properties]} @state]
+       (if (vector? property)
+         [(if enumerate :li :div) {}
+          [:ul {:style {:border "solid 2px black" :padding "1rem"}}
+           (map #(this :-render-question % true) property)]]
+         (let [property (keyword property)
+               current-value (get attributes property)
+               {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
+               error? (or (contains? invalid-properties property) (contains? missing-properties property))
+               colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
+                                                :color (:state-exception style/colors)}))
+               data (merge (utils/restructure prop state property library-schema colorize current-value)
+                           {:value-nullsafe (or current-value "") ;; avoids warning for nil value
+                            :required? (contains? required-attributes property)
+                            :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                            :set-property #(swap! state update :attributes assoc property %)
+                            :disabled (not editable?)
+                            :radio (fn [{:keys [val label property]}]
+                                     [:label {:style (colorize {:display "inline-flex" :alignItems "center"
+                                                                :cursor "pointer" :marginRight "2em"})}
+                                      [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                               ;; looks like "library:RS-G-Male" or "library:requiresExternalApproval-Yes"
+                                               :data-test-id (str (name property) "-" (or label (str val)))
+                                               :style {:cursor "pointer"}
+                                               :disabled (not editable?)
+                                               :onChange #(swap! state update :attributes assoc property val)}]
+                                      [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
+                           prop
+                           renderHint)]
+           (when-not (:hidden prop)
+             [(if (or enumerate nested?) :li :div) {}
+              (render-header data)
+              (cond enum (render-enum data)
+                    (= type "boolean") (render-boolean data)
+                    (= (:datatype renderHint) "freetext") (render-freetext data)
+                    (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
+                    (= (:typeahead prop) "populate") (render-populate-typeahead data)
+                    :else (render-textfield data))])))))})
