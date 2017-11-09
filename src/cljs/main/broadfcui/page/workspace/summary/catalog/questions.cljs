@@ -218,10 +218,27 @@
    (fn [{:keys [props state this]} property & [nested?]]
      (let [{:keys [library-schema missing-properties required-attributes enumerate editable?]} props
            {:keys [attributes invalid-properties]} @state]
-       (if (vector? property)
-         [(if enumerate :li :div) {}
-          [:ul {:style {:border "solid 2px black" :padding "1rem"}}
-           (map #(this :-render-question % true) property)]]
+       (if (map? property)
+         (let [{:keys [requireGroup items]} property
+               {:keys [required renderHint] :as prop} (get-in library-schema [:requireGroups (keyword requireGroup)])
+               error? (when (not-any?
+                             (fn [item]
+                               (let [value (get attributes item)]
+                                 ((cond
+                                    (string? value) string/blank?
+                                    (array? value) empty?
+                                    :else boolean)) value))
+                             items)
+                        true)
+               colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
+                                                :color (:state-exception style/colors)}))]
+           [(if enumerate :li :div) {}
+            [:div {}
+             (render-header {:prop prop :required? required :colorize colorize})
+             [:small {} (:wording renderHint)]
+             [:ul {:style {:border (str (:line-default style/colors) " solid 1px") :borderRadius 3
+                           :margin "0 1rem" :padding "1rem"}}
+              (map #(this :-render-question % true) items)]]])
          (let [property (keyword property)
                current-value (get attributes property)
                {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
@@ -247,7 +264,7 @@
                            prop
                            renderHint)]
            (when-not (:hidden prop)
-             [(if (or enumerate nested?) :li :div) {}
+             [(if (or enumerate nested?) :li :div) {:style (when nested? {:display "block"})}
               (render-header data)
               (cond enum (render-enum data)
                     (= type "boolean") (render-boolean data)

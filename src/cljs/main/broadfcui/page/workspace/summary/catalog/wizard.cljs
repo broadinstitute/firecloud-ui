@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.summary.catalog.wizard
   (:require
    [dmohs.react :as react]
+   [clojure.set :as set]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.modal :as modal]
@@ -149,7 +150,7 @@
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
-                                    :missing-properties (clojure.set/union invalid invalid-properties)
+                                    :missing-properties (set/union invalid invalid-properties)
                                     :attributes working-attributes}
                                    (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
@@ -217,7 +218,7 @@
            (let [[questions _] (library-utils/get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values all-attributes)
                                                                     questions required-attributes)]
-             (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
+             (reset! invalid-attributes (set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
          (after-update (fn [_]
                          (let [next-page (this :find-next-page)]
