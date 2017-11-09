@@ -89,7 +89,7 @@ if [ "$DOCKERHOST" != "" ]; then
 fi
 
 #TEST_ENTRYPOINT="testOnly -- -l ProdTest"
-TEST_ENTRYPOINT='testOnly *DataSpec -- -z "no workspace defaults or user preferences"'
+TEST_ENTRYPOINT='testOnly *DataSpec'
 if [ $ENV = "prod" ]; then
     TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi
