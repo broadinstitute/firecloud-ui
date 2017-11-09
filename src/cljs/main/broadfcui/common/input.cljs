@@ -6,12 +6,12 @@
    ))
 
 (react/defc TextField
-  {:get-text
+  {:get-trimmed-text
    (fn [{:keys [refs]}]
      (common/get-trimmed-text refs "textfield"))
    :validate
    (fn [{:keys [props state this]}]
-     (let [text (this :get-text)
+     (let [text (this :get-trimmed-text)
            fails (keep (fn [p] (when-not ((:test p) text) (:message p)))
                        (filter some? (:predicates props)))]
        (when (seq fails)
@@ -34,8 +34,8 @@
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))
-    ((@refs (first ids)) :get-text)
-    (map #((@refs %) :get-text) ids)))
+    ((@refs (first ids)) :get-trimmed-text)
+    (map #((@refs %) :get-trimmed-text) ids)))
 
 (defn validate [refs & ids]
   (not-empty (distinct (flatten (keep #((@refs %) :validate) ids)))))
