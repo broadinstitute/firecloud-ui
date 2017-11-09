@@ -18,7 +18,7 @@
   (-> doid
       (string/split "/")
       last
-      (string/replace-all #"_" " ")))
+      (string/replace-all #"_" ": ")))
 
 
 (react/defc ResearchPurposeSection
