@@ -358,7 +358,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Download should reflect visible columns" - {
     "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      val wd = new File("")
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))

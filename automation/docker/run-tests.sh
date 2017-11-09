@@ -73,9 +73,9 @@ docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
 mkdir -p $WORKING_DIR/chrome/downloads
 # Without this, the directory permissions don't allow chrome to automatically save downloads which
 # leads to a system save dialog opening which Selenium doesn't have any way of handling.
-echo Begin ugly but necessary python error that looks bad but actually does something useful
+echo '--- Begin ugly but necessary python error that looks bad but actually does something useful ---'
 docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/chrome/downloads
-echo End ugly but necessary python error
+echo '--- End ugly but necessary python error ---'
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
