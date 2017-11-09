@@ -91,6 +91,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
   }
 
+  def readInputTable = Table("io-inputs")
+  def readOutputTable = Table("io-outputs")
+
   def openLaunchModal(): LaunchAnalysisModal = {
     openLaunchAnalysisModalButton.doClick()
     await ready new LaunchAnalysisModal

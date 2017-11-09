@@ -3,10 +3,13 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.api.Orchestration
+import org.broadinstitute.dsde.firecloud.component.Table
 import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, Tags, WebBrowserSpec}
 import org.scalatest._
 
@@ -37,6 +40,74 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
       }
 
+    }
+  }
+
+  "test for GAWB-2775 regressions" in withWebDriver { implicit driver =>
+    val user = UserPool.chooseProjectOwner
+    implicit val authToken: AuthToken = AuthToken(user)
+    val baseName = "GAWB-2775-regression"
+
+    val method = Method(
+      methodName = baseName,
+      methodNamespace = baseName,
+      snapshotId = 1,
+      rootEntityType = "participant",
+      synopsis = "",
+      documentation = "",
+      payload = "workflow w {\n  String s\n  Array[String] normal_bam \n  Array[String] tumor_bam\n  Array[Pair[String, String]] all_bams = zip(normal_bam, tumor_bam)\n  \n  String gender\n  Int age\n  Pair[String, Int] sample_pair = (gender, age)\n  \n  output {\n    Pair[String, Int] sample_level_pair = sample_pair\n  \tArray[Pair[String, String]] t_n_bams = all_bams\n  }\n}"
+    )
+
+    // create/clean up workspace
+    withWorkspace(billingProject, baseName) { workspaceName =>
+      withSignIn(user) { _ =>
+
+        // create method in method repo
+        Orchestration.methods.createMethod(method.creationAttributes)
+
+        // upload error-inducing config to workspace
+        // POST /api/workspaces/{workspaceNamespace}/{workspaceName}/methodconfigs
+        Orchestration.methodConfigurations.createMethodConfigInWorkspace(
+          billingProject,
+          workspaceName,
+          method,
+          baseName,
+          baseName,
+          1,
+          Map(
+            "w.sample_level_pair" -> "this.participant.control_sample",
+            "w.t_n_bams" -> ""
+          ),
+          Map(
+            "w.age" -> "this.Age",
+            "w.gender" -> "this.Gender",
+            "w.normal_bam" -> "this.control_sample",
+            "w.tumor_bam" -> "this.case_sample"
+          ),
+          "participant"
+        )
+
+        val page = new WorkspaceSummaryPage(billingProject, workspaceName).open
+        val configTab = page.goToMethodConfigTab()
+        val configDetails = configTab.openMethodConfig(baseName, baseName)
+
+        // Sanity check for whether the method <-> config link is correct
+        assert(!configDetails.isSnapshotRedacted)
+
+        val inputs = configDetails.readInputTable
+        val outputs = configDetails.readOutputTable
+
+        inputs.getData
+
+        // attempt to edit and save the method IO
+        configDetails.editMethodConfig()
+
+        // refresh the page
+
+        // check that the edit is preserved
+
+        // clean up
+      }
     }
   }
 

@@ -50,7 +50,9 @@
    (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
-       [Table {:data (->> (io-key inputs-outputs)
+       [Table {:data-test-id
+               (str "io-" (name io-key))
+               :data (->> (io-key inputs-outputs)
                           (map (fn [{:keys [name inputType outputType optional] :as item}]
                                  (let [[task variable] (take-last 2 (string/split name "."))
                                        k-name (keyword name)

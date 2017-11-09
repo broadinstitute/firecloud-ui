@@ -155,13 +155,14 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
   object methodConfigurations {
 
-    //    This only works for method configs, but not methods
+    //    This only works for method configs, but not methods (a fundamental property of FireCloud; methods only live in the Methods Repository and cannot be copied)
     def copyMethodConfigFromMethodRepo(ns: String, wsName: String, configurationNamespace: String, configurationName: String, configurationSnapshotId: Int, destinationNamespace: String, destinationName: String)(implicit token: AuthToken): String = {
       logger.info(s"Copying method config from method repo: $ns/$wsName config: $configurationNamespace/$configurationName $configurationSnapshotId destination: $destinationNamespace/$destinationName")
       postRequest(apiUrl(s"api/workspaces/$ns/$wsName/method_configs/copyFromMethodRepo"),
         Map("configurationNamespace" -> configurationNamespace, "configurationName" -> configurationName, "configurationSnapshotId" -> configurationSnapshotId, "destinationNamespace" -> destinationNamespace, "destinationName" -> destinationName))
     }
 
+    // Creates a new config in a workspace - input & output values dropped
     def createMethodConfigInWorkspace(wsNs: String, wsName: String, method:Method,
                                       configNamespace: String, configName: String, methodConfigVersion: Int,
                                       inputs: Map[String, String], outputs: Map[String, String],
