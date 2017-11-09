@@ -1,29 +1,39 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import java.io.{File, PrintWriter}
+import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture._
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
+import org.scalatest.selenium.WebBrowser
+import org.scalatest.{FreeSpec, ShouldMatchers}
 
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
+  private def makeTempDownloadDirectory(): String = {
+    val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads")
+    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
+    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
+    downloadPath.toString
+  }
+
 //  val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads").toString
-  val downloadPath = "target"
-  val billingProject = Config.Projects.default
+//  val downloadPath = "target"
+  private val downloadPath = makeTempDownloadDirectory()
+  private val billingProject = Config.Projects.default
 
   "import a participants file" in withWebDriver { implicit driver =>
     val owner = UserPool.chooseProjectOwner
@@ -342,7 +352,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
   "Download should reflect visible columns" - {
     "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      import scala.collection.JavaConverters._
       val wd = new File("")
       logger.info("working dir: " + wd.getAbsolutePath)
       logger.info("files: " + Files.list(wd.toPath).iterator.asScala.mkString(", "))
