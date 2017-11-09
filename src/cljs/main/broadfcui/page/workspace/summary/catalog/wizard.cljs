@@ -122,11 +122,14 @@
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
-        [:div {:style {:borderBottom style/standard-line
-                       :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+        (flex/box
+         {:style {:borderBottom style/standard-line
+                  :padding "20px 48px 18px"
+                  :display "flex"
+                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
-         (buttons/x-button modal/pop-modal)]
+         flex/spring
+         (buttons/x-button modal/pop-modal))
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
