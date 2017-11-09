@@ -10,10 +10,10 @@ import akka.stream.scaladsl.{Sink, _}
 import akka.util.ByteString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.broadinstitute.dsde.firecloud.config.AuthToken
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 trait FireCloudClient {
   implicit val system = ActorSystem()
@@ -60,6 +60,14 @@ trait FireCloudClient {
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
         throw APIException(Await.result(entityFuture, 1.second).decodeString("UTF-8"))
     }
+  }
+
+  import scala.reflect.ClassTag
+  import scala.reflect._
+  def parseResponseAs[T: ClassTag](response: HttpResponse): T = {
+    // https://stackoverflow.com/questions/6200253/scala-classof-for-type-parameter
+    val classT: Class[T] = classTag[T].runtimeClass.asInstanceOf[Class[T]]
+    mapper.readValue(parseResponse(response), classT)
   }
 
   private def requestWithJsonContent(method: HttpMethod, uri: String, content: Any, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {

@@ -2,7 +2,8 @@ package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.Method
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
@@ -10,7 +11,6 @@ import org.broadinstitute.dsde.firecloud.util.Util
 import org.broadinstitute.dsde.firecloud.util.Util.appendUnderscore
 
 import scala.concurrent.duration._
-
 
 trait Orchestration extends FireCloudClient with LazyLogging {
 

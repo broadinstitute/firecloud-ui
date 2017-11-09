@@ -4,7 +4,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
@@ -33,7 +34,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
    *  because we specifically need a curator.
    */
   val defaultUser: Credentials = UserPool.chooseCurator
-  val authTokenDefault: AuthToken = AuthToken(defaultUser)
+  val authTokenDefault: AuthToken = UserAuthToken(defaultUser)
 
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
@@ -213,7 +214,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)
 
                   register cleanUp {
-                    api.workspaces.delete(projectName, cloneWorkspaceName)(AuthToken(user))
+                    api.workspaces.delete(projectName, cloneWorkspaceName)(UserAuthToken(user))
                   }
 
 
@@ -242,7 +243,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
 
                     register cleanUp {
-                      api.workspaces.delete(projectName, cloneWorkspaceName)(AuthToken(user))
+                      api.workspaces.delete(projectName, cloneWorkspaceName)(UserAuthToken(user))
                     }
 
                     summaryPage.readAuthDomainGroups should include(groupOneName)
@@ -257,7 +258,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
-        implicit val authToken: AuthToken = AuthToken(user)
+        implicit val authToken: AuthToken = UserAuthToken(user)
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
