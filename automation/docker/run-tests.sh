@@ -63,16 +63,19 @@ docker rm -v $(docker ps -a -q -f status=exited)
 trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
   HUP INT QUIT PIPE TERM
 
-# make sure ${WORKING_DIR}/target exists before mapping it into a docker container
-#echo "WORKING_DIR: $WORKING_DIR"
-#mkdir -p $WORKING_DIR/chrome
-
 # build and run the composed services
 echo "HOST IP: $DOCKERHOST"
 docker-compose -f ${HUB_COMPOSE} pull
 docker-compose -f ${HUB_COMPOSE} up -d
 docker-compose -f ${HUB_COMPOSE} scale chrome=$NUM_NODES
-#docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/target
+
+# Make sure ${WORKING_DIR}/chrome/downloads exists and make it writable by the node-chrome containers.
+mkdir -p $WORKING_DIR/chrome/downloads
+# Without this, the directory permissions don't allow chrome to automatically save downloads which
+# leads to a system save dialog opening which Selenium doesn't have any way of handling.
+echo Begin ugly but necessary python error that looks bad but actually does something useful
+docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/chrome/downloads
+echo End ugly but necessary python error
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
@@ -100,7 +103,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/target/users.json:/app/src/test/resources/users.json \
-    -v $WORKING_DIR/target:/app/target \
+    -v $WORKING_DIR/chrome/downloads:/app/chrome/downloads \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \

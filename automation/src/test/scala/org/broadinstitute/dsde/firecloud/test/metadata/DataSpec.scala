@@ -24,14 +24,20 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   private def makeTempDownloadDirectory(): String = {
-    val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads")
+    /*
+     * This might work some day if docker permissions get straightened out... or it might not be
+     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
+    new File("chrome").mkdirs()
+    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
     val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
     Files.setPosixFilePermissions(downloadPath, permissions.asJava)
     downloadPath.toString
+     */
+    val downloadPath = "chrome/downloads"
+    new File(downloadPath).mkdirs()
+    downloadPath
   }
 
-//  val downloadPath = Files.createTempDirectory(Paths.get("target"), "chrome_downloads").toString
-//  val downloadPath = "target"
   private val downloadPath = makeTempDownloadDirectory()
   private val billingProject = Config.Projects.default
 
@@ -353,12 +359,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   "Download should reflect visible columns" - {
     "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
       val wd = new File("")
-      logger.info("working dir: " + wd.getAbsolutePath)
-      logger.info("files: " + Files.list(wd.toPath).iterator.asScala.mkString(", "))
-//      logger.info("chrome files: " + Files.list(new File("chrome").toPath).iterator.asScala.mkString(", "))
-      logger.info("download path files: " + Files.list(new File(downloadPath).toPath).iterator.asScala.mkString(", "))
-//      go to s"file://${new File(downloadPath).getAbsolutePath}"
-//      false shouldEqual true
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))
