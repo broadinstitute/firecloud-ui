@@ -7,7 +7,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.components.autosuggest :refer [Autosuggest]]
+   [broadfcui.components.ontology-autosuggest :refer [OntologyAutosuggest]]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
    [broadfcui.utils :as utils]
@@ -67,27 +67,10 @@
       (when (:disease-checked? @state)
         [:div {:style {:paddingLeft "1.5rem"}}
          (this :-render-selected-diseases)
-         [Autosuggest
-          {:url "/autocomplete/"
-           :service-prefix "/duos"
-           :caching? true
-           :inputProps {:placeholder "Search for a disease ontology value"}
-           :get-value #(.-label %)
-           :renderSuggestion (fn [suggestion]
-                               (react/create-element
-                                [:div {}
-                                 [:div {:style {:lineHeight "1.5em"}}
-                                  (.-label suggestion)
-                                  [:small {:style {:float "right"}} (.-id suggestion)]]
-                                 [:small {:style {:fontStyle "italic"}}
-                                  (.-definition suggestion)]
-                                 [:div {:style {:clear "both"}}]]))
-           :highlightFirstSuggestion false
-           :onSuggestionSelected (fn [_ suggestion]
-                                   (let [{:keys [id label]} (js->clj (.-suggestion suggestion) :keywordize-keys true)]
-                                     (swap! state update :selected-diseases assoc id label)))
-           :theme {:input {:width "100%" :marginBottom 0}
-                   :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]])])
+         [OntologyAutosuggest
+          {:on-suggestion-selected
+           (fn [{:keys [id label]}]
+             (swap! state update :selected-diseases assoc id label))}]])])
    :-render-selected-diseases
    (fn [{:keys [state]}]
      (map (fn [[id label]]
