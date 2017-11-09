@@ -45,6 +45,7 @@
 
 (defn- translate-research-purpose [research-purpose]
   (as-> research-purpose $
+        (dissoc $ :ds)
         (utils/map-keys {:methods "NDMS"
                          :control "NCTRL"
                          :aggregates "NAGR"
