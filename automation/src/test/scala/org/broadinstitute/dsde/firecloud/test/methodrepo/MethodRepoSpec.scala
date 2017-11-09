@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.methodrepo
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Credentials}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -10,7 +11,7 @@ import org.scalatest._
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WebBrowserSpec with Matchers with CleanUp {
 
   val ownerUser: Credentials = UserPool.chooseProjectOwner
-  implicit val ownerAuthToken: AuthToken = AuthToken(ownerUser)
+  implicit val ownerAuthToken: AuthToken = UserAuthToken(ownerUser)
 
   "A user" - {
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>

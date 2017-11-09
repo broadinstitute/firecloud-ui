@@ -2,7 +2,8 @@ package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
@@ -20,7 +21,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   val subjectId: String = Config.Users.tempSubjectId
 
   val adminUser: Credentials = UserPool.chooseAdmin
-  implicit val authToken: AuthToken = AuthToken(adminUser)
+  implicit val authToken: AuthToken = UserAuthToken(adminUser)
 
   // Clean-up anything left over from any previous failures.
   before {
