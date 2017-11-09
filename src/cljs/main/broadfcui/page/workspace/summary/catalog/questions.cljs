@@ -204,15 +204,15 @@
            get-prop (fn [prop-key] (prop->string (get attributes prop-key
                                                       (get-in library-schema [:properties prop-key :default]))))]
        {:attributes
-        (reduce (fn [map prop]
+        (reduce (fn [prev prop]
                   (if (map? prop)
-                    (reduce (fn [map-inner prop-inner]
+                    (reduce (fn [prev-inner prop-inner]
                               (let [prop-inner-key (keyword prop-inner)]
-                                (assoc map-inner prop-inner-key (get-prop prop-inner-key))))
-                            map
+                                (assoc prev-inner prop-inner-key (get-prop prop-inner-key))))
+                            prev
                             (:items prop))
                     (let [prop-key (keyword prop)]
-                      (assoc map prop-key (get-prop prop-key)))))
+                      (assoc prev prop-key (get-prop prop-key)))))
                 {}
                 questions)}))
    :render
