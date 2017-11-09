@@ -1,29 +1,45 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import java.io.{File, PrintWriter}
+import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture._
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
+import org.scalatest.selenium.WebBrowser
+import org.scalatest.{FreeSpec, ShouldMatchers}
 
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
-  logger.info("working dir: " + new File("").getAbsolutePath)
-  val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "chrome_downloads").toString
-  val billingProject = Config.Projects.default
+  private def makeTempDownloadDirectory(): String = {
+    /*
+     * This might work some day if docker permissions get straightened out... or it might not be
+     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
+    new File("chrome").mkdirs()
+    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
+    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
+    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
+    downloadPath.toString
+     */
+    val downloadPath = "chrome/downloads"
+    new File(downloadPath).mkdirs()
+    downloadPath
+  }
+
+  private val downloadPath = makeTempDownloadDirectory()
+  private val billingProject = Config.Projects.default
 
   "import a participants file" in withWebDriver { implicit driver =>
     val owner = UserPool.chooseProjectOwner
