@@ -26,12 +26,32 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   private def makeTempDownloadDirectory(): String = {
     /*
      * This might work some day if docker permissions get straightened out... or it might not be
-     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
-    new File("chrome").mkdirs()
-    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
-    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
-    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
-    downloadPath.toString
+     * needed. For now, we instead `chmod 777` the directory in run-tests.sh. Without this or the
+     * chmod, Chrome cannot write to the configured download directory so it presents a system save
+     * dialog which Selenium has no way to handle. With this (still without the chmod), the file
+     * gets saved but the test cannot read it for some reason.
+     *
+     * I'm intentionally leaving this commented-out code here in an effort to help the next person
+     * who comes along and tries to fix this for real.
+     */
+//    new File("chrome").mkdirs()
+//    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
+//    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
+//    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
+//    downloadPath.toString
+
+    /*
+     * Having this be a static directory is potentially problematic. In a Selenium Hub environment,
+     * this is mapped to a directory in the working directory where the test code lives and is
+     * executing from. Therefore, if tests are run in parallel that happen to download files with
+     * the same names, they can step on each other. Unfortunately, if the permissions for the
+     * download directory aren't opened before running the tests, the docker containers do not have
+     * the necessary permissions. Therefore, the tests cannot currently create their own download
+     * directories for test isolation purposes.
+     *
+     * This is fine as long as DataSpec is the only test suite downloading metadata AND DataSpec
+     * does NOT use ParallelTestExecution. Outside of those parameters, this problem will need a
+     * better solution.
      */
     val downloadPath = "chrome/downloads"
     new File(downloadPath).mkdirs()
