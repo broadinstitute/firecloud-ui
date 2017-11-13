@@ -239,9 +239,10 @@
          {:data clusters
           :body {:empty-message "There are no clusters to display."
                  :style table-style/table-light
+                 :fixed-column-count 1
                  :columns
-                 [{:header "" :initial-width 30
-                   :resizable? false :sortable? false :filterable? false
+                 [{:id "delete" :initial-width 30
+                   :resizable? false :sortable? false :filterable? false :hidden? true
                    :as-text :clusterName :sort-by :clusterName
                    :render
                    (fn [cluster]
