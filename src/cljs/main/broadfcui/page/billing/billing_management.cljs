@@ -80,7 +80,7 @@
                   :style table-style/table-light
                   :data-props {:row (fn [project] {:data-test-id (str (:projectName project) "-row")})}
                   :columns
-                  [{:id "Status Icon" :initial-width 16
+                  [{:id "Status Icon" :initial-width 32
                     :resizable? false :sortable? false :filterable? false
                     :column-data :creationStatus
                     :render
