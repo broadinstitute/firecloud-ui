@@ -352,7 +352,7 @@
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :delete})
 
-(defn get-clusters-list [labels]
+(defn get-clusters-list []
   {:path (str "/clusters")
    :method :get})
 

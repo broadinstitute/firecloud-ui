@@ -75,24 +75,19 @@
         (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
-(defn checkIfWhitelisted []
-  (utils/log "calling get clusters")
-  (endpoints/call-ajax-leo
-   {:endpoint (endpoints/get-clusters-list {})
-    :headers utils/content-type=json
-    :on-done (fn [{:keys [success? get-parsed-response]}]
-               (utils/log success?))}))
-
-
 (react/defc- WorkspaceDetails
   {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
-           {:keys [workspace workspace-error bucket-access?]} @state
+           {:keys [workspace workspace-error bucket-access? whitelisted?]} @state
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-workspace)
-           refresh-tab #((@refs %) :refresh)]
-          ; userEmail utils/get-user-email]
+           refresh-tab #((@refs %) :refresh)
+           tabs [[SUMMARY :workspace-summary]
+                 [DATA :workspace-data]
+                 [ANALYSIS :workspace-analysis]
+                 [CONFIGS :workspace-method-configs]
+                 [MONITOR :workspace-monitor]]]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
@@ -118,12 +113,7 @@
              :contents [notifications/WorkspaceComponent
                         (merge (select-keys props [:workspace-id])
                                {:close-self #((:infobox @locals) :close)})]})}]]
-        (tab-bar/create-bar (merge {:tabs [[SUMMARY :workspace-summary]
-                                           [DATA :workspace-data]
-                                           [ANALYSIS :workspace-analysis]
-                                           [CONFIGS :workspace-method-configs]
-                                           [MONITOR :workspace-monitor]
-                                           [NOTEBOOKS :workspace-notebooks]]
+        (tab-bar/create-bar (merge {:tabs (if whitelisted? (conj tabs [NOTEBOOKS :workspace-notebooks]) tabs)
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
@@ -169,6 +159,11 @@
      (after-update this :-refresh-workspace))
    :-refresh-workspace
    (fn [{:keys [props state]}]
+     (endpoints/call-ajax-leo
+      {:endpoint (endpoints/get-clusters-list)
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state assoc :whitelisted? success?))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [status-code success?]}]
@@ -253,7 +248,7 @@
                    :submission-id submission-id :workflow-id workflow-id})
     :make-path (fn [workspace-id submission-id workflow-id]
                  (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))})
-  (nav/defpath
+   (nav/defpath
    :workspace-notebooks
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/notebooks"
