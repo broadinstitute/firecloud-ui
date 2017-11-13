@@ -208,7 +208,7 @@
                      :onClick #(this :-delete-cluster)}
          :content
          (react/create-element
-          [:div {:style {:marginBottom -20}}
+          [:div {}
            (when deleting? [comps/Blocker {:banner "Deleting cluster..."}])
            [:div {} (str "Are you sure you want to delete cluster " cluster-to-delete "?")]
            [comps/ErrorViewer {:error server-error}]])}]))
