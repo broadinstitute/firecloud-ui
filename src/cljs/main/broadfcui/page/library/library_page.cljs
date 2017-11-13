@@ -13,7 +13,6 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
@@ -375,13 +374,12 @@
                                 :on-filter (fn [text]
                                              (swap! state assoc :search-text text)
                                              (this :-refresh-table true))})
-        (when (config/debug?)
-          [ResearchPurposeSection
-           {:research-purpose-values (:research-purpose @state)
-            :on-search (fn [options]
-                         ;; Throw out falses:
-                         (swap! state assoc :research-purpose (utils/filter-values identity options))
-                         (this :-refresh-table))}])
+        [ResearchPurposeSection
+         {:research-purpose-values (:research-purpose @state)
+          :on-search (fn [options]
+                       ;; Throw out falses:
+                       (swap! state assoc :research-purpose (utils/filter-values identity options))
+                       (this :-refresh-table))}]
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)
