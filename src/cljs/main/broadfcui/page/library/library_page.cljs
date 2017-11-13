@@ -110,9 +110,13 @@
                         :initial-width 180 :show-initial? false
                         :column-data keyname
                         :render (fn [field]
-                                  (if (sequential? field)
-                                    (string/join ", " field)
-                                    field))})
+                                  (let [tag? (= (get-in (keyname attributes) [:renderHint :type]) "tag")
+                                        sequential? (sequential? field)]
+                                    (cond
+                                      tag? (->> field
+                                                (map #(style/render-custom-tag % {:style {:margin "0 0.1rem" :padding "0 0.5rem"}})))
+                                      sequential? (string/join ", " field)
+                                      :else field)))})
                      extra-columns))
           :style {:header-row {:fontWeight 500 :fontSize "90%"
                                :backgroundColor nil

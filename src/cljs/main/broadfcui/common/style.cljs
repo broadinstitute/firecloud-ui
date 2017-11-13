@@ -198,6 +198,16 @@
                  :borderRadius 3 :padding "0.2rem 0.5rem"}}
    tag])
 
+(defn render-custom-tag [tag props]
+  [:div
+   (utils/deep-merge {:style {:display "inline-block"
+                              :background (:tag-background colors)
+                              :color (:tag-foreground colors)
+                              :margin "0.1rem 0.1rem"
+                              :borderRadius 3
+                              :padding "0.2rem 0.5rem"}} props)
+   tag])
+
 (defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
 
