@@ -285,6 +285,7 @@
                    :column-data (comp :numberOfPreemptibleWorkers :machineConfig)}
                   {:header "Labels" :initial-width :auto
                    :column-data #(dissoc (:labels %) :serviceAccount :clusterName :googleProject :googleBucket)
+                   :sort-by (comp vec keys)
                    :render
                    (fn [labels]
                      [:div {}
