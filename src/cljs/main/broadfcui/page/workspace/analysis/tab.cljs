@@ -26,15 +26,13 @@
    (fn [{:keys [props]}]
      {:tracks (get @tracks-cache (:workspace-id props) [])})
    :render
-   (fn [{:keys [state this props]}]
-     (if true
-      ; [:div {} [NotebooksContainer props]]
-       [:div {}
-        [IGVContainer {:tracks (:tracks @state)}]
-        [buttons/Button {:text "Select Tracks..."
-                         :style {:float "right" :marginTop "1rem"}
-                         :onClick #(this :show-track-selection-dialog)}]
-        (common/clear-both)]))
+   (fn [{:keys [state this]}]
+     [:div {}
+      [IGVContainer {:tracks (:tracks @state)}]
+      [buttons/Button {:text "Select Tracks..."
+                       :style {:float "right" :marginTop "1rem"}
+                       :onClick #(this :show-track-selection-dialog)}]
+      (common/clear-both)])
    :component-will-unmount
    (fn [{:keys [props state]}]
      (swap! tracks-cache assoc (:workspace-id props) (:tracks @state)))})
