@@ -19,11 +19,9 @@
      {:tracks (get @tracks-cache (:workspace-id props) [])})
    :render
    (fn [{:keys [state this props]}]
-     (utils/log props)
-     (if true ;; if the user is in the whitelist
-       [:div {}
-        [NotebooksContainer props]
-        (common/clear-both)]))
+     [:div {}
+      [NotebooksContainer props]
+      (common/clear-both)])
    :component-will-unmount
    (fn [{:keys [props state]}]
      (swap! tracks-cache assoc (:workspace-id props) (:tracks @state)))})

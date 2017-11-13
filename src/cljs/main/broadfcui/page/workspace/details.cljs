@@ -86,6 +86,7 @@
            tabs [[SUMMARY :workspace-summary]
                  [DATA :workspace-data]
                  [ANALYSIS :workspace-analysis]
+                 (when whitelisted? [NOTEBOOKS :workspace-notebooks])
                  [CONFIGS :workspace-method-configs]
                  [MONITOR :workspace-monitor]]]
        [:div {}
@@ -113,7 +114,7 @@
              :contents [notifications/WorkspaceComponent
                         (merge (select-keys props [:workspace-id])
                                {:close-self #((:infobox @locals) :close)})]})}]]
-        (tab-bar/create-bar (merge {:tabs (if whitelisted? (conj tabs [NOTEBOOKS :workspace-notebooks]) tabs)
+        (tab-bar/create-bar (merge {:tabs tabs
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
