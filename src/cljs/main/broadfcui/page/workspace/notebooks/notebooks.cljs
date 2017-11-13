@@ -255,7 +255,7 @@
                           :onClick #(swap! state assoc :show-delete-dialog? true :cluster-to-delete (:clusterName cluster))}
                          (icons/render-icon {} :delete))))}
 
-                  {:header "Name" :initial-width 200
+                  {:header "Name" :initial-width 150
                    :as-text :clusterName :sort-by :clusterName :sort-initial :asc
                    :render
                    (fn [cluster]
@@ -271,17 +271,19 @@
                              [:div {:style {:height table-style/table-icon-size}}
                               (icon-for-cluster-status status) status])}
                   (table-utils/date-column {:column-data :createdDate :style {}})
-                  {:header "Master Machine Type" :initial-width 100
+                  {:header "Master Machine Type" :initial-width 150
                    :column-data (comp :masterMachineType :machineConfig)}
-                  {:header "Master Disk Size" :initial-width 100
+                  {:header "Master Disk Size (GB)" :initial-width 150
                    :column-data (comp :masterDiskSize :machineConfig)}
-                  {:header "Workers" :initial-width 100
+                  {:header "Workers" :initial-width 80
                    :column-data (comp :numberOfWorkers :machineConfig)}
-                  {:header "Worker Machine Type" :initial-width 100
+                  {:header "Worker Machine Type" :initial-width 150
                    :column-data (comp :workerMachineType :machineConfig)}
-                  {:header "Worker Local SSDs" :initial-width 100
+                  {:header "Worker Disk Size (GB)" :initial-width 150
+                   :column-data (comp :workerMachineType :machineConfig)}
+                  {:header "Worker Local SSDs" :initial-width 130
                    :column-data (comp :numberOfWorkerLocalSSDs :machineConfig)}
-                  {:header "Preemptible Workers" :initial-width 100
+                  {:header "Preemptible Workers" :initial-width 150
                    :column-data (comp :numberOfPreemptibleWorkers :machineConfig)}
                   {:header "Labels" :initial-width :auto
                    :column-data #(dissoc (:labels %) :serviceAccount :clusterName :googleProject :googleBucket)
