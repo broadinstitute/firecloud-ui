@@ -36,9 +36,7 @@ fi
 
 if [ ${1} = "local" ]; then
   UI_LOCATION=$DOCKERHOST_ADDRESS
-fi
-
-if [ ${1} = "fiab" ]; then
+else
   UI_LOCATION=$FC_INSTANCE
 fi
 

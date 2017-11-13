@@ -1,6 +1,4 @@
-FROM digitalgenius/alpine-scala-sbt
-
-RUN mkdir /app
+FROM 1science/sbt
 
 COPY src /app/src
 COPY test.sh /app
