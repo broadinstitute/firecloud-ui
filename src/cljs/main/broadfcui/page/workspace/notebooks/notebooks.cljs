@@ -155,7 +155,7 @@
    :-create-cluster
    (fn [{:keys [this state refs props]}]
      (swap! state dissoc :server-error :validation-errors)
-     (let [[clusterNameCreate extensionURI & fails] (input/get-and-validate refs "clusterNameCreate")
+     (let [[clusterNameCreate extensionURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI")
            payload {:bucketPath ""
                     :labels (react/call :-process-labels this)}
            machineConfig (react/call :-process-machine-config this)]
@@ -171,7 +171,7 @@
                           (swap! state dissoc :creating?)
                           (if success?
                             (do ((:dismiss props)) ((:reload-after-create props))) ;if success, update the table?
-                            (swap! state assoc :server-error {:error status-text})))})))))
+                            (swap! state assoc :server-error (get-parsed-response false))))})))))
    :-process-labels
    (fn [{:keys [state refs]}]
      (zipmap (map #(keyword  (first %)) (:labels @state))
