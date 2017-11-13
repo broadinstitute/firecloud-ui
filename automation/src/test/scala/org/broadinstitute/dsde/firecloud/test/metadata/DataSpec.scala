@@ -413,6 +413,21 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         importColumns = Some(List("participant_id", "foo", "bar", "baz")),
         expectedColumns = List("participant_id", "baz"))
     }
+
+    "keep ID column in download even if hidden in UI" in withWebDriver(downloadPath) { implicit driver =>
+      val user = UserPool.chooseAnyUser
+      implicit val authToken: AuthToken = AuthToken(user)
+      withWorkspace(billingProject, "DataSpec_download") { workspaceName =>
+        withSignIn(user) { _ =>
+          val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+          val columns = List("participant_id", "foo")
+          dataTab.importFile(generateMetadataFile(columns))
+          dataTab.dataTable.hideColumn("participant_id")
+          val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+          readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns)
+        }
+      }
+    }
   }
 
   private def testMetadataDownload(initialColumns: List[String],
