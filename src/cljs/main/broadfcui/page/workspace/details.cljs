@@ -6,7 +6,6 @@
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.tab-bar :as tab-bar]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -19,6 +18,9 @@
    [broadfcui.page.workspace.summary.tab :as summary-tab]
    [broadfcui.utils :as utils]
    ))
+
+
+(defonce ^:private whitelisted-users (atom {}))
 
 
 (defn- protected-banner [workspace]
@@ -79,14 +81,14 @@
   {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
-           {:keys [workspace workspace-error bucket-access? whitelisted?]} @state
+           {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-workspace)
            refresh-tab #((@refs %) :refresh)
            tabs [[SUMMARY :workspace-summary]
                  [DATA :workspace-data]
                  [ANALYSIS :workspace-analysis]
-                 (when whitelisted? [NOTEBOOKS :workspace-notebooks])
+                 (when (get @whitelisted-users (utils/get-user-email)) [NOTEBOOKS :workspace-notebooks])
                  [CONFIGS :workspace-method-configs]
                  [MONITOR :workspace-monitor]]]
        [:div {}
@@ -151,7 +153,7 @@
                NOTEBOOKS (react/create-element
                           [notebooks-tab/Page
                            (merge {:ref NOTEBOOKS}
-                                   (utils/restructure workspace-id workspace))]))))]]))
+                                  (utils/restructure workspace-id workspace))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
@@ -160,11 +162,12 @@
      (after-update this :-refresh-workspace))
    :-refresh-workspace
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-leo
-      {:endpoint (endpoints/get-clusters-list)
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state assoc :whitelisted? success?))})
+     (when-not (contains? @whitelisted-users (utils/get-user-email))
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/get-clusters-list)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success?]}]
+                    (swap! whitelisted-users assoc (utils/get-user-email) success?))}))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [status-code success?]}]
@@ -256,6 +259,4 @@
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Notebooks"})
     :make-path (fn [workspace-id]
-                 (str (ws-path workspace-id) "/notebooks"))})
-
-  )
+                 (str (ws-path workspace-id) "/notebooks"))}))
