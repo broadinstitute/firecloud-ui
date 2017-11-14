@@ -39,15 +39,15 @@ Before you run tests for the first time, make sure your docker has enough memory
 To generate a Docker container automatically and run the tests inside of it:
 
 ```bash
-./run-tests.sh FIRECLOUD-LOCATION [dev | qa] [vault token] [working dir]
+./run-tests.sh FIRECLOUD-LOCATION [dev] [vault token] [working dir]
 ```
 
 **Arguments:** (arguments are positional)
 
 * FireCloud location (required)
 	* One of `fiab`, `local` (local UI, FIAB backend), `alpha`, `prod`, or an IP address. `fiab` and `local` will pull the IP from your `etc/hosts`.
-* `dev` or `qa`
-	* Environment of your FiaB. Defaults to `dev`.
+* `dev`
+	* Environment of your FiaB..
 * Vault auth token
 	* Defaults to reading it from `~/.vault-token`.
 * Working directory
@@ -70,7 +70,7 @@ If your version of Chrome is 61 or later, check `chromedriver --version` to make
 Also run the config render script. If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
 
 ```bash
-./render-local-env.sh [working dir] [vault token] [dev | qa] [local_ui]
+./render-local-env.sh [working dir] [vault token] [dev] [local_ui]
 ```
 
 **Arguments:** (arguments are positional)
@@ -79,8 +79,8 @@ Also run the config render script. If you are planning on running the firecloud 
 	* Defaults to `$PWD`.
 * Vault auth token
 	* Defaults to reading it from `~/.vault-token`.
-* `dev` or `qa`
-	* Environment of your FiaB. Defaults to `dev`.
+* `dev`
+	* Environment of your FiaB.
 * Local UI
 	* Enter `local_ui` here to run against a local UI stack.
 
@@ -89,10 +89,8 @@ Also run the config render script. If you are planning on running the firecloud 
 Be sure you used the `local_ui` param when you rendered your configs (see above). When starting your UI, run:
 
 ```bash
-FIAB=true [ENV=qa] ./config/docker-rsync-local-ui.sh
+FIAB=true ./config/docker-rsync-local-ui.sh
 ```
-
-If you don't provide `ENV`, it will default to `dev`.
 
 #### Running tests
 
@@ -129,3 +127,10 @@ sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z
 ```
 
 For more information see [SBT's documentation](http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments).
+
+
+## Troubleshooting
+
+If you have problems with IntelliJ, it may be due to artifacts left over from a previous import or build. If you have problems, first close the projects in IntelliJ and delete the `automation/.idea` and `automation/target` directories. Then repeat the IntelliJ project import instructions above.
+
+If FireCloud tests fail, make sure your basic selenium test setup is working by first running GoogleSpec which only accesses http://www.google.com/ and does not rely on FireCloud.

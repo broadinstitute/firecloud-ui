@@ -36,7 +36,7 @@ Support for running FireCloud outside of the Broad is planned.
 1. Make sure you've run the `firecloud-setup.sh` script in the `firecloud-develop` repo to render the config files and run script.
 2. Be sure you've added local.broadinstitute.org to your `/etc/hosts`:
 
-``` bash
+```bash
 sudo sh -c "echo '127.0.0.1       local.broadinstitute.org' >> /etc/hosts"
 ```
 
@@ -72,9 +72,3 @@ To compile and build the `broadinstitute/firecloud-ui` docker image, run
 
 ## Testing
 See [TESTING.md](TESTING.md)
-
-## Troubleshooting
-
-If you have problems with IntelliJ, it may be due to artifacts left over from a previous import or build. If you have problems, first close the projects in IntelliJ and delete the `automation/.idea` and `automation/target` directories. Then repeat the IntelliJ project import instructions above.
-
-If FireCloud tests fail, make sure your basic selenium test setup is working by first running GoogleSpec which only accesses http://www.google.com/ and does not rely on FireCloud.

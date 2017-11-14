@@ -19,7 +19,7 @@ Correct cursive settings are included in this repo in importable form, in the fi
 
 The first time you encounter a `defc`, you must manually tell Cursive how to format it:
 
-1. Highlight any usage of that symbol  
+1. Click on any usage of that symbol  
 2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
 3. Select _Resolve as..._  
 4. Select _def_
