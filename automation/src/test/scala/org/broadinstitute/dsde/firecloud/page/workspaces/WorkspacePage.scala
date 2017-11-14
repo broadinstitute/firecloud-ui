@@ -45,4 +45,9 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
     tabs.goToTab("Monitor")
     await ready new WorkspaceMonitorPage(namespace, name)
   }
+
+  def goToNotebooksTab(): WorkspaceNotebooksPage = {
+    tabs.goToTab("Notebooks")
+    await ready new WorkspaceNotebooksPage(namespace, name)
+  }
 }
