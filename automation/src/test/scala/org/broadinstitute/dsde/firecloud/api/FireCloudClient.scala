@@ -62,8 +62,7 @@ trait FireCloudClient {
     }
   }
 
-  import scala.reflect.ClassTag
-  import scala.reflect._
+  import scala.reflect.{ClassTag, classTag}
   def parseResponseAs[T: ClassTag](response: HttpResponse): T = {
     // https://stackoverflow.com/questions/6200253/scala-classof-for-type-parameter
     val classT: Class[T] = classTag[T].runtimeClass.asInstanceOf[Class[T]]
