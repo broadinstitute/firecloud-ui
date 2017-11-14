@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
 
-// Note: we are creating a new auth token from google every time we call this case class
+// Note: we are creating a new service account private key every time we call this case class
 
 case class ServiceAccountAuthToken(saId: WorkbenchUserServiceAccountEmail) extends AuthToken {
 
