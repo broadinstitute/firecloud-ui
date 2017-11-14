@@ -4,9 +4,10 @@ import org.broadinstitute.dsde.firecloud.api.Sam
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatus
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.scalatest.{FreeSpec, Matchers}
 
-class SamApiSpec extends FreeSpec with Matchers {
+class SamApiSpec extends FreeSpec with Matchers with CleanUp {
   val anyUser: Credentials = UserPool.chooseAnyUser
   val userAuthToken: AuthToken = UserAuthToken(anyUser)
 
@@ -22,7 +23,8 @@ class SamApiSpec extends FreeSpec with Matchers {
       // first call should create pet.  confirm that a second call to create/retrieve gives the same results
       Sam.user.petServiceAccountEmail()(userAuthToken) shouldBe petAccountEmail
 
-      val petAuthToken: AuthToken = ServiceAccountAuthToken(petAccountEmail)
+      val petAuthToken = ServiceAccountAuthToken(petAccountEmail)
+      register cleanUp petAuthToken.removePrivateKey()
 
       Sam.user.status()(petAuthToken) shouldBe userInfo
 
