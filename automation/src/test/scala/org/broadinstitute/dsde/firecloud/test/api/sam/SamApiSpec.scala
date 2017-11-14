@@ -1,4 +1,4 @@
-package org.broadinstitute.dsde.firecloud.test.api
+package org.broadinstitute.dsde.firecloud.test.api.sam
 
 import org.broadinstitute.dsde.firecloud.api.Sam
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatus
