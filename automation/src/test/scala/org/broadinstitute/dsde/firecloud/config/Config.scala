@@ -61,6 +61,7 @@ object Config {
     val Temps = UserSet(makeCredsMap(userDataJson("temps")))
     val AuthDomainUsers = UserSet(makeCredsMap(userDataJson("authdomains")))
     val Students = UserSet(makeCredsMap(userDataJson("students")))
+    val NotebooksWhitelisted = UserSet(makeCredsMap(userDataJson("notebookswhitelisted")))
 
     // defaults
     val owner = Owners.getUserCredential("hermione")
@@ -68,6 +69,7 @@ object Config {
     val admin = Admins.getUserCredential("dumbledore")
     val testUser = Students.getUserCredential("harry")
     val temp = Temps.getUserCredential("luna")
+    val notebooksWhitelisted = NotebooksWhitelisted.getUserCredential("percy")
 
     val tempSubjectId = users.getString("tempSubjectId")
 
