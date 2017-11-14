@@ -3,6 +3,8 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component.Label
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
@@ -406,6 +408,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           Label("Notebooks-tab").awaitVisible()
            val notebooksTab = detailPage.goToNotebooksTab()
          }
        }
