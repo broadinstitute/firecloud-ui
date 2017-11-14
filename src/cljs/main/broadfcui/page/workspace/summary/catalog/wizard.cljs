@@ -122,10 +122,12 @@
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
-        [:div {:style {:borderBottom style/standard-line
+        [:div {:style {:display "flex"
+                       :borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
+         flex/spring
          (buttons/x-button modal/pop-modal)]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
