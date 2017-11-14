@@ -129,7 +129,7 @@
                              :entityName (:name entity)
                              :useCallCache ((@refs "callCache-check") :checked?)}
                             (when-not (string/blank? expression) {:expression expression}))]
-         (swap! state assoc :launching? true :launch-server-error nil)
+         (utils/multi-swap! state (assoc :launching? true) (dissoc :launch-server-error))
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-submission (:workspace-id props))
            :payload payload

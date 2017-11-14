@@ -91,7 +91,7 @@
                 {:on-success #(this :-load-data)}]))}]])}}])
    :-delete-group
    (fn [{:keys [state this]}]
-     (swap! state assoc :deleting? true :delete-modal? nil)
+     (utils/multi-swap! state (assoc :deleting? true) (dissoc :delete-modal?))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response

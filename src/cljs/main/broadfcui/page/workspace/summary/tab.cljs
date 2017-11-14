@@ -45,7 +45,7 @@
        :ok-button {:text "Delete" :onClick #(this :delete)}}])
    :delete
    (fn [{:keys [props state]}]
-     (swap! state assoc :deleting? true :server-error nil)
+     (utils/multi-swap! state (assoc :deleting? true) (dissoc :server-error))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-workspace (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]

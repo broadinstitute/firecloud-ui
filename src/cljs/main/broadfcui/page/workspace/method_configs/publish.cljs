@@ -38,9 +38,9 @@
          {:text "Publish"
           :onClick
           #(let [[ns n & fails] (input/get-and-validate refs "mcNamespace" "mcName")]
-             (swap! state assoc :validation-errors fails :error nil)
+             (utils/multi-swap! state (assoc :validation-errors fails) (dissoc :error))
              (when-not fails
-               (swap! state assoc :publishing? true :error nil)
+               (swap! state assoc :publishing? true)
                (endpoints/call-ajax-orch
                 {:endpoint (endpoints/copy-method-config-to-repo workspace-id)
                  :headers utils/content-type=json

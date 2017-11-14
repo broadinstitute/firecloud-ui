@@ -173,9 +173,9 @@
                            :onClick (fn [_]
                                       (when-let [prev-page (peek (:pages-stack @state))]
                                         (utils/multi-swap! state
-                                                           (assoc :page-num prev-page)
-                                                           (update :pages-stack pop)
-                                                           (dissoc :validation-error))))
+                                          (assoc :page-num prev-page)
+                                          (update :pages-stack pop)
+                                          (dissoc :validation-error))))
                            :style {:width 80}
                            :disabled? (zero? page-num)}]
           (flex/strut 27)
@@ -248,7 +248,7 @@
                                                                          ; ensure discoverable by is being sent. when it is reset to all users, it is the empty list
                                                                          ; and therefore removed by the call above
                                                                          {:library:discoverableByGroups discoverable-by})})]
-         (swap! state assoc :submitting? true :submit-error nil)
+         (utils/multi-swap! state (assoc :submitting? true) (dissoc :submit-error))
          (endpoints/call-ajax-orch
           {:endpoint ((:name invoke-args) (:workspace-id props))
            :payload (:data invoke-args)

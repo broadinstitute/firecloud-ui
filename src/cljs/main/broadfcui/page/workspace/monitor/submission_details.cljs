@@ -162,7 +162,7 @@
            (when (contains? moncommon/sub-running-statuses (:status submission))
              [AbortButton
               {:on-abort (fn []
-                           (swap! state assoc :server-response nil)
+                           (swap! state dissoc :server-response)
                            (this :load-details))
                :workspace-id (:workspace-id props)
                :submission-id (:submissionId submission)}])]

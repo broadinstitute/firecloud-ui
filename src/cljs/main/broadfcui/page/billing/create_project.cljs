@@ -106,9 +106,7 @@
        (fn [{:keys [success? status-code raw-response]}]
          (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)]
            (if (and success? (not parse-error?))
-             (swap! state assoc
-                    :billing-accounts parsed
-                    :selected-account nil)
+             (utils/multi-swap! state (assoc :billing-accounts parsed) (dissoc :selected-account))
              (swap! state assoc
                     :error {:code status-code :details (if parse-error? raw-response parsed)}))))}))
    :create-billing-project

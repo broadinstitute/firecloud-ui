@@ -130,8 +130,8 @@
    (fn [{:keys [state props]} item-type item-name]
      (let [update-viewer-state (fn [& args]
                                  (apply swap! state assoc args))]
-       (swap! state assoc :selected-entity item-name :selected-entity-type item-type
-              :loading-attributes? true :selected-attr-list nil)
+       (utils/multi-swap! state (assoc :selected-entity item-name :selected-entity-type item-type :loading-attributes? true)
+                                (dissoc :selected-attr-list))
        (data-utils/get-entity-attrs {:entity-name item-name
                                      :entity-type item-type
                                      :workspace-id (:workspace-id props)

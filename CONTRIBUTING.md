@@ -32,6 +32,8 @@ The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after 
     5. Repeat this process for `defc-`.
     6. Find an instance of `utils/multi-swap!` and resolve it as `->`.
 
+In addition, set the indent level of `multi-swap!` to `1`.
+
 ### Source code layout & organization
 
 We feel the 80-character line length limit in the style guide is more restrictive than necessary. Where feasible, avoid making lines longer than 100 characters.

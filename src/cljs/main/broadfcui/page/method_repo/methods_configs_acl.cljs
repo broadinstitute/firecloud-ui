@@ -124,7 +124,7 @@
                        (fn [{:keys [success? parsed-response]}]
                          (if success?
                            (this :-post-update (set (map :user non-empty-acls)))
-                           (swap! state assoc :persist-error (:message parsed-response) :saving? nil))))})))))
+                           (utils/multi-swap! state (assoc :persist-error (:message parsed-response)) (dissoc :saving?)))))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv

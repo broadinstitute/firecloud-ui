@@ -46,7 +46,7 @@
    :-add-user
    (fn [{:keys [props state refs]}]
      (let [[email & fails] (input/get-and-validate refs "email")]
-       (swap! state assoc :fails fails :server-error nil)
+       (utils/multi-swap! state (assoc :fails fails) (dissoc :server-error))
        (when-not fails
          (let [role (common/get-trimmed-text refs "role")
                {:keys [endpoint on-add]} props]

@@ -101,7 +101,7 @@
                               :style {:marginLeft "auto"}
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                               :onClick #(this :-handle-import-data-click)}]])
-          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil)
+          :on-entity-type-selected #(utils/multi-swap! state (assoc :selected-entity-type %) (dissoc :selected-entity))
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
