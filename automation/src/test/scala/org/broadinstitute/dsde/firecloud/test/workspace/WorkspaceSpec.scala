@@ -301,8 +301,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "who has reader access to workspace" - {
 
       "should see launch analysis button disabled" in withWebDriver { implicit driver =>
-        val user = UserPool.chooseStudent
-        implicit val authToken: AuthToken = authTokenOwner
+        val user = Config.Users.owner
+        implicit val authToken: AuthToken = AuthToken(user)
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           withSignIn(user) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
@@ -400,25 +400,20 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
    "Notebooks whitelist" - {
      "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-       val user = UserPool.chooseNotebooksWhitelisted
+       val user = Config.Users.owner
        implicit val authToken: AuthToken = AuthToken(user)
 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
            val notebooksTab = detailPage.goToNotebooksTab()
-
-//           val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
-//           val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-//           errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
-//           errorModal.clickCancel()
          }
        }
 
      }
 
      "Non-members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-       val user = UserPool.chooseNotebooksWhitelisted //choose not whitelisted
+       val user = Config.Users.owner
        implicit val authToken: AuthToken = AuthToken(user)
 
        withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>

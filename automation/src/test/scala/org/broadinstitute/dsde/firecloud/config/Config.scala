@@ -69,7 +69,7 @@ object Config {
     val admin = Admins.getUserCredential("dumbledore")
     val testUser = Students.getUserCredential("harry")
     val temp = Temps.getUserCredential("luna")
-    val notebooksWhitelisted = NotebooksWhitelisted.getUserCredential("ron")
+    val notebooksWhitelisted = NotebooksWhitelisted.getUserCredential("hermione")
 
     val tempSubjectId = users.getString("tempSubjectId")
 
