@@ -8,7 +8,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
-   [broadfcui.components.ontology-autosuggest :refer [OntologyAutosuggest]]
+   [broadfcui.components.ontology-autosuggest :as ontology]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
@@ -112,12 +112,6 @@
                            :rows 3
                            :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
 
-;;; REMOVE THIS
-(defn- render-doid [doid]
-  (-> doid
-      (string/split "/")
-      last
-      (string/replace-all #"_" " ")))
 
 (def ^:private ATTRIBUTE_SEPARATOR ", ")
 
@@ -137,21 +131,6 @@
     (let [values (split-attributes value-string)]
       (string/join ATTRIBUTE_SEPARATOR (utils/delete values (utils/index-of values item))))))
 
-(defn- render-selected-diseases [{:keys [state related-id-prop related-label-prop]}]
-    (map (fn [[id label]]
-           (flex/box
-            {:style {:margin "0.3rem 0" :alignItems "center"}}
-            [:span {:style {:fontSize "66%"}} (style/render-tag (render-doid id))]
-            [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
-            flex/spring
-            (links/create-internal
-             {:onClick
-              #(do (swap! state update-in [:attributes related-id-prop] remove-from-comma-separated-strings id)
-                   (swap! state update-in [:attributes related-label-prop] remove-from-comma-separated-strings label))}
-             (icons/render-icon {:className "fa-lg"
-                                 :style {:color (:text-light style/colors)}}
-                                :remove))))
-         (zip-comma-separated-strings (get-in @state [:attributes related-id-prop]) (get-in @state [:attributes related-label-prop]))))
 
 (defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe set-property state property library-schema disabled]}]
   (let [[related-id-prop related-label-prop] (library-utils/get-related-id+label-props library-schema property)
@@ -159,12 +138,17 @@
     [:div {:style {:marginBottom "0.75em"}}
      (if (= (:type prop) "array")
        [:div {}
-        (render-selected-diseases (utils/restructure state related-id-prop related-label-prop))
-        [OntologyAutosuggest
+        (ontology/render-multiple-ontology-selections
+         {:onClick (fn [id label]
+                     (swap! state update-in [:attributes related-id-prop] remove-from-comma-separated-strings id)
+                     (swap! state update-in [:attributes related-label-prop] remove-from-comma-separated-strings label))
+          :selection-map (zip-comma-separated-strings (get-in @state [:attributes related-id-prop]) (get-in @state [:attributes related-label-prop]))})
+        [ontology/OntologyAutosuggest
          {:on-suggestion-selected
           (fn [{:keys [id label]}]
             (swap! state update-in [:attributes related-id-prop] #(str % (when % ", ")  id ))
-            (swap! state update-in [:attributes related-label-prop] #(str % (when % ", ") label)))}]]
+            (swap! state update-in [:attributes related-label-prop] #(str % (when % ", ") label)))
+          :selected-ids (split-attributes (get-in @state [:attributes related-id-prop]))}]]
        [:div {}
         [Autosuggest
          {:value value-nullsafe

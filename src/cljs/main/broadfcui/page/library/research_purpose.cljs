@@ -7,18 +7,11 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.components.ontology-autosuggest :refer [OntologyAutosuggest]]
+   [broadfcui.components.ontology-autosuggest :as ontology]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
    [broadfcui.utils :as utils]
    ))
-
-
-(defn- render-doid [doid]
-  (-> doid
-      (string/split "/")
-      last
-      (string/replace-all #"_" ":")))
 
 
 (react/defc ResearchPurposeSection
@@ -66,25 +59,14 @@
                               (swap! state assoc :disease-checked? new-val))}]
       (when (:disease-checked? @state)
         [:div {:style {:paddingLeft "1.5rem"}}
-         (this :-render-selected-diseases)
-         [OntologyAutosuggest
+         (ontology/render-multiple-ontology-selections
+          {:onClick (fn [id label]  (swap! state update :selected-diseases dissoc id))
+           :selection-map (:selected-diseases @state)})
+         [ontology/OntologyAutosuggest
           {:on-suggestion-selected
            (fn [{:keys [id label]}]
-             (swap! state update :selected-diseases assoc id label))}]])])
-   :-render-selected-diseases
-   (fn [{:keys [state]}]
-     (map (fn [[id label]]
-            (flex/box
-             {:style {:margin "0.3rem 0" :alignItems "center"}}
-             [:span {:style {:fontSize "66%"}} (style/render-tag (render-doid id))]
-             [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
-             flex/spring
-             (links/create-internal
-               {:onClick #(swap! state update :selected-diseases dissoc id)}
-               (icons/render-icon {:className "fa-lg"
-                                   :style {:color (:text-light style/colors)}}
-                                  :remove))))
-          (:selected-diseases @state)))
+             (swap! state update :selected-diseases assoc id label))
+           :selected-ids (keys (:selected-diseases @state))}]])])
    :-render-checkbox
    (fn [{:keys [state]} label code]
      [Checkbox {:style {:margin "0.75rem 0"}

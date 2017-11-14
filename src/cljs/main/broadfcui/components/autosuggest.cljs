@@ -1,6 +1,7 @@
 (ns broadfcui.components.autosuggest
   (:require
    [dmohs.react :as react]
+   [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -24,6 +25,8 @@
   :on-change (optional)
   :on-submit (optional) - fires when hitting return or clear button
 
+  :remove-selected (optional) - list of suggestions to filter out (typically
+    ones that have already been selected for a multi-select)
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
   :value (required when not caching)
@@ -58,7 +61,9 @@
                                                 (swap! state assoc :suggestions
                                                        (if success?
                                                          ; don't bother keywordizing, it's just going to be converted to js
-                                                         (get-parsed-response false)
+                                                         (filterv
+                                                          (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
+                                                          (get-parsed-response false))
                                                          [:error])))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
@@ -75,7 +80,7 @@
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
-                   :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
+                   :onSuggestionsClearRequested #(swap! state assoc :suggestions #{})
                    :getSuggestionValue #(if (keyword? %) value ((or get-value identity) %))
                    :renderSuggestion (fn [suggestion]
                                        (react/create-element
