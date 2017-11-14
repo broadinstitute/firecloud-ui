@@ -73,7 +73,7 @@
     "neville": "neville.temp@test.firecloud.org"
   },
   "notebookswhitelisted": {
-    "hermione": "hermione.owner@quality.firecloud.org"
+    "hermione": "hermione.owner@test.firecloud.org"
   }
 }
 {{end}}
