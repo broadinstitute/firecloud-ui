@@ -31,7 +31,9 @@
   :default-value (optional when caching)
   :value (required when not caching)
 
-  Other props to pass through to input element go in :inputProps."
+  Other props to pass through to input element go in :inputProps.
+
+  :set-value is exposed publicly, for use when caching."
   {:component-will-mount
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
@@ -148,4 +150,7 @@
    :component-will-unmount
    (fn [{:keys [locals this]}]
      (when-let [on-clear (:on-clear @locals)]
-       (.removeEventListener (react/find-dom-node this) "search" on-clear)))})
+       (.removeEventListener (react/find-dom-node this) "search" on-clear)))
+   :set-value
+   (fn [{:keys [state]} value]
+     (swap! state assoc :value value))})

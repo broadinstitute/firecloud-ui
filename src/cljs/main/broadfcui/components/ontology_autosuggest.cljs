@@ -18,7 +18,6 @@
 
 
 (defn render-multiple-ontology-selections [{:keys [onClick selection-map]}]
-  (utils/log selection-map)
   (map (fn [[id label]]
          (flex/box
           {:style {:margin "0.3rem 0" :alignItems "center"}}
@@ -33,36 +32,33 @@
        selection-map))
 
 
-(react/defc OntologyAutosuggest
-  {:get-default-props
-   (fn []
-     {:render-suggestion
-      (fn [{:keys [label id definition]}]
-        (react/create-element
-         [:div {}
-          [:div {:style {:lineHeight "1.5em"}}
-           label
-           [:small {:style {:float "right"}} id]]
-          [:small {:style {:fontStyle "italic"}}
-           definition]
-          [:div {:style {:clear "both"}}]]))})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [render-suggestion on-suggestion-selected selected-ids]} props]
-       [Autosuggest
-        {:url "/autocomplete/"
-         :service-prefix "/duos"
-         :caching? true
-         :remove-selected selected-ids
-         :inputProps {:placeholder "Search for a disease ontology value"}
-         :get-value #(.-label %)
-         :renderSuggestion (fn [suggestion]
-                             (render-suggestion (js->clj suggestion :keywordize-keys true)))
-         :highlightFirstSuggestion false
-         :onSuggestionSelected (fn [_ suggestion]
-                                 (on-suggestion-selected (js->clj (.-suggestion suggestion) :keywordize-keys true)))
-         :theme {:input {:width "100%" :marginBottom 0}
-                 :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]))})
-
-
-
+(defn create-ontology-autosuggest [props]
+  (let [{:keys [ref render-suggestion on-suggestion-selected selected-ids on-change on-submit value input-props]} props
+        render-suggestion (or render-suggestion
+                              (fn [{:keys [label id definition]}]
+                                (react/create-element
+                                 [:div {}
+                                  [:div {:style {:lineHeight "1.5em"}}
+                                   label
+                                   [:small {:style {:float "right"}} id]]
+                                  [:small {:style {:fontStyle "italic"}}
+                                   definition]
+                                  [:div {:style {:clear "both"}}]])))]
+    [Autosuggest
+     {:ref ref
+      :value value
+      :inputProps (or input-props {})
+      :url "/autocomplete/"
+      :service-prefix "/duos"
+      :caching? true
+      :remove-selected selected-ids
+      :get-value #(.-label %)
+      :renderSuggestion (fn [suggestion]
+                          (render-suggestion (js->clj suggestion :keywordize-keys true)))
+      :highlightFirstSuggestion false
+      :onSuggestionSelected (fn [_ suggestion]
+                              (on-suggestion-selected (js->clj (.-suggestion suggestion) :keywordize-keys true)))
+      :on-change on-change
+      :on-submit on-submit
+      :theme {:input {:width "100%" :marginBottom 0}
+              :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]))

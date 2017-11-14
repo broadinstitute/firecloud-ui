@@ -62,11 +62,11 @@
          (ontology/render-multiple-ontology-selections
           {:onClick (fn [id label]  (swap! state update :selected-diseases dissoc id))
            :selection-map (:selected-diseases @state)})
-         [ontology/OntologyAutosuggest
+         (ontology/create-ontology-autosuggest
           {:on-suggestion-selected
            (fn [{:keys [id label]}]
              (swap! state update :selected-diseases assoc id label))
-           :selected-ids (keys (:selected-diseases @state))}]])])
+           :selected-ids (keys (:selected-diseases @state))})])])
    :-render-checkbox
    (fn [{:keys [state]} label code]
      [Checkbox {:style {:margin "0.75rem 0"}
