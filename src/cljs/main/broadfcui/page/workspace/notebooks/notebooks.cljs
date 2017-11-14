@@ -236,7 +236,7 @@
           [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-delete-dialog?)
                                        :cluster-to-delete (:cluster-to-delete @state))])
         [Table
-         {:data clusters
+         {:data clusters :data-test-id "spark-clusters-table"
           :body {:empty-message "There are no clusters to display."
                  :style table-style/table-light
                  :fixed-column-count 1
@@ -319,6 +319,7 @@
            (if clusters
              [NotebooksTable
               (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
+                                                                        :data-test-id "create-modal-button"
                                                                         :onClick #(swap! state assoc :show-create-dialog? true)}]]
                            :clusters clusters
                            :reload-after-delete #(this :-get-clusters-list))]))]))
