@@ -401,7 +401,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
    "Notebooks whitelist" - {
      "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
        val user = UserPool.chooseNotebooksWhitelisted
-       implicit val authToken: AuthToken = authTokenOwner
+       implicit val authToken: AuthToken = AuthToken(user)
 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
@@ -419,7 +419,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
      "Non-members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
        val user = UserPool.chooseNotebooksWhitelisted //choose not whitelisted
-       implicit val authToken: AuthToken = authTokenOwner
+       implicit val authToken: AuthToken = AuthToken(user)
 
        withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
