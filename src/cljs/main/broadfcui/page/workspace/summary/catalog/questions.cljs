@@ -5,7 +5,10 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
+   [broadfcui.components.ontology-autosuggest :refer [OntologyAutosuggest]]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
@@ -109,49 +112,99 @@
                            :rows 3
                            :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
 
-(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe set-property state property library-schema disabled]}]
-  (let [clear #(apply swap! state update :attributes dissoc property
-                      (library-utils/get-related-id+label-props library-schema property))]
-    [:div {:style {:marginBottom "0.75em"}}
-     [Autosuggest
-      {:value value-nullsafe
-       :inputProps {:placeholder (:inputHint prop)
-                    :data-test-id property
-                    :disabled disabled}
-       :url "/autocomplete/"
-       :service-prefix "/duos"
-       :get-value #(.-label %)
-       :renderSuggestion (fn [suggestion]
-                           (react/create-element
-                            [:div {}
-                             [:div {:style {:lineHeight "1.5em"}}
-                              (.-label suggestion)
-                              [:small {:style {:float "right"}} (.-id suggestion)]]
-                             [:small {:style {:fontStyle "italic"}}
-                              (.-definition suggestion)]
-                             [:div {:style {:clear "both"}}]]))
-       :highlightFirstSuggestion false
-       :onSuggestionSelected (fn [_ suggestion]
-                               (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
-                                     {:keys [id label]} suggestion
-                                     [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
-                                 (swap! state update :attributes assoc
-                                        related-id-prop id
-                                        related-label-prop label)))
-       :on-change set-property
-       :on-submit #(when (empty? %) (clear))
-       :theme {:input (colorize {:width "100%" :marginBottom 0})
-               :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
+;;; REMOVE THIS
+(defn- render-doid [doid]
+  (-> doid
+      (string/split "/")
+      last
+      (string/replace-all #"_" " ")))
 
-     (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-       (when (not-any? clojure.string/blank? [related-id related-label])
-         [:div {}
-          [:span {:style {:fontWeight "bold"}} related-label]
-          [:span {:style {:fontSize "small" :float "right"}} related-id]
+(def ^:private ATTRIBUTE_SEPARATOR ", ")
+
+(defn- split-attributes [values]
+  (string/split values (re-pattern ATTRIBUTE_SEPARATOR)))
+
+(defn- zip-comma-separated-strings [keys values]
+  (if (string/blank? keys)
+    {}
+    (let [split-keys (split-attributes keys)
+          split-values (split-attributes values)]
+        (zipmap split-keys split-values))))
+
+(defn- remove-from-comma-separated-strings [value-string item]
+  (if (string/blank? value-string)
+    value-string
+    (let [values (split-attributes value-string)]
+      (string/join ATTRIBUTE_SEPARATOR (utils/delete values (utils/index-of values item))))))
+
+(defn- render-selected-diseases [{:keys [state related-id-prop related-label-prop]}]
+    (map (fn [[id label]]
+           (flex/box
+            {:style {:margin "0.3rem 0" :alignItems "center"}}
+            [:span {:style {:fontSize "66%"}} (style/render-tag (render-doid id))]
+            [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
+            flex/spring
+            (links/create-internal
+             {:onClick
+              #(do (swap! state update-in [:attributes related-id-prop] remove-from-comma-separated-strings id)
+                   (swap! state update-in [:attributes related-label-prop] remove-from-comma-separated-strings label))}
+             (icons/render-icon {:className "fa-lg"
+                                 :style {:color (:text-light style/colors)}}
+                                :remove))))
+         (zip-comma-separated-strings (get-in @state [:attributes related-id-prop]) (get-in @state [:attributes related-label-prop]))))
+
+(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe set-property state property library-schema disabled]}]
+  (let [[related-id-prop related-label-prop] (library-utils/get-related-id+label-props library-schema property)
+        clear #(apply swap! state update :attributes dissoc property [related-id-prop related-label-prop])]
+    [:div {:style {:marginBottom "0.75em"}}
+     (if (= (:type prop) "array")
+       [:div {}
+        (render-selected-diseases (utils/restructure state related-id-prop related-label-prop))
+        [OntologyAutosuggest
+         {:on-suggestion-selected
+          (fn [{:keys [id label]}]
+            (swap! state update-in [:attributes related-id-prop] #(str % (when % ", ")  id ))
+            (swap! state update-in [:attributes related-label-prop] #(str % (when % ", ") label)))}]]
+       [:div {}
+        [Autosuggest
+         {:value value-nullsafe
+          :inputProps {:placeholder (:inputHint prop)
+                       :data-test-id property
+                       :disabled disabled}
+          :url "/autocomplete/"
+          :service-prefix "/duos"
+          :get-value #(.-label %)
+          :renderSuggestion (fn [suggestion]
+                              (react/create-element
+                               [:div {}
+                                [:div {:style {:lineHeight "1.5em"}}
+                                 (.-label suggestion)
+                                 [:small {:style {:float "right"}} (.-id suggestion)]]
+                                [:small {:style {:fontStyle "italic"}}
+                                 (.-definition suggestion)]
+                                [:div {:style {:clear "both"}}]]))
+          :highlightFirstSuggestion false
+          :onSuggestionSelected (fn [_ suggestion]
+                                  (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
+                                        {:keys [id label]} suggestion]
+                                    (swap! state update :attributes assoc
+                                           related-id-prop id
+                                           related-label-prop label)))
+          :on-change set-property
+          :on-submit #(when (empty? %) (clear))
+          :theme {:input (colorize {:width "100%" :marginBottom 0})
+                  :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
+
+        (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
+          (when (not-any? clojure.string/blank? [related-id related-label])
           [:div {}
-           (when-not disabled
-             (links/create-internal {:onClick clear}
-                                    "Clear Selection"))]]))]))
+           [:span {:style {:fontWeight "bold"}} related-label]
+           [:span {:style {:fontSize "small" :float "right"}} related-id]
+           [:div {}
+            (when-not disabled
+              (links/create-internal {:onClick clear}
+                                     "Clear Selection"))]]))])]))
+
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
