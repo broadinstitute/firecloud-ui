@@ -29,6 +29,11 @@ object Sam extends FireCloudClient with LazyLogging {
         case _ => None
       }
     }
+
+    def deletePetServiceAccount(userSubjectId: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Deleting pet service account for user $userSubjectId")
+      deleteRequest(url + s"api/admin/user/$userSubjectId/petServiceAccount")
+    }
   }
 
   object user {
