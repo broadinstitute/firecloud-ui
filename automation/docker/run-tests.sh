@@ -22,7 +22,7 @@ fi
 ENV=dev
 NUM_NODES=2
 TEST_ENTRYPOINT="testOnly -- -l ProdTest"
-TEST_CONTAINER="automation-$(cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 8 | head -n 1)"
+TEST_CONTAINER="automation-$(head /dev/urandom | env LC_CTYPE=C tr -dc a-z0-9 | head -c 8)"
 DOCKERHOST_ADDRESS="172.19.0.1" # default address of localhost in Docker
 
 # Parameters
