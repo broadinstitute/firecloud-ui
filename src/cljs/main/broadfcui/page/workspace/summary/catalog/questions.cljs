@@ -148,7 +148,7 @@
         (ontology/create-ontology-autosuggest
          {:on-suggestion-selected
           (fn [{:keys [id label]}]
-            (swap! state update-in [:attributes related-id-prop] #(str % (when % ", ")  id ))
+            (swap! state update-in [:attributes related-id-prop] #(str % (when % ", ") id))
             (swap! state update-in [:attributes related-label-prop] #(str % (when % ", ") label)))
           :selected-ids (split-attributes (get-in @state [:attributes related-id-prop]))})]
        [:div {}
@@ -168,13 +168,13 @@
 
         (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
           (when (not-any? clojure.string/blank? [related-id related-label])
-          [:div {}
-           [:span {:style {:fontWeight "bold"}} related-label]
-           [:span {:style {:fontSize "small" :float "right"}} related-id]
-           [:div {}
-            (when-not disabled
-              (links/create-internal {:onClick clear}
-                                     "Clear Selection"))]]))])]))
+            [:div {}
+             [:span {:style {:fontWeight "bold"}} related-label]
+             [:span {:style {:fontSize "small" :float "right"}} related-id]
+             [:div {}
+              (when-not disabled
+                (links/create-internal {:onClick clear}
+                                       "Clear Selection"))]]))])]))
 
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
