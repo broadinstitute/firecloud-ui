@@ -417,8 +417,22 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
      }
 
-//     "Non-members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-//
-//     }
+     "Non-members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
+       val user = UserPool.chooseNotebooksWhitelisted //choose not whitelisted
+       implicit val authToken: AuthToken = authTokenOwner
+
+       withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
+         withSignIn(user) { listPage =>
+           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           val notebooksTab = detailPage.goToNotebooksTab()
+
+           //           val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
+           //           val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
+           //           errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
+           //           errorModal.clickCancel()
+         }
+       }
+
+     }
    }
 }
