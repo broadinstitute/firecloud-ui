@@ -9,7 +9,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 class SamApiSpec extends FreeSpec with Matchers with CleanUp {
   val anyUser: Credentials = UserPool.chooseAnyUser
-  val userAuthToken: AuthToken = UserAuthToken(anyUser)
+  val userAuthToken: AuthToken = anyUser.makeAuthToken()
 
   "Sam" - {
     "should give pets the same access as their owners" in {
