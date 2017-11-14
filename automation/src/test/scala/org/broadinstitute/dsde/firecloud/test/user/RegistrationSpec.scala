@@ -21,7 +21,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   val subjectId: String = Config.Users.tempSubjectId
 
   val adminUser: Credentials = UserPool.chooseAdmin
-  implicit val authToken: AuthToken = UserAuthToken(adminUser)
+  implicit val authToken: AuthToken = adminUser.makeAuthToken()
 
   // Clean-up anything left over from any previous failures.
   before {

@@ -34,7 +34,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
    *  because we specifically need a curator.
    */
   val defaultUser: Credentials = UserPool.chooseCurator
-  val authTokenDefault: AuthToken = UserAuthToken(defaultUser)
+  val authTokenDefault: AuthToken = defaultUser.makeAuthToken()
 
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
@@ -214,7 +214,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)
 
                   register cleanUp {
-                    api.workspaces.delete(projectName, cloneWorkspaceName)(UserAuthToken(user))
+                    api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
                   }
 
 
@@ -243,7 +243,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
 
                     register cleanUp {
-                      api.workspaces.delete(projectName, cloneWorkspaceName)(UserAuthToken(user))
+                      api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
                     }
 
                     summaryPage.readAuthDomainGroups should include(groupOneName)
@@ -258,7 +258,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
       "looks restricted in the workspace list page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
-        implicit val authToken: AuthToken = UserAuthToken(user)
+        implicit val authToken: AuthToken = user.makeAuthToken()
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>

@@ -11,7 +11,7 @@ import org.scalatest._
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WebBrowserSpec with Matchers with CleanUp {
 
   val ownerUser: Credentials = UserPool.chooseProjectOwner
-  implicit val ownerAuthToken: AuthToken = UserAuthToken(ownerUser)
+  implicit val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
     "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>

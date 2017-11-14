@@ -43,7 +43,7 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       new SignInPage(Config.FireCloud.baseUrl).open
-      executeScript(s"window.forceSignedIn('${UserAuthToken(user).value}')")
+      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
     }, page, testCode)
   }
 
