@@ -141,9 +141,8 @@
             [:div {:style {:marginBottom "0.25em"}}
              [buttons/Button {:icon :add-new :text "Add new"
                               :onClick (fn [_]
-                                         (swap! state #(-> %
-                                                           (assoc :table-key (gensym))
-                                                           (update :attributes conj ["" ""])))
+                                         (utils/multi-swap! state (assoc :table-key (gensym))
+                                                                  (update :attributes conj ["" ""]))
                                          ;; have to do this by ID not ref, since the fields are generated within Table
                                          (after-update #(.focus (.getElementById js/document "focus"))))}]])
           [Table
@@ -170,10 +169,8 @@
                                                       :style {:color (:text-lightest style/colors)
                                                               :verticalAlign "middle" :fontSize 22
                                                               :cursor "pointer"}
-                                                      :onClick (fn [_]
-                                                                 (swap! state #(-> %
-                                                                                   (assoc :table-key (gensym))
-                                                                                   (update :attributes utils/delete index))))}
+                                                      :onClick #(utils/multi-swap! state (assoc :table-key (gensym))
+                                                                                         (update :attributes utils/delete index))}
                                                      :remove))}
                                {:id "key" :header (header "Key") :initial-width 300
                                 :as-text (constantly nil)
