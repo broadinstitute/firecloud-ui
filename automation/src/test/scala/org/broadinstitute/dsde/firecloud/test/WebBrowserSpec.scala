@@ -7,12 +7,9 @@ import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials}
-import org.broadinstitute.dsde.firecloud.page.user.SignInPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
-import org.openqa.selenium.chrome.ChromeDriverService
-import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.chrome.{ChromeDriverService, ChromeOptions}
 import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
 import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.scalatest.Suite
@@ -94,23 +91,6 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
 
   def randomUuid: String = {
     UUID.randomUUID().toString
-  }
-
-  /**
-    * Convenience method for sign-in to the configured FireCloud URL.
-    */
-  def signIn(email: String, password: String)(implicit webDriver: WebDriver): Unit = {
-    new SignInPage(Config.FireCloud.baseUrl).open.signIn(email, password)
-  }
-
-  /**
-    * Convenience method for sign-in to the configured FireCloud URL. Assumes
-    * that the user has previously registered and will therefore be taken to
-    * the workspace list page.
-    */
-  def signIn(credentials: Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
-    signIn(credentials.email, credentials.password)
-    await ready new WorkspaceListPage
   }
 
   /**

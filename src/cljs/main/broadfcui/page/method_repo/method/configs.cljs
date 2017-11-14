@@ -105,21 +105,18 @@
 
 (react/defc Configs
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      (let [{:keys [method-id snapshot-id config-id config-snapshot-id]} props
-           {:keys [configs configs-error]} @state
            make-config-link-props (fn [{:keys [namespace name snapshotId]}]
                                     {:href (nav/get-link :method-config-viewer
                                                          method-id snapshot-id
                                                          {:config-ns namespace :config-name name} snapshotId)})]
        [:div {:style {:margin "2.5rem 1.5rem"}}
-        (cond
-          configs-error [:div {:style {:textAlign "center" :color (:state-exception style/colors)}}
-                         "Error loading configs: " configs-error]
-          config-id [ConfigViewer (utils/restructure config-id config-snapshot-id)]
-          (not configs) [:div {:style {:textAlign "center" :padding "1rem"}}
-                         [comps/Spinner {:text "Loading configs..."}]]
-          :else (method-common/render-config-table (utils/restructure make-config-link-props configs)))]))
+        (if config-id
+          [ConfigViewer (utils/restructure config-id config-snapshot-id)]
+          [method-common/ConfigTable (merge {:ref "config-table"}
+                                            (utils/restructure make-config-link-props)
+                                            (select-keys props [:method-id :snapshot-id]))])]))
    :component-will-mount
    (fn [{:keys [props this]}]
      (when-not (:config-id props)
@@ -129,12 +126,6 @@
      (when (not= (:snapshot-id props) (:snapshot-id prev-props))
        (this :refresh)))
    :refresh
-   (fn [{:keys [props state]}]
-     (swap! state dissoc :configs :configs-error)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-compatible-configs (conj (:method-id props) (select-keys props [:snapshot-id])))
-       :on-done (net/handle-ajax-response
-                 (fn [{:keys [success? parsed-response]}]
-                   (if success?
-                     (swap! state assoc :configs parsed-response)
-                     (swap! state assoc :configs-error (:message parsed-response)))))}))})
+   (fn [{:keys [refs]}]
+     (when-let [config-table (@refs "config-table")]
+       (config-table :refresh)))})

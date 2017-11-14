@@ -35,8 +35,8 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
     "should be able to redact a method that they own" in withWebDriver { implicit driver =>
       withMethod( "TEST-REDACT-" ) { case (name,namespace)=>
-        withSignIn(ownerUser) { _ =>
-          val methodRepoPage = new MethodRepoPage().open
+        withSignIn(ownerUser) { workspaceListPage =>
+          val methodRepoPage = workspaceListPage.goToMethodRepository()
 
           // verify that it's in the table
           methodRepoPage.MethodRepoTable.goToTab("My Methods")
@@ -50,7 +50,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
           methodDetailPage.redact()
 
           // and verify that it's gone
-          methodRepoPage.open
+          methodDetailPage.goToMethodRepository()
           methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe false
         }
       }

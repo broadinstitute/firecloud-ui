@@ -6,11 +6,11 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
-   [broadfcui.page.method-repo.method.common :as method-common]
    [broadfcui.page.method-repo.method.configs :as configs]
    [broadfcui.page.method-repo.method.exporter :refer [MethodExporter]]
    [broadfcui.page.method-repo.method.summary :refer [Summary]]
@@ -59,10 +59,15 @@
                                     :dest-config-id config-id
                                     :post-export? true))}])
         (when post-export?
-          (method-common/render-post-export-dialog
-           {:workspace-id (:dest-workspace-id @state)
-            :config-id (:dest-config-id @state)
-            :dismiss #(swap! state dissoc :post-export? :dest-workspace-id :dest-config-id)}))
+          [modals/OKCancelForm
+           {:header "Export successful"
+            :content "Would you like to go to the edit page now?"
+            :cancel-text "No, stay here"
+            :dismiss #(swap! state dissoc :post-export? :dest-workspace-id :dest-config-id)
+            :ok-button
+            {:text "Yes"
+             :onClick #(mc-sync/flag-synchronization)
+             :href (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state))}}])
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
          (tab-bar/render-title
           "METHOD"

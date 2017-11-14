@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
@@ -18,7 +19,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
-  override val element: Query = testId("summary-tab")
+  override val query: Query = testId("summary-tab")
 
   override def awaitReady(): Unit = {
     await condition {
@@ -31,7 +32,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
 
-  private val sidebar = new Component("sidebar") with Stateful {
+  private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = getState == "ready"
 
     val editButton = Button("edit-button")

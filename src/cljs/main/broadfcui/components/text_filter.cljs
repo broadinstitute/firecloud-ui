@@ -34,7 +34,7 @@
                          :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
-     ((:on-filter props) (common/get-text refs "filter-field")))
+     ((:on-filter props) (common/get-trimmed-text refs "filter-field")))
    :component-did-mount
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search"

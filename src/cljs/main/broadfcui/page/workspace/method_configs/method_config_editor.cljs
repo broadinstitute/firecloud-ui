@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -73,7 +74,8 @@
 (react/defc- Sidebar
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [access-level workspace-id after-delete redacted? snapshots
+     (let [{:keys [access-level workspace-id after-delete
+                   redacted? name-validation-errors? snapshots
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
            config-id (ws-common/config->id (:methodConfiguration loaded-config))]
@@ -95,7 +97,9 @@
                {:data-test-id "save-edited-method-config-button"
                 :color :state-success
                 :text "Save" :icon :done
-                :disabled? (when redacted? "Choose an available snapshot")
+                :disabled? (cond redacted? "Choose an available snapshot"
+                                 ; We have a single validation error
+                                 name-validation-errors? (first name-validation-errors?))
                 :onClick #(parent :-commit)}]
               [buttons/SidebarButton
                {:data-test-id "cancel-edit-method-config-button"
@@ -167,12 +171,12 @@
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
-                         (select-keys @state [:editing? :loaded-config :redacted?])
+                         (select-keys @state [:editing? :loaded-config :redacted? :name-validation-errors?])
                          (select-keys @locals [:body-id])
                          {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
          (this :-render-main locked?)]]))
    :-render-main
-   (fn [{:keys [state this locals props]} locked?]
+   (fn [{:keys [state this locals props refs]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
@@ -200,9 +204,13 @@
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
-           (style/create-text-field {:ref "confname" :style {:maxWidth 500}
-                                     :data-test-id "edit-method-config-name-input"
-                                     :defaultValue (:name config)})
+           [:div {}
+            [input/TextField {:data-test-id "edit-method-config-name-input"
+                              :ref "confname" :style {:maxWidth 500 :width "100%" :fontSize "100%"}
+                              :defaultValue (:name config)
+                              :predicates [(input/nonempty-alphanumeric_-period "Config name")]
+                              :onChange #(swap! state assoc :name-validation-errors? ((@refs "confname") :validate))}]
+            (style/create-textfield-hint input/hint-alphanumeric_-period)]
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id "method-config-name"} (:name config)]))
         (create-section-header "Referenced Method")
@@ -279,9 +287,9 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
-           name (common/get-text refs "confname")
+           name (common/get-trimmed-text refs "confname")
            root-entity-type (if (seq (:entity-types @state))
-                              (common/get-text refs "rootentitytype")
+                              (common/get-trimmed-text refs "rootentitytype")
                               (:rootEntityType config))
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")

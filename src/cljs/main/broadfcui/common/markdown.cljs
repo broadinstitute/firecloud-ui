@@ -31,7 +31,7 @@
            :path "markdown-deps.bundle.js"}])))})
 
 (react/defc MarkdownEditor
-  {:get-text
+  {:get-trimmed-text
    (fn [{:keys [state]}]
      (:text @state))
    :get-initial-state

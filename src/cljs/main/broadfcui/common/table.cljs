@@ -76,12 +76,15 @@
                      :tab (some-> (:tabs props) :items (get (:selected-tab-index @state)))
                      :query-params query-params
                      :on-done (fn [{:keys [total-count tab-count filtered-rows results]}]
-                                ((@refs "blocker") :hide)
-                                (swap! state merge
-                                       {:data-test-state "ready"
-                                        :rows results
-                                        :tab-count (or tab-count total-count)}
-                                       (utils/restructure total-count filtered-rows query-params)))})))
+                                (when-let [blocker (@refs "blocker")]
+                                  ;; blocker disappearing means that the Table was unmounted while
+                                  ;; this function was running, so just ignore the result.
+                                  (blocker :hide)
+                                  (swap! state merge
+                                         {:data-test-state "ready"
+                                          :rows results
+                                          :tab-count (or tab-count total-count)}
+                                         (utils/restructure total-count filtered-rows query-params))))})))
    :get-default-props
    (fn []
      {:load-on-mount true})

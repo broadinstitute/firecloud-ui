@@ -12,7 +12,7 @@
 (react/defc EntityDetails
   {:get-fields
    (fn [{:keys [refs]}]
-     {"methodVersion" (int (common/get-text refs "snapshotId"))})
+     {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))})
    :clear-redacted-snapshot
    (fn [{:keys [state]}]
      (swap! state dissoc :redacted-snapshot))
@@ -32,7 +32,7 @@
            [:div {:style {:paddingTop "0.5rem"}}
             [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
             (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-              (if (:payload-expanded @state) "Collapse" "Expand"))
+                                   (if (:payload-expanded @state) "Collapse" "Expand"))
             (when (:payload-expanded @state)
               (if config?
                 [:div {:style {:margin "0.5rem 0 0 1rem"}}
@@ -56,7 +56,7 @@
                                                      :style {:width 120}
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                 #(f (int (common/get-text refs "snapshotId"))))}
+                                                                 #(f (int (common/get-trimmed-text refs "snapshotId"))))}
                                                     (:snapshots props)
                                                     redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
