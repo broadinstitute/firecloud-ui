@@ -5,8 +5,6 @@ import org.broadinstitute.dsde.firecloud.config.{Config, Credentials}
 
 import scala.collection.JavaConverters._
 
-// Note: we are creating a new auth token from google every time we call this case class
-
 case class UserAuthToken(user: Credentials) extends AuthToken {
   override protected def buildCredential(): GoogleCredential = {
     val pemfile = new java.io.File(Config.GCS.pathToQAPem)
