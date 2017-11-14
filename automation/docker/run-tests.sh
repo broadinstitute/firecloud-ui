@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 # Get script location, via https://stackoverflow.com/a/12197227
 pushd . > /dev/null
 WORKING_DIR="${BASH_SOURCE[0]}";

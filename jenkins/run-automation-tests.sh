@@ -10,8 +10,6 @@ if [ -z "${ENV}" ]; then
     exit 2
 fi
 
-set -x
-
 VAULT_TOKEN=$(cat /etc/vault-token-dsde)
 
 # run tests
