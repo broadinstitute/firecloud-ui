@@ -13,7 +13,6 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
@@ -44,16 +43,19 @@
    (:namespace data) "/" (:name data) " workspace."])
 
 (defn- translate-research-purpose [research-purpose]
-  (->> research-purpose
-       (utils/map-keys {:aggregates "NAGR"
-                        :poa "POA"
-                        :commercial "NCU"})
-       (merge {"DS" []
-               "NDMS" false
-               "NCTRL" false
-               "NAGR" false
-               "POA" false
-               "NCU" false})))
+  (as-> research-purpose $
+        (dissoc $ :ds)
+        (utils/map-keys {:methods "NDMS"
+                         :control "NCTRL"
+                         :aggregates "NAGR"
+                         :poa "POA"
+                         :commercial "NCU"} $)
+        (merge {"NDMS" false
+                "NCTRL" false
+                "NAGR" false
+                "POA" false
+                "NCU" false} $)
+        (assoc $ "DS" (vec (keys (:ds research-purpose))))))
 
 (react/defc- DatasetsTable
   {:execute-search
@@ -372,15 +374,12 @@
                                 :on-filter (fn [text]
                                              (swap! state assoc :search-text text)
                                              (this :-refresh-table true))})
-        (when (config/debug?)
-          [ResearchPurposeSection
-           {:research-purpose-values (:research-purpose @state)
-            :on-search (fn [options]
-                         (swap! state assoc :research-purpose
-                                ;; Throw out false/empty. Currently, the only codes in use are
-                                ;; true/false so this works for now.
-                                (utils/filter-values identity options))
-                         (this :-refresh-table))}])
+        [ResearchPurposeSection
+         {:research-purpose-values (:research-purpose @state)
+          :on-search (fn [options]
+                       ;; Throw out falses:
+                       (swap! state assoc :research-purpose (utils/filter-values identity options))
+                       (this :-refresh-table))}]
         (facet-section (merge
                         {:aggregates (:aggregates @state)
                          :aggregate-properties (:library-attributes @state)

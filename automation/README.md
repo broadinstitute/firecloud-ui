@@ -15,10 +15,13 @@
 For more documentation on writing and running tests, see the [Confluence page](https://broadinstitute.atlassian.net/wiki/spaces/GAWB/pages/116428999/Creating+and+running+Automated+Tests). 
 
 To run against alpha:
-```$xslt
+
+```bash
 ./run-tests-against-real.sh alpha $VAULT_TOKEN
 ```
+
 To run smoketests against prod:
-```$xslt
+
+```bash
 ./run-tests-against-real.sh prod $VAULT_TOKEN
 ```

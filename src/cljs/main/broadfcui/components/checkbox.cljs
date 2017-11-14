@@ -7,22 +7,25 @@
 
 (react/defc Checkbox
   {:checked?
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
+     (assert (not (this :-managed?)) "You're asking if a managed checkbox is checked -- you know this.")
      (:checked? @state))
    :get-default-props
    (fn []
      {:initial-checked? false
       :disabled? false})
    :get-initial-state
-   (fn [{:keys [props]}]
-     {:checked? (:initial-checked? props)})
+   (fn [{:keys [props this]}]
+     (if (this :-managed?)
+       {}
+       {:checked? (boolean (:initial-checked? props))}))
    :component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :id (gensym "checkbox-")))
    :render
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state locals this]}]
      (let [{:keys [data-test-id label disabled? on-change style]} props
-           {:keys [checked?]} @state
+           checked? (:checked? (if (this :-managed?) props @state))
            {:keys [id]} @locals]
        [:div {:style (merge {:color ((if disabled? :text-lightest :text-light) style/colors)} style)}
         [:input {:data-test-id data-test-id
@@ -31,8 +34,12 @@
                  :checked checked? :disabled disabled?
                  :onChange #(let [new-value (not checked?)]
                               (when on-change (on-change new-value))
-                              (swap! state assoc :checked? new-value))}]
+                              (when-not (this :-managed?)
+                                (swap! state assoc :checked? new-value)))}]
         [:label {:htmlFor id
                  :style {:paddingLeft "0.5rem"
                          :cursor (if disabled? "not-allowed" "pointer")}}
-         label]]))})
+         label]]))
+   :-managed?
+   (fn [{:keys [props]}]
+     (contains? props :checked?))})

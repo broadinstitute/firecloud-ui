@@ -126,7 +126,6 @@
         (flex/box
          {:style {:borderBottom style/standard-line
                   :padding "20px 48px 18px"
-                  :display "flex"
                   :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
          flex/spring
