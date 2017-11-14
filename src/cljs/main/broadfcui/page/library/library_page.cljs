@@ -114,7 +114,7 @@
                                         sequential? (sequential? field)]
                                     (cond
                                       tag? (->> field
-                                                (map #(style/render-custom-tag % {:style {:margin "0 0.1rem" :padding "0 0.5rem"}})))
+                                                (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem"}} %)))
                                       sequential? (string/join ", " field)
                                       :else field)))})
                      extra-columns))
