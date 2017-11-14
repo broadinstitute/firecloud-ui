@@ -68,9 +68,9 @@
    (fn [{:keys [props state this]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
-           extra-columns (subvec search-result-columns 4)]
+           extra-columns (subvec search-result-columns 5)]
        [Table
-        {:ref "table" :persistence-key "library-table" :v 4
+        {:ref "table" :persistence-key "library-table" :v 5
          :fetch-data (this :-pagination)
          :style {:content {:marginLeft "2rem"}}
          :body
@@ -103,7 +103,13 @@
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
                       :column-data :library:dataUseRestriction :initial-width 180}
                      {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
-                      :column-data :library:numSubjects :initial-width 100}]
+                      :column-data :library:numSubjects :initial-width 100}
+                     {:id "library:consentCodes" :header (:title (:library:consentCodes attributes))
+                      :column-data :library:consentCodes :initial-width 100
+                      :render (fn [data]
+                                (->> data
+                                     sort
+                                     (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem"}} %))))}]
                     (map
                      (fn [keyname]
                        {:id (name keyname) :header (:title (keyname attributes))
@@ -114,8 +120,9 @@
                                         sequential? (sequential? field)]
                                     (cond
                                       tag? (->> field
+                                                sort
                                                 (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem"}} %)))
-                                      sequential? (string/join ", " field)
+                                      sequential? (string/join ", " (sort field))
                                       :else field)))})
                      extra-columns))
           :style {:header-row {:fontWeight 500 :fontSize "90%"
