@@ -42,8 +42,7 @@
     "neville": "neville.temp@quality.firecloud.org"
   },
   "notebookswhitelisted": {
-    "percy": "percy.authdomain@quality.firecloud.org",
-    "ron": "ron.weasley@test.firecloud.org",
+    "ron": "ron.weasley@test.firecloud.org"
   }
 }
 {{else}}
@@ -74,8 +73,7 @@
     "neville": "neville.temp@test.firecloud.org"
   },
   "notebookswhitelisted": {
-    "percy": "percy.authdomain@quality.firecloud.org",
-    "ron": "ron.weasley@test.firecloud.org",
+    "ron": "ron.weasley@test.firecloud.org"
   }
 }
 {{end}}
