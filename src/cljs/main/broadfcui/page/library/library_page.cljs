@@ -109,7 +109,7 @@
                       :render (fn [data]
                                 (->> data
                                      sort
-                                     (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem"}} %))))}]
+                                     (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem" :display "inline-flex"}} %))))}]
                     (map
                      (fn [keyname]
                        {:id (name keyname) :header (:title (keyname attributes))
@@ -121,7 +121,7 @@
                                     (cond
                                       tag? (->> field
                                                 sort
-                                                (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem"}} %)))
+                                                (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem" :display "inline-flex"}} %)))
                                       sequential? (string/join ", " (sort field))
                                       :else field)))})
                      extra-columns))
