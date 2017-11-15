@@ -409,6 +409,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           Label("Notebooks-tab").awaitVisible()
            val notebooksTab = detailPage.goToNotebooksTab()
            notebooksTab.createClusterButtonEnabled() shouldBe true
          }

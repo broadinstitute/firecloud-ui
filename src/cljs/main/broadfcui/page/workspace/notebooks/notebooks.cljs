@@ -329,7 +329,7 @@
    :-get-clusters-list
    (fn [{:keys [props state this]}]
      (endpoints/call-ajax-leo
-      {:endpoint (endpoints/get-clusterxs-list)
+      {:endpoint (endpoints/get-clusters-list)
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
