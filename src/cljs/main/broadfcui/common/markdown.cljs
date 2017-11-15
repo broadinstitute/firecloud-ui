@@ -46,10 +46,11 @@
      (let [{:keys [mode]} @state
            tab (fn [mode-key label]
                  (let [selected? (= mode-key mode)]
-                   [:span {:style {:border style/standard-line :padding "3px 8px" :cursor "pointer"
-                                   :color (when selected? "white")
-                                   :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
-                           :onClick #(swap! state assoc :mode mode-key)}
+                   [:div {:style {:display "inline-block"
+                                  :border style/standard-line :padding "3px 8px" :cursor "pointer"
+                                  :color (when selected? "white")
+                                  :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
+                          :onClick #(swap! state assoc :mode mode-key)}
                     label]))
            controlled? (this :-controlled?)
            text (if controlled? (:value props) (:text @state))
