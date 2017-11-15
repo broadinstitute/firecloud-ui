@@ -305,7 +305,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       "should see launch analysis button disabled" in withWebDriver { implicit driver =>
         val user = Config.Users.owner
-        implicit val authToken: AuthToken = AuthToken(user)
+        implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           withSignIn(user) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
@@ -404,7 +404,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
    "Notebooks whitelist" - {
      "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
        val user = UserPool.chooseNotebooksWhitelisted
-       implicit val authToken: AuthToken = AuthToken(user)
+       implicit val authToken: AuthToken = user.makeAuthToken()
 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
@@ -418,7 +418,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
      "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
        val user = UserPool.chooseCurator
-       implicit val authToken: AuthToken = AuthToken(user)
+       implicit val authToken: AuthToken = user.makeAuthToken()
 
        withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
