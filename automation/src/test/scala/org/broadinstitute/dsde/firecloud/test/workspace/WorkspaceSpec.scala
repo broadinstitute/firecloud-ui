@@ -11,6 +11,7 @@ import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.fixture._
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceNotebooksPage.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
@@ -402,35 +403,30 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
    "Notebooks whitelist" - {
      "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-       val user = Config.Users.owner
+       val user = UserPool.chooseNotebooksWhitelisted
        implicit val authToken: AuthToken = AuthToken(user)
 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-           Label("Notebooks-tab").awaitVisible()
            val notebooksTab = detailPage.goToNotebooksTab()
+           notebooksTab.createClusterButtonEnabled() shouldBe true
          }
        }
-
      }
 
-//     "Non-members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-//       val user = Config.Users.owner
-//       implicit val authToken: AuthToken = AuthToken(user)
-//
-//       withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
-//         withSignIn(user) { listPage =>
-//           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-//           val notebooksTab = detailPage.goToNotebooksTab()
-//
-//           //           val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
-//           //           val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-//           //           errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
-//           //           errorModal.clickCancel()
-//         }
-//       }
-//
-//     }
+     "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
+       val user = UserPool.chooseCurator
+       implicit val authToken: AuthToken = AuthToken(user)
+
+       withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
+         withSignIn(user) { listPage =>
+           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           //go directly to notebooks page
+           val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
+           notebooksTab.checkUnauthorized(user.email) shouldBe true
+         }
+       }
+     }
    }
 }

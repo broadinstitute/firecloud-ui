@@ -9,7 +9,8 @@ case class TabBar(private val queryString: QueryString = TestId("tabs"))(implici
 
   def goToTab(name: String): Unit = {
     awaitReady()
-    if (name == "Notebooks-tab") (Label(name).awaitVisible())
+    //the whitelisted Notebooks tab loads after the rest of the tabs
+    if (name == "Notebooks") (Label(name).awaitVisible())
     click on tab(name)
   }
 

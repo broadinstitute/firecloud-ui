@@ -313,7 +313,7 @@
          (when (:show-create-dialog? @state)
            [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
                                         :reload-after-create #(this :-get-clusters-list))])
-         [:div {:style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]
+         [:div {:style {:data-test-id "spark-clusters-title" :fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]
          (if server-error
            [comps/ErrorViewer {:error server-error}]
            (if clusters

@@ -11,17 +11,18 @@ import org.scalatest.selenium.Page
 class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceNotebooksPage] {
 
-  override def awaitReady(): Unit = sparkClustersTable.awaitReady()
+  override def awaitReady(): Unit = sparkClustersHeader.awaitVisible()
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
 
+  private val sparkClustersHeader = Label("spark-clusters-title")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")
-  private val sparkClustersTable = Table("spark-clusters-table")
+  private def unWhitelistedMessage(email: String): Query = withText(s"Error: '$email' is unauthorized")
 
   def createClusterButtonEnabled(): Boolean = openCreateClusterModalButton.isStateEnabled
 
-
-
-
-
+  def checkUnauthorized(email: String): Boolean = {
+    awaitReady()
+    find(unWhitelistedMessage(email)).isDefined
+  }
 }
