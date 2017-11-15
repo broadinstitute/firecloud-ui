@@ -62,6 +62,9 @@
        sort
        (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem" :display "inline-flex"}} %))))
 
+(defn- sortable-tag-field [data]
+  (->> data sort (string/trim) (string/lower-case) (string/join " ")))
+
 (react/defc- DatasetsTable
   {:execute-search
    (fn [{:keys [refs]} reset-sort?]
@@ -110,10 +113,12 @@
                      {:id "library:consentCodes" :header (:title (:library:consentCodes attributes))
                       :column-data :library:consentCodes :initial-width 180
                       :as-text (fn [data] (string/join ", " (sort data)))
+                      :sort-by (fn [data] (sortable-tag-field data))
                       :render (fn [data] (render-tags data))}
                      {:id "tag:tags" :header (:title (:tag:tags attributes))
                       :column-data :tag:tags :initial-width 100
                       :as-text (fn [data] (string/join ", " (sort data)))
+                      :sort-by (fn [data] (sortable-tag-field data))
                       :render (fn [data] (render-tags data))}]
                     (map
                      (fn [keyname]
