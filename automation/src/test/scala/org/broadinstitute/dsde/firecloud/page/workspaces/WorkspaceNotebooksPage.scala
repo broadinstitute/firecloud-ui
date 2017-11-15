@@ -17,12 +17,12 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 
   private val sparkClustersHeader = testId("spark-clusters-title")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")
-  private def unWhitelistedMessage(email: String): Query = withText(s"Error: '$email' is unauthorized")
+  private def unWhitelistedMessage = s"is unauthorized"
 
   def createClusterButtonEnabled(): Boolean = openCreateClusterModalButton.isStateEnabled
 
   def checkUnauthorized: Unit = {
     awaitReady()
-    await text s"is unauthorized"
+    await text unWhitelistedMessage
   }
 }
