@@ -69,4 +69,14 @@ object UserPool {
     Temps.getRandomCredentials(n)
   }
 
+    /**
+    * Chooses a notebooksWhitelisted user.
+    */
+  def chooseNotebooksWhitelisted: Credentials = chooseNotebooksWhitelisteds(1).head
+
+  def chooseNotebooksWhitelisteds(n: Int): Seq[Credentials] = {
+    NotebooksWhitelisted.getRandomCredentials(n)
+  }
+
+
 }

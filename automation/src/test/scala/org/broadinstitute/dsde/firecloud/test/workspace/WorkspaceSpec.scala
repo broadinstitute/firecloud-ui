@@ -3,12 +3,15 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component.Label
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.fixture._
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceNotebooksPage.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
@@ -397,4 +400,34 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     }
   }
+
+   "Notebooks whitelist" - {
+     "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
+       val user = UserPool.chooseNotebooksWhitelisted
+       implicit val authToken: AuthToken = user.makeAuthToken()
+
+       withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
+         withSignIn(user) { listPage =>
+           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           Label("Notebooks-tab").awaitVisible()
+           val notebooksTab = detailPage.goToNotebooksTab()
+           notebooksTab.createClusterButtonEnabled() shouldBe true
+         }
+       }
+     }
+
+     "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
+       val user = UserPool.chooseCurator
+       implicit val authToken: AuthToken = user.makeAuthToken()
+
+       withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
+         withSignIn(user) { listPage =>
+           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+           //go directly to notebooks page
+           val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
+           notebooksTab.checkUnauthorized
+         }
+       }
+     }
+   }
 }
