@@ -72,7 +72,7 @@
           :side-by-side [SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
-                          :initial-slider-position (:or (:initial-slider-position props) 500)}])]))
+                          :initial-slider-position (or (:initial-slider-position props) 500)}])]))
    :-controlled?
    (fn [{:keys [props]}]
      (contains? props :value))})
