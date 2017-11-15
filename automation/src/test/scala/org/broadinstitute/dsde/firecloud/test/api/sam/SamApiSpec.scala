@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.api.Sam
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountEmail, WorkbenchUserServiceAccountName}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountName}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
 import org.scalatest.{FreeSpec, Matchers}
@@ -16,10 +16,17 @@ class SamApiSpec extends FreeSpec with Matchers {
   val anyUser: Credentials = UserPool.chooseAnyUser
   val userAuthToken: AuthToken = anyUser.makeAuthToken()
 
+  def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
+
+  def removePet(userInfo: UserStatusDetails): Unit = {
+    Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+    val remove = googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
+    Await.result(remove, 5.seconds)
+  }
+
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
-    val petName = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
-    val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), petName)
-    Await.result(find, 1.minute)
+    val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
+    Await.result(find, 5.seconds)
   }
 
   "Sam" - {
@@ -31,9 +38,8 @@ class SamApiSpec extends FreeSpec with Matchers {
 
       // ensure known state for pet (not present)
 
-      Sam.admin.deletePetServiceAccount(userStatus.userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+      removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
-
 
       val petAccountEmail = Sam.user.petServiceAccountEmail()(userAuthToken)
       petAccountEmail.value should not be userStatus.userInfo.userEmail
@@ -54,8 +60,9 @@ class SamApiSpec extends FreeSpec with Matchers {
       // clean up
 
       petAuthToken.removePrivateKey()
-      Sam.admin.deletePetServiceAccount(userStatus.userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+      removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
     }
   }
+
 }
