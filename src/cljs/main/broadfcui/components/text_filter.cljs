@@ -19,7 +19,9 @@
          {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
           :data-test-id (str data-test-id "-input")
           :placeholder (or placeholder "Filter") :defaultValue initial-text
-          :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+          :style {:flex "1 0 auto"
+                  :borderTopRightRadius 0 :borderBottomRightRadius 0
+                  :marginBottom 0}
           :onKeyDown (common/create-key-handler
                       [:enter :esc]
                       (fn [e]

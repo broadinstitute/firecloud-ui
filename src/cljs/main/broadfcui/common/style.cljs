@@ -74,7 +74,8 @@
    :borderTopLeftRadius 3 :borderBottomLeftRadius 3 :borderBottomRightRadius 3 :borderTopRightRadius 3
    :boxSizing "border-box"
    :fontSize "88%"
-   :marginBottom "0.75em" :padding "0.5em"})
+   :marginLeft 0 :marginTop 0 :marginBottom "0.75em" :marginRight 0
+   :padding "0.5em"})
 
 (def select-style
   {:backgroundColor "#fff"
