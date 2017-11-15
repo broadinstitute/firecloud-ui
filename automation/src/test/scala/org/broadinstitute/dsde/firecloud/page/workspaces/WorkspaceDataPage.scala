@@ -69,7 +69,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 
     for {
       path <- downloadPath
-      entityType <- find(CssSelectorQuery(downloadMetadataButton.element.queryString)).get.attribute("data-entity-type")
+      entityType <- find(CssSelectorQuery(downloadMetadataButton.query.queryString)).get.attribute("data-entity-type")
     } yield archiveDownloadedFile(s"$path/$entityType.txt")
   }
 
