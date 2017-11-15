@@ -110,13 +110,13 @@
                      {:id "library:consentCodes" :header (:title (:library:consentCodes attributes))
                       :column-data :library:consentCodes :initial-width 180
                       :as-text (fn [data] (string/join ", " (sort data)))
-                      :sort-by (comp string/lower-case :as-text)
-                      :render (fn [data] (render-tags data))}
+                      :sortable? false
+                      :render render-tags}
                      {:id "tag:tags" :header (:title (:tag:tags attributes))
                       :column-data :tag:tags :initial-width 100
                       :as-text (fn [data] (string/join ", " (sort data)))
-                      :sort-by (comp string/lower-case :as-text)
-                      :render (fn [data] (render-tags data))}]
+                      :sortable? false
+                      :render render-tags}]
                     (map
                      (fn [keyname]
                        {:id (name keyname) :header (:title (keyname attributes))
