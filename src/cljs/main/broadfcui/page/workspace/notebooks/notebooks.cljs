@@ -313,7 +313,7 @@
          (when (:show-create-dialog? @state)
            [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
                                         :reload-after-create #(this :-get-clusters-list))])
-         [:div {:style {:data-test-id "spark-clusters-title" :fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]
+         [:div {} [:span {:style {:data-test-id "spark-clusters-title" :fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
          (if server-error
            [comps/ErrorViewer {:error server-error}]
            (if clusters
@@ -329,7 +329,7 @@
    :-get-clusters-list
    (fn [{:keys [props state this]}]
      (endpoints/call-ajax-leo
-      {:endpoint (endpoints/get-clusters-list)
+      {:endpoint (endpoints/get-clusterxs-list)
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
