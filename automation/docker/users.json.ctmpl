@@ -2,8 +2,7 @@
 {{if eq $environment "qa"}}
 {
   "admins": {
-    "dumbledore": "dumbledore.admin@quality.firecloud.org",
-    "voldemort": "voldemort.admin@quality.firecloud.org"
+    "dumbledore": "dumbledore.admin@quality.firecloud.org"
   },
   "owners": {
     "hermione": "hermione.owner@quality.firecloud.org",
