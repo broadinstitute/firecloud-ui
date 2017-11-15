@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.BaseFireCloudPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceNotebooksPage.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
@@ -44,5 +45,10 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   def goToMonitorTab(): WorkspaceMonitorPage = {
     tabs.goToTab("Monitor")
     await ready new WorkspaceMonitorPage(namespace, name)
+  }
+
+  def goToNotebooksTab(): WorkspaceNotebooksPage = {
+    tabs.goToTab("Notebooks")
+    await ready new WorkspaceNotebooksPage(namespace, name)
   }
 }

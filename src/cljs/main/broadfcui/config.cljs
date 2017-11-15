@@ -17,7 +17,7 @@
 (defn check-config [config]
   (let [config-keys (set (keys config))
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
-        optional {"isDebug" :boolean "shibbolethUrlRoot" :string
+        optional {"isDebug" :boolean "shibbolethUrlRoot" :string "leonardoUrlRoot" :string
                   "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string "featuredJsonUrl" :string
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
@@ -40,6 +40,7 @@
 (def config (atom nil))
 
 (defn api-url-root [] (get @config "apiUrlRoot"))
+(defn leonardo-url-root [] (get @config "leonardoUrlRoot"))
 (defn debug? [] (get @config "isDebug"))
 (defn google-client-id [] (get @config "googleClientId"))
 (defn tcga-namespace [] (get @config "tcgaNamespace"))
