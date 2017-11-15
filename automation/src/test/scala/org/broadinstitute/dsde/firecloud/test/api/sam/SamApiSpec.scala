@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.test.api.sam
 
-import org.broadinstitute.dsde.firecloud.api.Sam
+import org.broadinstitute.dsde.firecloud.api.{Orchestration, Sam, Thurloe}
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountName}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountEmail, WorkbenchUserServiceAccountName, WorkbenchUserServiceAccountSubjectId}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
 import org.scalatest.{FreeSpec, Matchers}
@@ -25,9 +25,13 @@ class SamApiSpec extends FreeSpec with Matchers {
     Await.result(remove, 5.seconds)
   }
 
+  def findSaInGoogle(name: WorkbenchUserServiceAccountName): Option[WorkbenchUserServiceAccount] = {
+    val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name)
+    Await.result(find, 1.minute)
+  }
+
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
-    val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
-    Await.result(find, 5.seconds)
+    findSaInGoogle(petName(userInfo))
   }
 
   "Sam" - {
@@ -63,6 +67,50 @@ class SamApiSpec extends FreeSpec with Matchers {
       petAuthToken.removePrivateKey()
       removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
+    }
+
+    def cleanupUser(subjectId: WorkbenchUserServiceAccountSubjectId): Unit = {
+      implicit val token: AuthToken = UserPool.chooseAdmin.makeAuthToken()
+      if (Sam.admin.doesUserExist(subjectId.value).getOrElse(false)) {
+        Sam.admin.deleteUser(subjectId.value)
+      }
+      Thurloe.keyValuePairs.deleteAll(subjectId.value)
+    }
+
+    def registerSaAsNewUser(email: WorkbenchUserServiceAccountEmail)(implicit authToken: AuthToken): Unit = {
+      val newUserProfile = Orchestration.profile.BasicProfile (
+        firstName = "Generic",
+        lastName = "Testerson",
+        title = "User",
+        contactEmail = Option(email.value),
+        institute = "Broad",
+        institutionalProgram = "DSP",
+        programLocationCity = "Cambridge",
+        programLocationState = "MA",
+        programLocationCountry = "USA",
+        pi = "Albus Dumbledore",
+        nonProfitStatus = "true"
+      )
+      Orchestration.profile.registerUser(newUserProfile)
+    }
+
+    "should not treat non-pet service accounts as pets" in {
+      val saEmail = WorkbenchUserServiceAccountEmail(Config.GCS.qaEmail)
+      val sa = findSaInGoogle(saEmail.toAccountName).get
+
+      // ensure clean state: SA's user not registered
+      cleanupUser(sa.subjectId)
+
+      implicit val saAuthToken: ServiceAccountAuthToken = ServiceAccountAuthToken(saEmail)
+
+      registerSaAsNewUser(saEmail)
+
+      // I am no one's pet.  I am myself.
+      Sam.user.status()(saAuthToken).userInfo.userEmail shouldBe saEmail.value
+
+      // clean up
+      saAuthToken.removePrivateKey()
+      cleanupUser(sa.subjectId)
     }
   }
 

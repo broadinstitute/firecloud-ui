@@ -87,6 +87,10 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
   }
 
+  /*
+   *  Workspace requests
+   */
+
   object workspaces {
 
     def create(namespace: String, name: String, authDomain: Set[String] = Set.empty)
@@ -240,10 +244,32 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
   }
 
+  object profile {
+    // copied from firecloud-orchestration repo
+    case class BasicProfile (
+                              firstName: String,
+                              lastName: String,
+                              title: String,
+                              contactEmail: Option[String],
+                              institute: String,
+                              institutionalProgram: String,
+                              programLocationCity: String,
+                              programLocationState: String,
+                              programLocationCountry: String,
+                              pi: String,
+                              nonProfitStatus: String
+                            )
 
-  /*
-   *  Workspace requests
-   */
+
+    def registerUser(profile: BasicProfile)(implicit token: AuthToken): Unit = {
+      profile.contactEmail match {
+        case Some(email) => logger.info(s"Creating profile for user $email")
+        case _ => logger.info("Creating user profile")
+      }
+
+      postRequest(apiUrl(s"register/profile"), profile)
+    }
+  }
 
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
     logger.info(s"Importing metadata: $ns/$wsName $fileName")
