@@ -58,6 +58,11 @@
                 "NCU" false} $)
         (assoc $ "DS" (vec (keys (:ds research-purpose))))))
 
+(defn- render-tags [data]
+  (->> data
+       sort
+       (map #(style/render-tag {:style {:margin "0 0.1rem" :padding "0 0.5rem" :display "inline-flex"}} %))))
+
 (react/defc- DatasetsTable
   {:execute-search
    (fn [{:keys [refs]} reset-sort?]
@@ -69,9 +74,9 @@
    (fn [{:keys [props state this]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
-           extra-columns (subvec search-result-columns 4)]
+           extra-columns (subvec search-result-columns 5)]
        [Table
-        {:ref "table" :persistence-key "library-table" :v 4
+        {:ref "table" :persistence-key "library-table" :v 5
          :fetch-data (this :-pagination)
          :style {:content {:marginLeft "2rem"}}
          :body
@@ -101,19 +106,29 @@
                                  (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
-                     {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
-                      :column-data :library:dataUseRestriction :initial-width 180}
                      {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
-                      :column-data :library:numSubjects :initial-width 100}]
+                      :column-data :library:numSubjects :initial-width 100}
+                     {:id "library:consentCodes" :header (:title (:library:consentCodes attributes))
+                      :column-data :library:consentCodes :initial-width 180
+                      :as-text (fn [data] (string/join ", " (sort data)))
+                      :sortable? false
+                      :render render-tags}
+                     {:id "tag:tags" :header (:title (:tag:tags attributes))
+                      :column-data :tag:tags :initial-width 180
+                      :as-text (fn [data] (string/join ", " (sort data)))
+                      :sortable? false
+                      :render render-tags}]
                     (map
                      (fn [keyname]
                        {:id (name keyname) :header (:title (keyname attributes))
                         :initial-width 180 :show-initial? false
                         :column-data keyname
                         :render (fn [field]
-                                  (if (sequential? field)
-                                    (string/join ", " field)
-                                    field))})
+                                  (let [tag? (= (get-in (keyname attributes) [:renderHint :type]) "tag")]
+                                    (cond
+                                      tag? (render-tags field)
+                                      (sequential? field) (string/join ", " (sort field))
+                                      :else field)))})
                      extra-columns))
           :style {:header-row {:fontWeight 500 :fontSize "90%"
                                :backgroundColor nil
