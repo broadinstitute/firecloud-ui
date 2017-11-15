@@ -33,13 +33,13 @@
 (react/defc MarkdownEditor
   {:get-trimmed-text
    (fn [{:keys [state this]}]
-     (assert (not (this :-managed?)) "Trying to read text from a managed component")
+     (assert (not (this :-controlled?)) "Trying to read text from a controlled component")
      (:text @state))
    :get-initial-state
    (fn [{:keys [props this]}]
      (merge
       {:mode :edit}
-      (when-not (this :-managed?)
+      (when-not (this :-controlled?)
         {:text (or (:initial-text props) "")})))
    :render
    (fn [{:keys [props state this]}]
@@ -51,12 +51,12 @@
                                    :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
                            :onClick #(swap! state assoc :mode mode-key)}
                     label]))
-           managed? (this :-managed?)
-           text (if managed? (:value props) (:text @state))
+           controlled? (this :-controlled?)
+           text (if controlled? (:value props) (:text @state))
            markdown-view [MarkdownView {:text text}]
            text-area (style/create-text-area {:value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
-                                                           (if managed?
+                                                           (if controlled?
                                                              ((:on-change props) new-value)
                                                              (swap! state assoc :text new-value)))
                                               :style {:width "100%" :height "100%" :minHeight 200
@@ -73,6 +73,6 @@
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
                           :initial-slider-position (:or (:initial-slider-position props) 500)}])]))
-   :-managed?
+   :-controlled?
    (fn [{:keys [props]}]
      (contains? props :value))})
