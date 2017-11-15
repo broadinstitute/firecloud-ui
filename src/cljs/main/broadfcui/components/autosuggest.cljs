@@ -1,7 +1,6 @@
 (ns broadfcui.components.autosuggest
   (:require
    [dmohs.react :as react]
-   [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -82,7 +81,7 @@
         (clj->js (utils/deep-merge
                   {:suggestions (or suggestions [])
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
-                   :onSuggestionsClearRequested #(swap! state assoc :suggestions #{})
+                   :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
                    :getSuggestionValue #(if (keyword? %) value ((or get-value identity) %))
                    :renderSuggestion (fn [suggestion]
                                        (react/create-element
