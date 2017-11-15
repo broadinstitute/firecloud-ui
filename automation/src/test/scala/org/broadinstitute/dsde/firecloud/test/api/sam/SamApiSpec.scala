@@ -7,27 +7,25 @@ import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountEmail, WorkbenchUserServiceAccountName, WorkbenchUserServiceAccountSubjectId}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
-class SamApiSpec extends FreeSpec with Matchers {
+class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
   val anyUser: Credentials = UserPool.chooseAnyUser
   val userAuthToken: AuthToken = anyUser.makeAuthToken()
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
   def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
 
   def removePet(userInfo: UserStatusDetails): Unit = {
     Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
     // TODO: why is this necessary?  GAWB-2867
-    val remove = googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
-    Await.result(remove, 5.seconds)
+    googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo)).futureValue
   }
 
   def findSaInGoogle(name: WorkbenchUserServiceAccountName): Option[WorkbenchUserServiceAccount] = {
-    val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name)
-    Await.result(find, 5.seconds)
+    googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name).futureValue
   }
 
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
