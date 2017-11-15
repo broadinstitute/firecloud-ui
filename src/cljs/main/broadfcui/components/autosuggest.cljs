@@ -47,7 +47,7 @@
               :on-submit (when on-submit wrapped-on-submit))))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:value (:default-value props)})
+     {:value (if (:caching? props) (:value props) (:default-value props))})
    :render
    (fn [{:keys [state props locals]}]
      (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
