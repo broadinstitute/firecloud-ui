@@ -304,8 +304,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "who has reader access to workspace" - {
 
       "should see launch analysis button disabled" in withWebDriver { implicit driver =>
-        val user = Config.Users.owner
-        implicit val authToken: AuthToken = user.makeAuthToken()
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
           withSignIn(user) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
