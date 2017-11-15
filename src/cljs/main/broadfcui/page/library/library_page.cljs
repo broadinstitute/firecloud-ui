@@ -9,6 +9,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
@@ -95,9 +96,9 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (links/create-internal
-                                  (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
-                                         (this :-get-link-props data))
-                                  (:library:datasetName data)))}
+                                 (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
+                                        (this :-get-link-props data))
+                                 (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -152,19 +153,21 @@
             (comps/push-message
              {:header "Request Access"
               :message
-              [:span {}
-               (if (or (not-empty (set/difference ws-auth-domains built-in-groups))
-                       (empty? ws-auth-domains))
-                 (standard-access-instructions data)
-                 [:span {}
-                  (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
-                        target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
-                    [:div {}
-                     (when tcga? tcga-access-instructions)
-                     (when target? target-access-instructions)
-                     (when (or tcga? target?)
-                       [:p {} "After dbGaP approves your application please link your eRA
-                       Commons ID in your FireCloud profile page."])])])]}))}
+              (cond (:library:dataAccessInstructions data)
+                    [markdown/MarkdownView {:text (:library:dataAccessInstructions data)}]
+                    (or (not-empty (set/difference ws-auth-domains built-in-groups))
+                        (empty? ws-auth-domains))
+                    (standard-access-instructions data)
+                    :else
+                    [:span {}
+                     (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
+                           target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
+                       [:div {}
+                        (when tcga? tcga-access-instructions)
+                        (when target? target-access-instructions)
+                        (when (or tcga? target?)
+                          [:p {} "After dbGaP approves your application please link your eRA
+                       Commons ID in your FireCloud profile page."])])])}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :-build-aggregate-fields
    (fn [{:keys [props]}]

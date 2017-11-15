@@ -32,15 +32,18 @@
 
 (react/defc MarkdownEditor
   {:get-trimmed-text
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
+     (assert (not (this :-managed?)) "Trying to read text from a managed component")
      (:text @state))
    :get-initial-state
-   (fn [{:keys [props]}]
-     {:mode :edit
-      :text (or (:initial-text props) "")})
+   (fn [{:keys [props this]}]
+     (merge
+      {:mode :edit}
+      (when-not (this :-managed?)
+        {:text (or (:initial-text props) "")})))
    :render
-   (fn [{:keys [props state]}]
-     (let [{:keys [mode text]} @state
+   (fn [{:keys [props state this]}]
+     (let [{:keys [mode]} @state
            tab (fn [mode-key label]
                  (let [selected? (= mode-key mode)]
                    [:span {:style {:border style/standard-line :padding "3px 8px" :cursor "pointer"
@@ -48,13 +51,18 @@
                                    :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
                            :onClick #(swap! state assoc :mode mode-key)}
                     label]))
+           managed? (this :-managed?)
+           text (if managed? (:value props) (:text @state))
            markdown-view [MarkdownView {:text text}]
-           text-area (style/create-text-area {:value (:text @state)
-                                              :onChange #(swap! state assoc :text (-> % .-target .-value))
+           text-area (style/create-text-area {:value text
+                                              :onChange #(let [new-value (-> % .-target .-value)]
+                                                           (if managed?
+                                                             ((:on-change props) new-value)
+                                                             (swap! state assoc :text new-value)))
                                               :style {:width "100%" :height "100%" :minHeight 200
                                                       :resize (if (= mode :edit) "vertical" "none")}})]
        [:div {}
-        [:div {}
+        [:div {:style {:marginTop "0.5rem"}}
          (tab :edit "Edit")
          (tab :preview "Preview")
          (tab :side-by-side "Side-by-side")]
@@ -64,4 +72,7 @@
           :side-by-side [SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
-                          :initial-slider-position (:or (:initial-slider-position props) 500)}])]))})
+                          :initial-slider-position (:or (:initial-slider-position props) 500)}])]))
+   :-managed?
+   (fn [{:keys [props]}]
+     (contains? props :value))})
