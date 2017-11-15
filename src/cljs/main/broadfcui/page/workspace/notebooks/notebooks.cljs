@@ -261,7 +261,7 @@
                    (fn [cluster]
                      (if (= (:status cluster) "Running")
                        (links/create-external
-                        {:href (str (config/leonardo-url-root) "notebooks/" (:googleProject cluster) "/" (:clusterName cluster))
+                        {:href (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster))
                          :onClick #(utils/set-notebooks-access-token-cookie (utils/get-access-token))}
                         (:clusterName cluster))
                        (:clusterName cluster)))}
