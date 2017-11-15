@@ -121,7 +121,7 @@
               (update-column-display (assoc-in column-display [index :width] initial-width)))
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style {:overflowX "auto"}}
-         [:div {:style (merge {:minWidth "fit-content"} (:table style))}
+         [:div {:style (merge {:display "table"} (:table style))}
           (header properties)
           (body properties)]]))
     :-on-mouse-move
