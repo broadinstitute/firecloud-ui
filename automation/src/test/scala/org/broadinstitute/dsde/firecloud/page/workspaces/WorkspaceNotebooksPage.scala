@@ -21,8 +21,8 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 
   def createClusterButtonEnabled(): Boolean = openCreateClusterModalButton.isStateEnabled
 
-  def checkUnauthorized(email: String): Boolean = {
+  def checkUnauthorized: Unit = {
     awaitReady()
-    find(unWhitelistedMessage(email)).isDefined
+    await text s"is unauthorized"
   }
 }

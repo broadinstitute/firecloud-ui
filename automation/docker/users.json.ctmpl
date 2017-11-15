@@ -42,7 +42,8 @@
     "neville": "neville.temp@quality.firecloud.org"
   },
   "notebookswhitelisted": {
-    "hermione": "hermione.owner@quality.firecloud.org"
+    "hermione": "hermione.owner@quality.firecloud.org",
+    "ron": "ron.weasley@quality.firecloud.org"
   }
 }
 {{else}}
@@ -73,7 +74,8 @@
     "neville": "neville.temp@test.firecloud.org"
   },
   "notebookswhitelisted": {
-    "hermione": "hermione.owner@test.firecloud.org"
+    "hermione": "hermione.owner@test.firecloud.org",
+    "ron": "ron.weasley@test.firecloud.org"
   }
 }
 {{end}}
