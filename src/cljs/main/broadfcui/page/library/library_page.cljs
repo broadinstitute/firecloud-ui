@@ -113,7 +113,7 @@
                       :sortable? false
                       :render render-tags}
                      {:id "tag:tags" :header (:title (:tag:tags attributes))
-                      :column-data :tag:tags :initial-width 100
+                      :column-data :tag:tags :initial-width 180
                       :as-text (fn [data] (string/join ", " (sort data)))
                       :sortable? false
                       :render render-tags}]
