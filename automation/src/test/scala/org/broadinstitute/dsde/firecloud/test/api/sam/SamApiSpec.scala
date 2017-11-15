@@ -20,6 +20,7 @@ class SamApiSpec extends FreeSpec with Matchers {
 
   def removePet(userInfo: UserStatusDetails): Unit = {
     Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+    // TODO: why is this necessary?  GAWB-2867
     val remove = googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
     Await.result(remove, 5.seconds)
   }
