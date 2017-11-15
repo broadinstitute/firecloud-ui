@@ -110,28 +110,16 @@
                            :rows 3
                            :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
 
-
-(def ^:private ATTRIBUTE_SEPARATOR ", ")
-
-(defn- split-attributes [values]
-  (string/split values (re-pattern ATTRIBUTE_SEPARATOR)))
-
-(defn- zip-comma-separated-strings [keys values]
-  (if (string/blank? keys)
-    {}
-    (let [split-keys (split-attributes keys)
-          split-values (split-attributes values)]
-        (zipmap split-keys split-values))))
-
-(defn- remove-from-comma-separated-strings [value-string item]
-  (if (string/blank? value-string)
-    value-string
-    (let [values (split-attributes value-string)]
-      (string/join ATTRIBUTE_SEPARATOR (utils/delete values (utils/index-of values item))))))
-
+;; Needed to handle DS labels before adding the DS_URL field
+(defn- handle-differences [[related-id related-label]]
+  (if (nil? related-id)
+    ["" "" true]
+    [related-id related-label false]
+    ))
 
 (defn- render-ontology-typeahead [{:keys [refs prop colorize value-nullsafe set-property state property library-schema disabled]}]
   (let [[related-id-prop related-label-prop] (library-utils/get-related-id+label-props library-schema property)
+        [related-id related-label clear-fields] (handle-differences (library-utils/get-related-id+label (:attributes @state) library-schema property))
         clear (fn []
                 (apply swap! state update :attributes dissoc property [related-id-prop related-label-prop])
                 ((@refs (name property)) :set-value ""))]
@@ -140,15 +128,20 @@
        [:div {}
         (ontology/render-multiple-ontology-selections
          {:onClick (fn [id label]
-                     (swap! state update-in [:attributes related-id-prop] remove-from-comma-separated-strings id)
-                     (swap! state update-in [:attributes related-label-prop] remove-from-comma-separated-strings label))
-          :selection-map (zip-comma-separated-strings (get-in @state [:attributes related-id-prop]) (get-in @state [:attributes related-label-prop]))})
+                     (swap! state update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
+                     (swap! state update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label))
+          :selection-map (library-utils/zip-comma-separated-strings related-id related-label)})
         (ontology/create-ontology-autosuggest
          {:on-suggestion-selected
           (fn [{:keys [id label]}]
-            (swap! state update-in [:attributes related-id-prop] #(str % (when % ", ") id))
-            (swap! state update-in [:attributes related-label-prop] #(str % (when % ", ") label)))
-          :selected-ids (split-attributes (get-in @state [:attributes related-id-prop]))})]
+            (if clear-fields
+              (do
+                (swap! state update :attributes assoc related-id-prop id)
+                (swap! state update :attributes assoc related-label-prop label))
+              (do
+                (swap! state update-in [:attributes related-id-prop] library-utils/add-to-comma-separated-strings id)
+                (swap! state update-in [:attributes related-label-prop] library-utils/add-to-comma-separated-strings label))))
+          :selected-ids (library-utils/split-attributes related-id)})]
        [:div {}
         (ontology/create-ontology-autosuggest
          {:ref (name property)
@@ -164,16 +157,14 @@
           :on-change set-property
           :on-submit #(when (empty? %) (clear))})
 
-        (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-          (when (not-any? clojure.string/blank? [related-id related-label])
-            [:div {}
-             [:span {:style {:fontWeight "bold"}} related-label]
-             [:span {:style {:fontSize "small" :float "right"}} related-id]
-             [:div {}
-              (when-not disabled
-                (links/create-internal {:onClick clear}
-                                       "Clear Selection"))]]))])]))
-
+        (when (not-any? string/blank? [related-id related-label])
+          [:div {}
+           [:span {:style {:fontWeight "bold"}} related-label]
+           [:span {:style {:fontSize "small" :float "right"}} related-id]
+           [:div {}
+            (when-not disabled
+              (links/create-internal {:onClick clear}
+                                     "Clear Selection"))]])])]))
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}

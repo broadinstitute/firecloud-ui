@@ -14,7 +14,7 @@
   (-> doid
       (string/split "/")
       last
-      (string/replace-all #"_" ": ")))
+      (string/replace-all #"_" ":")))
 
 
 (defn render-multiple-ontology-selections [{:keys [onClick selection-map]}]
