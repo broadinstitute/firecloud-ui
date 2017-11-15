@@ -5,8 +5,6 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.icons :as icons]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.ontology-autosuggest :as ontology]
    [broadfcui.config :as config]
