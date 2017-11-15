@@ -109,7 +109,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           //1) Not sure if bug or not: filter from launch analysis modal is still present when data tab revisited
           //2) Filter on the datatab removes even the row being referenced
           //this clear filter fixes the problem. Can be removed when filter bug fixed
-          workspaceDataTab.dataTable.clearFilter
+          workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "output")
         }
         withSignIn(reader) { _ =>
@@ -141,7 +141,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.clearFilter
+          workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
         }
         withSignIn(reader) { _ =>
@@ -177,7 +177,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.clearFilter
+          workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
         }
         withSignIn(reader) { _ =>
@@ -217,7 +217,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
             submissionTab.readStatusMessage() shouldEqual ""
           }
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.dataTable.clearFilter
+          workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
         }
         withSignIn(reader) { _ =>

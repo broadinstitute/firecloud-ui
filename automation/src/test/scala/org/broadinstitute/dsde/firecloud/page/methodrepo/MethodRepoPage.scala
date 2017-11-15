@@ -1,12 +1,13 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
-import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class MethodRepoPage(implicit webDriver: WebDriver) extends AuthenticatedPage with Page with PageUtil[MethodRepoPage] {
+class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with Page with PageUtil[MethodRepoPage] {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 

@@ -50,7 +50,12 @@
    attributes))
 
 (defn validate-required [attributes questions required-attributes]
-  (let [required-props (->> questions
+  (let [questions (reduce (fn [prev question]
+                            (into prev
+                                  (if (map? question) (:items question) question)))
+                          []
+                          questions)
+        required-props (->> questions
                             (map keyword)
                             (filter (partial contains? required-attributes))
                             set)

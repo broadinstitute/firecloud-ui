@@ -48,7 +48,7 @@
      (let [[email & fails] (input/get-and-validate refs "email")]
        (swap! state assoc :fails fails :server-error nil)
        (when-not fails
-         (let [role (common/get-text refs "role")
+         (let [role (common/get-trimmed-text refs "role")
                {:keys [endpoint on-add]} props]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch

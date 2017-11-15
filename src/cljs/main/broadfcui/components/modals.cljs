@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.common :as common]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -29,12 +30,14 @@
        (modal/render
         {:content
          [:div {}
-          [:div {:style {:borderBottom style/standard-line
-                         :padding "1rem 3rem 1rem"
-                         :fontSize "140%" :fontWeight 400 :lineHeight 1}
-                 :data-test-id data-test-id}
+          (flex/box
+           {:style {:alignItems "flex-start"
+                    :borderBottom style/standard-line
+                    :padding "1rem 3rem 1rem"
+                    :fontSize "140%" :fontWeight 400 :lineHeight 1}}
            header
-           (when show-close? (buttons/x-button dismiss))]
+           flex/spring
+           (when show-close? (buttons/x-button dismiss)))
           [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)} :data-test-id (str data-test-id "-content")}
            content

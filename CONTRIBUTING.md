@@ -14,19 +14,22 @@ For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/b
 The [**Lisp Paredit**](https://atom.io/packages/lisp-paredit) package formats code correctly.
 
 **IntelliJ**  
-The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.
-Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).
+The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free. It requires the following configuration:
 
-The first time you encounter a `defc`, you must manually tell Cursive how to format it:
+1. Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml). Import them from `IntelliJ IDEA -> Preferences -> Editor -> Code Style -> Clojure`:
 
-1. Highlight any usage of that symbol  
-2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
-3. Select _Resolve as..._  
-4. Select _def_
+    <img width="831" src="https://user-images.githubusercontent.com/22642695/32802415-f3cd6452-c94d-11e7-85f4-4698da453d78.png">
 
-<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
+2. The first time you encounter a `defc`, you must manually tell Cursive how to format it:
 
-You'll have to repeat this process for `defc-`.
+    1. Click on any usage of that symbol  
+    2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
+    3. Select _Resolve as..._  
+    4. Select _def_
+
+    <img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
+
+    You'll have to repeat this process for `defc-`.
 
 ### Source code layout & organization
 

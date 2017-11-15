@@ -13,6 +13,7 @@
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -175,9 +176,13 @@
    (fn []
      {:user-status #{}})
    :component-will-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [this state]}]
      (init-nav-paths)
-     (this :handle-hash-change))
+     (this :handle-hash-change)
+     (set! (.-forceSignedIn js/window)
+           (auth/force-signed-in {:on-sign-in #(swap! state update :user-status conj :signed-in)
+                                  :on-sign-out #(swap! state update :user-status disj :signed-in)
+                                  :on-error #(swap! state assoc :force-sign-in-error %)})))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
@@ -186,6 +191,10 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (when-let [error (:force-sign-in-error @state)]
+          (modals/render-error {:header (str "Error validating access token")
+                                :text (auth/render-forced-sign-in-error error)
+                                :on-dismiss #(swap! state dissoc :force-sign-in-error)}))
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))

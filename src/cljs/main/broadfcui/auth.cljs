@@ -159,6 +159,35 @@
                                        :redirectUri (.. js/window -location -origin)})
                                :on-done #(swap! state assoc :hidden? true)})))))})
 
+(defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
+  (fn [auth-token]
+    (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
+                           (js/encodeURIComponent auth-token))
+                 :on-done
+                 (fn [{:keys [status-code success? get-parsed-response raw-response]}]
+                   (if success?
+                     (let [{:keys [email sub]} (get-parsed-response)
+                           auth2 (clj->js
+                                  {:currentUser
+                                   {:get
+                                    (constantly
+                                     (clj->js
+                                      {:getAuthResponse
+                                       (constantly (clj->js {:access_token auth-token}))
+                                       :getBasicProfile
+                                       (constantly (clj->js {:getEmail (constantly email)
+                                                             :getId (constantly sub)}))}))
+                                    :listen (constantly nil)}
+                                   :signOut on-sign-out})]
+                       (utils/set-google-auth2-instance! auth2)
+                       (on-sign-in))
+                     (on-error {:status status-code :response raw-response})))})))
+
+(defn render-forced-sign-in-error [error]
+  [:div {}
+   [:div {} "Status: " (:status error)]
+   [:div {} "Response: " (:response error)]])
+
 (defn add-nav-paths []
   (nav/defpath
    :policy

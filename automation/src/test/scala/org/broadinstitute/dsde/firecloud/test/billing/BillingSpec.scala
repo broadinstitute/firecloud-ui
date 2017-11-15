@@ -23,17 +23,17 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
       "should be able to create a billing project" in withWebDriver { implicit driver =>
         val userOwner = UserPool.chooseProjectOwner
         implicit val authToken: AuthToken = AuthToken(userOwner)
-        signIn(userOwner)
+        withSignIn(userOwner) { _ =>
+          val billingPage = new BillingManagementPage().open
+          val billingProjectName = "billing-spec-create-" + makeRandomId() // is this a unique ID?
+          logger.info(s"Creating billing project: $billingProjectName")
 
-        val billingPage = new BillingManagementPage().open
-        val billingProjectName = "billing-spec-create-" + makeRandomId() // is this a unique ID?
-        logger.info(s"Creating billing project: $billingProjectName")
+          billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
 
-        billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
-        register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
-
-        val status = billingPage.waitForCreateCompleted(billingProjectName)
-        withClue(s"Creating billing project: $billingProjectName") { status shouldEqual "success" }
+          val status = billingPage.waitForCreateCompleted(billingProjectName)
+          withClue(s"Creating billing project: $billingProjectName") { status shouldEqual "success" }
+        }
       }
 
       "with a new billing project" - {

@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.summary.catalog.wizard
   (:require
    [dmohs.react :as react]
+   [clojure.set :as set]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.modal :as modal]
@@ -122,11 +123,13 @@
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
-        [:div {:style {:borderBottom style/standard-line
-                       :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+        (flex/box
+         {:style {:borderBottom style/standard-line
+                  :padding "20px 48px 18px"
+                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          "Catalog Dataset"
-         (buttons/x-button modal/pop-modal)]
+         flex/spring
+         (buttons/x-button modal/pop-modal))
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
@@ -146,7 +149,7 @@
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
-                                    :missing-properties (clojure.set/union invalid invalid-properties)
+                                    :missing-properties (set/union invalid invalid-properties)
                                     :attributes working-attributes}
                                    (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
@@ -214,7 +217,7 @@
            (let [[questions _] (library-utils/get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values all-attributes)
                                                                     questions required-attributes)]
-             (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
+             (reset! invalid-attributes (set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
          (after-update (fn [_]
                          (let [next-page (this :find-next-page)]

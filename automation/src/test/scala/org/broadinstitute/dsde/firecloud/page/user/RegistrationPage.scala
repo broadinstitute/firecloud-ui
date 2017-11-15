@@ -1,14 +1,15 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component.{Button, TextField}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.openqa.selenium.WebDriver
 
 /**
   * Page class for the registration page.
   * TODO: Refactor this for reuse with a profile edit page.
   */
-class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
+class RegistrationPage(implicit webDriver: WebDriver) extends AuthenticatedPage {
 
   override def awaitReady(): Unit = await text "User Info"
 

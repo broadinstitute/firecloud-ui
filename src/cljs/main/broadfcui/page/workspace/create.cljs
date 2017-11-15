@@ -87,7 +87,7 @@
        (swap! state assoc :validation-errors fails)
        (let [project (nth (:billing-projects props) (int (:selected-project @state)))
              name (input/get-text refs "wsName")
-             desc (common/get-text refs "wsDescription")
+             desc (common/get-trimmed-text refs "wsDescription")
              attributes (if (clojure.string/blank? desc) {} {:description desc})
              auth-domain {:authorizationDomain (map
                                                 (fn [group-name]
@@ -111,7 +111,7 @@
        (swap! state assoc :validation-errors fails)
        (let [name (input/get-text refs "wsName")
              project (nth (:billing-projects props) (int (:selected-project @state)))
-             desc (common/get-text refs "wsDescription")
+             desc (common/get-trimmed-text refs "wsDescription")
              attributes (if (or (:description props) (not (clojure.string/blank? desc)))
                           {:description desc}
                           {})

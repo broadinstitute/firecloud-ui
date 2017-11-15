@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
-import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -12,7 +13,7 @@ import scala.concurrent.duration.DurationLong
 /**
   * Page class for managing billing projects.
   */
-class BillingManagementPage(implicit webDriver: WebDriver) extends AuthenticatedPage
+class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   with Page with PageUtil[BillingManagementPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
