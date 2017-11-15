@@ -27,7 +27,7 @@ class SamApiSpec extends FreeSpec with Matchers {
 
   def findSaInGoogle(name: WorkbenchUserServiceAccountName): Option[WorkbenchUserServiceAccount] = {
     val find = googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name)
-    Await.result(find, 1.minute)
+    Await.result(find, 5.seconds)
   }
 
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {

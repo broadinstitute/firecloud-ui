@@ -18,11 +18,11 @@ case class ServiceAccountAuthToken(saId: WorkbenchUserServiceAccountEmail) exten
 
   // creates a new Google private key.  Be sure to call removePrivateKey() when you are done with it!
   private lazy val serviceAccountPrivateKey: WorkbenchUserServiceAccountKey = {
-    Await.result(googleIamDAO.createServiceAccountKey(GoogleProject(Config.Projects.default), saId), 1.minute)
+    Await.result(googleIamDAO.createServiceAccountKey(GoogleProject(Config.Projects.default), saId), 5.seconds)
   }
 
   def removePrivateKey(): Unit = {
-    Await.result(googleIamDAO.removeServiceAccountKey(GoogleProject(Config.Projects.default), saId, serviceAccountPrivateKey.id), 1.minute)
+    Await.result(googleIamDAO.removeServiceAccountKey(GoogleProject(Config.Projects.default), saId, serviceAccountPrivateKey.id), 5.seconds)
   }
 
   override protected def buildCredential(): GoogleCredential = {
