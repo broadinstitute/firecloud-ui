@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 import org.broadinstitute.dsde.firecloud.api.AclEntry
-import org.broadinstitute.dsde.firecloud.config.AuthToken
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.Suite
