@@ -423,7 +423,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
        withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-           //go directly to notebooks page
+           //go directly to notebooks page 
            val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
            notebooksTab.checkUnauthorized
          }
