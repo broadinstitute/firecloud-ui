@@ -46,12 +46,12 @@
 (defn- translate-research-purpose [research-purpose]
   (as-> research-purpose $
         (dissoc $ :ds)
-        (utils/map-keys {:methods "NDMS"
+        (utils/map-keys {:methods "NMDS"
                          :control "NCTRL"
                          :aggregates "NAGR"
                          :poa "POA"
                          :commercial "NCU"} $)
-        (merge {"NDMS" false
+        (merge {"NMDS" false
                 "NCTRL" false
                 "NAGR" false
                 "POA" false
