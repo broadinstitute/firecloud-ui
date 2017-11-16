@@ -7,7 +7,6 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.ontology-autosuggest :as ontology]
-   [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
    ))
@@ -121,10 +120,9 @@
 (defn- handle-differences [[related-id related-label]]
   (if (or (nil? related-id) (nil? related-label))
     ["" "" true]
-    [related-id related-label false]
-    ))
+    [related-id related-label false]))
 
-(defn- render-ontology-typeahead [{:keys [refs prop colorize value-nullsafe set-property state property library-schema disabled]}]
+(defn- render-ontology-typeahead [{:keys [refs prop value-nullsafe set-property state property library-schema disabled]}]
   (let [[related-id-prop related-label-prop] (library-utils/get-related-id+label-props library-schema property)
         [related-id related-label clear-fields] (handle-differences (library-utils/get-related-id+label (:attributes @state) library-schema property))
         clear (fn []
@@ -135,17 +133,18 @@
        [:div {}
         (ontology/render-multiple-ontology-selections
          {:on-delete (fn [{:keys [id label]}]
-                       (swap! state update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
-                       (swap! state update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label))
+                       (utils/multi-swap! state
+                         (update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
+                         (update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label)))
           :selection-map (library-utils/zip-comma-separated-strings related-id related-label)})
         (ontology/create-ontology-autosuggest
          {:on-suggestion-selected
           (fn [{:keys [id label]}]
             (if clear-fields
               (swap! state update :attributes assoc related-id-prop id related-label-prop label)
-              (do
-                (swap! state update-in [:attributes related-id-prop] library-utils/add-to-comma-separated-strings id)
-                (swap! state update-in [:attributes related-label-prop] library-utils/add-to-comma-separated-strings label))))
+              (utils/multi-swap! state
+                (update-in [:attributes related-id-prop] library-utils/add-to-comma-separated-strings id)
+                (update-in [:attributes related-label-prop] library-utils/add-to-comma-separated-strings label))))
           :selected-ids (library-utils/split-attributes related-id)})]
        [:div {}
         (ontology/create-ontology-autosuggest
