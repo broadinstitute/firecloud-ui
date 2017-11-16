@@ -14,9 +14,13 @@
    [broadfcui.page.workspace.data.tab :as data-tab]
    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
+   [broadfcui.page.workspace.notebooks.tab :as notebooks-tab]
    [broadfcui.page.workspace.summary.tab :as summary-tab]
    [broadfcui.utils :as utils]
    ))
+
+
+(defonce ^:private whitelisted-users (atom {}))
 
 
 (defn- protected-banner [workspace]
@@ -52,6 +56,7 @@
 (def ^:private ANALYSIS "Analysis")
 (def ^:private CONFIGS "Method Configurations")
 (def ^:private MONITOR "Monitor")
+(def ^:private NOTEBOOKS "Notebooks")
 
 (defn- process-workspace [raw-workspace]
   (let [attributes (get-in raw-workspace [:workspace :attributes])
@@ -79,7 +84,13 @@
            {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
            request-refresh #(this :-refresh-workspace)
-           refresh-tab #((@refs %) :refresh)]
+           refresh-tab #((@refs %) :refresh)
+           tabs [[SUMMARY :workspace-summary]
+                 [DATA :workspace-data]
+                 [ANALYSIS :workspace-analysis]
+                 (when (get @whitelisted-users (utils/get-user-email)) [NOTEBOOKS :workspace-notebooks])
+                 [CONFIGS :workspace-method-configs]
+                 [MONITOR :workspace-monitor]]]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
@@ -105,11 +116,7 @@
              :contents [notifications/WorkspaceComponent
                         (merge (select-keys props [:workspace-id])
                                {:close-self #((:infobox @locals) :close)})]})}]]
-        (tab-bar/create-bar (merge {:tabs [[SUMMARY :workspace-summary]
-                                           [DATA :workspace-data]
-                                           [ANALYSIS :workspace-analysis]
-                                           [CONFIGS :workspace-method-configs]
-                                           [MONITOR :workspace-monitor]]
+        (tab-bar/create-bar (merge {:tabs tabs
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
                                    (utils/restructure request-refresh refresh-tab)))
@@ -142,7 +149,11 @@
                         [monitor-tab/Page
                          (merge {:ref MONITOR}
                                 (utils/restructure workspace-id workspace)
-                                (select-keys props [:submission-id :workflow-id]))]))))]]))
+                                (select-keys props [:submission-id :workflow-id]))])
+               NOTEBOOKS (react/create-element
+                          [notebooks-tab/Page
+                           (merge {:ref NOTEBOOKS}
+                                  (utils/restructure workspace-id workspace))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
@@ -151,6 +162,12 @@
      (after-update this :-refresh-workspace))
    :-refresh-workspace
    (fn [{:keys [props state]}]
+     (when-not (contains? @whitelisted-users (utils/get-user-email))
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/get-clusters-list)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success?]}]
+                    (swap! whitelisted-users assoc (utils/get-user-email) success?))}))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [status-code success?]}]
@@ -234,4 +251,12 @@
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id :workflow-id workflow-id})
     :make-path (fn [workspace-id submission-id workflow-id]
-                 (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))}))
+                 (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))})
+   (nav/defpath
+   :workspace-notebooks
+   {:component WorkspaceDetails
+    :regex #"workspaces/([^/]+)/([^/]+)/notebooks"
+    :make-props (fn [namespace name]
+                  {:workspace-id (utils/restructure namespace name) :tab-name "Notebooks"})
+    :make-path (fn [workspace-id]
+                 (str (ws-path workspace-id) "/notebooks"))}))

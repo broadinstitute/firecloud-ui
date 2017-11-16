@@ -111,6 +111,11 @@
     (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain))
     (delete-access-token-cookie)))
 
+(defn set-notebooks-access-token-cookie [token]
+  (if token
+    (.set goog.net.cookies "FCtoken" token -1 "/" "broadinstitute.org")
+    (delete-access-token-cookie)))
+
 (defn refresh-access-token [] (set-access-token-cookie (get-access-token)))
 
 ;; TODO - make this unnecessary
@@ -196,6 +201,20 @@
   (let [on-done (:on-done arg-map)]
     (ajax (assoc arg-map
             :url (str (config/api-url-root) service-prefix path)
+            :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
+                            (:headers arg-map))
+            :on-done (fn [{:keys [status-code status-text] :as m}]
+                       (when (and (not @server-down?) (not @maintenance-mode?))
+                         (cond
+                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
+                           (check-server-down status-code) (reset! server-down? true)))
+                       (on-done m))))))
+
+(defn ajax-leo [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
+  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
+  (let [on-done (:on-done arg-map)]
+    (ajax (assoc arg-map
+            :url (str (config/leonardo-url-root) service-prefix path)
             :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]

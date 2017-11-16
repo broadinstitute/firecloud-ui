@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.ontology-autosuggest :as ontology]
@@ -109,6 +109,13 @@
                            :disabled disabled
                            :rows 3
                            :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
+
+(defn- render-markdown [{:keys [value-nullsafe set-property prop]}]
+  [:div {:style {:marginTop "0.5rem"}}
+   (style/create-textfield-hint (:inputHint prop))
+   [markdown/MarkdownEditor {:value value-nullsafe
+                             :on-change set-property
+                             :initial-slider-position 250}]])
 
 ;; Needed to handle DS labels before adding the DS_URL field
 (defn- handle-differences [[related-id related-label]]
@@ -288,6 +295,7 @@
               (cond enum (render-enum data)
                     (= type "boolean") (render-boolean data)
                     (= (:datatype renderHint) "freetext") (render-freetext data)
+                    (= (:datatype renderHint) "markdown") (render-markdown data)
                     (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
                     (= (:typeahead prop) "populate") (render-populate-typeahead data)
                     :else (render-textfield data))])))))})

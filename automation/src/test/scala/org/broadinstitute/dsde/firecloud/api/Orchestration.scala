@@ -2,7 +2,8 @@ package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.Method
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
@@ -10,7 +11,6 @@ import org.broadinstitute.dsde.firecloud.util.Util
 import org.broadinstitute.dsde.firecloud.util.Util.appendUnderscore
 
 import scala.concurrent.duration._
-
 
 trait Orchestration extends FireCloudClient with LazyLogging {
 
@@ -86,6 +86,10 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       deleteRequest(apiUrl(s"api/groups/$groupName/${role.toString}/$email"))
     }
   }
+
+  /*
+   *  Workspace requests
+   */
 
   object workspaces {
 
@@ -240,10 +244,32 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
   }
 
+  object profile {
+    // copied from firecloud-orchestration repo
+    case class BasicProfile (
+                              firstName: String,
+                              lastName: String,
+                              title: String,
+                              contactEmail: Option[String],
+                              institute: String,
+                              institutionalProgram: String,
+                              programLocationCity: String,
+                              programLocationState: String,
+                              programLocationCountry: String,
+                              pi: String,
+                              nonProfitStatus: String
+                            )
 
-  /*
-   *  Workspace requests
-   */
+
+    def registerUser(profile: BasicProfile)(implicit token: AuthToken): Unit = {
+      profile.contactEmail match {
+        case Some(email) => logger.info(s"Creating profile for user $email")
+        case _ => logger.info("Creating user profile")
+      }
+
+      postRequest(apiUrl(s"register/profile"), profile)
+    }
+  }
 
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
     logger.info(s"Importing metadata: $ns/$wsName $fileName")

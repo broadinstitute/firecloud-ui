@@ -40,6 +40,10 @@
   "temps": {
     "luna": "luna.temp@quality.firecloud.org",
     "neville": "neville.temp@quality.firecloud.org"
+  },
+  "notebookswhitelisted": {
+    "hermione": "hermione.owner@quality.firecloud.org",
+    "ron": "ron.weasley@quality.firecloud.org"
   }
 }
 {{else}}
@@ -68,6 +72,10 @@
   "temps": {
     "luna": "luna.temp@test.firecloud.org",
     "neville": "neville.temp@test.firecloud.org"
+  },
+  "notebookswhitelisted": {
+    "hermione": "hermione.owner@test.firecloud.org",
+    "ron": "ron.weasley@test.firecloud.org"
   }
 }
 {{end}}
