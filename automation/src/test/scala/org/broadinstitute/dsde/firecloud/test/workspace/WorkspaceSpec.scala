@@ -402,14 +402,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   }
 
    "Notebooks whitelist" - {
-     "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
+     "Members should be able to see and access the Notebooks tab" ignore withWebDriver { implicit driver =>
        val user = UserPool.chooseNotebooksWhitelisted
        implicit val authToken: AuthToken = user.makeAuthToken()
 
        withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
          withSignIn(user) { listPage =>
-           listPage.enterWorkspace(billingProject, workspaceName)
-           val detailPage = new WorkspaceNotebooksPage(billingProject, workspaceName).open
+           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
            Label("Notebooks-tab").awaitVisible()
            val notebooksTab = detailPage.goToNotebooksTab()
            notebooksTab.createClusterButtonEnabled() shouldBe true
@@ -417,7 +416,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
        }
      }
 
-     "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
+     "Non-members should NOT be able to access the Notebooks tab" ignore withWebDriver { implicit driver =>
        val user = UserPool.chooseCurator
        implicit val authToken: AuthToken = user.makeAuthToken()
 
@@ -425,11 +424,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
            //go directly to notebooks page
-           new WorkspaceNotebooksPage(billingProject, workspaceName).open
            val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
-            if (!notebooksTab.checkUnauthorized) {
-
-            }
+            notebooksTab.checkUnauthorized
          }
        }
      }
