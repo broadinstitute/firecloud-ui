@@ -3,11 +3,13 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.tab-bar :as tab-bar]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -105,8 +107,20 @@
               [comps/Spinner {:text "Loading method..."}]]
              (condp = active-tab
                WDL (react/create-element
-                    [WDLViewer
-                     {:ref WDL :wdl (:payload selected-snapshot)}])
+                    [:div {:style {}}
+                     [WDLViewer
+                      {:ref WDL :wdl (:payload selected-snapshot)}]
+                     [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
+                      "Import URL for this WDL: "
+                      (let [link (str (config/api-url-root)
+                                      "/ga4gh/v1/tools/"
+                                      (:namespace selected-snapshot)
+                                      ":"
+                                      (:name selected-snapshot)
+                                      "/versions/"
+                                      (:snapshotId selected-snapshot)
+                                      "/plain-WDL/descriptor")]
+                       (links/create-external {:href link} link))]])
                CONFIGS (react/create-element
                         [configs/Configs
                          (merge {:ref CONFIGS}
