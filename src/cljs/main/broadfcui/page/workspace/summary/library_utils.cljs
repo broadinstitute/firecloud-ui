@@ -75,7 +75,7 @@
 (defn validate-required [attributes questions required-attributes]
   (let [questions (reduce (fn [prev question]
                             (into prev
-                                  (if (map? question) (:items question) question)))
+                                  (if (map? question) (:items question) [question])))
                           []
                           questions)
         required-props (->> questions
