@@ -16,20 +16,12 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
   val userAuthToken: AuthToken = anyUser.makeAuthToken()
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
-  def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
-
-  def removePet(userInfo: UserStatusDetails): Unit = {
-    Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
-    // TODO: why is this necessary?  GAWB-2867
-    googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo)).futureValue
-  }
-
   def findSaInGoogle(name: WorkbenchUserServiceAccountName): Option[WorkbenchUserServiceAccount] = {
     googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name).futureValue
   }
 
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
-    findSaInGoogle(petName(userInfo))
+    findSaInGoogle(Sam.petName(userInfo))
   }
 
   "Sam" - {
@@ -41,7 +33,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
       // ensure known state for pet (not present)
 
-      removePet(userStatus.userInfo)
+      Sam.removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
 
       val petAccountEmail = Sam.user.petServiceAccountEmail()(userAuthToken)
@@ -63,7 +55,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       // clean up
 
       petAuthToken.removePrivateKey()
-      removePet(userStatus.userInfo)
+      Sam.removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
     }
 
