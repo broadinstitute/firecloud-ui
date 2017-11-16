@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.test
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.net.URL
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.UUID
 
@@ -14,6 +15,7 @@ import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDete
 import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.scalatest.Suite
 
+import scala.collection.JavaConverters._
 import scala.sys.SystemProperties
 import scala.util.Random
 
@@ -32,25 +34,48 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     * @param testCode the test code to run
     */
   def withWebDriver(testCode: (WebDriver) => Any): Unit = {
-    val headless = new SystemProperties().get("headless")
-    headless match {
-      case Some("false") => runLocalChrome(testCode)
-      case _ => runHeadless(testCode)
+    withWebDriver(System.getProperty("java.io.tmpdir"))(testCode)
+  }
+
+  /**
+    * Executes a test in a fixture with a managed WebDriver. A test that uses
+    * this will get its own WebDriver instance will be destroyed when the test
+    * is complete. This encourages test case isolation.
+    *
+    * @param downloadPath a directory where downloads should be saved
+    * @param testCode the test code to run
+    */
+  def withWebDriver(downloadPath: String)(testCode: (WebDriver) => Any): Unit = {
+    val headless = new SystemProperties().get("headless") match {
+      case Some("false") => false
+      case _ => true
+    }
+    val capabilities = getChromeIncognitoOption(downloadPath, headless)
+    if (headless) {
+      runHeadless(capabilities, testCode)
+    } else {
+      runLocalChrome(capabilities, testCode)
     }
   }
 
-  private def getChromeIncognitoOption: DesiredCapabilities = {
+  private def getChromeIncognitoOption(downloadPath: String, headless: Boolean): DesiredCapabilities = {
+    val fullDownloadPath = if (headless) s"/app/$downloadPath" else new File(downloadPath).getAbsolutePath
+    logger.info(s"Chrome download path: $fullDownloadPath")
     val options = new ChromeOptions
     options.addArguments("--incognito")
+    // Note that download.prompt_for_download will be ignored if download.default_directory is invalid or doesn't exist
+    options.setExperimentalOptions("prefs", Map(
+      "download.default_directory" -> fullDownloadPath,
+      "download.prompt_for_download" -> "false").asJava)
     val capabilities = DesiredCapabilities.chrome
     capabilities.setCapability(ChromeOptions.CAPABILITY, options)
     capabilities
   }
 
-  private def runLocalChrome(testCode: (WebDriver) => Any) = {
+  private def runLocalChrome(capabilities: DesiredCapabilities, testCode: (WebDriver) => Any): Unit = {
     val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
-    implicit val driver = new RemoteWebDriver(service.getUrl, getChromeIncognitoOption)
+    implicit val driver: RemoteWebDriver = new RemoteWebDriver(service.getUrl, capabilities)
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))
     driver.setFileDetector(new LocalFileDetector())
     try {
@@ -63,9 +88,9 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     }
   }
 
-  private def runHeadless(testCode: (WebDriver) => Any) = {
+  private def runHeadless(capabilities: DesiredCapabilities, testCode: (WebDriver) => Any): Unit = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), getChromeIncognitoOption)
+    implicit val driver: RemoteWebDriver = new RemoteWebDriver(new URL(defaultChrome), capabilities)
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))
     driver.setFileDetector(new LocalFileDetector())
     try {

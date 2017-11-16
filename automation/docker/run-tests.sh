@@ -84,6 +84,14 @@ if [ $? -ne 0 ]; then
   exit -1
 fi
 
+# Make sure ${WORKING_DIR}/chrome/downloads exists and make it writable by the node-chrome containers.
+mkdir -p $WORKING_DIR/chrome/downloads
+# Without this, the directory permissions don't allow chrome to automatically save downloads which
+# leads to a system save dialog opening which Selenium doesn't have any way of handling.
+echo '--- Begin ugly but necessary python error that looks bad but actually does something useful ---'
+docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/chrome/downloads
+echo '--- End ugly but necessary python error ---'
+
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
@@ -100,6 +108,7 @@ docker run -e FC_INSTANCE=$FC_INSTANCE \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/target/users.json:/app/src/test/resources/users.json \
+    -v $WORKING_DIR/chrome/downloads:/app/chrome/downloads \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v $WORKING_DIR/output:/app/output \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \

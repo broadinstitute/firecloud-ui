@@ -2,23 +2,46 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import java.io.{File, PrintWriter}
+import java.nio.file.attribute.PosixFilePermission
+import java.nio.file.{Files, Paths}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.firecloud.fixture._
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, ParallelTestExecution, ShouldMatchers}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
+import org.openqa.selenium.WebDriver
+import org.scalatest.selenium.WebBrowser
+import org.scalatest.{FreeSpec, ShouldMatchers}
+
+import scala.collection.JavaConverters._
+import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
 
-  val billingProject = Config.Projects.default
+  private def makeTempDownloadDirectory(): String = {
+    /*
+     * This might work some day if docker permissions get straightened out... or it might not be
+     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
+    new File("chrome").mkdirs()
+    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
+    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
+    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
+    downloadPath.toString
+     */
+    val downloadPath = "chrome/downloads"
+    new File(downloadPath).mkdirs()
+    downloadPath
+  }
+
+  private val downloadPath = makeTempDownloadDirectory()
+  private val billingProject = Config.Projects.default
 //  val owner: Credentials = UserPool.chooseProjectOwner
 //  val reader: Credentials = UserPool.chooseStudent
 //  implicit lazy val authToken: AuthToken = owner.makeAuthToken()
@@ -41,7 +64,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 
-  def makeTempMetadataFile(filePrefix: String, headers: List[String], rows: List[List[String]]): File = {
+  def makeMetadataFile(filePrefix: String, headers: List[String], rows: List[List[String]]): File = {
     val metadataFile = File.createTempFile(filePrefix, "txt")
     val writer = new PrintWriter(metadataFile)
     val rowStrings = rows map { _.mkString(s"\t") }
@@ -51,18 +74,22 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     metadataFile
   }
 
-  def createAndImportMetadataFile(fileName: String, headers: List[String], dataTab: WorkspaceDataPage): Unit = {
+  def createAndImportMetadataFile(headers: List[String], dataTab: WorkspaceDataPage): Unit = {
+    val file: File = generateMetadataFile(headers)
+    dataTab.importFile(file.getAbsolutePath)
+  }
+
+  private def generateMetadataFile(headers: List[String]) = {
     val data = for {
       h <- headers
-    }yield {
+    } yield {
       if (h == "participant_id") {
         "participant1"
       } else {
         h.takeRight(1)
       }
     }
-    val file = makeTempMetadataFile(fileName, headers, List(data))
-    dataTab.importFile(file.getAbsolutePath)
+    makeMetadataFile("DataSpec_column_display", headers, List(data))
   }
 
   "Writer and reader should see new columns" - {
@@ -217,9 +244,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         val headers2 = headers1 :+ "test2"
         withSignIn(owner) { _ =>
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
+          createAndImportMetadataFile(headers1, workspaceDataTab)
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
-          createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+          createAndImportMetadataFile(headers2, workspaceDataTab)
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2
         }
         withSignIn(reader) { _ =>
@@ -240,7 +267,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
         withSignIn(owner) { _ =>
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
+          createAndImportMetadataFile(headers1, workspaceDataTab)
           workspaceDataTab.dataTable.hideColumn("test1")
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2")
         }
@@ -252,7 +279,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         }
         withSignIn(owner) { _ =>
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+          createAndImportMetadataFile(headers2, workspaceDataTab)
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
         }
         withSignIn(reader) { _ =>
@@ -278,7 +305,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
               workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}")
             }
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-            createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
+            createAndImportMetadataFile(headers1, workspaceDataTab)
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
           }
           withSignIn(reader) { _ =>
@@ -287,7 +314,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           }
           withSignIn(owner) { _ =>
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-            createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+            createAndImportMetadataFile(headers2, workspaceDataTab)
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
           }
           withSignIn(reader) { _ =>
@@ -312,7 +339,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
             workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
           }
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          createAndImportMetadataFile("DataSpec_column_display", headers1, workspaceDataTab)
+          createAndImportMetadataFile(headers1, workspaceDataTab)
           workspaceDataTab.dataTable.hideColumn("test1")
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4")
         }
@@ -323,7 +350,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         }
         withSignIn(owner) { _ =>
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          createAndImportMetadataFile("DataSpec_column_display2", headers2, workspaceDataTab)
+          createAndImportMetadataFile(headers2, workspaceDataTab)
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
         }
         withSignIn(reader) { _ =>
@@ -332,5 +359,145 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         }
       }
     }
+  }
+
+  "Download should reflect visible columns" - {
+    "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo"),
+        expectedColumns = List("participant_id", "foo"))
+    }
+
+    "no workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo"),
+        userHidden = Some("foo"),
+        expectedColumns = List("participant_id"))
+    }
+
+    "no workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo"),
+        userHidden = Some("foo"),
+        importColumns = Some(List("participant_id", "foo", "bar")),
+        expectedColumns = List("participant_id", "bar"))
+    }
+
+    "with workspace defaults, no user preferences" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo", "bar"),
+        defaultShown = Some(List("participant_id", "foo")),
+        defaultHidden = Some(List("bar")),
+        expectedColumns = List("participant_id", "foo"))
+    }
+
+    "with workspace defaults, no user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo", "bar"),
+        defaultShown = Some(List("participant_id", "foo")),
+        defaultHidden = Some(List("bar")),
+        importColumns = Some(List("participant_id", "foo", "bar", "baz")),
+        expectedColumns = List("participant_id", "foo", "baz"))
+    }
+
+    "with workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo", "bar"),
+        defaultShown = Some(List("participant_id", "foo")),
+        defaultHidden = Some(List("bar")),
+        userHidden = Some("foo"),
+        expectedColumns = List("participant_id"))
+    }
+
+    "with workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+      testMetadataDownload(
+        initialColumns = List("participant_id", "foo", "bar"),
+        defaultShown = Some(List("participant_id", "foo")),
+        defaultHidden = Some(List("bar")),
+        userHidden = Some("foo"),
+        importColumns = Some(List("participant_id", "foo", "bar", "baz")),
+        expectedColumns = List("participant_id", "baz"))
+    }
+
+    "keep ID column in download even if hidden in UI" in withWebDriver(downloadPath) { implicit driver =>
+      val user = UserPool.chooseAnyUser
+      implicit val authToken: AuthToken = user.makeAuthToken()
+      withWorkspace(billingProject, "DataSpec_download") { workspaceName =>
+        withSignIn(user) { _ =>
+          val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+          val columns = List("participant_id", "foo")
+          dataTab.importFile(generateMetadataFile(columns))
+          dataTab.dataTable.hideColumn("participant_id")
+          val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+          readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns)
+        }
+      }
+    }
+  }
+
+  private def testMetadataDownload(initialColumns: List[String],
+                                   defaultShown: Option[List[String]] = None,
+                                   defaultHidden: Option[List[String]] = None,
+                                   userHidden: Option[String] = None,
+                                   importColumns: Option[List[String]] = None,
+                                   expectedColumns: List[String])
+                                  (implicit webDriver: WebDriver): Unit = {
+    val owner = UserPool.chooseProjectOwner
+    val writer = UserPool.chooseStudent
+    implicit val authToken: AuthToken = owner.makeAuthToken()
+
+    withWorkspace(billingProject, "DataSpec_download", aclEntries = List(AclEntry(writer.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
+      withSignIn(owner) { _ =>
+        (defaultShown, defaultHidden) match {
+          case (None, None) => Unit
+          case (_, _) => setColumnDefaults(workspaceName, defaultShown.getOrElse(List()), defaultHidden.getOrElse(List()))
+        }
+
+        val dataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        dataTab.importFile(generateMetadataFile(initialColumns))
+        userHidden.foreach(dataTab.dataTable.hideColumn)
+      }
+
+      withSignIn(writer) { _ =>
+        val dataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        userHidden.foreach(dataTab.dataTable.hideColumn)
+
+        importColumns foreach { l => dataTab.importFile(generateMetadataFile(l)) }
+
+        dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns
+        val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+        readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns)
+      }
+
+      withSignIn(owner) { _ =>
+        val dataTab = new WorkspaceDataPage(Config.Projects.default, workspaceName).open
+        dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns
+        val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+        readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns)
+      }
+    }
+  }
+
+  def setColumnDefaults(workspaceName: String, shown: List[String], hidden: List[String])
+                       (implicit webDriver: WebDriver): Unit = {
+    val workspaceSummaryTab = new WorkspaceSummaryPage(Config.Projects.default, workspaceName).open
+    workspaceSummaryTab.edit {
+      workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", buildColumnDefaults)
+    }
+
+    def buildColumnDefaults: String = {
+      def join(columns: List[String]) = columns match {
+        case List() => ""
+        case l => "\"" + s"${columns.mkString("\", \"")}" + "\""
+      }
+      s"""{"participant": {"shown": [${join(shown)}], "hidden": [${join(hidden)}]}}"""
+    }
+  }
+  def readHeadersFromTSV(fileName: String): List[String] = {
+    Source.fromFile(fileName).getLines().next().split('\t').toList
+  }
+
+  def columnsToFileHeaders(columns: List[String]): List[String] = {
+    List("entity:" + columns.head) ++ columns.tail
   }
 }

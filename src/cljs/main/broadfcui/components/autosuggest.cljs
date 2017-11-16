@@ -24,11 +24,15 @@
   :on-change (optional)
   :on-submit (optional) - fires when hitting return or clear button
 
+  :remove-selected (optional) - list of suggestions to filter out (typically
+    ones that have already been selected for a multi-select)
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
   :value (required when not caching)
 
-  Other props to pass through to input element go in :inputProps."
+  Other props to pass through to input element go in :inputProps.
+
+  :set-value is exposed publicly, for use when caching."
   {:component-will-mount
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
@@ -42,7 +46,7 @@
               :on-submit (when on-submit wrapped-on-submit))))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:value (:default-value props)})
+     {:value ((if (:caching? props) :value :default-value) props)})
    :render
    (fn [{:keys [state props locals]}]
      (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
@@ -58,7 +62,9 @@
                                                 (swap! state assoc :suggestions
                                                        (if success?
                                                          ; don't bother keywordizing, it's just going to be converted to js
-                                                         (get-parsed-response false)
+                                                         (filterv
+                                                          (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
+                                                          (get-parsed-response false))
                                                          [:error])))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
@@ -143,4 +149,7 @@
    :component-will-unmount
    (fn [{:keys [locals this]}]
      (when-let [on-clear (:on-clear @locals)]
-       (.removeEventListener (react/find-dom-node this) "search" on-clear)))})
+       (.removeEventListener (react/find-dom-node this) "search" on-clear)))
+   :set-value
+   (fn [{:keys [state]} value]
+     (swap! state assoc :value value))})

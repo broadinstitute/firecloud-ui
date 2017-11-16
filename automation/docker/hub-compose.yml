@@ -22,6 +22,11 @@ services:
       - hub
     ports:
       - 5555
+      # Port 5900 is for VNC
+      # Change image to selenium/node-chrome-debug
+      # Then connect to the result of running: `docker port docker_chrome_1 5900`
+      # On OS X you can use the Screen Sharing app
+      - 5900
     environment:
       HUB_PORT_4444_TCP_ADDR: hub
       HUB_PORT_4444_TCP_PORT: 4444
@@ -32,6 +37,7 @@ services:
       options:
         syslog-address: udp://localhost:515/
     volumes:
+      - $WORKING_DIR/target:/app/target
       # Prevent page crash: https://github.com/elgalu/docker-selenium/issues/20
       - /dev/shm:/dev/shm
 
