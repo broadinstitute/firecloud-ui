@@ -180,10 +180,9 @@
         auth-domain (:authorizationDomain workspace)
         domain-groups (map :membersGroupName auth-domain)]
     ;; GAWB-2872
-    (let [namespace (:namespace workspace-id)
-          name (:name workspace-id)]
-      (assert (some? namespace) (str "Cannot list workspace because it has no namespace." (if (some? name) (str " Name is \"" name "\"."))))
-      (assert (some? name) (str "Cannot list workspace because it has no name." (if (some? namespace) (str " Namespace is \"" namespace "\".")))))
+    (let [{:keys [namespace name]} workspace-id]
+      (assert namespace (str "Cannot list workspace because it has no namespace." (when name (str " Name is \"" name "\"."))))
+      (assert name (str "Cannot list workspace because it has no name." (when namespace (str " Namespace is \"" namespace "\".")))))
     (assoc ws
       :workspace-id workspace-id
       :workspace-column-sort-value (mapv string/lower-case (replace workspace-id [:namespace :name]))
