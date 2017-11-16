@@ -421,7 +421,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
     "keep ID column in download even if hidden in UI" in withWebDriver(downloadPath) { implicit driver =>
       val user = UserPool.chooseAnyUser
-      implicit val authToken: AuthToken = AuthToken(user)
+      implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "DataSpec_download") { workspaceName =>
         withSignIn(user) { _ =>
           val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -444,7 +444,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
                                   (implicit webDriver: WebDriver): Unit = {
     val owner = UserPool.chooseProjectOwner
     val writer = UserPool.chooseStudent
-    implicit val authToken: AuthToken = AuthToken(owner)
+    implicit val authToken: AuthToken = owner.makeAuthToken()
 
     withWorkspace(billingProject, "DataSpec_download", aclEntries = List(AclEntry(writer.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
       withSignIn(owner) { _ =>
