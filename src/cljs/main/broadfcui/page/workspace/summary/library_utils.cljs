@@ -1,15 +1,38 @@
 (ns broadfcui.page.workspace.summary.library-utils
   (:require
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
    ))
 
+(def ^:private ATTRIBUTE_SEPARATOR ", ")
+
 (defn unpack-attribute-list [value]
   (if (map? value)
-    (clojure.string/join ", " (:items value))
+    (string/join ATTRIBUTE_SEPARATOR (:items value))
     value))
 
+(defn- split-attributes [values]
+  (string/split values (re-pattern ATTRIBUTE_SEPARATOR)))
+
+(defn- zip-comma-separated-strings [keys values]
+  (if (string/blank? keys)
+    {}
+    (let [split-keys (split-attributes keys)
+          split-values (split-attributes values)]
+      (zipmap split-keys split-values))))
+
+(defn- remove-from-comma-separated-strings [value-string item]
+  (if (string/blank? value-string)
+    value-string
+    (let [values (split-attributes value-string)]
+      (string/join ATTRIBUTE_SEPARATOR (utils/delete values (utils/index-of values item))))))
+
+(defn- add-to-comma-separated-strings [value-string item]
+  (if (string/blank? value-string)
+    item
+    (str value-string ATTRIBUTE_SEPARATOR item)))
 
 (defn get-related-id+label-props [library-schema property]
   (map #(keyword (get-in library-schema [:properties property %]))
@@ -65,8 +88,8 @@
        :invalid missing-props})))
 
 (defn render-value [value]
-  (cond (sequential? value) (clojure.string/join ", " value)
-        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
+  (cond (sequential? value) (string/join ", " value)
+        (common/attribute-list? value) (string/join ", " (common/attribute-values value))
         (true? value) "Yes"
         (false? value) "No"
         :else value))

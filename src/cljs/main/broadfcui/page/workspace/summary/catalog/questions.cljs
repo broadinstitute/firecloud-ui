@@ -6,6 +6,8 @@
    [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
+   [broadfcui.components.ontology-autosuggest :as ontology]
+   [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
    ))
@@ -115,49 +117,59 @@
                              :on-change set-property
                              :initial-slider-position 250}]])
 
-(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe set-property state property library-schema disabled]}]
-  (let [clear #(apply swap! state update :attributes dissoc property
-                      (library-utils/get-related-id+label-props library-schema property))]
-    [:div {:style {:marginBottom "0.75em"}}
-     [Autosuggest
-      {:value value-nullsafe
-       :inputProps {:placeholder (:inputHint prop)
-                    :data-test-id property
-                    :disabled disabled}
-       :url "/autocomplete/"
-       :service-prefix "/duos"
-       :get-value #(.-label %)
-       :renderSuggestion (fn [suggestion]
-                           (react/create-element
-                            [:div {}
-                             [:div {:style {:lineHeight "1.5em"}}
-                              (.-label suggestion)
-                              [:small {:style {:float "right"}} (.-id suggestion)]]
-                             [:small {:style {:fontStyle "italic"}}
-                              (.-definition suggestion)]
-                             [:div {:style {:clear "both"}}]]))
-       :highlightFirstSuggestion false
-       :onSuggestionSelected (fn [_ suggestion]
-                               (let [suggestion (js->clj (.-suggestion suggestion) :keywordize-keys true)
-                                     {:keys [id label]} suggestion
-                                     [related-id-prop related-label-prop] (map (comp keyword #(% prop)) [:relatedID :relatedLabel])]
-                                 (swap! state update :attributes assoc
-                                        related-id-prop id
-                                        related-label-prop label)))
-       :on-change set-property
-       :on-submit #(when (empty? %) (clear))
-       :theme {:input (colorize {:width "100%" :marginBottom 0})
-               :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]
+;; Needed to handle DS labels before adding the DS_URL field
+(defn- handle-differences [[related-id related-label]]
+  (if (or (nil? related-id) (nil? related-label))
+    ["" "" true]
+    [related-id related-label false]
+    ))
 
-     (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-       (when (not-any? clojure.string/blank? [related-id related-label])
-         [:div {}
-          [:span {:style {:fontWeight "bold"}} related-label]
-          [:span {:style {:fontSize "small" :float "right"}} related-id]
+(defn- render-ontology-typeahead [{:keys [refs prop colorize value-nullsafe set-property state property library-schema disabled]}]
+  (let [[related-id-prop related-label-prop] (library-utils/get-related-id+label-props library-schema property)
+        [related-id related-label clear-fields] (handle-differences (library-utils/get-related-id+label (:attributes @state) library-schema property))
+        clear (fn []
+                (apply swap! state update :attributes dissoc property [related-id-prop related-label-prop])
+                ((@refs (name property)) :set-value ""))]
+    [:div {:style {:marginBottom "0.75em"}}
+     (if (= (:type prop) "array")
+       [:div {}
+        (ontology/render-multiple-ontology-selections
+         {:on-delete (fn [{:keys [id label]}]
+                       (swap! state update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
+                       (swap! state update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label))
+          :selection-map (library-utils/zip-comma-separated-strings related-id related-label)})
+        (ontology/create-ontology-autosuggest
+         {:on-suggestion-selected
+          (fn [{:keys [id label]}]
+            (if clear-fields
+              (swap! state update :attributes assoc related-id-prop id related-label-prop label)
+              (do
+                (swap! state update-in [:attributes related-id-prop] library-utils/add-to-comma-separated-strings id)
+                (swap! state update-in [:attributes related-label-prop] library-utils/add-to-comma-separated-strings label))))
+          :selected-ids (library-utils/split-attributes related-id)})]
+       [:div {}
+        (ontology/create-ontology-autosuggest
+         {:ref (name property)
+          :value value-nullsafe
+          :on-suggestion-selected
+          (fn [{:keys [id label]}]
+            (swap! state update :attributes assoc
+                   related-id-prop id
+                   related-label-prop label))
+          :input-props {:placeholder (:inputHint prop)
+                        :data-test-id property
+                        :disabled disabled}
+          :on-change set-property
+          :on-submit #(when (empty? %) (clear))})
+
+        (when (not-any? string/blank? [related-id related-label])
           [:div {}
-           (when-not disabled
-             (links/create-internal {:onClick clear}
-                                    "Clear Selection"))]]))]))
+           [:span {:style {:fontWeight "bold"}} related-label]
+           [:span {:style {:fontSize "small" :float "right"}} related-id]
+           [:div {}
+            (when-not disabled
+              (links/create-internal {:onClick clear}
+                                     "Clear Selection"))]])])]))
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
@@ -229,7 +241,7 @@
          #(this :-render-question %)
          questions)]))
    :-render-question
-   (fn [{:keys [props state this]} property & [nested?]]
+   (fn [{:keys [props refs state this]} property & [nested?]]
      (let [{:keys [library-schema missing-properties required-attributes enumerate editable?]} props
            {:keys [attributes invalid-properties]} @state]
        (if (map? property)
@@ -259,7 +271,7 @@
                error? (or (contains? invalid-properties property) (contains? missing-properties property))
                colorize #(merge % (when error? {:borderColor (:state-exception style/colors)
                                                 :color (:state-exception style/colors)}))
-               data (merge (utils/restructure prop state property library-schema colorize current-value)
+               data (merge (utils/restructure prop refs state property library-schema colorize current-value)
                            {:value-nullsafe (or current-value "") ;; avoids warning for nil value
                             :required? (contains? required-attributes property)
                             :update-property #(swap! state update :attributes assoc property (.. % -target -value))
