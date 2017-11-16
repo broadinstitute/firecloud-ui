@@ -112,7 +112,7 @@
 
 ;; Needed to handle DS labels before adding the DS_URL field
 (defn- handle-differences [[related-id related-label]]
-  (if (nil? related-id)
+  (if (or (nil? related-id) (nil? related-label))
     ["" "" true]
     [related-id related-label false]
     ))
@@ -127,17 +127,15 @@
      (if (= (:type prop) "array")
        [:div {}
         (ontology/render-multiple-ontology-selections
-         {:onClick (fn [id label]
-                     (swap! state update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
-                     (swap! state update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label))
+         {:on-delete (fn [{:keys [id label]}]
+                       (swap! state update-in [:attributes related-id-prop] library-utils/remove-from-comma-separated-strings id)
+                       (swap! state update-in [:attributes related-label-prop] library-utils/remove-from-comma-separated-strings label))
           :selection-map (library-utils/zip-comma-separated-strings related-id related-label)})
         (ontology/create-ontology-autosuggest
          {:on-suggestion-selected
           (fn [{:keys [id label]}]
             (if clear-fields
-              (do
-                (swap! state update :attributes assoc related-id-prop id)
-                (swap! state update :attributes assoc related-label-prop label))
+              (swap! state update :attributes assoc related-id-prop id related-label-prop label)
               (do
                 (swap! state update-in [:attributes related-id-prop] library-utils/add-to-comma-separated-strings id)
                 (swap! state update-in [:attributes related-label-prop] library-utils/add-to-comma-separated-strings label))))

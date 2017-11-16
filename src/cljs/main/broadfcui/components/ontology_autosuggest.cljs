@@ -17,7 +17,7 @@
       (string/replace-all #"_" ":")))
 
 
-(defn render-multiple-ontology-selections [{:keys [onClick selection-map]}]
+(defn render-multiple-ontology-selections [{:keys [on-delete selection-map]}]
   (map (fn [[id label]]
          (flex/box
           {:style {:margin "0.3rem 0" :alignItems "center"}}
@@ -25,40 +25,39 @@
           [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
           flex/spring
           (links/create-internal
-           {:onClick #(onClick id label)}
+           {:onClick #(on-delete (utils/restructure id label))}
            (icons/render-icon {:className "fa-lg"
                                :style {:color (:text-light style/colors)}}
                               :remove))))
        selection-map))
 
 
-(defn create-ontology-autosuggest [props]
-  (let [{:keys [ref render-suggestion on-suggestion-selected selected-ids on-change on-submit value input-props]} props
-        render-suggestion (or render-suggestion
-                              (fn [{:keys [label id definition]}]
-                                (react/create-element
-                                 [:div {}
-                                  [:div {:style {:lineHeight "1.5em"}}
-                                   label
-                                   [:small {:style {:float "right"}} id]]
-                                  [:small {:style {:fontStyle "italic"}}
-                                   definition]
-                                  [:div {:style {:clear "both"}}]])))]
-    [Autosuggest
-     {:ref ref
-      :value value
-      :inputProps (or input-props {})
-      :url "/autocomplete/"
-      :service-prefix "/duos"
-      :caching? true
-      :remove-selected selected-ids
-      :get-value #(.-label %)
-      :renderSuggestion (fn [suggestion]
-                          (render-suggestion (js->clj suggestion :keywordize-keys true)))
-      :highlightFirstSuggestion false
-      :onSuggestionSelected (fn [_ suggestion]
-                              (on-suggestion-selected (js->clj (.-suggestion suggestion) :keywordize-keys true)))
-      :on-change on-change
-      :on-submit on-submit
-      :theme {:input {:width "100%" :marginBottom 0}
-              :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}]))
+(defn create-ontology-autosuggest [{:keys [ref render-suggestion on-suggestion-selected selected-ids on-change on-submit value input-props]}]
+  [Autosuggest
+   {:ref ref
+    :value value
+    :inputProps (or input-props {})
+    :url "/autocomplete/"
+    :service-prefix "/duos"
+    :caching? true
+    :remove-selected selected-ids
+    :get-value #(.-label %)
+    :renderSuggestion (fn [suggestion]
+                        ((or render-suggestion
+                             (fn [{:keys [label id definition]}]
+                               (react/create-element
+                                [:div {}
+                                 [:div {:style {:lineHeight "1.5em"}}
+                                  label
+                                  [:small {:style {:float "right"}} id]]
+                                 [:small {:style {:fontStyle "italic"}}
+                                  definition]
+                                 [:div {:style {:clear "both"}}]])))
+                         (js->clj suggestion :keywordize-keys true)))
+    :highlightFirstSuggestion false
+    :onSuggestionSelected (fn [_ suggestion]
+                            (on-suggestion-selected (js->clj (.-suggestion suggestion) :keywordize-keys true)))
+    :on-change on-change
+    :on-submit on-submit
+    :theme {:input {:width "100%" :marginBottom 0}
+            :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}])

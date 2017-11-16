@@ -60,7 +60,7 @@
       (when (:disease-checked? @state)
         [:div {:style {:paddingLeft "1.5rem"}}
          (ontology/render-multiple-ontology-selections
-          {:onClick (fn [id label]  (swap! state update :selected-diseases dissoc id))
+          {:on-delete (fn [{:keys [id]}] (swap! state update :selected-diseases dissoc id))
            :selection-map (:selected-diseases @state)})
          (ontology/create-ontology-autosuggest
           {:on-suggestion-selected

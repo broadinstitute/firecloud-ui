@@ -10,7 +10,7 @@
 
 (defn unpack-attribute-list [value]
   (if (map? value)
-    (clojure.string/join ATTRIBUTE_SEPARATOR (:items value))
+    (string/join ATTRIBUTE_SEPARATOR (:items value))
     value))
 
 (defn- split-attributes [values]
@@ -88,8 +88,8 @@
        :invalid missing-props})))
 
 (defn render-value [value]
-  (cond (sequential? value) (clojure.string/join ", " value)
-        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
+  (cond (sequential? value) (string/join ", " value)
+        (common/attribute-list? value) (string/join ", " (common/attribute-values value))
         (true? value) "Yes"
         (false? value) "No"
         :else value))
