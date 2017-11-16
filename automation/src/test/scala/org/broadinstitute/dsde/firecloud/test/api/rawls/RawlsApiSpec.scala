@@ -25,8 +25,8 @@ class RawlsApiSpec extends FreeSpec with Matchers {
   val defaultProject:String = Config.Projects.default
 
   def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
-    val petName = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
-    val find = googleIamDAO.findServiceAccount(GoogleProject(defaultProject), petName)
+
+    val find = googleIamDAO.findServiceAccount(GoogleProject(defaultProject), Sam.petName(userInfo))
     Await.result(find, 1.minute)
   }
 
@@ -38,38 +38,36 @@ class RawlsApiSpec extends FreeSpec with Matchers {
       val workspaceNameA = "rawls_test_User_A_Workspace" + uuid
       val workspaceNameB = "rawls_test_User_B_Workspace" + uuid
 
-      //Createw workspace for User A and User B
+      //Create workspace for User A and User B
       Rawls.workspaces.create(defaultProject, workspaceNameA)(userAAuthToken)
       Rawls.workspaces.create(defaultProject, workspaceNameB)(userBAuthToken)
 
-      //
+      //Remove the pet SA for a clean test environment
       val userAStatus = Sam.user.status()(userAAuthToken)
-      Sam.admin.deletePetServiceAccount(userAStatus.userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
-      //TODO: This should be handled as part of the sam call
-      Sam.admin.removePet(userAStatus.userInfo)
+      Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
-      //Validate pet SA exists
+      //Validate that the pet SA has been created
       val petAccountEmail = Sam.user.petServiceAccountEmail()(userAAuthToken)
       petAccountEmail.value should not be userAStatus.userInfo.userEmail
       findPetInGoogle(userAStatus.userInfo).map(_.email) shouldBe Some(petAccountEmail)
-
-      Sam.user.petServiceAccountEmail()(userAAuthToken) shouldBe petAccountEmail
 
       val petAuthToken = ServiceAccountAuthToken(petAccountEmail)
 
       //TODO: Deserialize the json instead of checking for substring
       val petWorkspace = Rawls.workspaces.list()(petAuthToken)
       petWorkspace should include (workspaceNameA)
+      petWorkspace should not include (workspaceNameB)
 
       val userAWorkspace = Rawls.workspaces.list()(userAAuthToken)
       userAWorkspace should include (workspaceNameA)
+      userAWorkspace should not include (workspaceNameB)
 
       val userBWorkspace = Rawls.workspaces.list()(userBAuthToken)
       userBWorkspace should include (workspaceNameB)
 
       petAuthToken.removePrivateKey()
-      Sam.admin.deletePetServiceAccount(userAStatus.userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+      Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
       Rawls.workspaces.delete(defaultProject,workspaceNameA)(userAAuthToken)

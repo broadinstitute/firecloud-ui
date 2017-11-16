@@ -7,8 +7,8 @@ import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
 import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccountName
-import scala.concurrent.duration._
-import scala.concurrent.Await
+import org.scalatest.time.{Seconds, Span}
+import org.scalatest.concurrent.ScalaFutures
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccountEmail
@@ -18,9 +18,19 @@ import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccountEmail
   * not provide a required endpoint. This should primarily be used for admin
   * functions.
   */
-object Sam extends FireCloudClient with LazyLogging {
+object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
 
   private val url = Config.FireCloud.samApiUrl
+
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
+
+  def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
+
+  def removePet(userInfo: UserStatusDetails): Unit = {
+    Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
+    // TODO: why is this necessary?  GAWB-2867
+    googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo)).futureValue
+  }
 
   object admin {
 
@@ -40,14 +50,6 @@ object Sam extends FireCloudClient with LazyLogging {
     def deletePetServiceAccount(userSubjectId: String)(implicit token: AuthToken): Unit = {
       logger.info(s"Deleting pet service account for user $userSubjectId")
       deleteRequest(url + s"api/admin/user/$userSubjectId/petServiceAccount")
-    }
-
-    def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
-
-    def removePet(userInfo: UserStatusDetails): Unit = {
-      Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
-      val remove = googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo))
-      Await.result(remove, 5.seconds)
     }
   }
 
