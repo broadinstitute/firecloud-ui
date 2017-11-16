@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
@@ -42,7 +43,7 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       new SignInPage(Config.FireCloud.baseUrl).open
-      executeScript(s"window.forceSignedIn('${AuthToken(user).value}')")
+      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
     }, page, testCode)
   }
 

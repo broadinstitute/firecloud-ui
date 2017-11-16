@@ -56,7 +56,7 @@
   {:test (comp not empty?) :message (str field-name " cannot be empty")})
 
 (defn integer [field-name & {:keys [min max]}]
-  (let [parses (partial re-matches #"\-?[0-9]+")
+  (let [parses (partial re-matches #"\-?[0-9]*")
         in-range #(<= (or min js/-Infinity) (int %) (or max js/Infinity))]
     {:test (every-pred parses in-range)
      :message (str field-name " must be an integer"

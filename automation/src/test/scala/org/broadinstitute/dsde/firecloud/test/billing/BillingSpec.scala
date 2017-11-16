@@ -4,7 +4,8 @@ import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Rawls
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, UserPool, Config}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig, TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
@@ -22,14 +23,14 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     "with a billing account" - {
       "should be able to create a billing project" in withWebDriver { implicit driver =>
         val userOwner = UserPool.chooseProjectOwner
-        implicit val authToken: AuthToken = AuthToken(userOwner)
+        implicit val authToken: AuthToken = userOwner.makeAuthToken()
         withSignIn(userOwner) { _ =>
           val billingPage = new BillingManagementPage().open
           val billingProjectName = "billing-spec-create-" + makeRandomId() // is this a unique ID?
           logger.info(s"Creating billing project: $billingProjectName")
 
           billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
 
           val status = billingPage.waitForCreateCompleted(billingProjectName)
           withClue(s"Creating billing project: $billingProjectName") { status shouldEqual "success" }
@@ -40,13 +41,13 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
         "should be able to add a user to the billing project" in withWebDriver { implicit driver =>
           val ownerUser = UserPool.chooseProjectOwner
-          implicit val authToken: AuthToken = AuthToken(ownerUser)
+          implicit val authToken: AuthToken = ownerUser.makeAuthToken()
           val secondUser = UserPool.chooseStudent.email
 
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-add-user-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           withSignIn(ownerUser) { _ =>
@@ -63,12 +64,12 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
         "should be able to create a workspace in the billing project" in withWebDriver { implicit driver =>
           // Create new billing project
           val user = UserPool.chooseProjectOwner
-          implicit val authToken: AuthToken = AuthToken(user)
+          implicit val authToken: AuthToken = user.makeAuthToken()
 
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-make-ws-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           // create workspace and verify
@@ -83,12 +84,12 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
         "should be able to run a method in a new workspace in the billing project" in withWebDriver { implicit driver =>
           // Create new billing project
           val user = UserPool.chooseProjectOwner
-          implicit val authToken: AuthToken = AuthToken(user)
+          implicit val authToken: AuthToken = user.makeAuthToken()
 
           // TODO: extract this to BillingFixtures.withBillingProject
           val billingProjectName = "billing-spec-method-" + makeRandomId()
           logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthToken(UserPool.chooseAdmin))
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
           api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
 
           // create workspace

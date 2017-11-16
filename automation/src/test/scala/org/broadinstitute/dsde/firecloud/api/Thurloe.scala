@@ -2,7 +2,8 @@ package org.broadinstitute.dsde.firecloud.api
 
 import akka.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config}
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.config.Config
 
 import scala.util.Try
 

@@ -3,7 +3,8 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.config.{AuthToken, Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
@@ -23,7 +24,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
@@ -42,7 +43,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch modal with no default entities" ignore withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
@@ -60,7 +61,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch modal with workflows warning" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_with_workflows_warning") { workspaceName =>
 
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -85,7 +86,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch workflow with wrong root entity" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
@@ -108,7 +109,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch workflow on set without expression" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_on_set_without_expression") { workspaceName =>
 
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -134,7 +135,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch workflow with input not defined" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_input_not_defined") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       val method = MethodData.InputRequiredMethod
@@ -162,7 +163,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "import a method config into a workspace from the method repo" ignore withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(user) { _ =>
@@ -178,7 +179,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "import a method into a workspace from the method repo" ignore withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(user) { _ =>
@@ -194,7 +195,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch a method config from the method repo" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_config_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
@@ -212,7 +213,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "launch a method from the method repo" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
@@ -231,7 +232,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "abort a workflow" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_abort_workflow") { workspaceName =>
       val shouldUseCallCaching = false
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
@@ -251,7 +252,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   "delete a method config from a workspace" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = AuthToken(user)
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_delete_method_from_workspace") { workspaceName =>
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
@@ -267,7 +268,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "For a method config that references a redacted method" - {
     "should be able to choose new method snapshot" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
-      implicit val authToken: AuthToken = AuthToken(user)
+      implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_choose_new_snapshot") { workspaceName =>
         withMethod("MethodConfigTabSpec_redacted_choose_new_snapshot", MethodData.SimpleMethod, 2) { methodName =>
           val configName = methodName + "Config"
@@ -293,7 +294,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
     "should have warning icon in config list" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
-      implicit val authToken: AuthToken = AuthToken(user)
+      implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
         withMethod("MethodConfigTabSpec_redacted_has_warning_icon", MethodData.SimpleMethod) { methodName =>
           val configName = methodName + "Config"
@@ -311,7 +312,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
     "launch analysis button should be disabled and show error if clicked" ignore withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
-      implicit val authToken: AuthToken = AuthToken(user)
+      implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
         withMethod("MethodConfigTabSpec_redacted_launch_analysis_error", MethodData.SimpleMethod) { methodName =>
           val configName = methodName + "Config"
@@ -332,7 +333,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
     "should be able to be deleted when no unredacted snapshot exists" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
-      implicit val authToken: AuthToken = AuthToken(user)
+      implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_delete") { workspaceName =>
         withMethod("MethodConfigTabSpec_redacted_delete", MethodData.SimpleMethod) { methodName =>
           val configName = methodName + "Config"
