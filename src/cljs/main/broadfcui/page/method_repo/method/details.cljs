@@ -110,17 +110,18 @@
                     [:div {:style {}}
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
-                     [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
-                      "Import URL for this WDL: "
-                      (let [link (str (config/api-url-root)
-                                      "/ga4gh/v1/tools/"
-                                      (:namespace selected-snapshot)
-                                      ":"
-                                      (:name selected-snapshot)
-                                      "/versions/"
-                                      (:snapshotId selected-snapshot)
-                                      "/plain-WDL/descriptor")]
-                       (links/create-external {:href link} link))]])
+                     (if (:is-public @state)
+                       [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
+                        "Import URL for this WDL: "
+                        (let [link (str (config/api-url-root)
+                                        "/ga4gh/v1/tools/"
+                                        (:namespace selected-snapshot)
+                                        ":"
+                                        (:name selected-snapshot)
+                                        "/versions/"
+                                        (:snapshotId selected-snapshot)
+                                        "/plain-WDL/descriptor")]
+                          (links/create-external {:href link} link))])])
                CONFIGS (react/create-element
                         [configs/Configs
                          (merge {:ref CONFIGS}
@@ -211,7 +212,14 @@
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
                        (swap! state assoc :selected-snapshot parsed-response :loading-snapshot? false)
-                       (swap! state assoc :method-error (:message parsed-response)))))})))})
+                       (swap! state assoc :method-error (:message parsed-response)))))})
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-agora-entity-acl false {:namespace namespace :name name :snapshotId snapshot-id})
+         :on-done (net/handle-ajax-response
+                   (fn [{:keys [success? parsed-response]}]
+                     (if success?
+                       (swap! state assoc :is-public (= (:role (first (filter #(= "public" (:user %)) parsed-response))) "READER"))
+                       (swap! state assoc :is-public false))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]
   (str "methods/" namespace "/" name "/" snapshot-id))
