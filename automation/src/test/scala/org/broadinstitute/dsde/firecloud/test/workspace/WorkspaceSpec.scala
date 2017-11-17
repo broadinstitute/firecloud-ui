@@ -410,6 +410,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
            detailPage.goToMethodConfigTab()
+           new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
            Label("Notebooks-tab").awaitVisible() // should be refreshed
            val notebooksTab = detailPage.goToNotebooksTab()
            notebooksTab.createClusterButtonEnabled() shouldBe true
@@ -425,6 +426,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
          withSignIn(user) { listPage =>
            val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
            detailPage.goToMethodConfigTab()
+           new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
            //go directly to notebooks page
            val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
            notebooksTab.checkUnauthorized
