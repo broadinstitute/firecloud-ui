@@ -36,6 +36,7 @@
    :move-right "fa-angle-double-right"
    :new-window "fa-external-link"
    :publish "fa-upload"
+   :public "fa-users"
    :refresh "fa-refresh"
    :remove "fa-minus-circle"
    :reorder "fa-reorder"

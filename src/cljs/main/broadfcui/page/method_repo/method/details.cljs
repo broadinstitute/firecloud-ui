@@ -20,6 +20,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
+   [broadfcui.common.icons :as icons]
    ))
 
 
@@ -70,15 +71,19 @@
             {:text "Yes"
              :onClick #(mc-sync/flag-synchronization)
              :href (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state))}}])
-        [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
+        [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem" :alignItems "flex-end"}}
          (tab-bar/render-title
           "METHOD"
           [:span {}
            [:span {:data-test-id "header-namespace"} (:namespace method-id)]
            "/"
            [:span {:data-test-id "header-name"} (:name method-id)]])
-         [:div {:style {:paddingLeft "2rem" :marginTop -3}}
+         [:div {:style {:marginLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
+         (when (:is-public @state)
+           [:span {:style {:alignSelf "center" :marginLeft "2.5rem"}}
+            (icons/render-icon {} :public)
+            " Publicly Readable"]) ; wording matches the permissions modal
          (when-not workspace-id
            [buttons/Button {:style {:marginLeft "auto"}
                             :text "Export to Workspace..."
