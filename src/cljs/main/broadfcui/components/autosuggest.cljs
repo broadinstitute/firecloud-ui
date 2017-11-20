@@ -27,7 +27,7 @@
   :remove-selected (optional) - list of suggestions to filter out (typically
     ones that have already been selected for a multi-select)
   :caching? (optional) - set true to have re-renders managed internally
-  :default-value (optional when caching)
+  :default-value (optional - use to set initial value when caching)
   :value (required when not caching)
 
   Other props to pass through to input element go in :inputProps.
@@ -46,7 +46,7 @@
               :on-submit (when on-submit wrapped-on-submit))))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:value ((if (:caching? props) :value :default-value) props)})
+     {:value (:default-value props)})
    :render
    (fn [{:keys [state props locals]}]
      (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props

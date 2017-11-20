@@ -32,10 +32,10 @@
        selection-map))
 
 
-(defn create-ontology-autosuggest [{:keys [ref render-suggestion on-suggestion-selected selected-ids on-change on-submit value input-props]}]
+(defn create-ontology-autosuggest [{:keys [ref render-suggestion on-suggestion-selected selected-ids on-change on-submit default-value input-props]}]
   [Autosuggest
    {:ref ref
-    :value value
+    :default-value default-value
     :inputProps (or input-props {})
     :url "/autocomplete/"
     :service-prefix "/duos"
