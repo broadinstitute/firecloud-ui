@@ -150,7 +150,7 @@
        [:div {}
         (ontology/create-ontology-autosuggest
          {:ref (name property)
-          :value value-nullsafe
+          :default-value value-nullsafe
           :on-suggestion-selected
           (fn [{:keys [id label]}]
             (swap! state update :attributes assoc
