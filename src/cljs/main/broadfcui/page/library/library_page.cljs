@@ -231,7 +231,9 @@
   [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}}
    (if-not (string/blank? highlight)
      (let [suggestion-parts (string/split suggestion highlight)]
-       [:span {} (first suggestion-parts) [:strong {} highlight] (last suggestion-parts)])
+       (cond ;; different logic to handle permutations of where the highlight is in the suggestion
+         (< (count suggestion-parts) 2) [:span {} (first suggestion-parts) [:strong {} highlight] (second suggestion-parts)]
+         :else [:span {} (interpose [:strong {} highlight] suggestion-parts)]))
      suggestion)])
 
 (defn- create-search-section [{:keys [search-text facet-filters on-input on-filter]}]
