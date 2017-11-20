@@ -37,9 +37,12 @@
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
            wrapped-on-submit (fn [e]
-                               (on-submit (.. e -target -value)))
+                               (let [value (.. e -target -value)]
+                                 (when-not (empty? value)
+                                   (on-submit value))))
            on-clear (fn [e]
-                      (when (zero? (.. e -target -value -length)) (on-submit "")))]
+                      (when (empty? (.. e -target -value))
+                        (on-submit "")))]
        (swap! locals assoc
               :id (gensym "autosuggest")
               :on-clear (when on-submit on-clear)
