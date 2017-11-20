@@ -37,13 +37,9 @@
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
            wrapped-on-submit (fn [e]
-                               (.preventDefault e)
-                               (.stopPropagation e)
                                (on-submit (.. e -target -value)))
            on-clear (fn [e]
                       (when (empty? (.. e -target -value))
-                        (.preventDefault e)
-                        (.stopPropagation e)
                         (on-submit "")))]
        (swap! locals assoc
               :id (gensym "autosuggest")
@@ -88,6 +84,10 @@
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
                    :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
                    :getSuggestionValue #(if (keyword? %) value ((or get-value identity) %))
+                   :onSuggestionSelected (when-let [on-submit (:on-submit props)]
+                                           (fn [_ suggestion]
+                                             (when (= (.-method suggestion) "click")
+                                               (on-submit (.-suggestionValue suggestion)))))
                    :renderSuggestion (fn [suggestion]
                                        (react/create-element
                                         [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}} suggestion]))
@@ -95,9 +95,7 @@
                    {:value value
                     :onKeyDown (when-let [on-submit (:on-submit @locals)]
                                  (common/create-key-handler [:enter] on-submit))
-                    :onChange (fn [e value]
-                                (.preventDefault e)
-                                (.stopPropagation e)
+                    :onChange (fn [_ value]
                                 (let [value (.-newValue value)]
                                   (when caching?
                                     (swap! state assoc :value value))
