@@ -37,11 +37,13 @@
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
            wrapped-on-submit (fn [e]
-                               (let [value (.. e -target -value)]
-                                 (when-not (empty? value)
-                                   (on-submit value))))
+                               (.preventDefault e)
+                               (.stopPropagation e)
+                               (on-submit (.. e -target -value)))
            on-clear (fn [e]
                       (when (empty? (.. e -target -value))
+                        (.preventDefault e)
+                        (.stopPropagation e)
                         (on-submit "")))]
        (swap! locals assoc
               :id (gensym "autosuggest")
@@ -93,7 +95,9 @@
                    {:value value
                     :onKeyDown (when-let [on-submit (:on-submit @locals)]
                                  (common/create-key-handler [:enter] on-submit))
-                    :onChange (fn [_ value]
+                    :onChange (fn [e value]
+                                (.preventDefault e)
+                                (.stopPropagation e)
                                 (let [value (.-newValue value)]
                                   (when caching?
                                     (swap! state assoc :value value))
