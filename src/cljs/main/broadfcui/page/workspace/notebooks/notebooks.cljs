@@ -280,7 +280,7 @@
                   {:header "Worker Machine Type" :initial-width 150
                    :column-data (comp :workerMachineType :machineConfig)}
                   {:header "Worker Disk Size (GB)" :initial-width 150
-                   :column-data (comp :workerMachineType :machineConfig)}
+                   :column-data (comp :workerDiskSize :machineConfig)}
                   {:header "Worker Local SSDs" :initial-width 130
                    :column-data (comp :numberOfWorkerLocalSSDs :machineConfig)}
                   {:header "Preemptible Workers" :initial-width 150
