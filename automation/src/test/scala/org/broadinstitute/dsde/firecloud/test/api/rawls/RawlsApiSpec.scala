@@ -43,7 +43,7 @@ class RawlsApiSpec extends FreeSpec with Matchers {
       Rawls.workspaces.create(defaultProject, workspaceNameB)(userBAuthToken)
 
       //Remove the pet SA for a clean test environment
-      val userAStatus = Sam.user.status()(userAAuthToken)
+      val userAStatus = Sam.user.status()(userAAuthToken).get
       Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
