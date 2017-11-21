@@ -2,25 +2,24 @@ package org.broadinstitute.dsde.firecloud.test.api.rawls
 
 import java.util.UUID
 
-import com.fasterxml.jackson.annotation.ObjectIdGenerators.UUIDGenerator
 import org.broadinstitute.dsde.firecloud.api.{Rawls, Sam}
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
+import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
-import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountName}
+import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccount
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class RawlsApiSpec extends FreeSpec with Matchers {
-  val anyUsers: Seq[Credentials] = UserPool.chooseAnyUsers(2)
-  val anyUserA: Credentials = anyUsers.head
-  val anyUserB:  Credentials = anyUsers.tail.head
-  val userAAuthToken: AuthToken = anyUserA.makeAuthToken()
-  val userBAuthToken: AuthToken = anyUserB.makeAuthToken()
+class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
+  // We only want to see the users' workspaces so we can't be Project Owners
+  val Seq(studentA, studentB) = UserPool.chooseStudents(2)
+  val studentAToken: AuthToken = studentA.makeAuthToken()
+  val studentBToken: AuthToken = studentB.makeAuthToken()
 
   val defaultProject:String = Config.Projects.default
 
@@ -33,22 +32,25 @@ class RawlsApiSpec extends FreeSpec with Matchers {
   "Rawls" - {
     "pets should have same access as their owners" in {
 
+      //Create workspaces for Students
+
       val uuid = UUID.randomUUID().toString
 
       val workspaceNameA = "rawls_test_User_A_Workspace" + uuid
-      val workspaceNameB = "rawls_test_User_B_Workspace" + uuid
+      Rawls.workspaces.create(defaultProject, workspaceNameA)(studentAToken)
+      register cleanUp Rawls.workspaces.delete(defaultProject, workspaceNameA)(studentAToken)
 
-      //Create workspace for User A and User B
-      Rawls.workspaces.create(defaultProject, workspaceNameA)(userAAuthToken)
-      Rawls.workspaces.create(defaultProject, workspaceNameB)(userBAuthToken)
+      val workspaceNameB = "rawls_test_User_B_Workspace" + uuid
+      Rawls.workspaces.create(defaultProject, workspaceNameB)(studentBToken)
+      register cleanUp Rawls.workspaces.delete(defaultProject, workspaceNameB)(studentBToken)
 
       //Remove the pet SA for a clean test environment
-      val userAStatus = Sam.user.status()(userAAuthToken).get
+      val userAStatus = Sam.user.status()(studentAToken).get
       Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
       //Validate that the pet SA has been created
-      val petAccountEmail = Sam.user.petServiceAccountEmail()(userAAuthToken)
+      val petAccountEmail = Sam.user.petServiceAccountEmail()(studentAToken)
       petAccountEmail.value should not be userAStatus.userInfo.userEmail
       findPetInGoogle(userAStatus.userInfo).map(_.email) shouldBe Some(petAccountEmail)
 
@@ -59,19 +61,16 @@ class RawlsApiSpec extends FreeSpec with Matchers {
       petWorkspace should include (workspaceNameA)
       petWorkspace should not include (workspaceNameB)
 
-      val userAWorkspace = Rawls.workspaces.list()(userAAuthToken)
+      val userAWorkspace = Rawls.workspaces.list()(studentAToken)
       userAWorkspace should include (workspaceNameA)
       userAWorkspace should not include (workspaceNameB)
 
-      val userBWorkspace = Rawls.workspaces.list()(userBAuthToken)
+      val userBWorkspace = Rawls.workspaces.list()(studentBToken)
       userBWorkspace should include (workspaceNameB)
 
       petAuthToken.removePrivateKey()
       Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
-
-      Rawls.workspaces.delete(defaultProject,workspaceNameA)(userAAuthToken)
-      Rawls.workspaces.delete(defaultProject,workspaceNameB)(userBAuthToken)
     }
   }
 }
