@@ -57,9 +57,9 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
     case class UserStatusDetails(userSubjectId: String, userEmail: String)
     case class UserStatus(userInfo: UserStatusDetails, enabled: Map[String, Boolean])
 
-    def status()(implicit token: AuthToken): UserStatus = {
+    def status()(implicit token: AuthToken): Option[UserStatus] = {
       logger.info(s"Getting user registration status")
-      parseResponseAs[UserStatus](getRequest(url + "register/user"))
+      parseResponseOption[UserStatus](getRequest(url + "register/user"))
     }
 
     def petServiceAccountEmail()(implicit token: AuthToken): WorkbenchUserServiceAccountEmail = {

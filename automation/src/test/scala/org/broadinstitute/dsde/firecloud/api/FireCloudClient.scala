@@ -69,6 +69,14 @@ trait FireCloudClient {
     mapper.readValue(parseResponse(response), classT)
   }
 
+  // return Some(T) on success, None on failure
+  def parseResponseOption[T: ClassTag](response: HttpResponse): Option[T] = {
+    if (response.status.isSuccess())
+      Option(parseResponseAs[T](response))
+    else
+      None
+  }
+
   private def requestWithJsonContent(method: HttpMethod, uri: String, content: Any, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
     val req = HttpRequest(method, uri, List(makeAuthHeader(token)), HttpEntity(ContentTypes.`application/json`, mapper.writeValueAsString(content)))
     handleResponse(sendRequest(req))
