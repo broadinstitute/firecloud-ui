@@ -13,12 +13,14 @@
       body {
         margin: 0;
         -webkit-font-smoothing: antialiased;
-        -moz-font-smoothing: antialiased;
-        -o-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         background-color: #f4f4f4;
       }
       body, input, textarea, select, button {
         font-family: 'Roboto', sans-serif;
+      }
+      ::-webkit-search-results-button {
+          display: none;
       }
       *:disabled {
           cursor: not-allowed;
