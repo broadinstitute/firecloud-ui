@@ -5,16 +5,17 @@ import java.util.UUID
 import org.broadinstitute.dsde.firecloud.api.{Rawls, Sam}
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
+import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.google.model.GoogleProject
-import org.broadinstitute.dsde.workbench.model.{WorkbenchUserServiceAccount, WorkbenchUserServiceAccountName}
+import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccount
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class RawlsApiSpec extends FreeSpec with Matchers {
+class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
   // We only want to see the users' workspaces so we can't be Project Owners
   val Seq(studentA, studentB) = UserPool.chooseStudents(2)
   val studentAToken: AuthToken = studentA.makeAuthToken()
@@ -31,14 +32,17 @@ class RawlsApiSpec extends FreeSpec with Matchers {
   "Rawls" - {
     "pets should have same access as their owners" in {
 
+      //Create workspaces for Students
+
       val uuid = UUID.randomUUID().toString
 
       val workspaceNameA = "rawls_test_User_A_Workspace" + uuid
-      val workspaceNameB = "rawls_test_User_B_Workspace" + uuid
-
-      //Create workspace for User A and User B
       Rawls.workspaces.create(defaultProject, workspaceNameA)(studentAToken)
+      register cleanUp Rawls.workspaces.delete(defaultProject, workspaceNameA)(studentAToken)
+
+      val workspaceNameB = "rawls_test_User_B_Workspace" + uuid
       Rawls.workspaces.create(defaultProject, workspaceNameB)(studentBToken)
+      register cleanUp Rawls.workspaces.delete(defaultProject, workspaceNameB)(studentBToken)
 
       //Remove the pet SA for a clean test environment
       val userAStatus = Sam.user.status()(studentAToken).get
@@ -67,9 +71,6 @@ class RawlsApiSpec extends FreeSpec with Matchers {
       petAuthToken.removePrivateKey()
       Sam.removePet(userAStatus.userInfo)
       findPetInGoogle(userAStatus.userInfo) shouldBe None
-
-      Rawls.workspaces.delete(defaultProject,workspaceNameA)(studentAToken)
-      Rawls.workspaces.delete(defaultProject,workspaceNameB)(studentBToken)
     }
   }
 }
