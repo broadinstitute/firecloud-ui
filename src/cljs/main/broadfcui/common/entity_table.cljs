@@ -32,7 +32,7 @@
      (when reinitialize?
        (after-update #((@refs "table") :reinitialize))))
    :refresh
-   (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
+   (fn [{:keys [props state this after-update]} & [entity-type reinitialize? initial?]]
      (swap! state dissoc :entity-metadata)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
@@ -51,7 +51,8 @@
                              :selected-entity-type selected-entity-type)
                       (when-let [f (:on-entity-type-selected props)]
                         (f selected-entity-type))
-                      (after-update #(this :update-data reinitialize?)))
+                      (when-not initial?
+                        (after-update #(this :update-data reinitialize?))))
                     (swap! state assoc :server-error (get-parsed-response false))))}))
    :get-default-props
    (fn []
@@ -137,7 +138,7 @@
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]
-     (this :refresh (:initial-entity-type props)))
+     (this :refresh (:initial-entity-type props) false true))
    :-pagination
    (fn [{:keys [props state]}]
      (let [{:keys [entity-types]} @state]

@@ -142,7 +142,7 @@
         entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
-     ((@refs "entity-table") :refresh (:selected-entity-type @state) true))
+     ((@refs "entity-table") :refresh (:selected-entity-type @state) true true))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})
