@@ -14,7 +14,7 @@
              :state-exception "#e85c46"
              :state-running "#67688a"
              :state-success "#7aac20"
-             :state-warning "#ebaf3b"
+             :state-warning "#ffa726"
              :tag-background "#d4ecff"
              :tag-foreground "#2c3c4d"
              :text-light "#666"
