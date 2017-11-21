@@ -20,16 +20,19 @@ The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after 
 
     <img width="831" src="https://user-images.githubusercontent.com/22642695/32802415-f3cd6452-c94d-11e7-85f4-4698da453d78.png">
 
-2. The first time you encounter a `defc`, you must manually tell Cursive how to format it:
+2. You need to tell Cursive how to resolve some custom macros:
 
-    1. Click on any usage of that symbol  
+    1. Find an instance of `react/defc` and place your cursor on it or highlight it.
     2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
     3. Select _Resolve as..._  
     4. Select _def_
 
-    <img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
+        <img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
 
-    You'll have to repeat this process for `defc-`.
+    5. Repeat this process for `defc-`.
+    6. Find an instance of `utils/multi-swap!` and resolve it as `->`.
+
+In addition, set the indent level of `multi-swap!` to `1`.
 
 ### Source code layout & organization
 

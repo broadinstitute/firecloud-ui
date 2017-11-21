@@ -93,7 +93,7 @@
         (method-common/render-config-details config)]))
    :-refresh
    (fn [{:keys [props state]}]
-     (swap! state assoc :refreshing? true :config-error nil)
+     (utils/multi-swap! state (assoc :refreshing? true) (dissoc :config-error))
      (let [{:keys [config-id config-snapshot-id]} props]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-configuration (:namespace config-id) (:name config-id) config-snapshot-id true)

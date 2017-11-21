@@ -39,7 +39,7 @@
                                          (this :perform-copy selected)))}]]]]))
    :perform-copy
    (fn [{:keys [props state this]} selected re-link?]
-     (swap! state assoc :selection-error nil :server-error nil :copying? true)
+     (utils/multi-swap! state (assoc :copying? true) (dissoc :selection-error :server-error))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props) re-link?)
        :payload {:sourceWorkspace (:selected-workspace-id props)

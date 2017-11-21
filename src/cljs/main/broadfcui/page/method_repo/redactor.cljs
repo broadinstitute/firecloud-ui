@@ -4,6 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -28,7 +29,7 @@
    :-redact
    (fn [{:keys [props state]}]
      (let [{:keys [config? entity dismiss on-delete]} props]
-       (swap! state assoc :redacting? true :error nil)
+       (utils/multi-swap! state (assoc :redacting? true) (dissoc :error))
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/delete-agora-entity config? entity)
          :on-done (fn [{:keys [success? get-parsed-response]}]

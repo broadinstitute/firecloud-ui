@@ -3,8 +3,8 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    ))
 
 (react/defc DeleteDialog
@@ -24,11 +24,12 @@
        {:text "Delete"
         :data-test-id "modal-confirm-delete-button"
         :onClick
-        #(do (swap! state assoc :deleting? true :error nil)
-             (endpoints/call-ajax-orch
-              {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config-id props))
-               :on-done (fn [{:keys [success? get-parsed-response]}]
-                          (swap! state dissoc :deleting?)
-                          (if success?
-                            (do ((:dismiss props)) ((:after-delete props)))
-                            (swap! state assoc :error (get-parsed-response false))))}))}}])})
+        (fn [_]
+          (utils/multi-swap! state (assoc :deleting? true) (dissoc :error))
+          (endpoints/call-ajax-orch
+           {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config-id props))
+            :on-done (fn [{:keys [success? get-parsed-response]}]
+                       (swap! state dissoc :deleting?)
+                       (if success?
+                         (do ((:dismiss props)) ((:after-delete props)))
+                         (swap! state assoc :error (get-parsed-response false))))}))}}])})

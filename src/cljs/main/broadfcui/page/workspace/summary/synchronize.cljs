@@ -60,7 +60,7 @@
    :-grant-permission
    (fn [{:keys [props state]}]
      (let [{:keys [owned-methods dismiss]} props]
-       (swap! state assoc :grant-error nil :granting? true)
+       (utils/multi-swap! state (assoc :granting? true) (dissoc :grant-error))
        (endpoints/call-ajax-orch
         {:endpoint endpoints/multi-grant-method-acl
          :payload (mapv (fn [{:keys [method new-users]}]

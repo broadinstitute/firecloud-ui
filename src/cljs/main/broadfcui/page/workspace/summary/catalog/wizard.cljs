@@ -171,11 +171,11 @@
           flex/spring
           [buttons/Button {:text "Previous"
                            :onClick (fn [_]
-                                      (if-let [prev-page (peek (:pages-stack @state))]
-                                        (swap! state #(-> %
-                                                          (assoc :page-num prev-page)
-                                                          (update :pages-stack pop)
-                                                          (dissoc :validation-error)))))
+                                      (when-let [prev-page (peek (:pages-stack @state))]
+                                        (utils/multi-swap! state
+                                          (assoc :page-num prev-page)
+                                          (update :pages-stack pop)
+                                          (dissoc :validation-error))))
                            :style {:width 80}
                            :disabled? (zero? page-num)}]
           (flex/strut 27)
@@ -221,10 +221,9 @@
          (swap! state assoc :invalid-properties @invalid-attributes)
          (after-update (fn [_]
                          (let [next-page (this :find-next-page)]
-                           (swap! state #(-> %
-                                             (update :pages-seen conj next-page)
-                                             (update :pages-stack conj page-num)
-                                             (assoc :page-num next-page)))))))))
+                           (utils/multi-swap! state (update :pages-seen conj next-page)
+                                                    (update :pages-stack conj page-num)
+                                                    (assoc :page-num next-page))))))))
    :find-next-page
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema]} props
@@ -249,7 +248,7 @@
                                                                          ; ensure discoverable by is being sent. when it is reset to all users, it is the empty list
                                                                          ; and therefore removed by the call above
                                                                          {:library:discoverableByGroups discoverable-by})})]
-         (swap! state assoc :submitting? true :submit-error nil)
+         (utils/multi-swap! state (assoc :submitting? true) (dissoc :submit-error))
          (endpoints/call-ajax-orch
           {:endpoint ((:name invoke-args) (:workspace-id props))
            :payload (:data invoke-args)

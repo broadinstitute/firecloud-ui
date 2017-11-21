@@ -1,6 +1,6 @@
 (ns broadfcui.utils
   (:require-macros
-   [broadfcui.utils :refer [log jslog cljslog pause restructure]])
+   [broadfcui.utils :refer [log jslog cljslog pause restructure multi-swap!]])
   (:require
    [clojure.string :as string]
    cljs.pprint

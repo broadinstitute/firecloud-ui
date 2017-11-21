@@ -185,7 +185,7 @@
                     (if success?
                       (this :-export-loaded-config
                             (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
-                      (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))
+                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
    :-export-loaded-config
    (fn [{:keys [props state locals]} config]
      (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
@@ -198,4 +198,4 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       ((:on-export props) workspace-id (ws-common/config->id config))
-                      (swap! state assoc :banner nil :server-error (get-parsed-response false))))})))})
+                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))})

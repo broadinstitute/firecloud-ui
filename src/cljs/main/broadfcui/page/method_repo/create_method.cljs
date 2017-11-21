@@ -178,7 +178,7 @@
                    (this :-complete
                          (build-new-entity-id get-parsed-response)
                          (when (= 206 status-code) "Method successfully copied, but error while redacting."))
-                   (swap! state assoc :banner nil :upload-error (get-parsed-response false))))}))
+                   (utils/multi-swap! state (assoc :upload-error (get-parsed-response false)) (dissoc :banner))))}))
            (endpoints/call-ajax-orch
             {:endpoint endpoints/post-method
              :payload (assoc (utils/restructure namespace name synopsis documentation snapshotComment)
@@ -188,7 +188,7 @@
              (fn [{:keys [success? get-parsed-response]}]
                (if success?
                  (this :-complete (build-new-entity-id get-parsed-response))
-                 (swap! state assoc :banner nil :upload-error (get-parsed-response false))))})))))
+                 (utils/multi-swap! state (assoc :upload-error (get-parsed-response false)) (dissoc :banner))))})))))
    :-complete
    (fn [{:keys [props]} new-entity-id & [error-message]]
      ((:dismiss props))

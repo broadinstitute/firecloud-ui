@@ -42,3 +42,12 @@
    ; => {:x 3 :y 4}"
   [& symbols]
   (zipmap (map keyword symbols) symbols))
+
+
+(defmacro multi-swap!
+  "Update an atom with multiple functions:
+   (def state (atom {:a 1 :b 2}))
+   (multi-swap! state (assoc :c 3) (dissoc :b) (update :a inc))
+   #_=> {:a 2 :c 3}"
+  [a & forms]
+  `(swap! ~a (fn [x#] (-> x# ~@forms))))

@@ -224,7 +224,8 @@
                             :onClick #(this :save)}])]]))
    :save
    (fn [{:keys [props state refs]}]
-     (swap! state (fn [s] (assoc (dissoc s :server-error :validation-errors) :in-progress? true)))
+     (utils/multi-swap! state (dissoc :server-error :validation-errors)
+                              (assoc :in-progress? true))
      (let [values ((@refs "form") :get-values)
            validation-errors ((@refs "form") :validation-errors)]
        (cond
@@ -240,9 +241,8 @@
                                  (js/setTimeout on-done 2000)
                                  (assoc new-state :done? true))))))))
          :else
-         (swap! state (fn [s]
-                        (let [new-state (dissoc s :in-progress? :done?)]
-                          (assoc new-state :validation-errors validation-errors)))))))})
+         (utils/multi-swap! state (dissoc :in-progress? :done?)
+                                  (assoc :validation-errors validation-errors)))))})
 
 (defn render [props]
   (react/create-element Page props))

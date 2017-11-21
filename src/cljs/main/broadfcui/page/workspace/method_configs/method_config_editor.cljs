@@ -263,11 +263,11 @@
                                 workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
                                 selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
                             (swap! locals assoc :entities-loaded? true)
-                            (swap! state assoc
-                                   :blocker nil
-                                   :entity-types entity-types
-                                   :autocomplete-list (build-autocomplete-list
-                                                       (utils/restructure workspace-attributes entity-types selected-entity-type)))
+                            (utils/multi-swap! state
+                              (assoc :entity-types entity-types
+                                     :autocomplete-list (build-autocomplete-list
+                                                         (utils/restructure workspace-attributes entity-types selected-entity-type)))
+                              (dissoc :blocker))
                             (this :-begin-editing))
                           ;; FIXME: :data-attribute-load-error is unused
                           (swap! state assoc :data-attribute-load-error status-text)))}))
@@ -306,10 +306,10 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
-                      (do (swap! state dissoc :redacted?)
-                          ((:on-rename props) name)
+                      (do ((:on-rename props) name)
                           ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
-                          (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
+                          (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
+                                                   (dissoc :redacted?)))
                       (comps/push-error-response (get-parsed-response false))))})))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
@@ -371,5 +371,6 @@
                                                 :redacted? false)
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
-                          (swap! state assoc :redacted? true :blocker nil :wdl-parse-error (:message response))
+                          (utils/multi-swap! state (assoc :redacted? true :wdl-parse-error (:message response))
+                                                   (dissoc :blocker))
                           (comps/push-error (style/create-server-error-message (:message response)))))))})))})
