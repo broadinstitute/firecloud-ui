@@ -1,7 +1,7 @@
 (ns broadfcui.net
   (:require
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.utils :as utils]
    ))
@@ -27,7 +27,7 @@
    (cond
      (nil? ajax-response)
      (if blocking?
-       [comps/Blocker {:banner (or loading-text "Loading...")}]
+       (blocker (or loading-text "Loading..."))
        (spinner {:style {:display "inline-block"}}
                 (or loading-text "Loading...")))
      (not success?)

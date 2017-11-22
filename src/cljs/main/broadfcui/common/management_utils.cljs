@@ -10,6 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :as table]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -27,7 +28,7 @@
        (react/create-element
         [:div {:style {:width 420}}
          (when (:adding? @state)
-           [comps/Blocker {:banner "Adding user..."}])
+           (blocker "Adding user..."))
          [:div {:style {:display "flex"}}
           [:div {:style {:flex "1 1 auto"}}
            (style/create-form-label "User email")
@@ -74,7 +75,7 @@
               (when header
                 (header (:data @state)))
               (when (:removing? @state)
-                [comps/Blocker {:banner "Removing user..."}])
+                (blocker "Removing user..."))
               [table/Table
                {:data (table-data data)
                 :body {:behavior {:reorderable-columns? false}

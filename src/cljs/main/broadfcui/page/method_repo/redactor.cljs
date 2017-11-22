@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -18,7 +19,7 @@
          :content
          [:div {:style {:width 500}}
           (when (:redacting? @state)
-            [comps/Blocker {:banner "Redacting..."}])
+            (blocker "Redacting..."))
           [:p {} "Are you sure you want to redact this " (if config? "configuration" "method snapshot") "?"]
           (when-not config? [:div {}
                              [:small {} "Redacting this snapshot will remove all configurations that point to it from the Method Repository."

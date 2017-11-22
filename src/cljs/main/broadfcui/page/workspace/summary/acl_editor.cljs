@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
@@ -79,7 +80,7 @@
        (react/create-element
         [:div {}
          (when (:saving? @state)
-           [comps/Blocker {:banner "Updating..."}])
+           (blocker "Updating..."))
          [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
          (map (fn [acl-entry]
                 [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
@@ -163,7 +164,7 @@
      (react/create-element
       [:div {}
        (when (:saving? @state)
-         [comps/Blocker {:banner "Updating..."}])
+         (blocker "Updating..."))
        [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
         [:div {:style {:display "inline-block" :width 400}} "User ID"]
         [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]

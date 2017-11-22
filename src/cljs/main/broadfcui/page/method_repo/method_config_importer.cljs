@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -133,8 +134,7 @@
         any-actions? (or workflow? owner?)
         body-id (gensym "form")]
     [:div {:style {:display "flex"}}
-     (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}])
+     (blocker (:blocking-text @state))
      (when (and any-actions? (:allow-edit props))
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}

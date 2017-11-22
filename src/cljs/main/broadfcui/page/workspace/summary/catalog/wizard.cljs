@@ -6,6 +6,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
@@ -122,7 +123,7 @@
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
-          [comps/Blocker {:banner "Submitting..."}])
+          (blocker "Submitting..."))
         (flex/box
          {:style {:borderBottom style/standard-line
                   :padding "20px 48px 18px"

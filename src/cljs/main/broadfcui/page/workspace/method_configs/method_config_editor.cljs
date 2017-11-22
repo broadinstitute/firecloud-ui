@@ -7,6 +7,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.spinner :refer [spinner]]
@@ -168,7 +169,7 @@
            methods (:methods @state)
            methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
        [:div {}
-        [comps/Blocker {:banner (:blocker @state)}]
+        (blocker (:blocker @state))
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])

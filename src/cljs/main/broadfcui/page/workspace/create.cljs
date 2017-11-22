@@ -9,6 +9,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
@@ -39,7 +40,7 @@
          (react/create-element
           [:div {:style {:marginBottom -20}}
            (when creating-ws
-             [comps/Blocker {:banner (if workspace-id "Cloning Workspace..." "Creating Workspace...")}])
+             (blocker (if workspace-id "Cloning Workspace..." "Creating Workspace...")))
            (style/create-form-label "Billing Project")
            (style/create-select
             {:ref "project" :value selected-project

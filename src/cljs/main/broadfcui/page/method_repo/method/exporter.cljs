@@ -9,6 +9,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
@@ -63,8 +64,7 @@
      (let [{:keys [method-name dismiss workspace-id]} props
            {:keys [selected-config banner]} @state
            exporter [:div {}
-                     (when banner
-                       [comps/Blocker {:banner banner}])
+                     (blocker banner)
                      (if selected-config
                        (this :-render-export-page)
                        (this :-render-config-selector))]]

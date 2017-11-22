@@ -1,9 +1,9 @@
 (ns broadfcui.page.method-repo.method.details
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
@@ -45,7 +45,7 @@
            refresh-tab #((@refs %) :refresh)]
        [:div {:style {:position "relative"}}
         (when loading-snapshot?
-          (comps/render-blocker "Loading..."))
+          (blocker "Loading..."))
         (when (and method exporting?)
           [MethodExporter {:dismiss #(swap! state dissoc :exporting?)
                            :method-name (:name (last method))

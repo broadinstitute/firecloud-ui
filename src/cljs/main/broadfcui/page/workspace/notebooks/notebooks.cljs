@@ -13,6 +13,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.modals :as modals]
@@ -83,7 +84,7 @@
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
-           (when creating? [comps/Blocker {:banner "Creating cluster..."}])
+           (when creating? (blocker "Creating cluster..."))
            (style/create-form-label "Name")
            [input/TextField {:ref "clusterNameCreate" :autoFocus true :style {:width "100%"}
                              :defaultValue ""
@@ -134,12 +135,12 @@
                   (map-indexed (fn [i label]
                                  [:div {:display "inline-block" :style {:marginBottom 10}}
                                   (links/create-internal
-                                    {:style {:color (:text-light style/colors)
-                                             :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
-                                     :href "javascript:;"
-                                     :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                       (update :labels utils/delete i))))}
-                                    (icons/render-icon {} :remove))
+                                   {:style {:color (:text-light style/colors)
+                                            :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
+                                    :href "javascript:;"
+                                    :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                      (update :labels utils/delete i))))}
+                                   (icons/render-icon {} :remove))
                                   [input/TextField {:style {:ref (str "key" i)
                                                             :marginBottom 0 :width "47.5%" :marginRight "4%"}
                                                     :defaultValue (first label)
@@ -210,7 +211,7 @@
          :content
          (react/create-element
           [:div {}
-           (when deleting? [comps/Blocker {:banner "Deleting cluster..."}])
+           (when deleting? (blocker "Deleting cluster..."))
            [:div {} (str "Are you sure you want to delete cluster " cluster-to-delete "?")]
            [comps/ErrorViewer {:error server-error}]])}]))
    :-delete-cluster

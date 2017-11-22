@@ -1,9 +1,9 @@
 (ns broadfcui.page.method-repo.method.configs
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
@@ -31,7 +31,7 @@
            owner? (contains? (set (:managers config)) (utils/get-user-email))]
        [:div {:style {:margin "2.5rem 1.5rem"}}
         (when refreshing?
-          [comps/Blocker {:banner "Refreshing..."}])
+          (blocker "Refreshing..."))
         [:div {:style {:marginBottom "2rem"}}
          (let [{:keys [namespace name]} (:config-id props)]
            [:div {:style {:display "flex" :marginLeft (when owner? "300px")}}

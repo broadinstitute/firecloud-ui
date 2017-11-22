@@ -5,6 +5,7 @@
    [clojure.walk :as walk]
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.spinner :refer [spinner]]
@@ -20,7 +21,7 @@
      (let [swid (:selected-workspace-id props)]
        [:div {:style {:margin "1em"}}
         (when (:copying? @state)
-          [comps/Blocker {:banner "Copying..."}])
+          (blocker "Copying..."))
         [EntitySelector {:ref "EntitySelector"
                          :type (:type props)
                          :selected-workspace-bucket (:selected-workspace-bucket props)

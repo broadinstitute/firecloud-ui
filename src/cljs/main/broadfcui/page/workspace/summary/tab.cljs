@@ -9,6 +9,7 @@
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.spinner :refer [spinner]]
@@ -37,7 +38,7 @@
        :content
        [:div {}
         (when (:deleting? @state)
-          [comps/Blocker {:banner "Deleting..."}])
+          (blocker "Deleting..."))
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} (str "Deleting it will delete the associated bucket data"
                     (when (:published? props) " and unpublish the workspace from the Data Library")
@@ -136,9 +137,9 @@
              (this :-render-sidebar derived)
              (this :-render-main derived)
              (when (:updating-attrs? @state)
-               [comps/Blocker {:banner "Updating Attributes..."}])
+               (blocker "Updating Attributes..."))
              (when (contains? @state :locking?)
-               [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
+               (blocker (if (:locking? @state) "Locking..." "Unlocking...")))]))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :refresh))
@@ -185,7 +186,7 @@
                    :data-test-state (if ready? "ready" "loading")
                    :style {:width 270}}
              (when-not ready?
-               (comps/render-blocker "Loading..."))
+               (blocker "Loading..."))
              (when (and can-share? (not editing?))
                [buttons/SidebarButton
                 {:data-test-id "share-workspace-button"
