@@ -37,9 +37,12 @@
    (fn [{:keys [locals props]}]
      (let [{:keys [on-submit]} props
            wrapped-on-submit (fn [e]
-                               (on-submit (.. e -target -value)))
+                               (let [value (.. e -target -value)]
+                                 (when-not (empty? value)
+                                   (on-submit value))))
            on-clear (fn [e]
-                      (when (zero? (.. e -target -value -length)) (on-submit "")))]
+                      (when (empty? (.. e -target -value))
+                        (on-submit "")))]
        (swap! locals assoc
               :id (gensym "autosuggest")
               :on-clear (when on-submit on-clear)
@@ -83,6 +86,10 @@
                    :onSuggestionsFetchRequested #(swap! state assoc :suggestions (get-suggestions %))
                    :onSuggestionsClearRequested #(swap! state assoc :suggestions [])
                    :getSuggestionValue #(if (keyword? %) value ((or get-value identity) %))
+                   :onSuggestionSelected (when-let [on-submit (:on-submit props)]
+                                           (fn [_ suggestion]
+                                             (when (= (.-method suggestion) "click")
+                                               (on-submit (.-suggestionValue suggestion)))))
                    :renderSuggestion (fn [suggestion]
                                        (react/create-element
                                         [:div {:style {:textOverflow "ellipsis" :overflow "hidden"}} suggestion]))

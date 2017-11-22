@@ -261,8 +261,6 @@
      :renderSuggestion (fn [suggestion]
                          (react/create-element (highlight-suggestion (js->clj suggestion))))
      :highlightFirstSuggestion false
-     :onSuggestionSelected (fn [_ suggestion]
-                             (on-filter (.-suggestionValue suggestion)))
      :on-change on-input
      :on-submit on-filter
      :theme {:input {:width "100%" :marginBottom 0}
