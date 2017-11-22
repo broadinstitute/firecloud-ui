@@ -39,65 +39,65 @@
          (this :render-table))))
    :render-table
    (fn [{:keys [props]}]
-     [Table
-      {:ref "table"
-       :data (:workflows props)
-       :tabs {:items (->> moncommon/wf-all-statuses
-                          (map (fn [status] {:label status :predicate #(= status (:status %))}))
-                          (cons {:label "All"})
-                          vec)}
-       :body
-       {:empty-message "No Workflows"
-        :style table-style/table-heavy
-        :behavior {:fixed-column-count 1}
-        :columns [{:id "view" :initial-width 50
-                   :hidden? true :resizable? false :sortable? false :filterable? false
-                   :column-data :workflowId
-                   :as-text (constantly "View workflow details")
-                   :render (fn [id]
-                             (when id
-                               (links/create-internal
-                                 {:href (nav/get-link :workspace-workflow
-                                                      (:workspace-id props)
-                                                      (:submission-id props)
-                                                      id)}
-                                 "View")))}
-                  {:header "Data Entity" :initial-width 200
-                   :column-data :workflowEntity
-                   :as-text (fn [{:keys [entityName entityType]}]
-                              (str entityName " (" entityType ")"))
-                   :sort-by :text}
-                  {:header "Last Changed" :initial-width 280
-                   :column-data :statusLastChangedDate
-                   :sort-initial :desc
-                   :as-text moncommon/render-date}
-                  {:header "Status" :initial-width 120
-                   :column-data :status
-                   :render (fn [status]
-                             [:div {:data-test-id "workflow-status"}
-                              (moncommon/icon-for-wf-status status)
-                              status])}
-                  {:header "Messages" :initial-width 300
-                   :column-data :messages
-                   :as-text (partial string/join "\n")
-                   :render (fn [message-list]
-                             [:div {:data-test-id "status-message"} (common/mapwrap :div message-list)])}
-                  {:header "Workflow ID" :initial-width 300
-                   :as-text :workflowId :sort-by :text
-                   :render
-                   (fn [{:keys [workflowId inputResolutions]}]
-                     (when workflowId
-                       (let [{:keys [submission-id bucketName]} props
-                             inputs (second (second (first inputResolutions)))
-                             input-names (string/split inputs ".")
-                             workflow-name (first input-names)]
-                         (links/create-external
-                          {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                      workflow-name "/" workflowId "/")}
-                          workflowId))))}]}}])
+     (let [{:keys [workflows workspace-id submission-id bucketName]} props]
+       [Table
+        {:ref "table"
+         :data workflows
+         :tabs {:items (->> moncommon/wf-all-statuses
+                            (map (fn [status] {:label status :predicate #(= status (:status %))}))
+                            (cons {:label "All"})
+                            vec)}
+         :body
+         {:empty-message "No Workflows"
+          :style table-style/table-heavy
+          :behavior {:fixed-column-count 1}
+          :columns [{:id "view" :initial-width 50
+                     :hidden? true :resizable? false :sortable? false :filterable? false
+                     :column-data :workflowId
+                     :as-text (constantly "View workflow details")
+                     :render (fn [id]
+                               (when id
+                                 (links/create-internal
+                                  {:href (nav/get-link :workspace-workflow
+                                                       workspace-id
+                                                       submission-id
+                                                       id)}
+                                  "View")))}
+                    {:header "Data Entity" :initial-width 200
+                     :column-data :workflowEntity
+                     :as-text (fn [{:keys [entityName entityType]}]
+                                (str entityName " (" entityType ")"))
+                     :sort-by :text}
+                    {:header "Last Changed" :initial-width 280
+                     :column-data :statusLastChangedDate
+                     :sort-initial :desc
+                     :as-text moncommon/render-date}
+                    {:header "Status" :initial-width 120
+                     :column-data :status
+                     :render (fn [status]
+                               [:div {:data-test-id "workflow-status"}
+                                (moncommon/icon-for-wf-status status)
+                                status])}
+                    {:header "Messages" :initial-width 300
+                     :column-data :messages
+                     :as-text (partial string/join "\n")
+                     :render (fn [message-list]
+                               [:div {:data-test-id "status-message"} (common/mapwrap :div message-list)])}
+                    {:header "Workflow ID" :initial-width 300
+                     :as-text :workflowId :sort-by :text
+                     :render
+                     (fn [{:keys [workflowId inputResolutions]}]
+                       (when workflowId
+                         (let [inputs (second (second (first inputResolutions)))
+                               input-names (string/split inputs ".")
+                               workflow-name (first input-names)]
+                           (links/create-external
+                            {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                        workflow-name "/" workflowId "/")}
+                            workflowId))))}]}}]))
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
-     (let [workflows (:workflows props)
+     (let [{:keys [workflows workspace-id submission-id]} props
            workflowName (->> workflows (filterv #(= (:workflowId %) workflowId))
                              first :workflowEntity :entityName)]
        [:div {}
@@ -105,13 +105,12 @@
          [comps/Breadcrumbs {:crumbs
                              [{:text "Workflows"
                                :href (nav/get-link :workspace-submission
-                                                   (:workspace-id props)
-                                                   (:submission-id props))}
+                                                   workspace-id
+                                                   submission-id)}
                               {:text workflowName}]}]]
         (workflow-details/render
-         (merge (select-keys props [:workspace-id :submission-id :bucketName])
+         (merge (select-keys props [:workspace-id :submission-id :bucketName :submission])
                 {:workflow-id workflowId
-                 :submission (:submission props)
                  :workflow-name workflowName}))]))})
 
 
@@ -147,61 +146,66 @@
 (react/defc Page
   {:render
    (fn [{:keys [state props this]}]
-     (let [server-response (:server-response @state)
-           {:keys [submission error-message]} server-response]
+     (let [{:keys [workspace-id bucketName workflow-id]} props
+           {:keys [server-response]} @state
+           {:keys [submission error-message]} server-response
+           {:keys [status submissionId methodConfigurationNamespace methodConfigurationName submissionEntity submissionDate workflows]} submission]
        (cond
          (nil? server-response)
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analysis details..."}]]
          error-message (style/create-server-error-message error-message)
          :else
          [:div {}
-          [:div {:style {:float "left" :width 290 :marginRight 40}}
-           [comps/StatusLabel {:text (:status submission)
-                               :color (color-for-submission submission)
-                               :icon (icon-for-submission submission)}]
-           (when (contains? moncommon/sub-running-statuses (:status submission))
-             [AbortButton
-              {:on-abort (fn []
-                           (swap! state assoc :server-response nil)
-                           (this :load-details))
-               :workspace-id (:workspace-id props)
-               :submission-id (:submissionId submission)}])]
-          [:div {:style {:float "left"}}
-           (style/create-section-header "Method Configuration")
-           (style/create-paragraph
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
-             [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
-           (style/create-section-header "Submission Entity")
-           (style/create-paragraph
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])]
-          [:div {:style {:float "right"}}
-           (style/create-section-header "Submitted by")
-           (style/create-paragraph
-            [:div {} (:submitter submission)]
-            [:div {} (common/format-date (:submissionDate submission)) " ("
-             (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
-           (style/create-section-header "Submission ID")
-           (links/create-external {:data-test-id "submission-id"
-                                   :href (str moncommon/google-cloud-context
-                                              (:bucketName props) "/" (:submissionId submission) "/")}
-                                  (style/create-paragraph (:submissionId submission)))]
+          [:div {:style {:display "flex"}}
+           [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+            [comps/StatusLabel {:text status
+                                :color (color-for-submission submission)
+                                :icon (icon-for-submission submission)}]
+            (when (contains? moncommon/sub-running-statuses status)
+              [AbortButton
+               {:on-abort (fn []
+                            (swap! state assoc :server-response nil)
+                            (this :load-details))
+                :workspace-id workspace-id
+                :submission-id (:submissionId submission)}])]
+           [:div {}
+            [:div {:style {:display "flex"}}
+             [:div {:style {:flexBasis "50%" :paddingRight "2rem"}}
+              (style/create-section-header "Method Configuration")
+              (style/create-paragraph
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
+                [:span {:style {:fontWeight 500}} methodConfigurationNamespace]]
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+                [:span {:style {:fontWeight 500}} methodConfigurationName]])
+              (style/create-section-header "Submission Entity")
+              (style/create-paragraph
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
+                [:span {:style {:fontWeight 500}} (:entityType submissionEntity)]]
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+                [:span {:style {:fontWeight 500}} (:entityName submissionEntity)]])]
+             [:div {:style {:flexBasis "50%" :paddingRight "2rem"}}
+              (style/create-section-header "Submitted by")
+              (style/create-paragraph
+               [:div {} (:submitter submission)]
+               [:div {} (common/format-date submissionDate) " ("
+                (duration/fuzzy-time-from-now-ms (js/Date.parse submissionDate) true) ")"])
+              (style/create-section-header "Submission ID")
+              (links/create-external {:data-test-id "submission-id"
+                                      :href (str moncommon/google-cloud-context
+                                                 bucketName "/" submissionId "/")}
+                                     submissionId)]]]]
           (common/clear-both)
           [:h2 {} "Workflows:"]
-          [WorkflowsTable {:workflows (:workflows submission)
-                           :workspace-id (:workspace-id props)
+          [WorkflowsTable {:workflows workflows
+                           :workspace-id workspace-id
                            :submission submission
-                           :bucketName (:bucketName props)
-                           :submission-id (:submissionId submission)
-                           :workflow-id (:workflow-id props)}]])))
+                           :bucketName bucketName
+                           :submission-id submissionId
+                           :workflow-id workflow-id}]])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
