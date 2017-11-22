@@ -80,7 +80,7 @@
            [:span {:data-test-id "header-name"} (:name method-id)]])
          [:div {:style {:marginLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
-         (when (:is-public @state)
+         (when (:public (:selected-snapshot @state))
            [:span {:style {:alignSelf "center" :marginLeft "2.5rem"}}
             (icons/render-icon {} :public)
             " Publicly Readable"]) ; wording matches the permissions modal
@@ -115,7 +115,7 @@
                     [:div {:style {}}
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
-                     (if (:is-public @state)
+                     (if (:public selected-snapshot)
                        [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
                         "Import URL for this WDL: "
                         (let [link (str (config/api-url-root)
@@ -217,14 +217,7 @@
                    (fn [{:keys [success? parsed-response]}]
                      (if success?
                        (swap! state assoc :selected-snapshot parsed-response :loading-snapshot? false)
-                       (swap! state assoc :method-error (:message parsed-response)))))})
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-entity-acl false {:namespace namespace :name name :snapshotId snapshot-id})
-         :on-done (net/handle-ajax-response
-                   (fn [{:keys [success? parsed-response]}]
-                     (if success?
-                       (swap! state assoc :is-public (= (:role (first (filter #(= "public" (:user %)) parsed-response))) "READER"))
-                       (swap! state assoc :is-public false))))})))})
+                       (swap! state assoc :method-error (:message parsed-response)))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]
   (str "methods/" namespace "/" name "/" snapshot-id))
