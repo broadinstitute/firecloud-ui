@@ -84,7 +84,9 @@
         (select-keys props [:workspace-id])
         {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
          :import-type "data"
-         :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
+         :on-data-imported #((@refs "entity-table") :refresh
+                             :entity-type (or % (:selected-entity-type @state))
+                             :reinitialize? true)})]))
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
@@ -142,7 +144,9 @@
         entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
-     ((@refs "entity-table") :refresh (:selected-entity-type @state) true))
+     ((@refs "entity-table") :refresh
+      :entity-type (:selected-entity-type @state)
+      :reinitialize? true :initial? true))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})
