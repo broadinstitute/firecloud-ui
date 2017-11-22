@@ -6,6 +6,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
@@ -47,7 +48,7 @@
            "Error loading config: " config-error]
           (not config)
           [:div {:style {:textAlign "center" :padding "1rem"}}
-           [comps/Spinner {:text "Loading config..."}]]
+           (spinner "Loading config...")]
           :else
           [:div {:style {:display "flex"}}
            [mr-sync/SyncContainer {:ref "sync-container" :config config}]

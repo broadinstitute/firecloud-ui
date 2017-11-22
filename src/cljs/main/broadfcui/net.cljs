@@ -2,6 +2,7 @@
   (:require
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -27,8 +28,8 @@
      (nil? ajax-response)
      (if blocking?
        [comps/Blocker {:banner (or loading-text "Loading...")}]
-       [comps/Spinner {:text (or loading-text "Loading...")
-                       :style {:display "inline-block"}}])
+       (spinner {:style {:display "inline-block"}}
+                (or loading-text "Loading...")))
      (not success?)
      (if handle-error
        (handle-error parsed-response)

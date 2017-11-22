@@ -11,6 +11,7 @@
    [broadfcui.common.table :as table]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -67,7 +68,7 @@
      (let [{:keys [load-error data]} @state
            {:keys [header table-data]} props]
        (cond load-error [comps/ErrorViewer {:error load-error}]
-             (not data) [comps/Spinner {:text "Loading members..."}]
+             (not data) (spinner "Loading members...")
              :else
              [:div {:style {:position "relative"}}
               (when header

@@ -1,10 +1,10 @@
 (ns broadfcui.components.queue-status
   (:require
    [dmohs.react :as react]
-   [broadfcui.components.buttons :as button]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.duration :as duration]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as button]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    ))
 
@@ -22,7 +22,7 @@
           queue-error (style/create-server-error-message [:div {}
                                                           [:div {} "Could not load queue status."]
                                                           [:div {} queue-error]])
-          (not queue-status) [:div {} [comps/Spinner {:text "Loading submission queue status..."}]]
+          (not queue-status) (spinner "Loading submission queue status...")
           :else
           [:div {}
            (make-row "Estimated wait time:" (duration/fuzzy-duration-ms 0 queue-time))

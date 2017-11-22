@@ -9,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
@@ -53,7 +54,7 @@
                                     :redacted? redacted?}
                                    (select-keys props [:editing? :snapshots :wdl-parse-error :onSnapshotIdChange]))]
              error (style/create-server-error-message error)
-             :else [comps/Spinner {:text "Loading details..."}])))
+             :else (spinner "Loading details..."))))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :load-agora-method))
@@ -142,7 +143,7 @@
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
-                  [comps/Spinner {:text "Loading Method Configuration..."}]]))
+                  (spinner "Loading Method Configuration...")]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-validated-method-config))

@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -22,7 +22,7 @@
            {:keys [on-select style]} props]
        (assert on-select ":on-select is required for WorkspaceSelector")
        (if-not workspaces
-         [comps/Spinner {:text "Loading workspaces..."}]
+         (spinner "Loading workspaces...")
          (style/create-select
           {:defaultValue ""
            :ref (fn [elem]

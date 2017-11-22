@@ -11,6 +11,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
@@ -28,7 +29,7 @@
        (cond config-error (style/create-server-error-message config-error)
              config [:div {:style {:padding "0.5rem 1rem" :background-color "white"}}
                      (method-common/render-config-details config)]
-             :else [comps/Spinner {:text "Loading Configuration Details..."}])))
+             :else (spinner "Loading Configuration Details..."))))
    :component-did-mount
    (fn [{:keys [props this]}]
      (this :-load (:preview-config props)))

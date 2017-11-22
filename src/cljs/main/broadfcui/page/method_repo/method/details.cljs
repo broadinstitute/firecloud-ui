@@ -7,6 +7,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -102,7 +103,7 @@
             "Error loading method: " method-error]
            (if-not selected-snapshot
              [:div {:style {:textAlign "center" :padding "1rem"}}
-              [comps/Spinner {:text "Loading method..."}]]
+              (spinner "Loading method...")]
              (condp = active-tab
                WDL (react/create-element
                     [WDLViewer

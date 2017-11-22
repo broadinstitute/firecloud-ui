@@ -2,8 +2,8 @@
   (:require
    [clojure.set :as set]
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.copy-data-entities :as copy-data-entities]
    [broadfcui.page.workspace.workspace-common :as ws-common]
@@ -52,7 +52,7 @@
                                      " data from an incompatible Authorization Domain.")]))})]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
-                [comps/Spinner {:text "Loading workspaces..."}]])))
+                (spinner "Loading workspaces...")])))
    :component-did-mount
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch

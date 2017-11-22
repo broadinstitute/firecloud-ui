@@ -14,6 +14,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -98,7 +99,7 @@
                         (this :-load-registration-status))]
           (case (:registration-status @state)
             nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-                 [comps/Spinner {:text "Loading user information..."}]]
+                 (spinner "Loading user information...")]
             :error [:div {:style {:margin "2em 0"}}
                     (style/create-server-error-message (.-errorMessage this))]
             :not-registered (profile-page/render

@@ -8,6 +8,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -22,7 +23,7 @@
        (react/create-element
         (let [{:keys [billing-accounts error]} @state]
           (cond
-            (not (or billing-accounts error)) [comps/Spinner {:text "Loading billing accounts..."}]
+            (not (or billing-accounts error)) (spinner "Loading billing accounts...")
             error
             (case (:code error)
               (:unknown :parse-error)

@@ -9,6 +9,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
@@ -16,14 +17,6 @@
 
 (declare push-error)
 (declare create-error-message)
-
-(react/defc Spinner
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
-             :data-test-id "spinner"}
-      (icons/render-icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
-      [:span {:data-test-id "spinner-text"} (:text props)]])})
 
 
 (react/defc AnimatedEllipsis
@@ -52,7 +45,7 @@
                  :position (if fixed? "fixed" "absolute") :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
                  :display "flex" :justifyContent "center" :alignItems "center"}}
    [:div {:style {:backgroundColor "#fff" :padding "2em"}}
-    [Spinner {:text text}]]])
+    (spinner text)]])
 
 (react/defc Blocker
   {:render

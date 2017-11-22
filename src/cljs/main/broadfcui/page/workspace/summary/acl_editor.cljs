@@ -8,6 +8,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -38,7 +39,7 @@
                     :main (this :-render-acl-content)
                     :offering-invites (this :-render-invite-offer)
                     :load-error (style/create-server-error-message (:load-error @state))
-                    :loading [comps/Spinner {:text "Loading Workspace Permissions..."}])
+                    :loading (spinner "Loading Workspace Permissions..."))
          :ok-button (case status
                       :main {:text "Save" :onClick #(this :-persist-acl false)}
                       :offering-invites {:text "Invite" :onClick #(this :-persist-acl true)}

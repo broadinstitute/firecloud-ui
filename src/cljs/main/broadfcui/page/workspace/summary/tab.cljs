@@ -11,6 +11,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -318,8 +319,7 @@
           "Google Bucket"
           [:div {}
            (case bucket-access?
-             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-                  [comps/Spinner {:height "1.5ex"}]]
+             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
              true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
                                           :title "Click to open the Google Cloud Storage browser for this bucket"}
                                          bucketName)
@@ -353,8 +353,7 @@
                    :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
         (when (seq library-attributes)
           (if-not library-schema
-            [comps/Spinner {:text "Loading Dataset Attributes"
-                            :style {:marginBottom "2rem"}}]
+            (spinner {:style {:marginBottom "2rem"}} "Loading Dataset Attributes...")
             [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
                                             request-refresh can-share? owner? curator? writer? catalog-with-read?)]))
         [attributes/WorkspaceAttributeViewerEditor

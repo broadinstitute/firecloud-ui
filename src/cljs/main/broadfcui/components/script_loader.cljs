@@ -1,7 +1,7 @@
 (ns broadfcui.components.script-loader
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -33,4 +33,4 @@
             :url path
             :attributes attributes}))]
         (when (and (not on-create) (not loaded?))
-          [comps/Spinner])]))})
+          (spinner))]))})

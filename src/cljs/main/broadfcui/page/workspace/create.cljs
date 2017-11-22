@@ -12,6 +12,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -135,7 +136,7 @@
      (let [{:keys [all-groups selected-groups]} @state
            locked-groups (vec (:auth-domain props))]
        (if-not all-groups
-         [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+         (spinner {:style {:margin 0}} "Loading Groups...")
          [:div {}
           (if (empty? all-groups)
             [:div {} "You are not a member of any groups. You must be a member of a group to set an Authorization Domain."]
@@ -182,7 +183,7 @@
       [buttons/Button
        {:data-test-id "open-create-workspace-modal-button"
         :text (case (:disabled-reason props)
-                :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
+                :not-loaded (spinner {:style {:margin 0}} "Getting billing info...")
                 "Create New Workspace...")
         :icon :add-new
         :disabled? (case (:disabled-reason props)

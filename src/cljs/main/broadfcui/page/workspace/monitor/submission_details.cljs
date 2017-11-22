@@ -12,6 +12,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -151,7 +152,7 @@
            {:keys [submission error-message]} server-response]
        (cond
          (nil? server-response)
-         [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analysis details..."}]]
+         [:div {:style {:textAlign "center"}} (spinner "Loading analysis details...")]
          error-message (style/create-server-error-message error-message)
          :else
          [:div {}

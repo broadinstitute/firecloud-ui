@@ -16,6 +16,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -51,7 +52,7 @@
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
           :data-test-id "status-icon" :data-test-value "unknown"}
-   [comps/Spinner {:size 12}]])
+   (spinner)])
 
 (defn icon-for-cluster-status [status]
   (case status
