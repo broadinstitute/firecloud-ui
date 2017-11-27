@@ -130,7 +130,8 @@
            (let [button-props (:column-edit-button toolbar)]
              [:div {:style (:style button-props)}
               [FoundationDropdown
-               {:button-contents [buttons/Button (:button button-props)]
+               {:data-test-id data-test-id
+                :button-contents [buttons/Button (:button button-props)]
                 :dropdown-class "bottom"
                 :style {:padding 0 :border "none"}
                 :contents [ColumnEditor (utils/restructure columns column-display update-column-display fixed-column-count)]}]]))
