@@ -88,7 +88,7 @@ fi
 mkdir -p $WORKING_DIR/chrome/downloads
 # Without this, the directory permissions don't allow chrome to automatically save downloads which
 # leads to a system save dialog opening which Selenium doesn't have any way of handling.
-echo '--- Begin ugly but necessary python error that looks bad but actually does something useful ---'
+echo '--- Begin ugly but necessary python stack trace and error "ValueError" that looks bad but actually does something useful ---'
 docker-compose -f ${HUB_COMPOSE} exec chrome sudo chmod 777 /app/chrome/downloads
 echo '--- End ugly but necessary python error ---'
 
