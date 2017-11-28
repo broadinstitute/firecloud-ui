@@ -16,6 +16,10 @@
    [broadfcui.utils :as utils]
    ))
 
+(defonce saved-user-profile (atom false))
+
+(defn save-user-profile [user-profile]
+  (reset! saved-user-profile user-profile))
 
 (defn get-nih-link-href []
   (str (get @config/config "shibbolethUrlRoot")
@@ -112,14 +116,14 @@
            :programLocationState :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state]}]
-     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (:values @state)))
+     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (merge @saved-user-profile (:values @state))))
    :validation-errors
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (this :get-field-keys))))
    :render
    (fn [{:keys [this props state]}]
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
-           (:values @state)
+           @saved-user-profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
             (this :render-nested-field :firstName "First Name" true)
@@ -149,7 +153,7 @@
      [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
       [:label {}
        [:input {:type "radio" :value value :name key
-                :checked (= (get-in @state [:values key]) value)
+                :checked (= (@saved-user-profile key) value)
                 :onChange #(swap! state assoc-in [:values key] value)}]
        value]])
    :render-nested-field
@@ -159,7 +163,7 @@
        [:div {:style {:fontSize "88%"}} label]]
       [input/TextField {:style {:marginRight "1em" :width 200}
                         :data-test-id key
-                        :defaultValue (get-in @state [:values key])
+                        :defaultValue (@saved-user-profile key)
                         :ref (name key)
                         :predicates [(when required (input/nonempty label))]
                         :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
@@ -170,7 +174,7 @@
        (style/create-form-label label)
        [input/TextField {:style {:width 200}
                          :data-test-id key
-                         :defaultValue (get-in @state [:values key])
+                         :defaultValue (@saved-user-profile key)
                          :ref (name key)
                          :placeholder (when valid-email-or-empty
                                         (-> @utils/auth2-atom
@@ -178,14 +182,16 @@
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
-   :component-did-mount
+   :component-will-mount
    (fn [{:keys [state]}]
-     (endpoints/profile-get
-      (fn [{:keys [success? status-text get-parsed-response]}]
-        (if success?
-          (let [parsed (get-parsed-response false)]
-            (swap! state assoc :values (common/parse-profile parsed)))
-          (swap! state assoc :error-message status-text)))))})
+     (when-not @saved-user-profile
+       (endpoints/profile-get
+        (fn [{:keys [success? status-text get-parsed-response]}]
+          (if success?
+            (do
+              (save-user-profile (common/parse-profile (get-parsed-response false)))
+              (swap! state assoc :loaded-profile? true))
+            (swap! state assoc :error-message status-text))))))})
 
 
 (react/defc- Page
@@ -225,7 +231,7 @@
    :save
    (fn [{:keys [props state refs]}]
      (utils/multi-swap! state (dissoc :server-error :validation-errors)
-                              (assoc :in-progress? true))
+                        (assoc :in-progress? true))
      (let [values ((@refs "form") :get-values)
            validation-errors ((@refs "form") :validation-errors)]
        (cond
@@ -234,15 +240,17 @@
           values
           (fn [{:keys [success? get-parsed-response]}]
             (swap! state (fn [s]
-                           (let [new-state (dissoc s :in-progress? :validation-errors)]
+                           (let [new-state (dissoc s :in-progress? :validation-errors)
+                                 parsed (get-parsed-response false)]
                              (if-not success?
                                (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
+                                 (save-user-profile (common/parse-profile parsed))
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)
-                                  (assoc :validation-errors validation-errors)))))})
+                            (assoc :validation-errors validation-errors)))))})
 
 (defn render [props]
   (react/create-element Page props))

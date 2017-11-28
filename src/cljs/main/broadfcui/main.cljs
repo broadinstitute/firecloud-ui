@@ -120,6 +120,7 @@
      (endpoints/profile-get
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+          (profile-page/save-user-profile parsed-values)
           (cond
             (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
             (swap! state assoc :registration-status :registered)
@@ -185,7 +186,7 @@
                                   :on-error #(swap! state assoc :force-sign-in-error %)})))
    :render
    (fn [{:keys [state]}]
-     (let [{:keys [auth2 user-status window-hash]} @state
+     (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
            {:keys [component make-props public?]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
                                public?
@@ -200,7 +201,7 @@
                             (nav/is-current-path? :status))))
           [NihLinkWarning])
         [top-banner/Container]
-        (when (:config-loaded? @state)
+        (when config-loaded?
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
@@ -220,7 +221,7 @@
                                                         :refresh-token-saved))))}])
 
            (cond
-             (not (:config-loaded? @state))
+             (not config-loaded?)
              [config-loader/Component
               {:on-success (fn []
                              (swap! state assoc :config-loaded? true)
