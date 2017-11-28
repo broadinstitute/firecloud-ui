@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.overlay :as overlay]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
@@ -24,13 +23,13 @@
         {:keys [hidden?] :as resolved} (table-utils/find-by-id id columns)
         text (table-utils/canonical-name resolved)]
     (when-not hidden?
-      [:div {}
+      [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"}}
        (icons/render-icon {:className "grab-icon"
-                    :style {:visibility (when fixed? "hidden")
-                            :color (style/colors :text-light) :fontSize 16
-                            :verticalAlign "middle" :marginRight "0.5rem"}
-                    :draggable false
-                    :onMouseDown on-drag-mouse-down}
+                           :style {:visibility (when fixed? "hidden")
+                                   :color (style/colors :text-light) :fontSize 16
+                                   :verticalAlign "middle" :marginRight "0.5rem"}
+                           :draggable false
+                           :onMouseDown on-drag-mouse-down}
                           :reorder)
        [:label {:style {:cursor (when-not (or dragging? fixed?) "pointer")}}
         [:input {:data-test-id (str text "-column-toggle")
@@ -50,7 +49,8 @@
             reorderable-columns (vec (drop fixed-column-count column-display))]
         [:div {:className (when drag-index "grabbing-icon")
                :style {:border (str "2px solid " (:line-default style/colors))
-                       :padding "1em" :lineHeight "1.5em"}}
+                       :padding "1em" :lineHeight "1.5em"
+                       :maxHeight 305 :overflow "auto"}} ; 305 makes the break mid-line
          [:div {:style {:display "flex" :marginBottom "0.5em" :justifyContent "space-between"
                         :padding "4px 8px" :borderRadius 5 :cursor (when-not drag-index "pointer")
                         :border (str "1px solid " (:button-primary style/colors))
@@ -123,27 +123,3 @@
      "mouseup"
      (fn [{:keys [this]}]
        (this :-on-mouse-up))})))
-
-
-(react/defc ColumnEditButton
-  {:get-default-props
-   (fn []
-     {:reorder-anchor :left})
-   :render
-   (fn [{:keys [props state refs]}]
-     [:div {}
-      [buttons/Button (merge
-                       {:ref "col-edit-button" :onClick #(swap! state assoc :reordering-columns? true)}
-                       (:button props))]
-      (when (:reordering-columns? @state)
-        (let [dismiss #(swap! state assoc :reordering-columns? false)]
-          [overlay/Overlay
-           {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
-            :dismiss-self dismiss
-            :anchor-x (:reorder-anchor props)
-            :content
-            (react/create-element
-             ColumnEditor
-             (merge
-              {:dismiss dismiss}
-              (select-keys props [:columns :column-display :update-column-display :fixed-column-count])))}]))])})

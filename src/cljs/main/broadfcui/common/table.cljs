@@ -3,13 +3,14 @@
    [dmohs.react :as react]
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
-   [broadfcui.components.text-filter :refer [TextFilter]]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.body :as body]
-   [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
+   [broadfcui.common.table.column-editor :refer [ColumnEditor]]
    [broadfcui.common.table.paginator :refer [Paginator]]
    [broadfcui.common.table.utils :as table-utils]
-   [broadfcui.config :as config]
+   [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :refer [FoundationDropdown]]
+   [broadfcui.components.text-filter :refer [TextFilter]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
@@ -128,10 +129,12 @@
          (when (:reorderable-columns? behavior)
            (let [button-props (:column-edit-button toolbar)]
              [:div {:style (:style button-props)}
-              [ColumnEditButton
-               (assoc (utils/restructure columns column-display update-column-display fixed-column-count)
-                 :reorder-anchor (:anchor button-props)
-                 :button (:button button-props))]]))
+              [FoundationDropdown
+               {:data-test-id data-test-id
+                :button-contents [buttons/Button (:button button-props)]
+                :dropdown-class "bottom"
+                :style {:padding 0 :border "none"}
+                :contents [ColumnEditor (utils/restructure columns column-display update-column-display fixed-column-count)]}]]))
          (when (and (:filterable? behavior) (not (contains? external-query-params :filter-text)))
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}
