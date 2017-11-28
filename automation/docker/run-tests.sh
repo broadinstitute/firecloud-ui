@@ -19,7 +19,7 @@ fi
 # Defaults
 ENV=dev
 NUM_NODES=2
-TEST_ENTRYPOINT="testOnly -- -l ProdTest"
+TEST_ENTRYPOINT="testOnly *WorkspaceSpec -- -z \"Members should be able to see and access the Notebooks tab\""
 TEST_CONTAINER="automation-$(head /dev/urandom | env LC_CTYPE=C tr -dc a-z0-9 | head -c 8)"
 DOCKERHOST_ADDRESS=$(docker network inspect docker_default | grep Gateway | awk -F '"' '{ print $4 }')
 
