@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
@@ -20,7 +21,6 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
-   [broadfcui.common.icons :as icons]
    ))
 
 
@@ -112,19 +112,20 @@
               [comps/Spinner {:text "Loading method..."}]]
              (condp = active-tab
                WDL (react/create-element
-                    [:div {:style {}}
+                    [:div {}
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
-                     (if (:public selected-snapshot)
+                     (when (:public selected-snapshot)
                        [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
                         "Import URL for this WDL: "
-                        (let [link (str (config/api-url-root)
+                        (let [{:keys [namespace name snapshotId]} selected-snapshot
+                              link (str (config/api-url-root)
                                         "/ga4gh/v1/tools/"
-                                        (:namespace selected-snapshot)
+                                        namespace
                                         ":"
-                                        (:name selected-snapshot)
+                                        name
                                         "/versions/"
-                                        (:snapshotId selected-snapshot)
+                                        snapshotId
                                         "/plain-WDL/descriptor")]
                           (links/create-external {:href link} link))])])
                CONFIGS (react/create-element
