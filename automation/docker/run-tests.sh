@@ -47,7 +47,7 @@ fi
 if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then
   HUB_COMPOSE=hub-compose.yml
 else
-  HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${UI_LOCATION} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE}  --add-host=leonardo-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
+  HOST_MAPPING="--add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${UI_LOCATION} --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=rawls-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=thurloe-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=sam-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} --add-host=leonardo-fiab.dsde-${ENV}.broadinstitute.org:${FC_INSTANCE} -e SLACK_API_TOKEN=$SLACK_API_TOKEN -e BUILD_NUMBER=$BUILD_NUMBER -e SLACK_CHANNEL=${SLACK_CHANNEL}"
   HUB_COMPOSE=hub-compose-fiab.yml
 fi
 
