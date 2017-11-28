@@ -2,11 +2,13 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
+   [broadfcui.page.profile :as profile]
    [broadfcui.utils :as utils]
    ))
 
@@ -100,3 +102,47 @@
    :-remove-alert
    (fn [{:keys [state]} alert]
      (swap! state update :service-alerts #(filter (partial not= alert) %)))})
+
+(react/defc TrialAlertContainer
+  {:render
+   (fn [{:keys [state]}]
+     (when-let [current-trial-state (keyword (:trialCurrentState @profile/saved-user-profile))]
+       (let [{:keys [title message link button]} (@state current-trial-state)]
+         (flex/box {:style {:color "white" :background-color (:button-primary style/colors)
+                            :padding "1rem"
+                            :display "flex" :justifyContent "center" :alignItems "center"}}
+                   [:div {:style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
+                                  :borderRight "1px solid white"
+                                  :paddingRight "1rem" :marginRight "1rem"
+                                  :maxWidth 200 :flexShrink 0}}
+                    title]
+                   [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
+                    message
+                    (when link
+                      (let [{:keys [label url]} link]
+                        (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label)))]
+                   (when button
+                     (let [{:keys [label url external?]} button]
+                       [:a {:style {:display "block"
+                                    :color "white" :textDecoration "none" :fontSize "1.125rem"
+                                    :fontWeight 500
+                                    :border "2px solid white" :borderRadius "0.25rem"
+                                    :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
+                            :href url
+                            :target (when external? "_blank")}
+                        label
+                        (when external?
+                          (icons/render-icon
+                           {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
+                           :external-link))]))))))
+   :component-will-mount
+   (fn [{:keys [this]}]
+     (add-watch profile/saved-user-profile :trial-alerts
+                (fn [_ _ _ {:keys [trialCurrentState]}]
+                  (when trialCurrentState
+                    (this :-get-trial-messages)))))
+   :-get-trial-messages
+   (fn [{:keys [state]}]
+     (utils/ajax {:url (config/trial-json-url)
+                  :on-done (fn [{:keys [get-parsed-response]}]
+                             (reset! state (get-parsed-response)))}))})
