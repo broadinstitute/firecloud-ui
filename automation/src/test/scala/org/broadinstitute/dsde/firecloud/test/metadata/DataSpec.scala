@@ -435,8 +435,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
   }
 
-//  This test are just to make sure functionality in this context works
-//  BUT we should really also write some tests for this specific component (seperate of this component)
+//  This test is just to make sure functionality in this context works
+//  BUT we should really also write some tests for this specific component (seperate of this context)
   "Column reordering should be reflected" in withWebDriver {implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
