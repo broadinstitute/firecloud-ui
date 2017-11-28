@@ -7,7 +7,6 @@ services:
     extra_hosts:
       - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
-      - "leonardo-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
     environment:
       # Prevent nodes from giving up after 30 seconds of inactivity (yes, this is configured on the hub rather than the nodes)
       SE_OPTS: -timeout 360
