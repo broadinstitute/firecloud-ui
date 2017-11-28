@@ -24,7 +24,8 @@
         text (table-utils/canonical-name resolved)]
     (when-not hidden?
       [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"}}
-       (icons/render-icon {:className "grab-icon"
+       (icons/render-icon {:data-test-id (str text "-grab-icon")
+                           :className "grab-icon"
                            :style {:visibility (when fixed? "hidden")
                                    :color (style/colors :text-light) :fontSize 16
                                    :verticalAlign "middle" :marginRight "0.5rem"}
