@@ -82,8 +82,8 @@
           (this :-render-snapshot-selector)]
          (when (:public (:selected-snapshot @state))
            [:span {:style {:alignSelf "center" :marginLeft "2.5rem"}}
-            (icons/render-icon {} :public)
-            " Publicly Readable"]) ; wording matches the permissions modal
+            (icons/render-icon {:style {:marginRight "0.5rem"}} :public)
+            "Publicly Readable"]) ; wording matches the permissions modal
          (when-not workspace-id
            [buttons/Button {:style {:marginLeft "auto"}
                             :text "Export to Workspace..."
