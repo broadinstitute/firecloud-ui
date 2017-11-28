@@ -21,6 +21,13 @@
 (defn save-user-profile [user-profile]
   (reset! saved-user-profile user-profile))
 
+(defn reload-user-profile [& [on-done]]
+  (endpoints/profile-get
+   (fn [{:keys [success? get-parsed-response] :as response}]
+     (when success?
+       (save-user-profile (common/parse-profile (get-parsed-response false))))
+     (when on-done (on-done response)))))
+
 (defn get-nih-link-href []
   (str (get @config/config "shibbolethUrlRoot")
        "/link-nih-account?redirect-url="
@@ -185,12 +192,10 @@
    :component-will-mount
    (fn [{:keys [state]}]
      (when-not @saved-user-profile
-       (endpoints/profile-get
-        (fn [{:keys [success? status-text get-parsed-response]}]
+       (reload-user-profile
+        (fn [{:keys [success? status-text]}]
           (if success?
-            (do
-              (save-user-profile (common/parse-profile (get-parsed-response false)))
-              (swap! state assoc :loaded-profile? true))
+            (swap! state assoc :loaded-profile? true)
             (swap! state assoc :error-message status-text))))))})
 
 

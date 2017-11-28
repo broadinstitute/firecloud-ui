@@ -117,10 +117,9 @@
        (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
-     (endpoints/profile-get
+     (profile-page/reload-user-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
-          (profile-page/save-user-profile parsed-values)
           (cond
             (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
             (swap! state assoc :registration-status :registered)
