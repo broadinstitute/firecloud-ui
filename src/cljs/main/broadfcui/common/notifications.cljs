@@ -7,6 +7,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.top-banner :as top-banner]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.page.profile :as profile]
    [broadfcui.utils :as utils]
@@ -142,7 +143,7 @@
                                                        (swap! state assoc :loading? true)))
                                           :target (when external? "_blank")}
                                       (if (and (not external?) loading?)
-                                        [comps/Spinner {:style {:fontSize "1rem" :margin 0}}]
+                                        (spinner {:style {:fontSize "1rem" :margin 0}})
                                         label)
                                       (when external?
                                         (icons/render-icon
