@@ -38,6 +38,7 @@ services:
     extra_hosts:
       - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
+      - "leonardo-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
     logging:
       driver: syslog
       options:
