@@ -77,6 +77,7 @@
            extra-columns (subvec search-result-columns 5)]
        [Table
         {:ref "table" :persistence-key "library-table" :v 5
+         :data-test-id "library-table"
          :fetch-data (this :-pagination)
          :style {:content {:marginLeft "2rem"}}
          :body
@@ -240,7 +241,7 @@
   [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
    [Autosuggest
     {:value search-text
-     :inputProps {:placeholder "Search"}
+     :inputProps {:placeholder "Search" :data-test-id "library-search-input"}
      :get-suggestions (fn [query callback]
                         (utils/ajax-orch
                          "/library/suggest/"
