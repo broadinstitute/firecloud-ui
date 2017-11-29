@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.{By, Keys, WebDriver}
+import org.openqa.selenium.{By, Keys, WebDriver, WebElement}
 
 case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful {
@@ -78,10 +78,21 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   def hideColumn(header: String): Unit = {
     if (readAllText(columnHeaders).contains(header)) {
       columnEditorButton.doClick()
-      val colToBeHidden = Checkbox(s"$header-column-toggle" inside this)
+      val colToBeHidden = Checkbox(TestId(s"$header-column-toggle"))
       colToBeHidden.ensureUnchecked()
       val action = new Actions(webDriver)
       action.sendKeys(Keys.ESCAPE).perform()
+    }
+  }
+
+  def moveColumn(header: String, otherHeader: String): Unit = {
+    val allHeaders = readAllText(columnHeaders)
+    if (allHeaders.contains(header) && allHeaders.contains(otherHeader)) {
+      columnEditorButton.doClick()
+      val colToBeMoved = testId(s"$header-grab-icon").element.underlying
+      val placeToMoveCol = testId(s"$otherHeader-grab-icon").element.underlying
+      val action = new Actions(webDriver)
+      action.clickAndHold(colToBeMoved).moveToElement(placeToMoveCol).release().build().perform()
     }
   }
 }
