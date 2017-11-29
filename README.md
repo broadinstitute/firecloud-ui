@@ -33,7 +33,7 @@ Support for running FireCloud outside of the Broad is planned.
 
 ### Development Stack Setup
 
-1. Make sure you've run the `firecloud-setup.sh` script in the `local` branch of the `firecloud-develop` repo to render the config files and run script.
+1. Make sure you've run the `firecloud-setup.sh` script in the `firecloud-develop` repo to render the config files and run script.
 2. Be sure you've added local.broadinstitute.org to your `/etc/hosts`:
 
 ```bash
