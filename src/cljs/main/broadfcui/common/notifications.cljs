@@ -142,8 +142,8 @@
                                                                      #(swap! state dissoc :loading?)))})
                                                        (swap! state assoc :loading? true)))
                                           :target (when external? "_blank")}
-                                      (if (and (not external?) loading?)
-                                        (spinner {:style {:fontSize "1rem" :margin 0}})
+                                      (if loading?
+                                        (spinner {:style {:fontSize "1rem" :margin 0}} "")
                                         label)
                                       (when external?
                                         (icons/render-icon
