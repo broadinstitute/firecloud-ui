@@ -87,7 +87,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
 
   def moveColumn(header: String, otherHeader: String): Unit = {
     val allHeaders = readAllText(columnHeaders)
-    if (allHeaders.contains(header) & allHeaders.contains(otherHeader)) {
+    if (allHeaders.contains(header) && allHeaders.contains(otherHeader)) {
       columnEditorButton.doClick()
       val colToBeMoved = testId(s"$header-grab-icon").element.underlying
       val placeToMoveCol = testId(s"$otherHeader-grab-icon").element.underlying
