@@ -9,8 +9,10 @@
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -36,7 +38,7 @@
        :content
        [:div {}
         (when (:deleting? @state)
-          [comps/Blocker {:banner "Deleting..."}])
+          (blocker "Deleting..."))
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} (str "Deleting it will delete the associated bucket data"
                     (when (:published? props) " and unpublish the workspace from the Data Library")
@@ -135,9 +137,9 @@
              (this :-render-sidebar derived)
              (this :-render-main derived)
              (when (:updating-attrs? @state)
-               [comps/Blocker {:banner "Updating Attributes..."}])
+               (blocker "Updating Attributes..."))
              (when (contains? @state :locking?)
-               [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
+               (blocker (if (:locking? @state) "Locking..." "Unlocking...")))]))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :refresh))
@@ -184,7 +186,7 @@
                    :data-test-state (if ready? "ready" "loading")
                    :style {:width 270}}
              (when-not ready?
-               (comps/render-blocker "Loading..."))
+               (blocker "Loading..."))
              (when (and can-share? (not editing?))
                [buttons/SidebarButton
                 {:data-test-id "share-workspace-button"
@@ -318,8 +320,7 @@
           "Google Bucket"
           [:div {}
            (case bucket-access?
-             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-                  [comps/Spinner {:height "1.5ex"}]]
+             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
              true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
                                           :title "Click to open the Google Cloud Storage browser for this bucket"}
                                          bucketName)
@@ -353,8 +354,7 @@
                    :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
         (when (seq library-attributes)
           (if-not library-schema
-            [comps/Spinner {:text "Loading Dataset Attributes"
-                            :style {:marginBottom "2rem"}}]
+            (spinner {:style {:marginBottom "2rem"}} "Loading Dataset Attributes...")
             [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
                                             request-refresh can-share? owner? curator? writer? catalog-with-read?)]))
         [attributes/WorkspaceAttributeViewerEditor

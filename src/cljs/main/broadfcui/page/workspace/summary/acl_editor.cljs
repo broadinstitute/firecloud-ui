@@ -6,8 +6,10 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -38,7 +40,7 @@
                     :main (this :-render-acl-content)
                     :offering-invites (this :-render-invite-offer)
                     :load-error (style/create-server-error-message (:load-error @state))
-                    :loading [comps/Spinner {:text "Loading Workspace Permissions..."}])
+                    :loading (spinner "Loading Workspace Permissions..."))
          :ok-button (case status
                       :main {:text "Save" :onClick #(this :-persist-acl false)}
                       :offering-invites {:text "Invite" :onClick #(this :-persist-acl true)}
@@ -78,7 +80,7 @@
        (react/create-element
         [:div {}
          (when (:saving? @state)
-           [comps/Blocker {:banner "Updating..."}])
+           (blocker "Updating..."))
          [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
          (map (fn [acl-entry]
                 [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
@@ -162,7 +164,7 @@
      (react/create-element
       [:div {}
        (when (:saving? @state)
-         [comps/Blocker {:banner "Updating..."}])
+         (blocker "Updating..."))
        [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
         [:div {:style {:display "inline-block" :width 400}} "User ID"]
         [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]

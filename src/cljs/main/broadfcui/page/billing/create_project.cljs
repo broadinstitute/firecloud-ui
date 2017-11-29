@@ -8,6 +8,8 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -22,7 +24,7 @@
        (react/create-element
         (let [{:keys [billing-accounts error]} @state]
           (cond
-            (not (or billing-accounts error)) [comps/Spinner {:text "Loading billing accounts..."}]
+            (not (or billing-accounts error)) (spinner "Loading billing accounts...")
             error
             (case (:code error)
               (:unknown :parse-error)
@@ -37,7 +39,7 @@
               [:div {:style {:width 750}
                      :data-test-id "create-billing-project-form"}
                (when (:creating? @state)
-                 [comps/Blocker {:banner "Creating billing account..."}])
+                 (blocker "Creating billing account..."))
                [:div {:style {:fontSize "120%"}}
                 "1. Enter a unique name:"]
                [input/TextField {:ref "name-field" :autoFocus true

@@ -7,8 +7,10 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
@@ -53,7 +55,7 @@
                                     :redacted? redacted?}
                                    (select-keys props [:editing? :snapshots :wdl-parse-error :onSnapshotIdChange]))]
              error (style/create-server-error-message error)
-             :else [comps/Spinner {:text "Loading details..."}])))
+             :else (spinner "Loading details..."))))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :load-agora-method))
@@ -142,7 +144,7 @@
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
-                  [comps/Spinner {:text "Loading Method Configuration..."}]]))
+                  (spinner "Loading Method Configuration...")]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-validated-method-config))
@@ -167,7 +169,7 @@
            methods (:methods @state)
            methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
        [:div {}
-        [comps/Blocker {:banner (:blocker @state)}]
+        (blocker (:blocker @state))
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])

@@ -10,6 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -38,7 +39,7 @@
         (cond
           (:error-message @state) (style/create-server-error-message (:error-message @state))
           (:pending-nih-username-token @state)
-          [components/Spinner {:ref "pending-spinner" :text "Linking NIH account..."}]
+          (spinner {:ref "pending-spinner"} "Linking NIH account...")
           (nil? username)
           (links/create-external {:href (get-nih-link-href)} "Log-In to NIH to link your account")
           :else
@@ -143,7 +144,7 @@
             (common/clear-both)
             (when-not (:new-registration? props)
               [:div {} [NihLink (select-keys props [:nih-token])]])]
-           :else [components/Spinner {:text "Loading User Profile..."}]))
+           :else (spinner "Loading User Profile...")))
    :render-radio-field
    (fn [{:keys [state]} key value]
      [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
@@ -218,7 +219,7 @@
            (:done? @state)
            [:div {:style {:color (:state-success style/colors)}} "Profile saved!"]
            (:in-progress? @state)
-           [components/Spinner {:text "Saving..."}]
+           (spinner "Saving...")
            :else
            [buttons/Button {:text (if new? "Register" "Save Profile")
                             :onClick #(this :save)}])]]))

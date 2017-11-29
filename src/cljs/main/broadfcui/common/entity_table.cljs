@@ -4,11 +4,11 @@
    [inflections.core :as inflections]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -64,7 +64,7 @@
        [:div {}
         (cond
           server-error (style/create-server-error-message server-error)
-          (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
+          (nil? entity-metadata) [:div {:style {:textAlign "center"}} (spinner "Retrieving entity types...")]
           :else
           (let [attributes (map keyword (get-in entity-metadata [(keyword selected-entity-type) :attributeNames]))
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]

@@ -3,8 +3,8 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -112,7 +112,7 @@
                                                    (react/create-element
                                                     [:div containerProps
                                                      (case suggestions
-                                                       [:loading] [comps/Spinner {:text "Loading..."}]
+                                                       [:loading] (spinner "Loading...")
                                                        [:error] [:div {:style {:margin "1em"}} "Error loading results."]
                                                        (.-children arg))])))
                    :theme

@@ -4,10 +4,10 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.method.messages :as messages]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -65,7 +65,7 @@
      (let [{:keys [acl-vec public-status count-orig]} @state]
        [:div {:style {:width 800}}
         (when (:saving? @state)
-          [comps/Blocker {:banner "Updating..."}])
+          (blocker "Updating..."))
         [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
          messages/methods-repo-group-alert
          [:div {:style {:float "left" :width column-width}} "User or Group ID"]

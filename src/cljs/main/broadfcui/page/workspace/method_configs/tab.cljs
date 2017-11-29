@@ -2,11 +2,11 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.method-configs.import-config :as import-config]
@@ -51,11 +51,11 @@
            {:configs (map #(add-redacted-attribute % methods) configs)
             :render-name (fn [config]
                            (links/create-internal
-                             {:data-test-id (str "method-config-" (:name config) "-link")
-                              :href (nav/get-link :workspace-method-config
-                                                  (:workspace-id props)
-                                                  (ws-common/config->id config))}
-                             (:name config)))
+                            {:data-test-id (str "method-config-" (:name config) "-link")
+                             :href (nav/get-link :workspace-method-config
+                                                 (:workspace-id props)
+                                                 (ws-common/config->id config))}
+                            (:name config)))
             :toolbar-items
             [flex/spring
              [buttons/Button
@@ -69,7 +69,7 @@
 
                :onClick #(swap! state assoc :importing? true)}]]})
           :else [:div {:style {:textAlign "center"}}
-                 [comps/Spinner {:text "Loading configurations..."}]])]))
+                 (spinner "Loading configurations...")])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :load))

@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.method.messages :as messages]
    [broadfcui.common.method.sync :as sync-common]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -24,7 +25,7 @@
          :content
          [:div {:style {:maxWidth 670}}
           (when (:granting? @state)
-            [comps/Blocker {:banner "Granting permission..."}])
+            (blocker "Granting permission..."))
           (when owned-methods
             [:div {}
              messages/methods-repo-group-alert

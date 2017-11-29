@@ -14,6 +14,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
@@ -340,7 +341,7 @@
 (defn- facet-section [{:keys [aggregates aggregate-properties expanded-aggregates
                               facet-filters aggregate-fields] :as props}]
   (if (empty? aggregates)
-    [[comps/Spinner {:text "Loading..."}]]
+    [(spinner "Loading...")]
     (map (fn [aggregate-field]
            [Facet (merge (utils/restructure aggregate-field aggregates)
                          (select-keys props [:update-filter :expanded-callback-function])

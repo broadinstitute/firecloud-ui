@@ -7,6 +7,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -48,7 +49,7 @@
                                             :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
                (str (if (> data-size preview-byte-count) "...") (:preview @state))]))]
           (when (:loading? @state)
-            [comps/Spinner {:text "Getting file info..."}])
+            (spinner "Getting file info..."))
           (when data
             [:div {:style {:marginTop "1em"}}
              (labeled "File size"

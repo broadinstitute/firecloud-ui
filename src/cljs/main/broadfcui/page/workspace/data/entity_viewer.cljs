@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :as entity-table]
    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.common.icons :as icons]
@@ -11,6 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
    ))
@@ -58,7 +58,7 @@
                      :fontSize "80%" :color (:text-light style/colors)}}
          (icons/render-icon {} :close)]
         (when (:loading-attributes? @state)
-          [comps/Blocker {:banner "Loading entity attributes..."}])
+          (blocker "Loading entity attributes..."))
         (when (not-empty (:last-entity @state))
           (let [last-entity (last (:last-entity @state))]
             [:a {:onClick (fn []

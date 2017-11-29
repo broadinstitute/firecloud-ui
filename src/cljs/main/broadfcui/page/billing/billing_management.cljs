@@ -11,6 +11,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -66,7 +67,7 @@
    (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
-       (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
+       (nil? (:projects @state)) (spinner "Loading billing projects...")
        :else
        (let [projects (->>
                        (:projects @state)

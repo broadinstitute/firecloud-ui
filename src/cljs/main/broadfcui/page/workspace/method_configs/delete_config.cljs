@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -17,7 +18,7 @@
         (cond
           (:error @state) [comps/ErrorViewer {:error (:error @state)}]
           (:deleting? @state) [:div {:style {:backgroundColor "#fff" :padding "1em"}}
-                               [comps/Spinner {:text "Deleting..."}]]
+                               (spinner "Deleting...")]
           :else "Are you sure you want to delete this method configuration?")]
        :dismiss (:dismiss props)
        :ok-button
