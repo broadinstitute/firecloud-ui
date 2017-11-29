@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToke
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model._
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
-import org.broadinstitute.dsde.workbench.google.model.GoogleProject
+import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount, ServiceAccountName}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
@@ -14,11 +14,11 @@ import org.scalatest.{FreeSpec, Matchers}
 class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
-  def findSaInGoogle(name: WorkbenchUserServiceAccountName): Option[WorkbenchUserServiceAccount] = {
+  def findSaInGoogle(name: ServiceAccountName): Option[ServiceAccount] = {
     googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name).futureValue
   }
 
-  def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
+  def findPetInGoogle(userInfo: UserStatusDetails): Option[ServiceAccount] = {
     findSaInGoogle(Sam.petName(userInfo))
   }
 
@@ -58,14 +58,14 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
       Sam.user.status()(tempAuthToken) shouldBe None
 
-      registerAsNewUser(WorkbenchUserEmail(tempUser.email))(tempAuthToken)
+      registerAsNewUser(WorkbenchEmail(tempUser.email))(tempAuthToken)
 
       val tempUserInfo = Sam.user.status()(tempAuthToken).get.userInfo
       tempUserInfo.userEmail shouldBe tempUser.email
 
       // OK to re-register
 
-      registerAsNewUser(WorkbenchUserEmail(tempUser.email))(tempAuthToken)
+      registerAsNewUser(WorkbenchEmail(tempUser.email))(tempAuthToken)
       Sam.user.status()(tempAuthToken).get.userInfo.userEmail shouldBe tempUser.email
 
       removeUser(tempUserInfo.userSubjectId)
@@ -116,8 +116,8 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
     }
 
     "should not treat non-pet service accounts as pets" in {
-      val saEmail = WorkbenchUserServiceAccountEmail(Config.GCS.qaEmail)
-      val sa = findSaInGoogle(saEmail.toAccountName).get
+      val saEmail = WorkbenchEmail(Config.GCS.qaEmail)
+      val sa = findSaInGoogle(google.toAccountName(saEmail)).get
 
       // ensure clean state: SA's user not registered
       removeUser(sa.subjectId.value)
