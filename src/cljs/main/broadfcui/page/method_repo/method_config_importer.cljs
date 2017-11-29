@@ -6,10 +6,12 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -132,8 +134,7 @@
         any-actions? (or workflow? owner?)
         body-id (gensym "form")]
     [:div {:style {:display "flex"}}
-     (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}])
+     (blocker (:blocking-text @state))
      (when (and any-actions? (:allow-edit props))
        [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
@@ -157,7 +158,7 @@
        (create-import-form state props (:loaded-config @state) true
                            (partial this :perform-copy))
        (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Loading configuration details..."}]))
+       :else (spinner "Loading configuration details...")))
    :perform-copy
    (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id after-import]} props
@@ -204,7 +205,7 @@
                            (partial this :perform-copy))
 
        (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Creating template..."}]))
+       :else (spinner "Creating template...")))
    :perform-copy
    (fn [{:keys [props state]} selected-workspace refs]
      (let [{:keys [workspace-id after-import]} props

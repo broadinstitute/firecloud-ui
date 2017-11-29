@@ -4,6 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.workspace-common :as ws-common]
@@ -22,7 +23,7 @@
      (let [{:keys [loading? file-input-key file-contents file upload-result]} @state]
        [:div {:style {:textAlign "center"} :data-test-id "data-upload-container"}
         (when loading?
-          [comps/Blocker {:banner "Uploading file..."}])
+          (blocker "Uploading file..."))
         ;; This key is changed every time a file is selected causing React to completely replace the
         ;; element. Otherwise, if a user selects the same file (even after having modified it), the
         ;; browser will not fire the onChange event.

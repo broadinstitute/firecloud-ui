@@ -10,6 +10,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
@@ -31,7 +32,7 @@
      (let [{:keys [loaded-config config-load-error loaded-method method-load-error import-error]} @state]
        (wrap
         (cond config-load-error (style/create-server-error-message config-load-error)
-              (not loaded-config) [comps/Spinner {:text "Loading configuration details..."}]
+              (not loaded-config) (spinner "Loading configuration details...")
               :else
               [:div {}
                [:div {:style {:paddingBottom "0.5rem"}}
@@ -45,7 +46,7 @@
                                           "The referenced method snapshot could not be found.
                                           It may have been redacted, or you may not have access to it."
                                           method-load-error))
-                     :else [comps/Spinner {:text "Loading method details..."}])
+                     :else (spinner "Loading method details..."))
                [:div {:style {:fontSize "120%" :margin "1rem 0 0.5rem"}}
                 "Import as:"]
                [:div {:style {:float "left" :marginRight "0.5rem"}}
@@ -117,11 +118,11 @@
                 :render-name
                 (fn [config]
                   (links/create-internal
-                    {:onClick #(push-page {:breadcrumb-text (id->str config)
-                                           :component [ConfirmWorkspaceConfig
-                                                       (assoc props :config config)]})}
-                    (:name config)))})
-              :else [comps/Spinner {:text "Loading configurations..."}]))))
+                   {:onClick #(push-page {:breadcrumb-text (id->str config)
+                                          :component [ConfirmWorkspaceConfig
+                                                      (assoc props :config config)]})}
+                   (:name config)))})
+              :else (spinner "Loading configurations...")))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -139,7 +140,7 @@
            {:keys [result removed-count error]} (get-workspaces)]
        (wrap
         (cond error (style/create-server-error-message error)
-              (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
+              (nil? result) (spinner "Loading workspaces...")
               :else (ws-common/workspace-selector
                      {:workspaces result
                       :on-workspace-selected

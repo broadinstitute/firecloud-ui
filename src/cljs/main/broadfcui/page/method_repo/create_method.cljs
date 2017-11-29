@@ -8,6 +8,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
@@ -49,8 +50,7 @@
          :content
          (react/create-element
           [:div {:style {:width "80vw"}}
-           (when-let [banner (:banner @state)]
-             [comps/Blocker {:banner banner}])
+           (blocker (:banner @state))
 
            [:div {:style {:display "flex" :justifyContent "space-between"}}
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}

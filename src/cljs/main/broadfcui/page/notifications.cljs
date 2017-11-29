@@ -1,12 +1,12 @@
 (ns broadfcui.page.notifications
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.foundation-switch :refer [render-foundation-switch]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -53,7 +53,7 @@
                       "Error when retrieving notifications: " message])]
     (cond
       (not (and general-response profile-response))
-      [comps/Spinner {:text "Loading notifications..."}]
+      (spinner "Loading notifications...")
       (not (:success? general-response))
       (show-error (:status-text general-response))
       (not (:success? profile-response))

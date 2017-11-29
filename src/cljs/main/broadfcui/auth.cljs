@@ -2,9 +2,9 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -14,7 +14,7 @@
   {:render
    (fn []
      [:div {:style {:padding "40px 0"}}
-      [comps/Spinner {:text "Loading auth..."}]])
+      (spinner "Loading auth...")])
    :component-did-mount
    (fn [{:keys [this]}]
      (js-invoke js/gapi "load" "auth2" #(this :-handle-auth2-loaded)))
@@ -108,7 +108,7 @@
    (fn [{:keys [state]}]
      [:div {:style {:padding "40px 0"}}
       (case (:error @state)
-        nil [comps/Spinner {:text "Loading user information..."}]
+        nil (spinner "Loading user information...")
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]

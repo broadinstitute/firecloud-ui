@@ -1,12 +1,13 @@
 (ns broadfcui.page.method-repo.method.details
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -44,7 +45,7 @@
            refresh-tab #((@refs %) :refresh)]
        [:div {:style {:position "relative"}}
         (when loading-snapshot?
-          (comps/render-blocker "Loading..."))
+          (blocker "Loading..."))
         (when (and method exporting?)
           [MethodExporter {:dismiss #(swap! state dissoc :exporting?)
                            :method-name (:name (last method))
@@ -102,7 +103,7 @@
             "Error loading method: " method-error]
            (if-not selected-snapshot
              [:div {:style {:textAlign "center" :padding "1rem"}}
-              [comps/Spinner {:text "Loading method..."}]]
+              (spinner "Loading method...")]
              (condp = active-tab
                WDL (react/create-element
                     [WDLViewer

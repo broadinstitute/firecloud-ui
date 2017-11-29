@@ -4,6 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -22,7 +23,7 @@
          (react/create-element
           [:div {:style {:width 500}}
            (when (:publishing? @state)
-             [comps/Blocker {:banner "Publishing Method Configuration..."}])
+             (blocker "Publishing Method Configuration..."))
            (style/create-form-label "Method Configuration Namespace")
            [input/TextField {:style {:width "100%"} :ref "mcNamespace"
                              :defaultValue namespace

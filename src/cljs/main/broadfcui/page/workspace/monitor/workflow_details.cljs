@@ -13,6 +13,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
@@ -154,7 +155,7 @@
        (let [server-response (:server-response @state)]
          (cond
            (nil? server-response)
-           [:div {} [comps/Spinner {:text "Loading operation details..."}]]
+           (spinner "Loading operation details...")
            (not (:success? server-response))
            (style/create-server-error-message (:response server-response))
            :else
@@ -264,7 +265,7 @@
      (let [server-response (:server-response @state)]
        (cond
          (nil? server-response)
-         [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
+         (spinner "Loading workflow details...")
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
          :else

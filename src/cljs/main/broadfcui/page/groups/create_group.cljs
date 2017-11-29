@@ -5,6 +5,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -18,7 +19,7 @@
        (react/create-element
         [:div {:style {:width 750}}
          (when (:creating? @state)
-           [comps/Blocker {:banner "Creating group..."}])
+           (blocker "Creating group..."))
          [:div {:style {:fontSize "120%"}}
           "Enter a unique name:"]
          [input/TextField {:ref "name-field" :autoFocus true

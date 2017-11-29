@@ -2,12 +2,12 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -74,7 +74,7 @@
            {:keys [submissions error-message]} server-response]
        (cond
          (nil? server-response)
-         [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
+         [:div {:style {:textAlign "center"}} (spinner "Loading analyses...")]
          error-message (style/create-server-error-message error-message)
          :else
          (render-submissions-table (:workspace-id props) submissions (:bucketName props)))))

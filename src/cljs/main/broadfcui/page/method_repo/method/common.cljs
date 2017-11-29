@@ -9,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -24,7 +25,7 @@
                                                  :inputs-outputs inputs-outputs
                                                  :values (:values props)
                                                  :default-hidden? (:default-hidden? props)}]
-             :else [comps/Spinner {:text "Loading inputs/outputs..."}])))
+             :else (spinner "Loading inputs/outputs..."))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -65,7 +66,7 @@
 
              (not resolved-configs)
              [:div {:style {:textAlign "center" :padding "1rem"}}
-              [comps/Spinner {:text "Loading configs..."}]]
+              (spinner "Loading configs...")]
 
              :else
              [Table
@@ -86,9 +87,9 @@
                                  :sort-by #(replace % [:namespace :name :snapshotId])
                                  :render (fn [{:keys [name namespace snapshotId] :as config}]
                                            (links/create-internal
-                                             (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
-                                                    (make-config-link-props config))
-                                             (style/render-name-id (str namespace "/" name) snapshotId)))}
+                                            (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
+                                                   (make-config-link-props config))
+                                            (style/render-name-id (str namespace "/" name) snapshotId)))}
                                 {:header "Method Snapshot" :initial-width 135 :filterable? false
                                  :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
                                 {:header "Synopsis" :initial-width :auto
