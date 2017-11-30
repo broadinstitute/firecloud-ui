@@ -117,7 +117,7 @@
                       {:ref WDL :wdl (:payload selected-snapshot)}]
                      (when (:public selected-snapshot)
                        [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
-                        "Import URL for this WDL"
+                        [:span {:style {:fontWeight 500}}"Import URL for this WDL"]
                         (let [{:keys [namespace name snapshotId]} selected-snapshot
                               link (str (config/api-url-root)
                                         "/ga4gh/v1/tools/"
