@@ -5,13 +5,12 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
-import org.broadinstitute.dsde.workbench.google.model.GoogleProject
-import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccountName
+import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccountName}
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.concurrent.ScalaFutures
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccountEmail
+import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 
 /**
   * Sam API service client. This should only be used when Orchestration does
@@ -24,7 +23,7 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
-  def petName(userInfo: UserStatusDetails) = WorkbenchUserServiceAccountName(s"pet-${userInfo.userSubjectId}")
+  def petName(userInfo: UserStatusDetails) = ServiceAccountName(s"pet-${userInfo.userSubjectId}")
 
   def removePet(userInfo: UserStatusDetails): Unit = {
     Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
@@ -62,10 +61,10 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
       parseResponseOption[UserStatus](getRequest(url + "register/user"))
     }
 
-    def petServiceAccountEmail()(implicit token: AuthToken): WorkbenchUserServiceAccountEmail = {
+    def petServiceAccountEmail()(implicit token: AuthToken): WorkbenchEmail = {
       logger.info(s"Getting pet service account email")
       val petEmailStr = parseResponseAs[String](getRequest(url + "api/user/petServiceAccount"))
-      WorkbenchUserServiceAccountEmail(petEmailStr)
+      WorkbenchEmail(petEmailStr)
     }
   }
 }
