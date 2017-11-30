@@ -16,7 +16,7 @@ object Thurloe extends FireCloudClient with LazyLogging {
 
   object FireCloudIdHeader extends ModeledCustomHeaderCompanion[FireCloudIdHeader] {
     override def name = "X-FireCloud-Id"
-    override def parse(value: String) = Try(new FireCloudIdHeader())
+    override def parse(value: String) = Try(new FireCloudIdHeader(value))
   }
   case class FireCloudIdHeader(id: String) extends ModeledCustomHeader[FireCloudIdHeader] {
     override def companion: ModeledCustomHeaderCompanion[FireCloudIdHeader] = FireCloudIdHeader

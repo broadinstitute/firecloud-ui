@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.user
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Orchestration, Thurloe}
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.component.{Label, TestId}
+import org.broadinstitute.dsde.firecloud.component.{Button, Label, TestId}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
@@ -52,11 +52,13 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
-        val bannerTitle = Label(TestId("trial-banner-title")).getText
-        bannerTitle shouldBe "Enabled"
+        val bannerTitleEl = Label(TestId("trial-banner-title"))
+        bannerTitleEl.getText shouldBe "Welcome to FireCloud!"
 
-//        Button(TestId("trial-banner-button")).doClick()
-
+        val bannerButton = Button(TestId("trial-banner-button"))
+        bannerButton.doClick()
+        await condition bannerButton.getState == "ready"
+        bannerTitleEl.getText shouldBe "Access Free Credits"
       }
     }
 
@@ -67,7 +69,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
         val bannerTitle = Label(TestId("trial-banner-title")).getText
-        bannerTitle shouldBe "Terminated"
+        bannerTitle shouldBe "Your free credits have expired"
       }
     }
   }

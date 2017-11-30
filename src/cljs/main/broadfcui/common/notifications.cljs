@@ -131,6 +131,7 @@
                (when button
                  (let [{:keys [label url external?]} button]
                    [:a {:data-test-id "trial-banner-button"
+                        :data-test-state (if loading? "loading" "ready")
                         :style {:display "block"
                                 :color "white" :textDecoration "none" :fontSize "1.125rem"
                                 :fontWeight 500
