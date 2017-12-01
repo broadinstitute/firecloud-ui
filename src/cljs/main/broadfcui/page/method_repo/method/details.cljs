@@ -2,6 +2,8 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
@@ -9,6 +11,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.tab-bar :as tab-bar]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -69,15 +72,19 @@
             {:text "Yes"
              :onClick #(mc-sync/flag-synchronization)
              :href (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state))}}])
-        [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem"}}
+        [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem" :alignItems "flex-end"}}
          (tab-bar/render-title
           "METHOD"
           [:span {}
            [:span {:data-test-id "header-namespace"} (:namespace method-id)]
            "/"
            [:span {:data-test-id "header-name"} (:name method-id)]])
-         [:div {:style {:paddingLeft "2rem" :marginTop -3}}
+         [:div {:style {:marginLeft "2rem" :marginTop -3}}
           (this :-render-snapshot-selector)]
+         (when (:public (:selected-snapshot @state))
+           [:span {:style {:alignSelf "center" :marginLeft "2.5rem"}}
+            (icons/render-icon {:style {:marginRight "0.5rem"}} :public)
+            "Publicly Readable"]) ; wording matches the permissions modal
          (when-not workspace-id
            [buttons/Button {:style {:marginLeft "auto"}
                             :text "Export to Workspace..."
@@ -106,8 +113,25 @@
               (spinner "Loading method...")]
              (condp = active-tab
                WDL (react/create-element
-                    [WDLViewer
-                     {:ref WDL :wdl (:payload selected-snapshot)}])
+                    [:div {}
+                     [WDLViewer
+                      {:ref WDL :wdl (:payload selected-snapshot)}]
+                     (when (:public selected-snapshot)
+                       [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
+                        [:span {:style {:fontWeight 500}}"Import URL for this WDL"]
+                        (let [{:keys [namespace name snapshotId]} selected-snapshot
+                              link (str (config/api-url-root)
+                                        "/ga4gh/v1/tools/"
+                                        namespace
+                                        ":"
+                                        name
+                                        "/versions/"
+                                        snapshotId
+                                        "/plain-WDL/descriptor")]
+                          [:input {:type "text" :readOnly true :value link
+                                   :style {:cursor "unset" :fontSize "1rem" :width 300
+                                           :display "block" :marginTop "0.25rem"}
+                                   :onClick #(.. % -target select)}])])])
                CONFIGS (react/create-element
                         [configs/Configs
                          (merge {:ref CONFIGS}

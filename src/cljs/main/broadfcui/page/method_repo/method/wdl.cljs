@@ -8,7 +8,7 @@
 (react/defc WDLViewer
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:margin "2.5rem 1.5rem"}}
+     [:div {:style {:margin "2.5rem 1.5rem 1rem"}}
       [CodeMirror {:text (:wdl props)}]])
    :refresh
    (constantly nil)})
