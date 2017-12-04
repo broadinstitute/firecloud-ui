@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Orchestration, Thurloe}
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.component.{Button, Label, TestId}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -24,7 +24,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
   val testUser: Credentials = UserPool.chooseStudent
   val userAuthToken: AuthToken = testUser.makeAuthToken()
-  var subjectId : String = Orchestration.profile.getUser()(userAuthToken)("userId").toString // TODO: Use orch endpoint to change trial status
+  var subjectId : String = Orchestration.profile.getUser()(userAuthToken)("userId").toString
 
 
   // Clean-up anything left over from any previous failures.
@@ -52,13 +52,13 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
-        val bannerTitleEl = Label(TestId("trial-banner-title"))
-        bannerTitleEl.getText shouldBe "Welcome to FireCloud!"
+        val bannerTitleElement = Label(TestId("trial-banner-title"))
+        bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
 
         val bannerButton = Button(TestId("trial-banner-button"))
         bannerButton.doClick()
         await condition bannerButton.getState == "ready"
-        bannerTitleEl.getText shouldBe "Access Free Credits"
+        bannerTitleElement.getText shouldBe "Access Free Credits"
       }
     }
 
@@ -70,6 +70,17 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
         await ready new WorkspaceListPage()
         val bannerTitle = Label(TestId("trial-banner-title")).getText
         bannerTitle shouldBe "Your free credits have expired"
+      }
+    }
+
+    "should not show the free trial banner to a terminated user" in withWebDriver { implicit driver =>
+      registerCleanUpForDeleteTrialState(subjectId)
+      Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+
+      withSignIn(testUser) { _ =>
+        await ready new WorkspaceListPage()
+        val bannerTitleElement = Label(TestId("trial-banner-title"))
+        bannerTitleElement.isVisible shouldBe false
       }
     }
   }

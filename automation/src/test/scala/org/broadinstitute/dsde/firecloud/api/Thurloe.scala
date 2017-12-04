@@ -42,7 +42,8 @@ object Thurloe extends FireCloudClient with LazyLogging {
 
     def set(subjectId: String, key: String, value: String)(implicit token: AuthToken): Unit = {
       logger.info(s"Setting $key as $value for $subjectId")
-      postRequest(url + s"api/thurloe", Map("userId" -> subjectId, "keyValuePairs" -> List(Map("key" -> key, "value" -> value))),
+      postRequest(url + s"api/thurloe",
+        Map("userId" -> subjectId, "keyValuePairs" -> List(Map("key" -> key, "value" -> value))),
         thurloeHeaders)
     }
 
