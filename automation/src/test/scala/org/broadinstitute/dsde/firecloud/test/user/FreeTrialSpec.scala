@@ -22,7 +22,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
   val adminUser: Credentials = UserPool.chooseAdmin
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
 
-  val testUser: Credentials = Config.Users.testUser  // TODO: pull from user pool and fetch correct subject ID
+  val testUser: Credentials = UserPool.chooseStudent
   val userAuthToken: AuthToken = testUser.makeAuthToken()
   var subjectId : String = Orchestration.profile.getUser()(userAuthToken)("userId").toString // TODO: Use orch endpoint to change trial status
 
