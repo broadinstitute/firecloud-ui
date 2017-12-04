@@ -29,11 +29,11 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
   // Clean-up anything left over from any previous failures.
   before {
-    Try(Thurloe.keyValuePairs.delete(subjectId, "trialCurrentState"))
+    Try(Thurloe.keyValuePairs.delete(subjectId, "trialState"))
   }
 
   private def registerCleanUpForDeleteTrialState(subjectId: String): Unit = {
-    register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialCurrentState")
+    register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
   }
 
   "FireCloud" - {
@@ -48,7 +48,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
     "should show the free trial banner to an enabled user and allow them to enroll" in withWebDriver { implicit driver =>
       registerCleanUpForDeleteTrialState(subjectId)
-      Thurloe.keyValuePairs.set(subjectId, "trialCurrentState", "Enabled")
+      Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
 
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
@@ -64,7 +64,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
     "should show a terminated user that they are inactive" in withWebDriver { implicit driver =>
       registerCleanUpForDeleteTrialState(subjectId)
-      Thurloe.keyValuePairs.set(subjectId, "trialCurrentState", "Terminated")
+      Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()

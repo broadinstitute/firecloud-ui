@@ -109,7 +109,7 @@
    (fn [{:keys [state]}]
      (let [{:keys [dismissed? loading? messages]} @state]
        (when-not dismissed?
-         (when-let [current-trial-state (keyword (:trialCurrentState @profile/saved-user-profile))]
+         (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
            (let [{:keys [title message warning? link button]} (messages current-trial-state)]
              (flex/box
               {:style {:color "white"
@@ -163,8 +163,8 @@
    :component-will-mount
    (fn [{:keys [this state]}]
      (add-watch profile/saved-user-profile :trial-alerts
-                (fn [_ _ _ {:keys [trialCurrentState]}]
-                  (when trialCurrentState
+                (fn [_ _ _ {:keys [trialState]}]
+                  (when trialState
                     (if-not (:messages @state)
                       (this :-get-trial-messages)
                       (.forceUpdate this))))))
