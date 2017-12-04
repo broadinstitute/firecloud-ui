@@ -41,8 +41,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
     "should not show the free trial banner to a non-enabled user" in withWebDriver { implicit driver =>
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
-        val bannerTitle = Label(TestId("trial-banner-title")).getText
-        bannerTitle shouldBe ""
+        val bannerTitleElement = Label(TestId("trial-banner-title"))
+        bannerTitleElement.isVisible shouldBe false
       }
     }
 
@@ -53,6 +53,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
         val bannerTitleElement = Label(TestId("trial-banner-title"))
+        bannerTitleElement.isVisible shouldBe true
         bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
 
         val bannerButton = Button(TestId("trial-banner-button"))
@@ -68,12 +69,13 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
       withSignIn(testUser) { _ =>
         await ready new WorkspaceListPage()
-        val bannerTitle = Label(TestId("trial-banner-title")).getText
-        bannerTitle shouldBe "Your free credits have expired"
+        val bannerTitleElement = Label(TestId("trial-banner-title"))
+        bannerTitleElement.isVisible shouldBe true
+        bannerTitleElement.getText shouldBe "Your free credits have expired"
       }
     }
 
-    "should not show the free trial banner to a terminated user" in withWebDriver { implicit driver =>
+    "should not show the free trial banner to a disabled user" in withWebDriver { implicit driver =>
       registerCleanUpForDeleteTrialState(subjectId)
       Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
