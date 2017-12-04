@@ -15,13 +15,12 @@ import org.scalatest.{FreeSpec, Ignore, Matchers}
 /**
   * Tests related to billing accounts.
   */
-@Ignore
 class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
   with Matchers with LazyLogging {
 
   "A user" - {
     "with a billing account" - {
-      "should be able to create a billing project" in withWebDriver { implicit driver =>
+      "should be able to create a billing project" ignore withWebDriver { implicit driver =>
         val userOwner = UserPool.chooseProjectOwner
         implicit val authToken: AuthToken = userOwner.makeAuthToken()
         withSignIn(userOwner) { _ =>
