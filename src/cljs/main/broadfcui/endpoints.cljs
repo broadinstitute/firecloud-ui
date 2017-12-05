@@ -345,6 +345,10 @@
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :delete})
 
+(defn get-clusters-list []
+  {:path (str "/isWhitelisted")
+   :method :get})
+
 (defn is-leo-whitelisted []
   {:path (str "/isWhitelisted")
    :method :get})
