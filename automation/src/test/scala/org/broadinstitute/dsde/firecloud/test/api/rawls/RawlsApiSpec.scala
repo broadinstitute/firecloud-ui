@@ -45,7 +45,8 @@ class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
 
       //Remove the pet SA for a clean test environment
       val userAStatus = Sam.user.status()(studentAToken).get
-      Sam.removePet(userAStatus.userInfo)
+      //doesn't matter if it fails
+      Try{Sam.removePet(userAStatus.userInfo)}
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
       //Validate that the pet SA has been created
