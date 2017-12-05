@@ -27,7 +27,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   var subjectId : String = _
 
 
-  // Clean-up anything left over from any previous failures.
   override def beforeEach {
     testUser = UserPool.chooseStudent
     userAuthToken = testUser.makeAuthToken()
@@ -35,7 +34,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     Try(Thurloe.keyValuePairs.delete(subjectId, "trialState"))
   }
 
-  private def registerCleanUpForDeleteTrialState(subjectId: String): Unit = {
+  private def registerCleanUpForDeleteTrialState(): Unit = {
     register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
   }
 
@@ -45,7 +44,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
           bannerTitleElement.isVisible shouldBe false
         }
       }
@@ -53,7 +52,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "who is enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
-        registerCleanUpForDeleteTrialState(subjectId)
+        registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
 
         withSignIn(testUser) { _ =>
@@ -72,7 +71,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "who is terminated" - {
       "should see that they are inactive" in withWebDriver { implicit driver =>
-        registerCleanUpForDeleteTrialState(subjectId)
+        registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
         withSignIn(testUser) { _ =>
@@ -86,7 +85,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "who is disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
-        registerCleanUpForDeleteTrialState(subjectId)
+        registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
         withSignIn(testUser) { _ =>
