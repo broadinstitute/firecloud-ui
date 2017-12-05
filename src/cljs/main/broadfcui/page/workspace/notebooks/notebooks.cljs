@@ -327,21 +327,21 @@
                            :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-is-leo-whitelisted)
-     (this :-get-clusters-list-if-whitelisted))
+     (this :-is-leo-whitelisted))
    :-is-leo-whitelisted
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
        {:endpoint (endpoints/is-leo-whitelisted)
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (do (swap! state assoc :server-response :is-leo-whitelisted true)   (this :-get-clusters-list-if-whitelisted))
-                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
-
+                     (do (swap! state assoc :is-leo-whitelisted? true)
+                         (this :-get-clusters-list-if-whitelisted))
+                     (do (swap! state assoc :is-leo-whitelisted? false)
+                       (swap! state assoc :server-response {:server-error (get-parsed-response false)}))))}))
    :-get-clusters-list-if-whitelisted
    (fn [{:keys [props state this]}]
-     (if (:-is-leo-whitelisted @state)
+     (when (:is-leo-whitelisted? @state)
        (endpoints/call-ajax-leo
          {:endpoint (endpoints/get-clusters-list)
           :headers utils/content-type=json
