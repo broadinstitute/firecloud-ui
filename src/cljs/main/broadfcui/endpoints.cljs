@@ -346,7 +346,7 @@
    :method :delete})
 
 (defn get-clusters-list []
-  {:path (str "/isWhitelisted")
+  {:path (str "/clusters")
    :method :get})
 
 (defn is-leo-whitelisted []
