@@ -97,6 +97,6 @@ object Config {
 
   object ChromeSettings {
     val chromedriverHost = chromeSettings.getString("chromedriverHost")
-    val chromDriverPath = chromeSettings.getString("chromedriverPath")
+    val chromeDriverPath = chromeSettings.getString("chromedriverPath")
   }
 }

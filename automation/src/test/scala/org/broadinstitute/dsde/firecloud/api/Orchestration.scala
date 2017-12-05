@@ -269,6 +269,10 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
       postRequest(apiUrl(s"register/profile"), profile)
     }
+
+    def getUser()(implicit token: AuthToken): Map[String, String] = {
+      parseResponseAs[Map[String, String]](getRequest(apiUrl(s"register/profile")))
+    }
   }
 
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
