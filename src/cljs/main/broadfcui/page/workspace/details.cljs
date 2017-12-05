@@ -164,7 +164,7 @@
    (fn [{:keys [props state]}]
      (when-not (contains? @whitelisted-users (utils/get-user-email))
        (endpoints/call-ajax-leo
-        {:endpoint (endpoints/is-leo-whitelisted)
+        {:endpoint endpoints/is-leo-whitelisted
          :headers utils/content-type=json
          :on-done (fn [{:keys [success?]}]
                     (swap! whitelisted-users assoc (utils/get-user-email) success?))}))

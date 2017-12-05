@@ -309,10 +309,10 @@
      (this :-get-clusters-list-if-whitelisted))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response show-create-dialog?]} @state
            {:keys [clusters server-error]} server-response]
         [:div {:display "inline-flex"}
-         (when (:show-create-dialog? @state)
+         (when show-create-dialog?
            [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
                                         :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
          [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
@@ -331,19 +331,18 @@
    :-is-leo-whitelisted
    (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
-       {:endpoint (endpoints/is-leo-whitelisted)
+       {:endpoint endpoints/is-leo-whitelisted
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
                      (do (swap! state assoc :is-leo-whitelisted? true)
                          (this :-get-clusters-list-if-whitelisted))
-                     (do (swap! state assoc :is-leo-whitelisted? false)
-                       (swap! state assoc :server-response {:server-error (get-parsed-response false)}))))}))
+                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
    :-get-clusters-list-if-whitelisted
    (fn [{:keys [props state this]}]
      (when (:is-leo-whitelisted? @state)
        (endpoints/call-ajax-leo
-         {:endpoint (endpoints/get-clusters-list)
+         {:endpoint endpoints/get-clusters-list
           :headers utils/content-type=json
           :on-done (fn [{:keys [success? get-parsed-response]}]
                      (if success?

@@ -345,11 +345,11 @@
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :delete})
 
-(defn get-clusters-list []
+(def get-clusters-list
   {:path (str "/clusters")
    :method :get})
 
-(defn is-leo-whitelisted []
+(def is-leo-whitelisted
   {:path (str "/isWhitelisted")
    :method :get})
 
