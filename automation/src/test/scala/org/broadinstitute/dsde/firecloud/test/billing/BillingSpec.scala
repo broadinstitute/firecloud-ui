@@ -20,6 +20,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
   "A user" - {
     "with a billing account" - {
+      // Need to tweak background sign-in to make this test work
       "should be able to create a billing project" ignore withWebDriver { implicit driver =>
         val userOwner = UserPool.chooseProjectOwner
         implicit val authToken: AuthToken = userOwner.makeAuthToken()
