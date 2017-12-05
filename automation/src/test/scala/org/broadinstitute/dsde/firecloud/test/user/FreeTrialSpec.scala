@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
+import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try
 
@@ -16,19 +16,22 @@ import scala.util.Try
 /**
   * Tests for new user registration scenarios.
   */
-class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec
+class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
 
-  val testUser: Credentials = UserPool.chooseStudent
-  val userAuthToken: AuthToken = testUser.makeAuthToken()
-  var subjectId : String = Orchestration.profile.getUser()(userAuthToken)("userId").toString
+  var testUser: Credentials = _
+  var userAuthToken: AuthToken = _
+  var subjectId : String = _
 
 
   // Clean-up anything left over from any previous failures.
-  before {
+  override def beforeEach {
+    testUser = UserPool.chooseStudent
+    userAuthToken = testUser.makeAuthToken()
+    subjectId = Orchestration.profile.getUser()(userAuthToken)("userId").toString
     Try(Thurloe.keyValuePairs.delete(subjectId, "trialState"))
   }
 
