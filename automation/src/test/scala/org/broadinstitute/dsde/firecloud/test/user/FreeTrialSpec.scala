@@ -38,9 +38,9 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
   }
 
-  "A user" - {
+  "A user whose free trial status is" - {
 
-    "who is not enabled " - {
+    "blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -50,7 +50,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       }
     }
 
-    "who is enabled" - {
+    "Enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
@@ -69,7 +69,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       }
     }
 
-    "who is terminated" - {
+    "Terminated" - {
       "should see that they are inactive" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
@@ -83,7 +83,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       }
     }
 
-    "who is disabled" - {
+    "Disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
