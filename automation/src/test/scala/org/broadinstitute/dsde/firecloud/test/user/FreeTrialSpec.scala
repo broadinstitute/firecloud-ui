@@ -39,53 +39,61 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
   }
 
-  "FireCloud" - {
+  "A user" - {
 
-    "should not show the free trial banner to a non-enabled user" in withWebDriver { implicit driver =>
-      withSignIn(testUser) { _ =>
-        await ready new WorkspaceListPage()
-        val bannerTitleElement = Label(TestId("trial-banner-title"))
-        bannerTitleElement.isVisible shouldBe false
+    "who is not enabled " - {
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe false
+        }
       }
     }
 
-    "should show the free trial banner to an enabled user and allow them to enroll" in withWebDriver { implicit driver =>
-      registerCleanUpForDeleteTrialState(subjectId)
-      Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
+    "who is enabled" - {
+      "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState(subjectId)
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
 
-      withSignIn(testUser) { _ =>
-        await ready new WorkspaceListPage()
-        val bannerTitleElement = Label(TestId("trial-banner-title"))
-        bannerTitleElement.isVisible shouldBe true
-        bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe true
+          bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
 
-        val bannerButton = Button(TestId("trial-banner-button"))
-        bannerButton.doClick()
-        await condition bannerButton.getState == "ready"
-        bannerTitleElement.getText shouldBe "Access Free Credits"
+          val bannerButton = Button(TestId("trial-banner-button"))
+          bannerButton.doClick()
+          await condition bannerButton.getState == "ready"
+          bannerTitleElement.getText shouldBe "Access Free Credits"
+        }
       }
     }
 
-    "should show a terminated user that they are inactive" in withWebDriver { implicit driver =>
-      registerCleanUpForDeleteTrialState(subjectId)
-      Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
+    "who is terminated" - {
+      "should see that they are inactive" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState(subjectId)
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
-      withSignIn(testUser) { _ =>
-        await ready new WorkspaceListPage()
-        val bannerTitleElement = Label(TestId("trial-banner-title"))
-        bannerTitleElement.isVisible shouldBe true
-        bannerTitleElement.getText shouldBe "Your free credits have expired"
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe true
+          bannerTitleElement.getText shouldBe "Your free credits have expired"
+        }
       }
     }
 
-    "should not show the free trial banner to a disabled user" in withWebDriver { implicit driver =>
-      registerCleanUpForDeleteTrialState(subjectId)
-      Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+    "who is disabled" - {
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState(subjectId)
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
-      withSignIn(testUser) { _ =>
-        await ready new WorkspaceListPage()
-        val bannerTitleElement = Label(TestId("trial-banner-title"))
-        bannerTitleElement.isVisible shouldBe false
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe false
+        }
       }
     }
   }
