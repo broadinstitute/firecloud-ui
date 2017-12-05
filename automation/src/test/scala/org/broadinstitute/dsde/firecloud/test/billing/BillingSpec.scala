@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig, TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, Ignore, Matchers}
 
@@ -99,13 +99,13 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
           api.importMetaData(billingProjectName, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
+          val methodConfigName: String = "test_method" + UUID.randomUUID().toString
+          api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace,
+            SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+
           // verify running a method
           withSignIn(user) { _ =>
-            val methodConfigName: String = "test_method" + UUID.randomUUID().toString
-            val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProjectName, workspaceName).open
-            val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(SimpleMethodConfig.configNamespace,
-              SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, methodConfigName)
-            methodConfigDetailsPage.editMethodConfig(inputs = Some(SimpleMethodConfig.inputs))
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
             val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
             submissionDetailsPage.waitUntilSubmissionCompletes()
