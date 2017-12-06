@@ -13,6 +13,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
   // We only want to see the users' workspaces so we can't be Project Owners
