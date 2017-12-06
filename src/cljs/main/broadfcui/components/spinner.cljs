@@ -8,8 +8,10 @@
 (defn spinner
   ([]
    (spinner {} ""))
-  ([text]
-   (spinner {} text))
+  ([attrs-or-text]
+   (if (map? attrs-or-text)
+     (spinner attrs-or-text "")
+     (spinner {} attrs-or-text)))
   ([attributes text]
    [:span (utils/deep-merge {:data-test-id "spinner"
                              :style {:margin "1em" :whiteSpace "nowrap" :display "inline-block"}}

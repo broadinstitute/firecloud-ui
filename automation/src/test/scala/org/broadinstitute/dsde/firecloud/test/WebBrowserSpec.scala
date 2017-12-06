@@ -73,7 +73,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
   }
 
   private def runLocalChrome(capabilities: DesiredCapabilities, testCode: (WebDriver) => Any): Unit = {
-    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
+    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromeDriverPath)).usingAnyFreePort().build()
     service.start()
     implicit val driver: RemoteWebDriver = new RemoteWebDriver(service.getUrl, capabilities)
     driver.manage.window.setSize(new org.openqa.selenium.Dimension(1600, 2400))

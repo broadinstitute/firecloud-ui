@@ -15,14 +15,14 @@ object Thurloe extends FireCloudClient with LazyLogging {
   private val url = Config.FireCloud.thurloeApiUrl
 
   object FireCloudIdHeader extends ModeledCustomHeaderCompanion[FireCloudIdHeader] {
-    override def name: String = "X-FireCloud-Id"
-    override def parse(value: String): Try[FireCloudIdHeader] = Try(FireCloudIdHeader(value))
+    override def name = "X-FireCloud-Id"
+    override def parse(value: String) = Try(new FireCloudIdHeader(value))
   }
   case class FireCloudIdHeader(id: String) extends ModeledCustomHeader[FireCloudIdHeader] {
     override def companion: ModeledCustomHeaderCompanion[FireCloudIdHeader] = FireCloudIdHeader
-    override def renderInRequests(): Boolean = true
-    override def renderInResponses(): Boolean = false
-    override def value(): String = id
+    override def renderInRequests = true
+    override def renderInResponses = false
+    override def value: String = id
   }
 
   object keyValuePairs {
@@ -38,6 +38,13 @@ object Thurloe extends FireCloudClient with LazyLogging {
         case (key, _) =>
           delete(subjectId, key)
       }
+    }
+
+    def set(subjectId: String, key: String, value: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Setting $key as $value for $subjectId")
+      postRequest(url + s"api/thurloe",
+        Map("userId" -> subjectId, "keyValuePairs" -> List(Map("key" -> key, "value" -> value))),
+        thurloeHeaders)
     }
 
     def getAll(subjectId: String)(implicit token: AuthToken): Map[String, String] = {
