@@ -7,12 +7,17 @@
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 
 fireCloud {
-  baseUrl = {{if eq $local_ui "true"}}"http://local.broadinstitute.org/"{{else if eq $environment "alpha"}}"https://firecloud.dsde-alpha.broadinstitute.org/"{{else if eq $environment "prod"}}"https://portal.firecloud.org/"{{else}}"https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"{{end}}
+  baseUrl = {{if eq $local_ui "true"}}"http://local.broadinstitute.org/"{{else if eq $environment "alpha"}}"https://firecloud.dsde-alpha.broadinstitute.org/"{{else if eq $environment "dev"}}"https://firecloud.dsde-dev.broadinstitute.org/"{{else if eq $environment "prod"}}"https://portal.firecloud.org/"{{else}}"https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"{{end}}
   {{if eq $environment "alpha"}}
   orchApiUrl = "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/"
   rawlsApiUrl = "https://rawls.dsde-alpha.broadinstitute.org/"
   samApiUrl = "https://sam.dsde-alpha.broadinstitute.org/"
   thurloeApiUrl = "https://thurloe.dsde-alpha.broadinstitute.org/"
+  {{else if eq $environment "dev"}}
+  orchApiUrl = "https://firecloud-orchestration.dsde-dev.broadinstitute.org/"
+  rawlsApiUrl = "https://rawls.dsde-dev.broadinstitute.org/"
+  samApiUrl = "https://sam.dsde-dev.broadinstitute.org/"
+  thurloeApiUrl = "https://thurloe.dsde-dev.broadinstitute.org/"
   {{else if eq $environment "prod"}}
   orchApiUrl = "https://api.firecloud.org/"
   rawlsApiUrl = "https://rawls.dsde-prod.broadinstitute.org"
