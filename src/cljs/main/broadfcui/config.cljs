@@ -19,6 +19,7 @@
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"isDebug" :boolean "shibbolethUrlRoot" :string "leonardoUrlRoot" :string
                   "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string "featuredJsonUrl" :string
+                  "trialJsonUrl" :string
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
                   "forumUrl" :string "authDomainGuideUrl" :string}
@@ -55,4 +56,5 @@
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn alerts-json-url [] (get @config "alertsJsonUrl"))
 (defn featured-json-url [] (get @config "featuredJsonUrl"))
+(defn trial-json-url [] (get @config "trialJsonUrl"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")

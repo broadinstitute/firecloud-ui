@@ -90,7 +90,7 @@
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
-       [:div {:style {:width "100%"}}
+       [:div {:style {:width (if (:selected-entity @state) "70%" "100%")}}
         [EntityTable
          {:ref "entity-table"
           :workspace-id workspace-id

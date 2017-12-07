@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
@@ -17,7 +17,7 @@
          "Error loading configuration:"
          [:ul {}
           (common/mapwrap :li errors)]]
-        [comps/Spinner {:text "Loading configuration..."}])])
+        (spinner "Loading configuration..."))])
    :component-did-mount
    (fn [{:keys [this]}]
      ;; Use basic ajax call here to bypass authentication.

@@ -9,6 +9,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
    [broadfcui.utils :as utils]
@@ -79,7 +80,7 @@
                                                           :text-selection (common/disable-text-selection))}
                                     :reorder))
                (case @index-url
-                 :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
+                 :pending (spinner "Searching for index file...")
                  :error (if requires-index?
                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:state-exception style/colors) :overflow "hidden"}}
                            (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))

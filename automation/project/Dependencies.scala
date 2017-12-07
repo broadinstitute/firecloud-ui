@@ -2,14 +2,14 @@ import sbt._
 
 object Dependencies {
   val jacksonV = "2.8.4"
-  val akkaV = "2.4.17"
-  val akkaHttpV = "10.0.5"
+  val akkaV = "2.5.7"
+  val akkaHttpV = "10.0.10"
 
-  val workbenchModelV  = "0.7-3fc9a3b"
+  val workbenchModelV  = "0.8-d97f551"
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val excludeWorkbenchModel = ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_2.11")
 
-  val workbenchGoogleV = "0.9-3fc9a3b"
+  val workbenchGoogleV = "0.10-d97f551"
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll excludeWorkbenchModel
 
   val rootDependencies = Seq(
@@ -26,7 +26,7 @@ object Dependencies {
       ExclusionRule("org.apache.httpcomponents", "httpclient")),
     "org.webjars"           %  "swagger-ui"    % "2.2.5",
     "com.typesafe.akka"   %%  "akka-http-core"     % akkaHttpV,
-    "com.typesafe.akka"   %%  "akka-stream-testkit" % "2.4.11",
+    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV,
     "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
     "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,

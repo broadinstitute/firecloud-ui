@@ -14,6 +14,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -43,7 +44,7 @@
        (let [{:keys [my-groups ws-instructions error]} @state]
          (cond
            (not (or (and my-groups ws-instructions) error))
-           [comps/Spinner {:text "Loading Authorization Domain..."}]
+           (spinner "Loading Authorization Domain...")
            error
            (case (:code error)
              (:unknown :parse-error)
@@ -94,7 +95,7 @@
                                                          :disabled? (or requested? requesting?)
                                                          :text (if requested? "Request Sent" "Request Access")
                                                          :onClick #(this :-request-access name i)}]
-                                        (when requesting? [comps/Spinner])
+                                        (when requesting? (spinner))
                                         (when requested?
                                           (dropdown/render-info-box
                                            {:text [:div {} "Your request has been submitted. When you are granted

@@ -8,8 +8,7 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToke
 import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.firecloud.test.CleanUp
-import org.broadinstitute.dsde.workbench.google.model.GoogleProject
-import org.broadinstitute.dsde.workbench.model.WorkbenchUserServiceAccount
+import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount}
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
@@ -23,7 +22,7 @@ class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
 
   val defaultProject:String = Config.Projects.default
 
-  def findPetInGoogle(userInfo: UserStatusDetails): Option[WorkbenchUserServiceAccount] = {
+  def findPetInGoogle(userInfo: UserStatusDetails): Option[ServiceAccount] = {
 
     val find = googleIamDAO.findServiceAccount(GoogleProject(defaultProject), Sam.petName(userInfo))
     Await.result(find, 1.minute)

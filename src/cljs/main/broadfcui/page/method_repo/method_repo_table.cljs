@@ -8,6 +8,7 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
@@ -36,7 +37,7 @@
             :entityType "Namespace" :entityName editing-namespace
             :title (str "Namespace " editing-namespace)}])
         (cond error [comps/ErrorViewer {:error error}]
-              (not methods) [comps/Spinner {:text "Loading..."}]
+              (not methods) (spinner "Loading...")
               :else
               [Table {:data-test-id "methods-table"
                       :persistence-key "method-repo-table2" :v 1
@@ -66,24 +67,24 @@
                                (fn [[namespace name]]
                                  (let [method-id (utils/restructure namespace name)]
                                    (links/create-internal
-                                     (utils/deep-merge
-                                      {:data-test-id (str "method-link-" namespace "-" name)
-                                       :style {:display "block" :marginTop -4}}
-                                      (if workspace-id
-                                        {:onClick #(nav-method
-                                                    {:label (str namespace "/" name)
-                                                     :component MethodDetails
-                                                     :props (utils/restructure method-id nav-method workspace-id)})}
-                                        {:href (nav/get-link :method-loader method-id)}))
-                                     [:span
-                                      {:className (when-not workspace-id "underline-on-hover")
-                                       :style {:fontSize "80%" :color "black"}
-                                       :onClick (when-not workspace-id
-                                                  (fn [e]
-                                                    (.preventDefault e)
-                                                    (swap! state assoc :editing-namespace namespace)))}
-                                      namespace]
-                                     [:div {:style {:fontWeight 600}} name])))}
+                                    (utils/deep-merge
+                                     {:data-test-id (str "method-link-" namespace "-" name)
+                                      :style {:display "block" :marginTop -4}}
+                                     (if workspace-id
+                                       {:onClick #(nav-method
+                                                   {:label (str namespace "/" name)
+                                                    :component MethodDetails
+                                                    :props (utils/restructure method-id nav-method workspace-id)})}
+                                       {:href (nav/get-link :method-loader method-id)}))
+                                    [:span
+                                     {:className (when-not workspace-id "underline-on-hover")
+                                      :style {:fontSize "80%" :color "black"}
+                                      :onClick (when-not workspace-id
+                                                 (fn [e]
+                                                   (.preventDefault e)
+                                                   (swap! state assoc :editing-namespace namespace)))}
+                                     namespace]
+                                    [:div {:style {:fontWeight 600}} name])))}
                               {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}

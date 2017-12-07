@@ -34,8 +34,9 @@
        (this :-render-dropdown)
        (.foundation (js/$ (:dropdown-element @locals)))))
    :component-will-receive-props
-   (fn [{:keys [this]}]
-     (this :-render-dropdown))
+   (fn [{:keys [this after-update]}]
+     ;; Wait until props have been updated so we don't have to use next-props here.
+     (after-update this :-render-dropdown))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (react/unmount-component-at-node (:dropdown-container @locals))

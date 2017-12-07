@@ -13,9 +13,11 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -51,7 +53,7 @@
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}
           :data-test-id "status-icon" :data-test-value "unknown"}
-   [comps/Spinner {:size 12}]])
+   (spinner)])
 
 (defn icon-for-cluster-status [status]
   (case status
@@ -82,7 +84,7 @@
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
-           (when creating? [comps/Blocker {:banner "Creating cluster..."}])
+           (when creating? (blocker "Creating cluster..."))
            (style/create-form-label "Name")
            [input/TextField {:ref "clusterNameCreate" :autoFocus true :style {:width "100%"}
                              :defaultValue ""
@@ -133,12 +135,12 @@
                   (map-indexed (fn [i label]
                                  [:div {:display "inline-block" :style {:marginBottom 10}}
                                   (links/create-internal
-                                    {:style {:color (:text-light style/colors)
-                                             :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
-                                     :href "javascript:;"
-                                     :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                       (update :labels utils/delete i))))}
-                                    (icons/render-icon {} :remove))
+                                   {:style {:color (:text-light style/colors)
+                                            :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
+                                    :href "javascript:;"
+                                    :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                      (update :labels utils/delete i))))}
+                                   (icons/render-icon {} :remove))
                                   [input/TextField {:style {:ref (str "key" i)
                                                             :marginBottom 0 :width "47.5%" :marginRight "4%"}
                                                     :defaultValue (first label)
@@ -209,7 +211,7 @@
          :content
          (react/create-element
           [:div {}
-           (when deleting? [comps/Blocker {:banner "Deleting cluster..."}])
+           (when deleting? (blocker "Deleting cluster..."))
            [:div {} (str "Are you sure you want to delete cluster " cluster-to-delete "?")]
            [comps/ErrorViewer {:error server-error}]])}]))
    :-delete-cluster
@@ -304,15 +306,15 @@
 (react/defc NotebooksContainer
   {:refresh
    (fn [{:keys [this]}]
-     (this :-get-clusters-list))
+     (this :-get-clusters-list-if-whitelisted))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response show-create-dialog?]} @state
            {:keys [clusters server-error]} server-response]
         [:div {:display "inline-flex"}
-         (when (:show-create-dialog? @state)
+         (when show-create-dialog?
            [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                        :reload-after-create #(this :-get-clusters-list))])
+                                        :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
          [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
          (if server-error
            [comps/ErrorViewer {:error server-error}]
@@ -322,20 +324,31 @@
                                                                         :data-test-id "create-modal-button"
                                                                         :onClick #(swap! state assoc :show-create-dialog? true)}]]
                            :clusters clusters
-                           :reload-after-delete #(this :-get-clusters-list))]))]))
+                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-get-clusters-list))
-   :-get-clusters-list
-   (fn [{:keys [props state this]}]
+     (this :-is-leo-whitelisted))
+   :-is-leo-whitelisted
+   (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
-      {:endpoint (endpoints/get-clusters-list)
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (when-not (= (:clusters @state) (get-parsed-response))
-                      (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
-                  (let [statuses (set (map #(:status %) (get-parsed-response)))]
-                    (when (or (contains? statuses "Creating") (contains? statuses "Updating") (contains? statuses "Deleting"))
-                      (js/setTimeout (fn [] (this :-get-clusters-list)) 10000))))}))})
+       {:endpoint endpoints/is-leo-whitelisted
+        :headers utils/content-type=json
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (do (swap! state assoc :is-leo-whitelisted? true)
+                         (this :-get-clusters-list-if-whitelisted))
+                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+   :-get-clusters-list-if-whitelisted
+   (fn [{:keys [props state this]}]
+     (when (:is-leo-whitelisted? @state)
+       (endpoints/call-ajax-leo
+         {:endpoint endpoints/get-clusters-list
+          :headers utils/content-type=json
+          :on-done (fn [{:keys [success? get-parsed-response]}]
+                     (if success?
+                       (when-not (= (:clusters @state) (get-parsed-response))
+                         (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
+                       (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
+                     (let [statuses (set (map #(:status %) (get-parsed-response)))]
+                       (when (or (contains? statuses "Creating") (contains? statuses "Updating") (contains? statuses "Deleting"))
+                         (js/setTimeout (fn [] (this :-get-clusters-list-if-whitelisted)) 10000))))})))})

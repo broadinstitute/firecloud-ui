@@ -1,11 +1,11 @@
 (ns broadfcui.page.workspace.summary.library-view
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
@@ -39,7 +39,7 @@
                (cond
                  (:consent @state) (library-utils/render-consent orsp-id (:consent @state))
                  (:consent-error @state) (library-utils/render-consent-error orsp-id (:consent-error @state))
-                 :else (library-utils/render-library-row (str "Retrieving information for " orsp-id) [comps/Spinner]))
+                 :else (library-utils/render-library-row (str "Retrieving information for " orsp-id) (spinner)))
                (library-utils/render-consent-codes library-schema library-attributes))])
           [:div {:style {:marginTop "0.5em"}}
            (links/create-internal {:onClick #(swap! state update :expanded? not)}

@@ -10,6 +10,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.queue-status :refer [QueueStatus]]
@@ -26,7 +27,7 @@
 (defn- render-form [state props]
   [:div {:style {:width "80vw"}}
    (when (:launching? @state)
-     [comps/Blocker {:banner "Launching analysis..."}])
+     (blocker "Launching analysis..."))
    (style/create-form-label "Select Entity")
    [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}

@@ -14,6 +14,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -98,7 +99,7 @@
                         (this :-load-registration-status))]
           (case (:registration-status @state)
             nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-                 [comps/Spinner {:text "Loading user information..."}]]
+                 (spinner "Loading user information...")]
             :error [:div {:style {:margin "2em 0"}}
                     (style/create-server-error-message (.-errorMessage this))]
             :not-registered (profile-page/render
@@ -117,7 +118,7 @@
        (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
-     (endpoints/profile-get
+     (profile-page/reload-user-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
           (cond
@@ -185,12 +186,14 @@
                                   :on-error #(swap! state assoc :force-sign-in-error %)})))
    :render
    (fn [{:keys [state]}]
-     (let [{:keys [auth2 user-status window-hash]} @state
+     (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
            {:keys [component make-props public?]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (when config-loaded?
+          [notifications/TrialAlertContainer])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
                                 :text (auth/render-forced-sign-in-error error)
@@ -200,7 +203,7 @@
                             (nav/is-current-path? :status))))
           [NihLinkWarning])
         [top-banner/Container]
-        (when (:config-loaded? @state)
+        (when config-loaded?
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
@@ -220,7 +223,7 @@
                                                         :refresh-token-saved))))}])
 
            (cond
-             (not (:config-loaded? @state))
+             (not config-loaded?)
              [config-loader/Component
               {:on-success (fn []
                              (swap! state assoc :config-loaded? true)

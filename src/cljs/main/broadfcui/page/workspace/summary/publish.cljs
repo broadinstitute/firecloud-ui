@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -13,7 +14,7 @@
    (fn [{:keys [props state]}]
      [:div {}
       (when (:publishing? @state)
-        [comps/Blocker {:banner "Publishing..."}])
+        (blocker "Publishing..."))
       [buttons/SidebarButton
        {:data-test-id "publish-button"
         :style :light :color :button-primary :margin :top
@@ -38,7 +39,7 @@
    (fn [{:keys [props state]}]
      [:div {}
       (when (:unpublishing? @state)
-        [comps/Blocker {:banner "Unpublishing..."}])
+        (blocker "Unpublishing..."))
       [buttons/SidebarButton
        {:style :light :color :state-exception :margin :top
         :icon :library :text "Unpublish"

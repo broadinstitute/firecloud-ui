@@ -2,7 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -17,7 +17,7 @@
        (:label props) ": "
        (cond
          (nil? (:success? props))
-         [comps/Spinner]
+         (spinner)
          (not (:success? props))
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when (:errors props)

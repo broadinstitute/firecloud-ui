@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.method.sync :as sync-common]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -28,7 +28,7 @@
    (fn [{:keys [state]}]
      [:div {}
       (when (:loading? @state)
-        [comps/Blocker {:banner "Checking method access..."}])
+        (blocker "Checking method access..."))
       (modals/show-modals
        state
        {:show-sync-modal? [sync-common/SynchronizeModal

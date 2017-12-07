@@ -435,6 +435,22 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
   }
 
+//  This test is just to make sure functionality in this context works
+//  BUT we should really also write some tests for this specific component (seperate of this context)
+  "Column reordering should be reflected" in withWebDriver {implicit driver =>
+    val user = UserPool.chooseProjectOwner
+    implicit val authToken: AuthToken = user.makeAuthToken()
+    withWorkspace(billingProject, "DataSpec_reordercolumns") {workspaceName =>
+      api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
+      withSignIn(user) {_ =>
+        val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+        workspaceDataTab.dataTable.moveColumn("test1", "test3")
+        workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "test3", "test1")
+      }
+
+    }
+  }
+
   private def testMetadataDownload(initialColumns: List[String],
                                    defaultShown: Option[List[String]] = None,
                                    defaultHidden: Option[List[String]] = None,

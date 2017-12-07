@@ -97,6 +97,7 @@ FIAB=true ./config/docker-rsync-local-ui.sh
 ##### From IntelliJ
 
 First, you need to set some default VM parameters for ScalaTest run configurations. In IntelliJ, go to `Run` > `Edit Configurations...`, select `ScalaTest` under `Defaults`, and add these VM parameters:
+
 ```
 -Djsse.enableSNIExtension=false -Dheadless=false
 ```

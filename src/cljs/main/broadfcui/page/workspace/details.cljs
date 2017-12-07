@@ -1,10 +1,10 @@
 (ns broadfcui.page.workspace.details
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.tab-bar :as tab-bar]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -127,7 +127,7 @@
             "Error loading workspace: " error]
            (if-not workspace
              [:div {:style {:textAlign "center" :padding "1rem"}}
-              [comps/Spinner {:text "Loading workspace..."}]]
+              (spinner "Loading workspace...")]
              (condp = active-tab
                nil (react/create-element
                     [summary-tab/Summary
@@ -164,7 +164,7 @@
    (fn [{:keys [props state]}]
      (when-not (contains? @whitelisted-users (utils/get-user-email))
        (endpoints/call-ajax-leo
-        {:endpoint (endpoints/get-clusters-list)
+        {:endpoint endpoints/is-leo-whitelisted
          :headers utils/content-type=json
          :on-done (fn [{:keys [success?]}]
                     (swap! whitelisted-users assoc (utils/get-user-email) success?))}))
