@@ -112,7 +112,7 @@
      (let [{:keys [dismissed? loading? messages displaying-eula?]} @state]
        (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
-           (let [{:keys [title message warning? link button]} (messages current-trial-state)]
+           (let [{:keys [title message warning? link button eula]} (messages current-trial-state)]
              (flex/box
               {:style {:color "white"
                        :background-color ((if warning? :state-warning :button-primary) style/colors)}}
@@ -158,7 +158,7 @@
               (when displaying-eula?
                 [modals/OKCancelForm
                  {:header "User License Agreement"
-                  :content [:div {:style {:backgroundColor "white" :padding "1rem"}} "Agreement goes here..."]
+                  :content [:div {:style {:backgroundColor "white" :padding "1rem"}} eula]
                   :dismiss #(swap! state dissoc :displaying-eula?)
                   :cancel-text "Refuse"
                   :ok-button [buttons/Button
@@ -166,11 +166,15 @@
                                :data-test-id "accept-button"
                                :onClick (fn []
                                           (utils/ajax-orch
-                                           "/profile/trial"
-                                           {:method :post
+                                           "/trial/userAgreement"
+                                           {:method :put
                                             :on-done (fn []
-                                                       (profile/reload-user-profile
-                                                        #(swap! state dissoc :loading?)))})
+                                                       (utils/ajax-orch
+                                                        "/profile/trial"
+                                                        {:method :post
+                                                         :on-done (fn []
+                                                                    (profile/reload-user-profile
+                                                                     #(swap! state dissoc :loading?)))}))})
                                           (utils/multi-swap! state (assoc :loading? true)
                                                              (dissoc :displaying-eula?)))}]}])))))))
    :component-will-mount
