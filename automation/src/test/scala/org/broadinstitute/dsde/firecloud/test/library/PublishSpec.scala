@@ -121,13 +121,13 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   "As a user with no TCGA permissions" - {
     "a published workspace" - {
       "with TCGA control access" - {
-        "should see a information message about getting TCGA access" ignore withWebDriver { implicit driver =>
+        "should see a information message about getting TCGA access" in withWebDriver { implicit driver =>
           //log in as a Curator and create/publish TCGA workspace
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
 
           api.NIH.addUserToNIH(Config.Users.jwt)
-          withWorkspace(namespace, "PublishSpec_curator_TCGA_", Set(Config.FireCloud.tcgaAuthDomain)) { wsName =>
+          withWorkspace(namespace, "TCGA_", Set(Config.FireCloud.tcgaAuthDomain)) { wsName =>
             withCleanUp {
               val data = LibraryData.metadata + ("library:datasetName" -> wsName)
               api.library.setLibraryAttributes(namespace, wsName, data)
@@ -139,6 +139,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               withSignIn(studentUser) { _ =>
                 val page = new DataLibraryPage().open
                 page.hasDataset(wsName) shouldBe true
+                page.openDataset(wsName)
 
               }
 

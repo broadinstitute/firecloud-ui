@@ -28,8 +28,14 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def hasDataset(name: String): Boolean = {
     doSearch(name)
     Link(s"dataset-$name").isVisible
-
   }
+
+
+  def openDataset(name: String): Unit = {
+    Thread.sleep(1)
+    Link(s"dataset-$name").doClick()
+  }
+
   def doSearch(searchParameter: String): Unit = {
     searchField.setText(searchParameter)
     pressKeys("\n")
