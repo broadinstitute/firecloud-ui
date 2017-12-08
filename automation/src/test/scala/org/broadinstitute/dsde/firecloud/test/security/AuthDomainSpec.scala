@@ -9,6 +9,7 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
@@ -38,6 +39,13 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   val authTokenDefault: AuthToken = defaultUser.makeAuthToken()
 
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, workspaceName: String): Unit = {
+    val error = workspaceSummaryPage.readError()
+    error should include(projectName)
+    error should include(workspaceName)
+    error should include("does not exist")
+  }
+
+  private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, projectName: String, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
     error should include(projectName)
     error should include(workspaceName)
@@ -519,61 +527,115 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       withGroup("AuthDomain", List(user.email)) { groupName =>
         withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
           withSignIn(owner) { workspaceListPage =>
-//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
             workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-//            workspaceListPage.showsRequestAccessModal() shouldEqual true
-            logger.info(workspaceListPage.showsRequestAccessModal().toString)
-//            checkWorkspaceFailure(new WorkspaceSummaryPage(projectName, workspaceName).open, workspaceName)
+            workspaceListPage.showsRequestAccessModal() shouldEqual true
+            new RequestAccessModal().cancel()
+
+            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
           }
 
           api.groups.addUserToGroup(groupName, owner.email, GroupRole.Member)
           withSignIn(owner) { workspaceListPage =>
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+
+            // Navigate somewhere else first otherwise background login status gets lost
             workspaceListPage.open
-//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
-//            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
-            workspaceListPage.open
-//            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
+            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
           }
 
           api.groups.removeUserFromGroup(groupName, owner.email, GroupRole.Member)
           withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.open
-//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
             workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-//            workspaceListPage.showsRequestAccessModal shouldEqual true
-            logger.info(workspaceListPage.showsRequestAccessModal().toString)
-//            checkWorkspaceFailure(new WorkspaceSummaryPage(projectName, workspaceName).open, workspaceName)
+            workspaceListPage.showsRequestAccessModal shouldEqual true
+            new RequestAccessModal().cancel()
+
+            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
           }
         }
       }
     }
-    "add user as billing project owner" in withWebDriver { implicit driver =>
+    "add user as billing project owner after workspace creation" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val user = UserPool.chooseStudent
-      val project = "breilly-test-20171208a"
+      val projectName = "breilly-test-20171208a"
       implicit val authToken: AuthToken = owner.makeAuthToken()
-      withGroup("AuthDomain") { groupName =>
-        withWorkspace(project, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
-          api.billing.addUserToBillingProject(project, user.email, BillingProjectRole.Owner)
+      withGroup("AuthDomain", List(user.email)) { groupName =>
+        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
           withSignIn(user) { workspaceListPage =>
-//            workspaceListPage.looksRestricted(project, workspaceName) shouldEqual true
-            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
+            workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
+          }
+
+          api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+          withSignIn(user) { workspaceListPage =>
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+            val workspaceSummaryPage = workspaceListPage.enterWorkspace(projectName, workspaceName)
+            workspaceSummaryPage.validateLocation()
+
+            // Navigate somewhere else first otherwise background login status gets lost
+            workspaceListPage.open
+            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
+          }
+
+          api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+          withSignIn(user) { workspaceListPage =>
+            workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
+
+            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+          }
+        }
+      }
+    }
+    "add user to auth domain group after workspace creation" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val user = UserPool.chooseStudent
+      val projectName = "breilly-test-20171208a"
+      implicit val authToken: AuthToken = owner.makeAuthToken()
+
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+      withGroup("AuthDomain") { groupName =>
+        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
+          withSignIn(user) { workspaceListPage =>
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+            workspaceListPage.showsRequestAccessModal() shouldEqual true
+            new RequestAccessModal().cancel()
+
+            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
           }
 
           api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-          withSignIn(user) { workspaceListPage =>
-            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
-            workspaceListPage.enterWorkspace(project, workspaceName)
-            logger.info("")
+          withSignIn(owner) { workspaceListPage =>
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+
+            // Navigate somewhere else first otherwise background login status gets lost
+            workspaceListPage.open
+            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
           }
 
-          api.billing.removeUserFromBillingProject(project, user.email, BillingProjectRole.Owner)
-          withSignIn(user) { workspaceListPage =>
-            //            workspaceListPage.looksRestricted(project, workspaceName) shouldEqual true
-            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
+          api.groups.removeUserFromGroup(groupName, owner.email, GroupRole.Member)
+          withSignIn(owner) { workspaceListPage =>
+            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+            workspaceListPage.showsRequestAccessModal shouldEqual true
+            new RequestAccessModal().cancel()
+
+            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
           }
         }
       }
