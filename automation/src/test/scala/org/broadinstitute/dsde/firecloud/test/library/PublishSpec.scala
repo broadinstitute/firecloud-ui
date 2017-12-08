@@ -140,6 +140,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 val page = new DataLibraryPage().open
                 page.hasDataset(wsName) shouldBe true
                 page.openDataset(wsName)
+                //verify that Request Access modal is shown
+                val RequestAccessModal   = RequestAccessModal()
+                RequestAccessModal.validateLocation shouldBe true
+                RequestAccessModal.clickOk()
 
               }
 

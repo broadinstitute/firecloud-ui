@@ -65,3 +65,12 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   }
 }
 
+case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  def validateLocation: Boolean = {
+    testId("push-message").element != null
+  }
+  def getRequestAccessText: String = {
+    readText (testId ("push-message"))
+  }
+}
+
