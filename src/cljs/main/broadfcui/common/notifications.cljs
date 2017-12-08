@@ -166,7 +166,7 @@
                                :data-test-id "accept-button"
                                :onClick (fn []
                                           (utils/ajax-orch
-                                           "/trial/userAgreement"
+                                           "/profile/trial/userAgreement"
                                            {:method :put
                                             :on-done (fn []
                                                        (utils/ajax-orch
