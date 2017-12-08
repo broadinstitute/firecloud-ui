@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.security
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
+import org.broadinstitute.dsde.firecloud.api.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
@@ -264,6 +265,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
               withCleanUp {
                 withSignIn(user) { workspaceListPage =>
+                  workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
                 }
               }
             }
@@ -503,6 +505,75 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 }
               }
             }
+          }
+        }
+      }
+    }
+  }
+
+  "Sam phase 3 regressions" - {
+    "add owner to auth domain group" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val user = UserPool.chooseStudent
+      implicit val userToken: AuthToken = user.makeAuthToken()
+      withGroup("AuthDomain", List(user.email)) { groupName =>
+        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
+          withSignIn(owner) { workspaceListPage =>
+//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
+            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+//            workspaceListPage.showsRequestAccessModal() shouldEqual true
+            logger.info(workspaceListPage.showsRequestAccessModal().toString)
+//            checkWorkspaceFailure(new WorkspaceSummaryPage(projectName, workspaceName).open, workspaceName)
+          }
+
+          api.groups.addUserToGroup(groupName, owner.email, GroupRole.Member)
+          withSignIn(owner) { workspaceListPage =>
+            workspaceListPage.open
+//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
+//            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+            workspaceListPage.open
+//            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
+          }
+
+          api.groups.removeUserFromGroup(groupName, owner.email, GroupRole.Member)
+          withSignIn(owner) { workspaceListPage =>
+            workspaceListPage.open
+//            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+            logger.info(workspaceListPage.looksRestricted(projectName, workspaceName).toString)
+            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+//            workspaceListPage.showsRequestAccessModal shouldEqual true
+            logger.info(workspaceListPage.showsRequestAccessModal().toString)
+//            checkWorkspaceFailure(new WorkspaceSummaryPage(projectName, workspaceName).open, workspaceName)
+          }
+        }
+      }
+    }
+    "add user as billing project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val user = UserPool.chooseStudent
+      val project = "breilly-test-20171208a"
+      implicit val authToken: AuthToken = owner.makeAuthToken()
+      withGroup("AuthDomain") { groupName =>
+        withWorkspace(project, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
+          api.billing.addUserToBillingProject(project, user.email, BillingProjectRole.Owner)
+          withSignIn(user) { workspaceListPage =>
+//            workspaceListPage.looksRestricted(project, workspaceName) shouldEqual true
+            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
+          }
+
+          api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+          withSignIn(user) { workspaceListPage =>
+            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
+            workspaceListPage.enterWorkspace(project, workspaceName)
+            logger.info("")
+          }
+
+          api.billing.removeUserFromBillingProject(project, user.email, BillingProjectRole.Owner)
+          withSignIn(user) { workspaceListPage =>
+            //            workspaceListPage.looksRestricted(project, workspaceName) shouldEqual true
+            logger.info(workspaceListPage.looksRestricted(project, workspaceName).toString)
           }
         }
       }
