@@ -32,7 +32,6 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
 
   def openDataset(name: String): Unit = {
-    Thread.sleep(1)
     Link(s"dataset-$name").doClick()
   }
 
