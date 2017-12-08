@@ -7,11 +7,12 @@ import org.broadinstitute.dsde.firecloud.api.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{GroupFixtures, UserFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{BillingFixtures, GroupFixtures, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.openqa.selenium.WebDriver
 import org.scalatest._
 
 /*
@@ -26,7 +27,7 @@ import org.scalatest._
  */
 class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures
-  with GroupFixtures
+  with BillingFixtures with GroupFixtures
   with UserFixtures {
 
   val projectName: String = Config.Projects.common
@@ -519,126 +520,270 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     }
   }
 
-  "Sam phase 3 regressions" - {
-    "add owner to auth domain group" in withWebDriver { implicit driver =>
+  "removing permissions from billing project owners for workspaces with auth domains" - {
+    "+ project owner, + group member, create workspace, - group member" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
-      val user = UserPool.chooseStudent
-      implicit val userToken: AuthToken = user.makeAuthToken()
+      val creator = UserPool.chooseStudent
+      val user = owner
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      val projectName: String = Config.Projects.default
       withGroup("AuthDomain", List(user.email)) { groupName =>
-        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
-          withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+        withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+          checkVisibleAndAccessible(user, projectName, workspaceName)
 
-            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-            workspaceListPage.showsRequestAccessModal() shouldEqual true
-            new RequestAccessModal().cancel()
+          api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+          checkVisibleNotAccessible(user, projectName, workspaceName)
+        }
+      }
+    }
 
-            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-          }
+    "+ project owner, + group member, create workspace, - project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
 
-          api.groups.addUserToGroup(groupName, owner.email, GroupRole.Member)
-          withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+      implicit val token: AuthToken = creator.makeAuthToken()
 
-            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+      withBillingProject("auth-domain-spec") { projectName =>
+        api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        withGroup("AuthDomain", List(user.email)) { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkVisibleAndAccessible(user, projectName, workspaceName)
 
-            // Navigate somewhere else first otherwise background login status gets lost
-            workspaceListPage.open
-            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
-          }
-
-          api.groups.removeUserFromGroup(groupName, owner.email, GroupRole.Member)
-          withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-
-            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-            workspaceListPage.showsRequestAccessModal shouldEqual true
-            new RequestAccessModal().cancel()
-
-            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
           }
         }
       }
     }
-    "add user as billing project owner after workspace creation" in withWebDriver { implicit driver =>
+
+    "+ project owner, create workspace, + group member, - group member" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
-      val user = UserPool.chooseStudent
-      val projectName = "breilly-test-20171208a"
-      implicit val authToken: AuthToken = owner.makeAuthToken()
-      withGroup("AuthDomain", List(user.email)) { groupName =>
-        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
-          withSignIn(user) { workspaceListPage =>
-            workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
-          }
+      val creator = UserPool.chooseStudent
+      val user = owner
 
-          api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-          withSignIn(user) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+      implicit val token: AuthToken = creator.makeAuthToken()
 
-            val workspaceSummaryPage = workspaceListPage.enterWorkspace(projectName, workspaceName)
-            workspaceSummaryPage.validateLocation()
-
-            // Navigate somewhere else first otherwise background login status gets lost
-            workspaceListPage.open
-            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
-          }
-
-          api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
-          withSignIn(user) { workspaceListPage =>
-            workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
-
-            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-          }
-        }
-      }
-    }
-    "add user to auth domain group after workspace creation" in withWebDriver { implicit driver =>
-      val owner = UserPool.chooseProjectOwner
-      val user = UserPool.chooseStudent
-      val projectName = "breilly-test-20171208a"
-      implicit val authToken: AuthToken = owner.makeAuthToken()
-
-      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+      val projectName: String = Config.Projects.default
       withGroup("AuthDomain") { groupName =>
-        withWorkspace(projectName, "AuthDomainSpec_sam3", Set(groupName)) { workspaceName =>
-          withSignIn(user) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-
-            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-            workspaceListPage.showsRequestAccessModal() shouldEqual true
-            new RequestAccessModal().cancel()
-
-            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-          }
+        withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+          checkVisibleNotAccessible(user, projectName, workspaceName)
 
           api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-          withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+          checkVisibleAndAccessible(user, projectName, workspaceName)
 
-            workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+          api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+          checkVisibleNotAccessible(user, projectName, workspaceName)
+        }
+      }
+    }
 
-            // Navigate somewhere else first otherwise background login status gets lost
-            workspaceListPage.open
-            new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
-          }
+    "+ project owner, create workspace, + group member, - project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
 
-          api.groups.removeUserFromGroup(groupName, owner.email, GroupRole.Member)
-          withSignIn(owner) { workspaceListPage =>
-            workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+      implicit val token: AuthToken = creator.makeAuthToken()
 
-            workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-            workspaceListPage.showsRequestAccessModal shouldEqual true
-            new RequestAccessModal().cancel()
+      withBillingProject("auth-domain-spec") { projectName =>
+        api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        withGroup("AuthDomain") { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkVisibleNotAccessible(user, projectName, workspaceName)
 
-            val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-            checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
           }
         }
       }
+    }
+
+    "+ group member, create workspace, + project owner, - group member" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain", List(user.email)) { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkNoAccess(user, projectName, workspaceName)
+
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+
+    "+ group member, create workspace, + project owner, - project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain", List(user.email)) { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkNoAccess(user, projectName, workspaceName)
+
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+
+    "create workspace, + project owner, + group member, - group member" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain") { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+
+            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+
+    "create workspace, + project owner, + group member, - project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain") { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+
+            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+
+    "create workspace, + group member, + project owner, - group member" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain") { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
+            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            checkNoAccess(user, projectName, workspaceName)
+
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+
+    "create workspace, + group member, + project owner, - project owner" in withWebDriver { implicit driver =>
+      val owner = UserPool.chooseProjectOwner
+      val creator = owner
+      val user = UserPool.chooseStudent
+
+      implicit val token: AuthToken = creator.makeAuthToken()
+
+      withBillingProject("auth-domain-spec") { projectName =>
+        withGroup("AuthDomain") { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
+            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            checkNoAccess(user, projectName, workspaceName)
+
+            api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkVisibleAndAccessible(user, projectName, workspaceName)
+
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
+          }
+        }
+      }
+    }
+  }
+
+  def checkNoAccess(user: Credentials, projectName: String, workspaceName: String)
+                   (implicit webDriver: WebDriver): Unit = {
+    withSignIn(user) { workspaceListPage =>
+      // Not in workspace list
+      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
+
+      // No direct access
+      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+    }
+  }
+
+  def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String)
+                               (implicit webDriver: WebDriver): Unit = {
+    withSignIn(user) { workspaceListPage =>
+      // Looks restricted; implies in workspace list
+      workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+      // Clicking opens request access modal
+      workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+      workspaceListPage.showsRequestAccessModal() shouldEqual true
+      // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
+      Thread sleep 500
+      new RequestAccessModal().cancel()
+
+      // No direct access
+      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+    }
+  }
+
+  def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String)
+                               (implicit webDriver: WebDriver): Unit = {
+    withSignIn(user) { workspaceListPage =>
+      // Looks restricted; implies in workspace list
+      workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+
+      // Clicking opens workspace
+      workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+
+      // Direct access also works
+      // Navigate somewhere else first otherwise background login status gets lost
+      workspaceListPage.open
+      new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
     }
   }
 }
