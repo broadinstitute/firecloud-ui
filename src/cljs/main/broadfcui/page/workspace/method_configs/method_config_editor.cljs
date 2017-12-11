@@ -360,10 +360,10 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]
                       (if-not success?
-                        (do
-                          (utils/multi-swap! state (assoc :redacted? true :wdl-parse-error (:message response))
-                                                   (dissoc :blocker))
-                          (comps/push-error (style/create-server-error-message (:message response))))
+                        (utils/multi-swap! state (assoc :redacted? true
+                                                        :showing-error-popup? true
+                                                        :wdl-parse-error (:message response))
+                                                 (dissoc :blocker))
                         (endpoints/call-ajax-orch
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (:methodRepoMethod response)
