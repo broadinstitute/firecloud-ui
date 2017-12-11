@@ -139,7 +139,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                   val clonedWsName = wsName + "_clone"
                   register cleanUp api.workspaces.delete(namespace, clonedWsName)
                   wspage.cloneWorkspace(namespace, clonedWsName)
-                  verifyhere
+                  //TODO: start here -- verify the DBG
                   //TODO: do I need to instantiate a new page? no..
 //                  wspage.hasPublishButton shouldBe true
 //                  val page = new DataLibraryPage().open
