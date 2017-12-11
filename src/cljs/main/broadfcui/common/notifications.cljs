@@ -109,11 +109,12 @@
 (react/defc TrialAlertContainer
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [dismissed? loading? messages displaying-eula?]} @state]
+     (let [{:keys [dismissed? loading? messages error]} @state]
        (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
            (let [{:keys [title message warning? link button eula]} (messages current-trial-state)]
-             (flex/box
+             (apply ;; needed until dmohs/react deals with nested seq's
+              flex/box
               {:style {:color "white"
                        :background-color ((if warning? :state-warning :button-primary) style/colors)}}
               (flex/box
@@ -155,28 +156,33 @@
                                 :color "white" :cursor "pointer"}
                         :title "Hide for now"}
                (icons/render-icon {} :close)]
-              (when displaying-eula?
+              (modals/show-modals
+               state
+               {:displaying-eula?
                 [modals/OKCancelForm
                  {:header "User License Agreement"
                   :content [:div {:style {:backgroundColor "white" :padding "1rem"}} eula]
-                  :dismiss #(swap! state dissoc :displaying-eula?)
+                  :data-test-id "message-modal"
                   :cancel-text "Refuse"
-                  :ok-button [buttons/Button
-                              {:text "Accept"
-                               :data-test-id "accept-button"
-                               :onClick (fn []
-                                          (utils/ajax-orch
-                                           "/profile/trial/userAgreement"
-                                           {:method :put
-                                            :on-done (fn []
-                                                       (utils/ajax-orch
-                                                        "/profile/trial"
-                                                        {:method :post
-                                                         :on-done (fn []
-                                                                    (profile/reload-user-profile
-                                                                     #(swap! state dissoc :loading?)))}))})
-                                          (utils/multi-swap! state (assoc :loading? true)
-                                                             (dissoc :displaying-eula?)))}]}])))))))
+                  :ok-button {:text "Accept"
+                              :onClick (fn []
+                                         (utils/ajax-orch
+                                          "/profile/trial/userAgreement"
+                                          {:method :put
+                                           :on-done (fn []
+                                                      (utils/ajax-orch
+                                                       "/profile/trial"
+                                                       {:method :post
+                                                        :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                                   (if success?
+                                                                     (profile/reload-user-profile
+                                                                      #(swap! state dissoc :loading?))
+                                                                     (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
+                                                                                        (dissoc :loading?))))}))})
+                                         (utils/multi-swap! state (assoc :loading? true)
+                                                            (dissoc :displaying-eula?)))}}]
+                :error
+                (modals/render-error {:text error})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
      (add-watch profile/saved-user-profile :trial-alerts
