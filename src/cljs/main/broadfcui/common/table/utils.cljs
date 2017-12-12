@@ -43,7 +43,7 @@
     data))
 
 (defn- matches-filter-text [filter-tokens source]
-  (let [lc-source (string/lower-case source)]
+  (let [lc-source (string/lower-case (str source))]
     (every? (fn [word] (utils/contains lc-source word)) filter-tokens)))
 
 (defn- filter-rows [{:keys [filter-text]} columns data]
