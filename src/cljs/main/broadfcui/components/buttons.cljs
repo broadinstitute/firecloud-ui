@@ -23,7 +23,8 @@
 
 
 (defn- make-default-test-id [{:keys [text icon]}]
-  (if text
+  (assert (string? text) "Making test ID with non-string")
+  (if (string? text)
     (-> text
         string/lower-case
         (string/replace-all #"\s+" "-")
