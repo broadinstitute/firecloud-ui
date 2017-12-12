@@ -127,29 +127,27 @@
                 title]
                [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
                 message
-                (when link
-                  (let [{:keys [label url]} link]
-                    (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label)))]
-               (when button
-                 (let [{:keys [label url external?]} button]
-                   [:a {:data-test-id "trial-banner-button"
-                        :data-test-state (if loading? "loading" "ready")
-                        :style {:display "block"
-                                :color "white" :textDecoration "none" :fontSize "1.125rem"
-                                :fontWeight 500
-                                :border "2px solid white" :borderRadius "0.25rem"
-                                :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
-                        :href (if external? url (when-not loading? "javascript:;"))
-                        :onClick (when-not (or external? loading?)
-                                   #(swap! state assoc :displaying-eula? true))
-                        :target (when external? "_blank")}
-                    (if loading?
-                      (spinner {:style {:fontSize "1rem" :margin 0}})
-                      label)
-                    (when external?
-                      (icons/render-icon
-                       {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
-                       :external-link))])))
+                (when-let [{:keys [label url]} link]
+                  (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
+               (when-let [{:keys [label url external?]} button]
+                 [:a {:data-test-id "trial-banner-button"
+                      :data-test-state (if loading? "loading" "ready")
+                      :style {:display "block"
+                              :color "white" :textDecoration "none" :fontSize "1.125rem"
+                              :fontWeight 500
+                              :border "2px solid white" :borderRadius "0.25rem"
+                              :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
+                      :href (if external? url (when-not loading? "javascript:;"))
+                      :onClick (when-not (or external? loading?)
+                                 #(swap! state assoc :displaying-eula? true))
+                      :target (when external? "_blank")}
+                  (if loading?
+                    (spinner {:style {:fontSize "1rem" :margin 0}})
+                    label)
+                  (when external?
+                    (icons/render-icon
+                     {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
+                     :external-link))]))
               [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
                         :style {:alignSelf "center" :fontSize "1.5rem" :padding "1rem"
                                 :color "white" :cursor "pointer"}
