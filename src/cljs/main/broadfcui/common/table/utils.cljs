@@ -43,6 +43,7 @@
     data))
 
 (defn- matches-filter-text [filter-tokens source]
+  (assert (string? source) (str "Attempting to filter table row text that is not a string: " source)) ; GAWB-2872
   (let [lc-source (string/lower-case (str source))]
     (every? (fn [word] (utils/contains lc-source word)) filter-tokens)))
 
