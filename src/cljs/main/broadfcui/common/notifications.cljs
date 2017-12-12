@@ -158,7 +158,9 @@
                {:displaying-eula?
                 [modals/OKCancelForm
                  {:header "User License Agreement"
-                  :content [:div {:style {:backgroundColor "white" :padding "1rem"}} eula]
+                  :content [:div {:style {:backgroundColor "white" :padding "1rem"
+                                          :maxHeight 500 :overflow "auto" :whiteSpace "pre-wrap"}}
+                            eula]
                   :data-test-id "message-modal"
                   :cancel-text "Refuse"
                   :ok-button {:text "Accept"
@@ -166,16 +168,19 @@
                                          (utils/ajax-orch
                                           "/profile/trial/userAgreement"
                                           {:method :put
-                                           :on-done (fn []
-                                                      (utils/ajax-orch
-                                                       "/profile/trial"
-                                                       {:method :post
-                                                        :on-done (fn [{:keys [success? get-parsed-response]}]
-                                                                   (if success?
-                                                                     (profile/reload-user-profile
-                                                                      #(swap! state dissoc :loading?))
-                                                                     (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
-                                                                                        (dissoc :loading?))))}))})
+                                           :on-done (fn [{:keys [success?]}]
+                                                      (if-not success?
+                                                        (utils/multi-swap! state (assoc :error "An error occurred. Please try again.")
+                                                                           (dissoc :loading?))
+                                                        (utils/ajax-orch
+                                                         "/profile/trial"
+                                                         {:method :post
+                                                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                                     (if success?
+                                                                       (profile/reload-user-profile
+                                                                        #(swap! state dissoc :loading?))
+                                                                       (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
+                                                                                          (dissoc :loading?))))})))})
                                          (utils/multi-swap! state (assoc :loading? true)
                                                             (dissoc :displaying-eula?)))}}]
                 :error
