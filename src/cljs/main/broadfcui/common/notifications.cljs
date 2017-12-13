@@ -10,7 +10,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
-   [broadfcui.page.profile :as profile]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -109,7 +109,7 @@
   {:render
    (fn [{:keys [state]}]
      (let [{:keys [dismissed? loading? messages error]} @state]
-       (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
+       (when-let [current-trial-state (keyword (:trialState @user-info/saved-user-profile))]
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
            (let [{:keys [title message warning? link button eula]} (messages current-trial-state)]
              (apply ;; needed until dmohs/react deals with nested seq's
@@ -177,8 +177,8 @@
                                                          {:method :post
                                                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                                                      (if success?
-                                                                       (profile/reload-user-profile
-                                                                        #(swap! state dissoc :loading?))
+                                                                         (user-info/reload-user-profile
+                                                                          #(swap! state dissoc :loading?))
                                                                        (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
                                                                                           (dissoc :loading?))))})))})
                                          (utils/multi-swap! state (assoc :loading? true)
@@ -187,7 +187,7 @@
                 (modals/render-error {:text error})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
-     (add-watch profile/saved-user-profile :trial-alerts
+     (add-watch user-info/saved-user-profile :trial-alerts
                 (fn [_ _ _ {:keys [trialState]}]
                   (when trialState
                     (if-not (:messages @state)
