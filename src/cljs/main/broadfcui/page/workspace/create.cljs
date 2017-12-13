@@ -183,32 +183,31 @@
 (react/defc Button
   {:get-initial-state
    (fn []
-     {:disabled-reason :not-loaded})
-   :render
-   (fn [{:keys [state]}]
-     [:div {:style {:display "inline"}}
-      (when (:modal? @state)
-        [CreateDialog {:dismiss #(swap! state dissoc :modal?)}])
-      [buttons/Button
-       {:data-test-id "open-create-workspace-modal-button"
-        :text (case (:disabled-reason @state)
-                :not-loaded (spinner {:style {:margin 0}} "Getting billing info...")
-                "Create New Workspace...")
-        :icon :add-new
-        :disabled? (case (:disabled-reason @state)
-                     nil false
-                     :not-loaded "Project billing data has not yet been loaded."
-                     :no-billing (comps/no-billing-projects-message)
-                     "Project billing data failed to load.")
-        :onClick #(swap! state assoc :modal? true)}]])
+     {:not-loaded? true})
    :component-will-mount
-   (fn [{:keys [this state]}]
-     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(.forceUpdate this))
+   (fn [{:keys [state]}]
+     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(swap! state dissoc :not-loaded?))
      (user-info/reload-billing-projects
       (fn [err-text]
-        (if err-text
-          (swap! state assoc :error-message err-text :disabled-reason :error)
-          (swap! state assoc :disabled-reason (when (empty? @user-info/saved-ready-billing-project-names) :no-billing))))))
+        (when err-text
+          (swap! state assoc :error-message err-text)))))
+   :render
+   (fn [{:keys [state]}]
+     (let [{:keys [not-loaded? error-message]} @state]
+       [:div {:style {:display "inline"}}
+        (when (:modal? @state)
+          [CreateDialog {:dismiss #(swap! state dissoc :modal?)}])
+        [buttons/Button
+         {:data-test-id "open-create-workspace-modal-button"
+          :text (if not-loaded?
+                  (spinner {:style {:margin 0}} "Getting billing info...")
+                  "Create New Workspace...")
+          :icon :add-new
+          :disabled? (cond
+                       not-loaded? "Project billing data has not yet been loaded."
+                       (empty? @user-info/saved-ready-billing-project-names) (comps/no-billing-projects-message)
+                       error-message "Project billing data failed to load.")
+          :onClick #(swap! state assoc :modal? true)}]]))
    :component-will-unmount
    (fn []
      (remove-watch user-info/saved-ready-billing-project-names :ws-create-button))})
