@@ -6,12 +6,13 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToke
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model._
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
+import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount, ServiceAccountName}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
+class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
   def findSaInGoogle(name: ServiceAccountName): Option[ServiceAccount] = {
@@ -102,6 +103,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
 
       val petAuthToken = ServiceAccountAuthToken(petAccountEmail)
+      register cleanUp petAuthToken.removePrivateKey()
 
       Sam.user.status()(petAuthToken) shouldBe Some(userStatus)
 
@@ -110,7 +112,6 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
       // clean up
 
-      petAuthToken.removePrivateKey()
       Sam.removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
     }
@@ -123,6 +124,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       removeUser(sa.subjectId.value)
 
       implicit val saAuthToken: ServiceAccountAuthToken = ServiceAccountAuthToken(saEmail)
+      register cleanUp saAuthToken.removePrivateKey()
 
       registerAsNewUser(saEmail)
 
@@ -130,7 +132,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       Sam.user.status()(saAuthToken).map(_.userInfo.userEmail) shouldBe Some(saEmail.value)
 
       // clean up
-      saAuthToken.removePrivateKey()
+
       removeUser(sa.subjectId.value)
     }
 
