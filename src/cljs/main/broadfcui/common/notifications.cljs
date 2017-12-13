@@ -6,8 +6,8 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
-   [broadfcui.components.top-banner :as top-banner]
    [broadfcui.components.spinner :refer [spinner]]
+   [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.page.profile :as profile]
    [broadfcui.utils :as utils]
@@ -109,60 +109,83 @@
 (react/defc TrialAlertContainer
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [dismissed? loading? messages]} @state]
-       (when-not dismissed?
-         (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
-           (when-not (= :Disabled current-trial-state) ; Disabled users do not see a banner
-             (let [{:keys [title message warning? link button]} (messages current-trial-state)]
-               (flex/box
-                {:style {:color "white"
-                         :background-color ((if warning? :state-warning :button-primary) style/colors)}}
-                (flex/box
-                 {:style {:padding "1rem" :flexGrow 1
-                          :justifyContent "center" :alignItems "center"}}
-                 [:div {:data-test-id "trial-banner-title"
-                        :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
-                                :borderRight "1px solid white"
-                                :paddingRight "1rem" :marginRight "1rem"
-                                :maxWidth 200 :flexShrink 0}}
-                  title]
-                 [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
-                  message
-                  (when link
-                    (let [{:keys [label url]} link]
-                      (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label)))]
-                 (when button
-                   (let [{:keys [label url external?]} button]
-                     [:a {:data-test-id "trial-banner-button"
-                          :data-test-state (if loading? "loading" "ready")
-                          :style {:display "block"
-                                  :color "white" :textDecoration "none" :fontSize "1.125rem"
-                                  :fontWeight 500
-                                  :border "2px solid white" :borderRadius "0.25rem"
-                                  :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
-                          :href (if external? url (when-not loading? "javascript:;"))
-                          :onClick (when-not (or external? loading?)
-                                     (fn []
-                                       (utils/ajax-orch
-                                        "/profile/trial"
-                                        {:method :post
-                                         :on-done (fn []
-                                                    (profile/reload-user-profile
-                                                     #(swap! state dissoc :loading?)))})
-                                       (swap! state assoc :loading? true)))
-                          :target (when external? "_blank")}
-                      (if loading?
-                        (spinner {:style {:fontSize "1rem" :margin 0}})
-                        label)
-                      (when external?
-                        (icons/render-icon
-                         {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
-                         :external-link))])))
-                [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
-                          :style {:alignSelf "center" :fontSize "1.5rem" :padding "1rem"
-                                  :color "white" :cursor "pointer"}
-                          :title "Hide for now"}
-                 (icons/render-icon {} :close)])))))))
+     (let [{:keys [dismissed? loading? messages error]} @state]
+       (when-let [current-trial-state (keyword (:trialState @profile/saved-user-profile))]
+         (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
+           (let [{:keys [title message warning? link button eula]} (messages current-trial-state)]
+             (apply ;; needed until dmohs/react deals with nested seq's
+              flex/box
+              {:style {:color "white"
+                       :background-color ((if warning? :state-warning :button-primary) style/colors)}}
+              (flex/box
+               {:style {:padding "1rem" :flexGrow 1
+                        :justifyContent "center" :alignItems "center"}}
+               [:div {:data-test-id "trial-banner-title"
+                      :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
+                              :borderRight "1px solid white"
+                              :paddingRight "1rem" :marginRight "1rem"
+                              :maxWidth 200 :flexShrink 0}}
+                title]
+               [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
+                message
+                (when-let [{:keys [label url]} link]
+                  (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
+               (when-let [{:keys [label url external?]} button]
+                 [:a {:data-test-id "trial-banner-button"
+                      :data-test-state (if loading? "loading" "ready")
+                      :style {:display "block"
+                              :color "white" :textDecoration "none" :fontSize "1.125rem"
+                              :fontWeight 500
+                              :border "2px solid white" :borderRadius "0.25rem"
+                              :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
+                      :href (if external? url (when-not loading? "javascript:;"))
+                      :onClick (when-not (or external? loading?)
+                                 #(swap! state assoc :displaying-eula? true))
+                      :target (when external? "_blank")}
+                  (if loading?
+                    (spinner {:style {:fontSize "1rem" :margin 0}})
+                    label)
+                  (when external?
+                    (icons/render-icon
+                     {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
+                     :external-link))]))
+              [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
+                        :style {:alignSelf "center" :fontSize "1.5rem" :padding "1rem"
+                                :color "white" :cursor "pointer"}
+                        :title "Hide for now"}
+               (icons/render-icon {} :close)]
+              (modals/show-modals
+               state
+               {:displaying-eula?
+                [modals/OKCancelForm
+                 {:header "User License Agreement"
+                  :content [:div {:style {:backgroundColor "white" :padding "1rem"
+                                          :maxHeight 500 :overflow "auto" :whiteSpace "pre-wrap"}}
+                            eula]
+                  :data-test-id "message-modal"
+                  :cancel-text "Refuse"
+                  :ok-button {:text "Accept"
+                              :onClick (fn []
+                                         (utils/ajax-orch
+                                          "/profile/trial/userAgreement"
+                                          {:method :put
+                                           :on-done (fn [{:keys [success?]}]
+                                                      (if-not success?
+                                                        (utils/multi-swap! state (assoc :error "An error occurred. Please try again.")
+                                                                           (dissoc :loading?))
+                                                        (utils/ajax-orch
+                                                         "/profile/trial"
+                                                         {:method :post
+                                                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                                     (if success?
+                                                                       (profile/reload-user-profile
+                                                                        #(swap! state dissoc :loading?))
+                                                                       (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
+                                                                                          (dissoc :loading?))))})))})
+                                         (utils/multi-swap! state (assoc :loading? true)
+                                                            (dissoc :displaying-eula?)))}}]
+                :error
+                (modals/render-error {:text error})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
      (add-watch profile/saved-user-profile :trial-alerts
