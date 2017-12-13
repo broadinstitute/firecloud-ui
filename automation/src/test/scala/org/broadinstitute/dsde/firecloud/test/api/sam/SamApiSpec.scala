@@ -11,6 +11,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
+import scala.util.Try
+
 class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
@@ -88,8 +90,8 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       val userStatus = Sam.user.status()(userAuthToken).get
 
       // ensure known state for pet (not present)
-
-      Sam.removePet(userStatus.userInfo)
+      // ok if this fails
+      Try{Sam.removePet(userStatus.userInfo)}
       findPetInGoogle(userStatus.userInfo) shouldBe None
 
       val petAccountEmail = Sam.user.petServiceAccountEmail()(userAuthToken)

@@ -13,6 +13,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
   // We only want to see the users' workspaces so we can't be Project Owners
@@ -45,7 +46,8 @@ class RawlsApiSpec extends FreeSpec with Matchers with CleanUp {
 
       //Remove the pet SA for a clean test environment
       val userAStatus = Sam.user.status()(studentAToken).get
-      Sam.removePet(userAStatus.userInfo)
+      //doesn't matter if it fails
+      Try{Sam.removePet(userAStatus.userInfo)}
       findPetInGoogle(userAStatus.userInfo) shouldBe None
 
       //Validate that the pet SA has been created
