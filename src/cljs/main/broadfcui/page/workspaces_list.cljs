@@ -437,7 +437,7 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (when (empty? projects) :no-billing)))))
      (utils/ajax
-      {:url (config/google-bucket-url "featured")
+      {:url (config/google-bucket-url "featured-workspaces")
        :on-done (fn [{:keys [raw-response]}]
                   (swap! state update :server-response assoc
                          :featured-workspaces (set (let [[parsed _] (utils/parse-json-string raw-response true false)]

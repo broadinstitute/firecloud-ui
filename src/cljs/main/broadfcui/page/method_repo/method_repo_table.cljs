@@ -9,6 +9,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
@@ -20,16 +21,18 @@
 
 (defn- process-methods [methods]
   (let [user-email (utils/get-user-email)]
-    (map (fn [method]
-           (assoc method :mine? (or (not (:public method))
-                                    (contains? (set (:managers method)) user-email))))
+    (map (fn [{:keys [public managers namespace name] :as method}]
+           (assoc method
+             :mine? (or (not public)
+                        (contains? (set managers) user-email))
+             :method-id (utils/restructure namespace name)))
          methods)))
 
 
 (react/defc MethodRepoTable
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [methods error editing-namespace]} @state
+     (let [{:keys [methods error editing-namespace featured-methods featured-namespaces]} @state
            {:keys [workspace-id nav-method]} props]
        [:div {}
         (when (:creating? @state)
@@ -56,7 +59,11 @@
                              :items [{:label "Public Methods"
                                       :predicate :public}
                                      {:label "My Methods"
-                                      :predicate :mine?}]}
+                                      :predicate :mine?}
+                                     {:label "Featured"
+                                      :predicate (fn [{:keys [namespace method-id]}]
+                                                   (or (contains? featured-namespaces namespace)
+                                                       (contains? featured-methods method-id)))}]}
                       :body {:behavior {:reorderable-columns? false}
                              :style (utils/deep-merge table-style/table-light
                                                       {:body {:fontWeight "initial" :fontSize "120%"
@@ -66,31 +73,30 @@
                                                                     :alignItems "center"})})
                              :columns
                              [{:header "Method" :initial-width 300
-                               :column-data (juxt :namespace :name)
-                               :as-text (partial string/join "/")
-                               :sort-by (comp string/lower-case second)
+                               :column-data :method-id
+                               :as-text (fn [{:keys [namespace name]}] (str namespace "/" name))
+                               :sort-by (comp string/lower-case :name)
                                :render
-                               (fn [[namespace name]]
-                                 (let [method-id (utils/restructure namespace name)]
-                                   (links/create-internal
-                                    (utils/deep-merge
-                                     {:data-test-id (str "method-link-" namespace "-" name)
-                                      :style {:display "block" :marginTop -4}}
-                                     (if workspace-id
-                                       {:onClick #(nav-method
-                                                   {:label (str namespace "/" name)
-                                                    :component MethodDetails
-                                                    :props (utils/restructure method-id nav-method workspace-id)})}
-                                       {:href (nav/get-link :method-loader method-id)}))
-                                    [:span
-                                     {:className (when-not workspace-id "underline-on-hover")
-                                      :style {:fontSize "80%" :color "black"}
-                                      :onClick (when-not workspace-id
-                                                 (fn [e]
-                                                   (.preventDefault e)
-                                                   (swap! state assoc :editing-namespace namespace)))}
-                                     namespace]
-                                    [:div {:style {:fontWeight 600}} name])))}
+                               (fn [{:keys [namespace name] :as method-id}]
+                                 (links/create-internal
+                                  (utils/deep-merge
+                                   {:data-test-id (str "method-link-" namespace "-" name)
+                                    :style {:display "block" :marginTop -4}}
+                                   (if workspace-id
+                                     {:onClick #(nav-method
+                                                 {:label (str namespace "/" name)
+                                                  :component MethodDetails
+                                                  :props (utils/restructure method-id nav-method workspace-id)})}
+                                     {:href (nav/get-link :method-loader method-id)}))
+                                  [:span
+                                   {:className (when-not workspace-id "underline-on-hover")
+                                    :style {:fontSize "80%" :color "black"}
+                                    :onClick (when-not workspace-id
+                                               (fn [e]
+                                                 (.preventDefault e)
+                                                 (swap! state assoc :editing-namespace namespace)))}
+                                   namespace]
+                                  [:div {:style {:fontWeight 600}} name]))}
                               {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}
@@ -124,4 +130,14 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :methods (process-methods (get-parsed-response)))
-                    (swap! state assoc :error (get-parsed-response false))))}))})
+                    (swap! state assoc :error (get-parsed-response false))))})
+     (utils/ajax
+      {:url (config/google-bucket-url "featured-methods")
+       :on-done (fn [{:keys [raw-response]}]
+                  ;; Fails gracefully if file is missing or malformed
+                  (when-let [parsed (some->> (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                               parsed)
+                                             (group-by #(contains? % :name)))]
+                    (swap! state assoc
+                           :featured-methods (set (parsed true))
+                           :featured-namespaces (set (map :namespace (parsed false))))))}))})
