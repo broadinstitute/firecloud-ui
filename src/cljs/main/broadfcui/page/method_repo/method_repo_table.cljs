@@ -18,6 +18,14 @@
    ))
 
 
+(defn- process-methods [methods]
+  (let [user-email (utils/get-user-email)]
+    (map (fn [method]
+           (assoc method :mine? (or (not (:public method))
+                                    (contains? (set (:managers method)) user-email))))
+         methods)))
+
+
 (react/defc MethodRepoTable
   {:render
    (fn [{:keys [props state]}]
@@ -48,9 +56,7 @@
                              :items [{:label "Public Methods"
                                       :predicate :public}
                                      {:label "My Methods"
-                                      :predicate (fn [method]
-                                                   (or (not (:public method))
-                                                       (contains? (set (:managers method)) (utils/get-user-email))))}]}
+                                      :predicate :mine?}]}
                       :body {:behavior {:reorderable-columns? false}
                              :style (utils/deep-merge table-style/table-light
                                                       {:body {:fontWeight "initial" :fontSize "120%"
@@ -117,5 +123,5 @@
       {:endpoint endpoints/list-method-definitions
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (swap! state assoc :methods (get-parsed-response))
+                    (swap! state assoc :methods (process-methods (get-parsed-response)))
                     (swap! state assoc :error (get-parsed-response false))))}))})
