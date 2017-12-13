@@ -1,4 +1,4 @@
-FROM 1science/sbt
+FROM iflavoursbv/sbt-openjdk-8-alpine
 
 COPY src /app/src
 COPY test.sh /app
