@@ -69,13 +69,13 @@
                       :behavior {:filterable? false :reorderable-columns? false :allow-no-sort? true
                                  :sortable-columns? (not editing?)}
                       :columns
-                      (concat [{:header "Task" :initial-width 150
+                      (concat [{:header "Task" :initial-width 180
                                 :sort-by (comp (partial mapv string/lower-case) (juxt :task :variable))
                                 :sort-initial :asc
                                 :as-text :task
                                 :render (fn [{:keys [task]}]
                                           [:div {:style (clip table-style/table-cell-plank-left)} task])}
-                               {:header "Variable" :initial-width 180
+                               {:header "Variable" :initial-width 220
                                 :as-text (fn [{:keys [variable optional?]}]
                                            (str variable (when optional? " (optional)")))
                                 :sort-by (comp string/lower-case :text)
@@ -96,7 +96,7 @@
                                                         table-style/table-cell-plank-right))}
                                    (or type "unknown")])}]
                               (when values
-                                [{:header "Attribute" :initial-width 400
+                                [{:header "Attribute" :initial-width 360
                                   :as-text :value
                                   :sort-by :text
                                   :render
