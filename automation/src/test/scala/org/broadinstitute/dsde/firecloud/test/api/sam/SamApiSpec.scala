@@ -142,7 +142,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       val proxyGroup = Sam.user.proxyGroup()
 
       // will break when Sam's implementation does
-      proxyGroup shouldBe WorkbenchEmail(s"PROXY_$userId@dev.test.firecloud.org")
+      proxyGroup shouldBe WorkbenchEmail(s"PROXY_$userId@${Config.GCS.appsDomain}")
     }
   }
 
