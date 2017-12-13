@@ -133,6 +133,17 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       saAuthToken.removePrivateKey()
       removeUser(sa.subjectId.value)
     }
+
+    "should retrieve the user's proxy group" in {
+      val anyUser: Credentials = UserPool.chooseAnyUser
+      implicit val userAuthToken: AuthToken = anyUser.makeAuthToken()
+
+      val userId = Sam.user.status().get.userInfo.userSubjectId
+      val proxyGroup = Sam.user.proxyGroup()
+
+      // will break when Sam's implementation does
+      proxyGroup shouldBe WorkbenchEmail(s"PROXY_$userId@dev.test.firecloud.org")
+    }
   }
 
 }
