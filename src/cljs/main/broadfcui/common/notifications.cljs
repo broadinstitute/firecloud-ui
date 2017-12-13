@@ -74,7 +74,7 @@
      (js/clearInterval (:interval-id @locals)))
    :-load-service-alerts
    (fn [{:keys [this]} & [first-time?]]
-     (utils/ajax {:url (config/alerts-json-url)
+     (utils/ajax {:url (config/google-bucket-url "alerts")
                   :on-done (partial this :-handle-response first-time?)}))
    :-handle-response
    (fn [{:keys [state]} first-time? {:keys [status-code raw-response]}]
@@ -195,6 +195,6 @@
                       (.forceUpdate this))))))
    :-get-trial-messages
    (fn [{:keys [state]}]
-     (utils/ajax {:url (config/trial-json-url)
+     (utils/ajax {:url (config/google-bucket-url "trial")
                   :on-done (fn [{:keys [get-parsed-response]}]
                              (swap! state assoc :messages (get-parsed-response)))}))})

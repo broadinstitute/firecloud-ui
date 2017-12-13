@@ -18,11 +18,11 @@
   (let [config-keys (set (keys config))
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"isDebug" :boolean "shibbolethUrlRoot" :string "leonardoUrlRoot" :string
-                  "submissionStatusRefresh" :integer "userGuideUrl" :string "alertsJsonUrl" :string "featuredJsonUrl" :string
-                  "trialJsonUrl" :string
+                  "submissionStatusRefresh" :integer "userGuideUrl" :string
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
-                  "forumUrl" :string "authDomainGuideUrl" :string}
+                  "forumUrl" :string "authDomainGuideUrl" :string
+                  "googleBucketUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (set/difference config-keys (set (keys all)))
@@ -54,7 +54,5 @@
 (defn billing-project-guide-url [] (get @config "billingProjectGuideUrl"))
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
-(defn alerts-json-url [] (get @config "alertsJsonUrl"))
-(defn featured-json-url [] (get @config "featuredJsonUrl"))
-(defn trial-json-url [] (get @config "trialJsonUrl"))
+(defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")
