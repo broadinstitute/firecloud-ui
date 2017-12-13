@@ -187,9 +187,9 @@
    {:url (config/google-bucket-url filename)
     :on-done (fn [{:keys [raw-response]}]
                ;; Fails gracefully if file is missing or malformed
-               (when-let [parsed (some->> (let [[parsed _] (parse-json-string raw-response true false)]
-                                            parsed)
-                                          on-done)]))}))
+               (some->> (parse-json-string raw-response true false)
+                        first
+                        on-done))}))
 
 
 (defonce server-down? (atom false))
