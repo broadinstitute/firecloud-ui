@@ -177,8 +177,10 @@
                                                          {:method :post
                                                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                                                      (if success?
+                                                                       (do
                                                                          (user-info/reload-user-profile
                                                                           #(swap! state dissoc :loading?))
+                                                                         (user-info/reload-billing-projects))
                                                                        (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
                                                                                           (dissoc :loading?))))})))})
                                          (utils/multi-swap! state (assoc :loading? true)
