@@ -15,6 +15,7 @@
    :bell "fa-bell-o"
    :cancel "fa-times-circle"
    :catalog "fa-tag"
+   :certified "fa-thumbs-o-up"
    :clone "fa-clone"
    :close "fa-close"
    :collapse "fa-minus-square-o"

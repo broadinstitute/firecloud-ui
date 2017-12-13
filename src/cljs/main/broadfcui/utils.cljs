@@ -182,6 +182,16 @@
             (.send xhr)))))))
 
 
+(defn get-google-bucket-file [filename on-done]
+  (ajax
+   {:url (config/google-bucket-url filename)
+    :on-done (fn [{:keys [raw-response]}]
+               ;; Fails gracefully if file is missing or malformed
+               (when-let [parsed (some->> (let [[parsed _] (parse-json-string raw-response true false)]
+                                            parsed)
+                                          on-done)]))}))
+
+
 (defonce server-down? (atom false))
 (defonce maintenance-mode? (atom false))
 

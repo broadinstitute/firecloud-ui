@@ -3,13 +3,13 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :refer [CreateMethodDialog]]
@@ -29,10 +29,18 @@
          methods)))
 
 
+(defn- split-by-name [parsed]
+  (let [split (group-by #(contains? % :name) parsed)]
+    {:with-name (set (split true))
+     :ns-only (set (map :namespace (split false)))}))
+
+
 (react/defc MethodRepoTable
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [methods error editing-namespace featured-methods featured-namespaces]} @state
+     (let [{:keys [methods error editing-namespace
+                   featured-methods featured-namespaces
+                   certified-methods certified-namespaces]} @state
            {:keys [workspace-id nav-method]} props]
        [:div {}
         (when (:creating? @state)
@@ -51,7 +59,7 @@
               (not methods) (spinner "Loading...")
               :else
               [Table {:data-test-id "methods-table"
-                      :persistence-key "method-repo-table2" :v 1
+                      :persistence-key "method-repo-table2" :v 2
                       :data methods
                       :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
                       :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
@@ -72,7 +80,22 @@
                                                                    {:borderTop (when (pos? index) style/standard-line)
                                                                     :alignItems "center"})})
                              :columns
-                             [{:header "Method" :initial-width 300
+                             [{:id "certified" :initial-width 36
+                               :filterable? false :sortable? false :resizable? false
+                               :column-data
+                               (fn [{:keys [namespace method-id]}]
+                                 (or (contains? certified-namespaces namespace)
+                                     (contains? certified-methods method-id)))
+                               :as-text
+                               (fn [certified?]
+                                 (when certified? "Oh yeah!"))
+                               :render
+                               (fn [certified?]
+                                 (when certified?
+                                   (icons/render-icon {:style {:fontSize "150%"
+                                                               :color (:state-success style/colors)}}
+                                                      :certified)))}
+                              {:header "Method" :initial-width 300
                                :column-data :method-id
                                :as-text (fn [{:keys [namespace name]}] (str namespace "/" name))
                                :sort-by (comp string/lower-case :name)
@@ -131,13 +154,13 @@
                   (if success?
                     (swap! state assoc :methods (process-methods (get-parsed-response)))
                     (swap! state assoc :error (get-parsed-response false))))})
-     (utils/ajax
-      {:url (config/google-bucket-url "featured-methods")
-       :on-done (fn [{:keys [raw-response]}]
-                  ;; Fails gracefully if file is missing or malformed
-                  (when-let [parsed (some->> (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                                               parsed)
-                                             (group-by #(contains? % :name)))]
-                    (swap! state assoc
-                           :featured-methods (set (parsed true))
-                           :featured-namespaces (set (map :namespace (parsed false))))))}))})
+     (utils/get-google-bucket-file
+      "featured-methods"
+      (fn [parsed]
+        (let [{:keys [with-name ns-only]} (split-by-name parsed)]
+          (swap! state assoc :featured-methods with-name :featured-namespaces ns-only))))
+     (utils/get-google-bucket-file
+      "certified-methods"
+      (fn [parsed]
+        (let [{:keys [with-name ns-only]} (split-by-name parsed)]
+          (swap! state assoc :certified-methods with-name :certified-namespaces ns-only)))))})
