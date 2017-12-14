@@ -39,7 +39,7 @@
      (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)
      (try
        [(js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?) false]
-       (catch js/Object e
+       (catch :default e
          [nil e])))))
 
 
