@@ -413,14 +413,15 @@
      (let [{:keys [server-response]} @state
            workspaces (map
                        (fn [ws]
-                         ;; GAWB-2872
-                         (if (or (nil? (:name (:workspace ws))) (nil? (:namespace (:workspace ws))))
-                          {:workspace
-                           {:namespace "(Unknown namespace)"
-                            :name "(Unknown name)"}
-                           :status "Exception"
-                           :accessLevel "NO ACCESS"}
-                          (assoc ws :status (common/compute-status ws))))
+                         ;; GAWB-2872 - detect a nonviable WS data structure and display an inert dummy, instead of exploding
+                         (let [{:keys [name namespace]} (:workspace ws)]
+                           (if (and name namespace)
+                             (assoc ws :status (common/compute-status ws))
+                             {:workspace
+                              {:namespace "(Unknown namespace)"
+                               :name "(Unknown name)"}
+                              :status "Exception"
+                              :accessLevel "NO ACCESS"})))
                        (get-in server-response [:workspaces-response :parsed-response]))
            {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
        (net/render-with-ajax
