@@ -64,11 +64,11 @@
                       :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
                       :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
                                      :backgroundColor (:background-light style/colors)}
-                             :items [{:label "Public Methods"
-                                      :predicate :public}
-                                     {:label "My Methods"
+                             :items [{:label "My Methods"
                                       :predicate :mine?}
-                                     {:label "Featured"
+                                     {:label "Public Methods"
+                                      :predicate :public}
+                                     {:label "Featured Methods"
                                       :predicate (fn [{:keys [namespace method-id]}]
                                                    (or (contains? featured-namespaces namespace)
                                                        (contains? featured-methods method-id)))}]}
