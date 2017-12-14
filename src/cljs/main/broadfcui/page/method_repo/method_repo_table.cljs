@@ -80,7 +80,7 @@
                                                                    {:borderTop (when (pos? index) style/standard-line)
                                                                     :alignItems "center"})})
                              :columns
-                             [{:id "certified" :initial-width 36
+                             [{:id "certified" :initial-width 40
                                :filterable? false :sortable? false :resizable? false
                                :column-data
                                (fn [{:keys [namespace method-id]}]
@@ -88,13 +88,10 @@
                                      (contains? certified-methods method-id)))
                                :as-text
                                (fn [certified?]
-                                 (when certified? "Oh yeah!"))
+                                 (when certified? "Certified"))
                                :render
                                (fn [certified?]
-                                 (when certified?
-                                   (icons/render-icon {:style {:fontSize "150%"
-                                                               :color (:state-success style/colors)}}
-                                                      :certified)))}
+                                 (when certified? (icons/certified-icon {:style {:marginLeft -5}})))}
                               {:header "Method" :initial-width 300
                                :column-data :method-id
                                :as-text (fn [{:keys [namespace name]}] (str namespace "/" name))
