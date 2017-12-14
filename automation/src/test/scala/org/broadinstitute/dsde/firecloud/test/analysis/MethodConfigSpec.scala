@@ -283,7 +283,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.saveEdits(expectSuccess = false)
             val modal = MessageModal()
             modal.validateLocation shouldBe true
-            modal.clickCancel()
+            modal.clickOk()
 
             methodConfigDetailsPage.changeSnapshotId(2)
             methodConfigDetailsPage.saveEdits()
@@ -346,7 +346,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.openEditMode(expectSuccess = false)
             val modal = MessageModal()
             modal.validateLocation shouldBe true
-            modal.clickCancel()
+            modal.clickOk()
 
             methodConfigDetailsPage.deleteMethodConfig()
             val list = await ready new WorkspaceMethodConfigListPage(billingProject, workspaceName)
