@@ -181,30 +181,27 @@
 
 
 (react/defc Button
-  {:get-initial-state
-   (fn []
-     {:not-loaded? true})
-   :component-will-mount
+  {:component-will-mount
    (fn [{:keys [state]}]
-     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(swap! state dissoc :not-loaded?))
+     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
      (user-info/reload-billing-projects
       (fn [err-text]
         (when err-text
           (swap! state assoc :error-message err-text)))))
    :render
    (fn [{:keys [state]}]
-     (let [{:keys [not-loaded? error-message]} @state]
+     (let [{:keys [loaded? error-message]} @state]
        [:div {:style {:display "inline"}}
         (when (:modal? @state)
           [CreateDialog {:dismiss #(swap! state dissoc :modal?)}])
         [buttons/Button
          {:data-test-id "open-create-workspace-modal-button"
-          :text (if not-loaded?
-                  (spinner {:style {:margin 0}} "Getting billing info...")
-                  "Create New Workspace...")
+          :text (if loaded?
+                  "Create New Workspace..."
+                  (spinner {:style {:margin 0}} "Getting billing info..."))
           :icon :add-new
           :disabled? (cond
-                       not-loaded? "Project billing data has not yet been loaded."
+                       (not loaded?) "Project billing data has not yet been loaded."
                        (empty? @user-info/saved-ready-billing-project-names) (comps/no-billing-projects-message)
                        error-message "Project billing data failed to load.")
           :onClick #(swap! state assoc :modal? true)}]]))
