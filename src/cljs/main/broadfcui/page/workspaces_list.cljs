@@ -412,7 +412,15 @@
    (fn [{:keys [props state]}]
      (let [{:keys [server-response]} @state
            workspaces (map
-                       (fn [ws] (assoc ws :status (common/compute-status ws)))
+                       (fn [ws]
+                         ;; GAWB-2872
+                         (if (or (nil? (:name (:workspace ws))) (nil? (:namespace (:workspace ws))))
+                          {:workspace
+                           {:namespace "(Unknown namespace)"
+                            :name "(Unknown name)"}
+                           :status "Exception"
+                           :accessLevel "NO ACCESS"}
+                          (assoc ws :status (common/compute-status ws))))
                        (get-in server-response [:workspaces-response :parsed-response]))
            {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
        (net/render-with-ajax
