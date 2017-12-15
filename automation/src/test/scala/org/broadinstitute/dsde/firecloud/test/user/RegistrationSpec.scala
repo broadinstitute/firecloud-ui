@@ -1,13 +1,14 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.{Sam, Thurloe}
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.api.Sam
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.Thurloe
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
 
 
@@ -20,6 +21,8 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   val testUser: Credentials = Config.Users.temp  // TODO: pull from user pool and fetch correct subject ID
   val subjectId: String = Config.Users.tempSubjectId
 
+  val thurloe = new Thurloe(Config.FireCloud.thurloeApiUrl, Config.FireCloud.fireCloudId)
+
   val adminUser: Credentials = UserPool.chooseAdmin
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
 
@@ -29,12 +32,12 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
       try { Sam.admin.deleteUser(subjectId) } catch nonFatalAndLog("Error deleting user before test but will try running the test anyway")
     }
-    Thurloe.keyValuePairs.deleteAll(subjectId)
+    thurloe.keyValuePairs.deleteAll(subjectId)
   }
 
   private def registerCleanUpForDeleteUser(subjectId: String): Unit = {
     register cleanUp Sam.admin.deleteUser(subjectId)
-    register cleanUp Thurloe.keyValuePairs.deleteAll(subjectId)
+    register cleanUp thurloe.keyValuePairs.deleteAll(subjectId)
   }
 
   "FireCloud registration" - {
