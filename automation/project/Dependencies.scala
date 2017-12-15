@@ -12,7 +12,7 @@ object Dependencies {
   val workbenchGoogleV = "0.10-d97f551"
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll excludeWorkbenchModel
 
-  val workbenchServiceV = "0.0.1-alpha-40d16ff-SNAP"
+  val workbenchServiceV = "0.0.1-alpha-b350837-SNAP"
   val workbenchService: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % workbenchServiceV % "test" classifier "tests" excludeAll excludeWorkbenchModel
 
   val rootDependencies = Seq(
