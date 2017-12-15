@@ -18,8 +18,7 @@ services:
 
 
   chrome:
-    # latest (3.8.1) currently has a bug where the download directory request is ignored. https://github.com/SeleniumHQ/docker-selenium/issues/628
-    image: selenium/node-chrome:3.7
+    image: selenium/node-chrome
     depends_on:
       - hub
     links:
