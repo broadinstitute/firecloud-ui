@@ -7,10 +7,18 @@ object Dependencies {
 
   val workbenchModelV  = "0.8-d97f551"
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
-  val excludeWorkbenchModel = ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_2.11")
 
-  val workbenchGoogleV = "0.10-d97f551"
-  val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll excludeWorkbenchModel
+  val workbenchMetricsV  = "0.3-7ad0aa8"
+  val workbenchMetrics: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-metrics" % workbenchMetricsV
+
+  val workbenchExclusions = Seq(
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_2.11"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-util_2.11"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11")
+  )
+
+  val workbenchGoogleV = "0.11-7ad0aa8"
+  val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
 
   val rootDependencies = Seq(
     // proactively pull in latest versions of Jackson libs, instead of relying on the versions
@@ -39,6 +47,7 @@ object Dependencies {
     "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
 
     workbenchModel,
+    workbenchMetrics,
     workbenchGoogle,
 
     // required by workbenchGoogle

@@ -40,7 +40,6 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
     Orchestration.profile.registerUser(newUserProfile)
   }
 
-  // TODO: why isn't WorkbenchSubject a ValueObject?  I'd like to use it here
   def removeUser(subjectId: String): Unit = {
     implicit val token: AuthToken = UserPool.chooseAdmin.makeAuthToken()
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
@@ -136,15 +135,28 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
       removeUser(sa.subjectId.value)
     }
 
-    "should retrieve the user's proxy group" in {
-      val anyUser: Credentials = UserPool.chooseAnyUser
-      implicit val userAuthToken: AuthToken = anyUser.makeAuthToken()
+    "should retrieve a user's proxy group as any user" in {
+      val Seq(user1: Credentials, user2: Credentials) = UserPool.chooseStudents(2)
+      val authToken1: AuthToken = user1.makeAuthToken()
+      val authToken2: AuthToken = user2.makeAuthToken()
 
-      val userId = Sam.user.status().get.userInfo.userSubjectId
-      val proxyGroup = Sam.user.proxyGroup()
+      val info1 = Sam.user.status()(authToken1).get.userInfo
+      val info2 = Sam.user.status()(authToken2).get.userInfo
+      val email1 = WorkbenchEmail(Sam.user.status()(authToken1).get.userInfo.userEmail)
+      val email2 = WorkbenchEmail(Sam.user.status()(authToken2).get.userInfo.userEmail)
+      val userId1 = Sam.user.status()(authToken1).get.userInfo.userSubjectId
+      val userId2 = Sam.user.status()(authToken2).get.userInfo.userSubjectId
 
-      // will break when Sam's implementation does
-      proxyGroup shouldBe WorkbenchEmail(s"PROXY_$userId@${Config.GCS.appsDomain}")
+      val proxyGroup1_1 = Sam.user.proxyGroup(email1)(authToken1)
+      val proxyGroup1_2 = Sam.user.proxyGroup(email1)(authToken2)
+      val proxyGroup2_1 = Sam.user.proxyGroup(email2)(authToken1)
+      val proxyGroup2_2 = Sam.user.proxyGroup(email2)(authToken2)
+
+      // will break when Sam's implementation changes
+      proxyGroup1_1 shouldBe WorkbenchEmail(s"PROXY_$userId1@${Config.GCS.appsDomain}")
+      proxyGroup1_2 shouldBe WorkbenchEmail(s"PROXY_$userId1@${Config.GCS.appsDomain}")
+      proxyGroup2_1 shouldBe WorkbenchEmail(s"PROXY_$userId2@${Config.GCS.appsDomain}")
+      proxyGroup2_2 shouldBe WorkbenchEmail(s"PROXY_$userId2@${Config.GCS.appsDomain}")
     }
   }
 
