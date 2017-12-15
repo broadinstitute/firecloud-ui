@@ -67,9 +67,9 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
       WorkbenchEmail(petEmailStr)
     }
 
-    def proxyGroup()(implicit token: AuthToken): WorkbenchEmail = {
-      logger.info(s"Getting proxy group email")
-      val proxyGroupEmailStr = parseResponseAs[String](getRequest(url + "api/google/user/proxyGroup"))
+    def proxyGroup(userEmail: WorkbenchEmail)(implicit token: AuthToken): WorkbenchEmail = {
+      logger.info(s"Getting proxy group email for user ${userEmail.value}")
+      val proxyGroupEmailStr = parseResponseAs[String](getRequest(url + s"api/google/user/proxyGroup/${userEmail.value}"))
       WorkbenchEmail(proxyGroupEmailStr)
     }
   }
