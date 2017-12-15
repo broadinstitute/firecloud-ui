@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.library
 import org.broadinstitute.dsde.firecloud.component.{Link, SearchField, Table}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -41,4 +41,21 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     LibraryTable.awaitReady()
 
   }
+
+
+  case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
+    val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
+    def validateLocation: Boolean = {
+      testId("push-message").element != null
+    }
+    def readMessageModalText: String = {
+      readText(testId("request-access-text"))
+    }
+  }
+
+
+
+
 }
+
+

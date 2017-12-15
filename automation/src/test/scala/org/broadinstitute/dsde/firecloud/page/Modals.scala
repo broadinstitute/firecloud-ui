@@ -63,16 +63,20 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
     testId("message-modal-content").element != null
   }
+
+    def readMessageModalText: String = {
+      readText (testId ("message-modal-content"))
+   }
 }
 
-case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  val requestAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
-  def validateLocation: Boolean = {
-    testId("push-message").element != null
-  }
+//case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
+ // val requestAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
+  //def validateLocation: Boolean = {
+   // testId("push-message").element != null
+ // }
 
-  def getRequestAccessText: String = {
-    readText (testId ("push-message"))
-  }
-}
+  //def getRequestAccessText: String = {
+  //  readText (testId ("push-message"))
+ // }
+//}
 

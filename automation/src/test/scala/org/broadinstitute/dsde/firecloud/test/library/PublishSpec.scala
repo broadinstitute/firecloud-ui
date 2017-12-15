@@ -126,7 +126,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
 
-          api.NIH.addUserToNIH(Config.Users.jwt)
+          api.NIH.addUserToNIH(Config.Users.tcgaJsonWebToken)
           withWorkspace(namespace, "TCGA_", Set(Config.FireCloud.tcgaAuthDomain)) { wsName =>
             withCleanUp {
               val data = LibraryData.metadata + ("library:datasetName" -> wsName)
@@ -134,16 +134,17 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               register cleanUp api.library.unpublishWorkspace(namespace, wsName)
               api.library.publishWorkspace(namespace, wsName)
 
-              //log in as a user with no TCGA access to make sure TCGA info message is displayed to you in Libraryval studentUser = UserPool.chooseStudent
+              //log in as a user with no TCGA access to make sure TCGA info message is displayed to you in Library
               val studentUser = UserPool.chooseStudent
               withSignIn(studentUser) { _ =>
                 val page = new DataLibraryPage().open
                 page.hasDataset(wsName) shouldBe true
                 page.openDataset(wsName)
                 //verify that Request Access modal is shown
-                val requestAccessModal   = RequestAccessModal()
+                val requestAccessModal = page.RequestAccessModal()
                 requestAccessModal.validateLocation shouldBe true
-                requestAccessModal.getRequestAccessText.contains(requestAccessModal.requestAccessText)
+                //verify that 'access to TCGA' text is being displayed
+                requestAccessModal.readMessageModalText should startWith(requestAccessModal.tcgaAccessText)
                 requestAccessModal.clickOk()
 
               }

@@ -245,7 +245,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
   */
    object NIH {
     def addUserToNIH(jwt: String)(implicit token: AuthToken): Unit = {
-      logger.info(s"Addidng user to NIH whitelist")
+      logger.info(s"Adding user to NIH whitelist: $jwt")
       postRequest(apiUrl(s"/api/nih/callback"), Map("jwt" -> jwt))
     }
   }
