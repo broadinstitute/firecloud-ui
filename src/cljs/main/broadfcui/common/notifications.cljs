@@ -219,7 +219,7 @@
              [:div {:style {:padding "0.5rem 0"  :borderTop style/standard-line}}
               [:label {}
                [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
-               "I agree to the terms of this Agreement"]]
+               "I agree to the terms of this Agreement."]]
              [:div {}
               [:label {}
                [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
