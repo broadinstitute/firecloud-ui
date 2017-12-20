@@ -18,7 +18,6 @@
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
-   [broadfcui.endpoints :as endpoints]
    [broadfcui.footer :as footer]
    [broadfcui.injections :as injections]
    [broadfcui.header :as header]
@@ -35,6 +34,7 @@
    [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -118,7 +118,7 @@
        (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
-     (profile-page/reload-user-profile
+     (user-info/reload-user-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
           (cond

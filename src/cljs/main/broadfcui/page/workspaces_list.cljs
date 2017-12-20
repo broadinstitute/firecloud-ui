@@ -21,6 +21,7 @@
    [broadfcui.net :as net]
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -298,7 +299,7 @@
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
                                              (if filters-expanded? "Collapse filters" "Expand filters"))
                       flex/spring
-                      [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
+                      [create/Button (select-keys props [:nav-context])]])}
           :sidebar (when filters-expanded?
                      (this :-render-side-filters))}]]))
    :component-did-update
@@ -405,21 +406,18 @@
 
 
 (react/defc- WorkspaceList
-  {:get-initial-state
-   (fn []
-     {:server-response {:disabled-reason :not-loaded}})
-   :render
+  {:render
    (fn [{:keys [props state]}]
      (let [{:keys [server-response]} @state
            workspaces (map
                        (fn [ws] (assoc ws :status (common/compute-status ws)))
                        (get-in server-response [:workspaces-response :parsed-response]))
-           {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
+           {:keys [featured-workspaces]} server-response]
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
           [WorkspaceTable
-           (merge props (utils/restructure workspaces billing-projects disabled-reason featured-workspaces))])
+           (merge props (utils/restructure workspaces featured-workspaces))])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -428,14 +426,6 @@
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
                  #(swap! state update :server-response assoc :workspaces-response %))})
-     (endpoints/get-billing-projects
-      (fn [err-text projects]
-        (if err-text
-          (swap! state update :server-response assoc
-                 :error-message err-text :disabled-reason :error)
-          (swap! state update :server-response assoc
-                 :billing-projects (map :projectName projects)
-                 :disabled-reason (when (empty? projects) :no-billing)))))
      (utils/ajax
       {:url (config/featured-json-url)
        :on-done (fn [{:keys [raw-response]}]
