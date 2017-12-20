@@ -208,7 +208,7 @@
                         :whiteSpace "pre-wrap" :maxWidth 800}}
           (if-not page-2?
             [:div {}
-             [:h2 {} "Welcome to FireCloud Free Credits Program!"]
+             [:h2 {} "Welcome to FireCloud Free Credit Program!"]
              [:p {} "FireCloud is offering the free credit program via " (links/create-external {:href "https://www.onixnet.com/onix"} "Onix Networking") ", a Google Cloud Premier Partner."]
              [:p {} "By accepting the terms of service, you are also agreeing to release your FireCloud user profile information to Onix Networking for them to grant you access to the free credits."]
              [:p {} "Your credit of $300 will be available for 60 days."]
