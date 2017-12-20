@@ -216,12 +216,11 @@
             [:div {}
              [:h2 {} "Onix Networking Terms of Service"]
              [:p {} eula]
-             [:div {:style {:padding "0.5rem 0"  :borderTop style/standard-line}}
-              [:label {}
+             [:div {:style {:padding "1rem" :border style/standard-line :background (:background-light style/colors)}}
+              [:label {:style {:marginBottom "0.5rem" :display "block"}}
                [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
-               "I agree to the terms of this Agreement."]]
-             [:div {}
-              [:label {}
+               "I agree to the terms of this Agreement."]
+              [:label {:style {:display "block"}}
                [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
                "I agree to the Google Cloud Terms of Service."]
               [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
