@@ -158,7 +158,8 @@
         {:keys [catalog-with-read? owner? writer? can-share?]}]
      (let [{:keys [workspace workspace-id request-refresh]} props
            {:keys [label-id body-id]} @locals
-           {:keys [editing? billing-loaded?] {:keys [library-schema curator?]} :server-response} @state
+           {:keys [editing? billing-loaded?]
+            {:keys [library-schema curator? billing-error? server-error]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
            billing-projects @user-info/saved-ready-billing-project-names
@@ -247,12 +248,13 @@
                [buttons/SidebarButton
                 {:data-test-id "open-clone-workspace-modal-button"
                  :style :light :margin :top :color :button-primary
-                 :text (if billing-loaded?
+                 :text (if (or billing-loaded? billing-error?)
                          "Clone..."
                          (spinner {:style {:margin 0}} "Getting billing info..."))
                  :icon :clone
                  :disabled? (cond
                               (not billing-loaded?) "Project billing data has not yet been loaded."
+                              billing-error? "Unable to load billing projects from the server."
                               (empty? billing-projects) (comps/no-billing-projects-message))
                  :onClick #(swap! state assoc :cloning? true)}])
              (when (and owner? (not editing?))
@@ -403,7 +405,7 @@
      (user-info/reload-billing-projects
       (fn [err-text]
         (if err-text
-          (swap! state update :server-response assoc :server-error "Unable to load billing projects")
+          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
           (swap! state assoc :billing-loaded? true))))
      (endpoints/get-library-attributes
       (fn [{:keys [success? get-parsed-response]}]
