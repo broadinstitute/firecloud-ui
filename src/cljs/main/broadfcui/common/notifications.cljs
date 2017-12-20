@@ -175,7 +175,7 @@
                              (swap! state assoc :messages (get-parsed-response)))}))
    :-show-eula-modal
    (fn [{:keys [state]} eula]
-     (let [{:keys [page-2?]} @state
+     (let [{:keys [page-2? terms-agreed? cloud-terms-agreed?]} @state
            accept-eula (fn []
                          (utils/ajax-orch
                           "/profile/trial/userAgreement"
@@ -202,15 +202,30 @@
                                             (dissoc :displaying-eula?)))]
        [modals/OKCancelForm
         {:header "User License Agreement"
-         :dismiss #(swap! state dissoc :displaying-eula? :page-2?)
+         :dismiss #(swap! state dissoc :displaying-eula? :page-2? :terms-agreed? :cloud-terms-agreed?)
          :content
          [:div {:style {:backgroundColor "white" :padding "1rem"
                         :whiteSpace "pre-wrap" :width 800}}
           (if-not page-2?
             [:div {}
              [:h2 {} "Welcome to FireCloud Free Credits Program!"]
-             [:p {} "FireCloud is offering the free credit program via Onix Networking [link to Onix], a Google Cloud Premier Partner. \nBy accepting the terms of service, you are also agreeing to release your FireCloud user profile information to Onix Networking for them to grant you access to the free credits. \nYour credit of $300 will be available for 60 days.\nOnix Networking will be contacting you during the trial with information on how to create your own billing account to further use FireCloud after the credits expire."]]
-            eula)]
+             [:p {} "FireCloud is offering the free credit program via " (links/create-external {:href "https://www.onixnet.com/onix"} "Onix Networking") ", a Google Cloud Premier Partner."]
+             [:p {} "By accepting the terms of service, you are also agreeing to release your FireCloud user profile information to Onix Networking for them to grant you access to the free credits."]
+             [:p {} "Your credit of $300 will be available for 60 days."]
+             [:p {} "Onix Networking will be contacting you during the trial with information on how to create your own billing account to further use FireCloud after the credits expire."]]
+            [:div {}
+             [:h2 {} "Onix Networking Terms of Service"]
+             [:p {} eula]
+             [:div {:style {:padding "0.5rem 0"  :borderTop style/standard-line}}
+              [:label {}
+               [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
+               "I agree to the terms of this Agreement"]]
+             [:div {}
+              [:label {}
+               [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
+               "I agree to the Google Cloud Terms of Service."]
+              [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
+               (links/create-external {:href "https://cloud.google.com/terms/"} "https://cloud.google.com/terms/")]]])]
          :data-test-id "eula-modal"
          :button-bar (flex/box
                       {:style {:justifyContent "center" :width "100%"}}
@@ -224,4 +239,6 @@
                          {:text "Review Terms of Service"
                           :onClick #(swap! state assoc :page-2? true)}
                          {:text "Accept"
+                          :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
+                                       "You must check the boxes to accept the agreement.")
                           :onClick accept-eula})])}]))})
