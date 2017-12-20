@@ -205,7 +205,7 @@
          :dismiss #(swap! state dissoc :displaying-eula? :page-2? :terms-agreed? :cloud-terms-agreed?)
          :content
          [:div {:style {:backgroundColor "white" :padding "1rem"
-                        :whiteSpace "pre-wrap" :width 800}}
+                        :whiteSpace "pre-wrap" :maxWidth 800}}
           (if-not page-2?
             [:div {}
              [:h2 {} "Welcome to FireCloud Free Credits Program!"]
@@ -216,7 +216,8 @@
             [:div {}
              [:h2 {} "Onix Networking Terms of Service"]
              [:p {} eula]
-             [:div {:style {:padding "1rem" :border style/standard-line :background (:background-light style/colors)}}
+             [:div {:style {:padding "1rem" :marginTop "0.5rem"
+                            :border style/standard-line :background (:background-light style/colors)}}
               [:label {:style {:marginBottom "0.5rem" :display "block"}}
                [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
                "I agree to the terms of this Agreement."]
