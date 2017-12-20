@@ -159,7 +159,7 @@
      (let [{:keys [workspace workspace-id request-refresh]} props
            {:keys [label-id body-id]} @locals
            {:keys [editing? billing-loaded?]
-            {:keys [library-schema curator? billing-error? server-error]} :server-response} @state
+            {:keys [library-schema curator? billing-error?]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
            billing-projects @user-info/saved-ready-billing-project-names
