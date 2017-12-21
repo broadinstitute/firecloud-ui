@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Rawls
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig, TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture._
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
@@ -15,8 +15,8 @@ import org.scalatest.{FreeSpec, Ignore, Matchers}
 /**
   * Tests related to billing accounts.
   */
-class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
-  with Matchers with LazyLogging {
+class BillingSpec extends FreeSpec with Matchers with LazyLogging
+  with WebBrowserSpec with BillingFixtures with UserFixtures with CleanUp {
 
   "A user" - {
     "with a billing account" - {
@@ -44,19 +44,15 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           implicit val authToken: AuthToken = ownerUser.makeAuthToken()
           val secondUser = UserPool.chooseStudent.email
 
-          // TODO: extract this to BillingFixtures.withBillingProject
-          val billingProjectName = "billing-spec-add-user-" + makeRandomId()
-          logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
-          api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
+          withBillingProject("billing-spec-add-user") { billingProjectName =>
+            withSignIn(ownerUser) { _ =>
+              val billingPage = new BillingManagementPage().open
+              billingPage.openBillingProject(billingProjectName)
+              billingPage.addUserToBillingProject(secondUser, "User")
 
-          withSignIn(ownerUser) { _ =>
-            val billingPage = new BillingManagementPage().open
-            billingPage.openBillingProject(billingProjectName)
-            billingPage.addUserToBillingProject(secondUser, "User")
-
-            val isSuccess = billingPage.isUserInBillingProject(secondUser)
-            isSuccess shouldEqual true
+              val isSuccess = billingPage.isUserInBillingProject(secondUser)
+              isSuccess shouldEqual true
+            }
           }
 
         }
@@ -66,17 +62,13 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()
 
-          // TODO: extract this to BillingFixtures.withBillingProject
-          val billingProjectName = "billing-spec-make-ws-" + makeRandomId()
-          logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
-          api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
-
-          // create workspace and verify
-          withSignIn(user) { listPage =>
-            val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
-            register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
-            val detailPage = listPage.createWorkspace(billingProjectName, workspaceName)
+          withBillingProject("billing-spec-make-ws") { billingProjectName =>
+            // create workspace and verify
+            withSignIn(user) { listPage =>
+              val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
+              register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
+              val detailPage = listPage.createWorkspace(billingProjectName, workspaceName)
+            }
           }
 
         }
@@ -86,30 +78,26 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()
 
-          // TODO: extract this to BillingFixtures.withBillingProject
-          val billingProjectName = "billing-spec-method-" + makeRandomId()
-          logger.info(s"Creating billing project: $billingProjectName")
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
-          api.billing.createBillingProject(billingProjectName, Config.Projects.billingAccountId)
+          withBillingProject("billing-spec-method") { billingProjectName =>
+            // create workspace
+            val workspaceName = "BillingSpec_runMethod_" + randomUuid
+            register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
+            api.workspaces.create(billingProjectName, workspaceName)
 
-          // create workspace
-          val workspaceName = "BillingSpec_runMethod_" + randomUuid
-          register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
-          api.workspaces.create(billingProjectName, workspaceName)
+            api.importMetaData(billingProjectName, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
-          api.importMetaData(billingProjectName, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+            val methodConfigName: String = "test_method" + UUID.randomUUID().toString
+            api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace,
+              SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
-          val methodConfigName: String = "test_method" + UUID.randomUUID().toString
-          api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace,
-            SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+            // verify running a method
+            withSignIn(user) { _ =>
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
-          // verify running a method
-          withSignIn(user) { _ =>
-            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
-
-            submissionDetailsPage.waitUntilSubmissionCompletes()
-            assert(submissionDetailsPage.verifyWorkflowSucceeded())
+              submissionDetailsPage.waitUntilSubmissionCompletes()
+              assert(submissionDetailsPage.verifyWorkflowSucceeded())
+            }
           }
         }
       }
