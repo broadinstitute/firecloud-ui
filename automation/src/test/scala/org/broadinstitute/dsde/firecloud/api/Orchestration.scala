@@ -275,6 +275,13 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
   }
 
+  object trial {
+    def enableUsers(userEmails: Traversable[String])(implicit token: AuthToken): Unit = {
+      logger.info(s"Attempting to enable trial users: ${userEmails.mkString(", ")}")
+      postRequest(apiUrl("trial/manager/enable"), userEmails)
+    }
+  }
+
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
     logger.info(s"Importing metadata: $ns/$wsName $fileName")
     postRequestWithMultipart(apiUrl(s"api/workspaces/$ns/$wsName/importEntities"), fileName, fileContent)

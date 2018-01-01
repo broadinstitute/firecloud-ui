@@ -10,6 +10,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 final class TrialApiSpec extends FreeSpec with Matchers with ScalaFutures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
+  val adminAuthToken = UserPool.chooseAdmin.makeAuthToken()
 
   def registerAsNewUser(email: WorkbenchEmail)(implicit authToken: AuthToken): Unit = {
     val newUserProfile = Orchestration.profile.BasicProfile (
@@ -30,7 +31,8 @@ final class TrialApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
   // TODO: Factor out if continued to be used
   def removeUser(subjectId: String): Unit = {
-    implicit val token: AuthToken = UserPool.chooseAdmin.makeAuthToken()
+    implicit val token: AuthToken = adminAuthToken
+
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
       Sam.admin.deleteUser(subjectId)
     }
@@ -50,9 +52,12 @@ final class TrialApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
       // Verify the user is registered
       val tempUserInfo = Sam.user.status()(tempAuthToken).get.userInfo
-      tempUserInfo.userEmail shouldBe tempUser.email
+      val tempUserEmail = tempUserInfo.userEmail
+      val tempUserSubjectId = tempUserInfo.userSubjectId
+      tempUserEmail shouldBe tempUser.email
 
       // TODO: Enable the user
+      Orchestration.trial.enableUsers(Seq(tempUserEmail))(adminAuthToken)
 
       // TODO: Verify the user is enrolled with the expected record
 
@@ -61,7 +66,7 @@ final class TrialApiSpec extends FreeSpec with Matchers with ScalaFutures {
       // TODO: Verify the user is enrolled with the expected record
 
       // Remove the user
-      removeUser(tempUserInfo.userSubjectId)
+      removeUser(tempUserSubjectId)
       Sam.user.status()(tempAuthToken) shouldBe None
     }
   }
