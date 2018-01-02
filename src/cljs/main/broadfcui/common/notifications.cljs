@@ -5,6 +5,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
@@ -159,7 +160,7 @@
                {:displaying-eula?
                 (this :-show-eula-modal eula)
                 :error
-                (modals/render-error {:text error})})))))))
+                (modals/render-error {:text error :on-dismiss #(swap! state dissoc :error)})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
      (add-watch user-info/saved-user-profile :trial-alerts
@@ -204,27 +205,38 @@
         {:header "Welcome to the FireCloud Free Credit Program!"
          :dismiss #(swap! state dissoc :displaying-eula? :page-2? :terms-agreed? :cloud-terms-agreed?)
          :content
-         [:div {:style {:backgroundColor "white" :padding "1rem"
-                        :whiteSpace "pre-wrap" :maxWidth 800}}
+         [:div {:style {:backgroundColor "white" :padding "1rem" :maxWidth 850}}
           (if-not page-2?
-            [:div {}
-             [:p {} "FireCloud is offering the free credit program via " (links/create-external {:href "https://www.onixnet.com/onix"} "Onix Networking") ", a Google Cloud Premier Partner."]
-             [:p {} "By accepting the terms of service, you are also agreeing to release your FireCloud user profile information to Onix Networking for them to grant you access to the free credits."]
-             [:p {} "Your credit of $300 will be available for 60 days."]
-             [:p {} "Onix Networking will be contacting you during the trial with information on how to create your own billing account to further use FireCloud after the credits expire."]]
-            [:div {}
-             [:h3 {:style {:margin 0}} "Onix Networking Terms of Service"]
-             [:p {} eula]
-             [:div {:style {:padding "1rem" :marginTop "0.5rem"
-                            :border style/standard-line :background (:background-light style/colors)}}
-              [:label {:style {:marginBottom "0.5rem" :display "block"}}
-               [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
-               "I agree to the terms of this Agreement."]
-              [:label {:style {:display "block"}}
-               [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
-               "I agree to the Google Cloud Terms of Service."]
-              [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
-               (links/create-external {:href "https://cloud.google.com/terms/"} "https://cloud.google.com/terms/")]]])]
+            (let [make-li (fn [& body]
+                            [:li {:style {:paddingBottom "0.5rem"}} body])]
+              [:ol {:style {:paddingRight "1rem"}}
+               (make-li "The FireCloud Free Credits Program (\"credits\"), sponsored by Google, is administered by " (links/create-external {:href "https://www.onixnet.com/products/google-cloud/google-cloud-platform/google-app-engine"} "Onix Networking") " (\"Onix\"), a Google Cloud Premier Partner.")
+               (make-li "By opting into this program, you are authorizing FireCloud to give Onix and Google access to your FireCloud user profile information. This is necessary for Onix and Google to give you the free credits.")
+               (make-li "Your credits of $250 will expire December 30, 2018 or 60 days after they were issued, whichever comes first.")
+               (make-li "Onix will contact you during the trial with information on options for creating your own billing account to further use FireCloud once the credits expire. Other billing options will be available on the FireCloud website.")
+               (make-li "FireCloud has no obligation to maintain a billing account or any data saved under an account once credits are exhausted.")
+               (make-li "Credits are not redeemable for cash and are not transferable.")
+               (make-li "All use of FireCloud by researchers is subject to the " (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=6819"} "FireCloud Terms of Use") ", which may be updated from time to time. FireCloud reserves the right to revoke credits for any activity that violates the Terms of Use.")])
+            (let [div-id (gensym "eula")]
+              [:div {:id div-id}
+               [:style {}
+                (str div-id " .markdown-body strong {text-decoration: underline}\n"
+                     div-id ".markdown-body ol {counter-reset: item}\n"
+                     div-id ".markdown-body li:before {content: counters(item, \".\") \". \"; counter-increment: item; margin-left: -2em; position: absolute}\n"
+                     div-id ".markdown-body li li:before {margin-left: -3em}\n"
+                     div-id ".markdown-body li li li:before {margin-left: -4em}\n"
+                     div-id ".markdown-body li {display: block;}")]
+               [markdown/MarkdownView {:text eula}]
+               [:div {:style {:padding "1rem" :marginTop "0.5rem"
+                              :border style/standard-line :background (:background-light style/colors)}}
+                [:label {:style {:marginBottom "0.5rem" :display "block"}}
+                 [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
+                 "I agree to the terms of this Agreement."]
+                [:label {:style {:display "block"}}
+                 [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
+                 "I agree to the Google Cloud Terms of Service."]
+                [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
+                 (links/create-external {:href "https://cloud.google.com/terms/"} "https://cloud.google.com/terms/")]]]))]
          :data-test-id "eula-modal"
          :button-bar (flex/box
                       {:style {:justifyContent "center" :width "100%"}}
