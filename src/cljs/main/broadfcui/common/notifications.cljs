@@ -210,13 +210,26 @@
             (let [make-li (fn [& body]
                             [:li {:style {:paddingBottom "0.5rem"}} body])]
               [:ol {:style {:paddingRight "1rem"}}
-               (make-li "The FireCloud Free Credits Program (\"credits\"), sponsored by Google, is administered by " (links/create-external {:href "https://www.onixnet.com/products/google-cloud/google-cloud-platform/google-app-engine"} "Onix Networking") " (\"Onix\"), a Google Cloud Premier Partner.")
-               (make-li "By opting into this program, you are authorizing FireCloud to give Onix and Google access to your FireCloud user profile information. This is necessary for Onix and Google to give you the free credits.")
-               (make-li "Your credits of $250 will expire December 30, 2018 or 60 days after they were issued, whichever comes first.")
-               (make-li "Onix will contact you during the trial with information on options for creating your own billing account to further use FireCloud once the credits expire. Other billing options will be available on the FireCloud website.")
-               (make-li "FireCloud has no obligation to maintain a billing account or any data saved under an account once credits are exhausted.")
+               (make-li "The FireCloud Free Credits Program (\"credits\"), sponsored by Google, is administered by "
+                        (links/create-external
+                         {:href "https://www.onixnet.com/products/google-cloud/google-cloud-platform/google-app-engine"}
+                         "Onix Networking") " (\"Onix\"), a Google Cloud Premier Partner.")
+               (make-li "By opting into this program, you are authorizing FireCloud to give Onix and
+                Google access to your FireCloud user profile information. This is necessary for Onix
+                and Google to give you the free credits.")
+               (make-li "Your credits of $250 will expire December 30, 2018 or 60 days after they
+                were issued, whichever comes first.")
+               (make-li "Onix will contact you during the trial with information on options for
+               creating your own billing account to further use FireCloud once the credits expire.
+               Other billing options will be available on the FireCloud website.")
+               (make-li "FireCloud has no obligation to maintain a billing account or any data saved
+               under an account once credits are exhausted.")
                (make-li "Credits are not redeemable for cash and are not transferable.")
-               (make-li "All use of FireCloud by researchers is subject to the " (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=6819"} "FireCloud Terms of Use") ", which may be updated from time to time. FireCloud reserves the right to revoke credits for any activity that violates the Terms of Use.")])
+               (make-li "All use of FireCloud by researchers is subject to the "
+                        (links/create-external
+                         {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=6819"}
+                         "FireCloud Terms of Use") ", which may be updated from time to time.
+                         FireCloud reserves the right to revoke credits for any activity that violates the Terms of Use.")])
             (let [div-id (gensym "eula")]
               [:div {:id div-id}
                [:style {}
@@ -237,7 +250,8 @@
                  [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
                  "I agree to the Google Cloud Terms of Service."]
                 [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
-                 (links/create-external {:href "https://cloud.google.com/terms/"} "https://cloud.google.com/terms/")]]]))]
+                 (links/create-external {:href "https://cloud.google.com/terms/"}
+                                        "https://cloud.google.com/terms/")]]]))]
          :data-test-id "eula-modal"
          :button-bar (flex/box
                       {:style {:justifyContent "center" :width "100%"}}
