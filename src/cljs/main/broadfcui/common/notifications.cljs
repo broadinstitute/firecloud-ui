@@ -220,7 +220,8 @@
             (if-not page-2?
               [markdown/MarkdownView {:text broad}]
               [:div {}
-               [markdown/MarkdownView {:text onix}]
+               [:div {:style {:fontSize "80%"}}
+                [markdown/MarkdownView {:text onix}]]
                [:div {:style {:padding "1rem" :marginTop "0.5rem"
                               :border style/standard-line :background (:background-light style/colors)}}
                 [:label {:style {:marginBottom "0.5rem" :display "block"}}
