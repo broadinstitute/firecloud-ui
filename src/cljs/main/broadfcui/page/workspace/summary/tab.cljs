@@ -26,6 +26,7 @@
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -104,8 +105,9 @@
 
 (react/defc Summary
   {:component-will-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
+   (fn [{:keys [this locals]}]
+     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary"))
+     (add-watch user-info/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response]} @state
@@ -148,15 +150,19 @@
      (swap! state dissoc :updating-attrs? :editing?)
      (when-not (= (:workspace-id props) (:workspace-id next-props))
        (this :refresh)))
+   :component-will-unmount
+   (fn []
+     (remove-watch user-info/saved-ready-billing-project-names :ws-summary))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
      (let [{:keys [workspace workspace-id request-refresh]} props
            {:keys [label-id body-id]} @locals
-           {:keys [editing?]
-            {:keys [library-schema billing-projects curator?]} :server-response} @state
+           {:keys [editing? billing-loaded?]
+            {:keys [library-schema curator? billing-error?]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
+           billing-projects @user-info/saved-ready-billing-project-names
            status (common/compute-status workspace)
            publishable? (and curator? (or catalog-with-read? owner?))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -165,8 +171,7 @@
            {:dismiss #(swap! state dissoc :cloning?)
             :workspace-id workspace-id
             :description description
-            :auth-domain (set (map :membersGroupName authorizationDomain))
-            :billing-projects billing-projects}])
+            :auth-domain (set (map :membersGroupName authorizationDomain))}])
         [:span {:id label-id}
          [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
@@ -243,8 +248,14 @@
                [buttons/SidebarButton
                 {:data-test-id "open-clone-workspace-modal-button"
                  :style :light :margin :top :color :button-primary
-                 :text "Clone..." :icon :clone
-                 :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+                 :text (if (or billing-loaded? billing-error?)
+                         "Clone..."
+                         (spinner {:style {:margin 0}} "Getting billing info..."))
+                 :icon :clone
+                 :disabled? (cond
+                              (not billing-loaded?) "Project billing data has not yet been loaded."
+                              billing-error? "Unable to load billing projects from the server."
+                              (empty? billing-projects) (comps/no-billing-projects-message))
                  :onClick #(swap! state assoc :cloning? true)}])
              (when (and owner? (not editing?))
                [buttons/SidebarButton
@@ -391,12 +402,11 @@
      (swap! state dissoc :server-response)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (endpoints/get-billing-projects
-      (fn [err-text projects]
+     (user-info/reload-billing-projects
+      (fn [err-text]
         (if err-text
-          (swap! state update :server-response assoc :server-error err-text)
-          (swap! state update :server-response
-                 assoc :billing-projects (map :projectName projects)))))
+          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
+          (swap! state assoc :billing-loaded? true))))
      (endpoints/get-library-attributes
       (fn [{:keys [success? get-parsed-response]}]
         (if success?

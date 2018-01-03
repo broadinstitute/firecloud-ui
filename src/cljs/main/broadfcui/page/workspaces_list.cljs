@@ -21,6 +21,7 @@
    [broadfcui.net :as net]
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -298,7 +299,7 @@
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
                                              (if filters-expanded? "Collapse filters" "Expand filters"))
                       flex/spring
-                      [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
+                      [create/Button (select-keys props [:nav-context])]])}
           :sidebar (when filters-expanded?
                      (this :-render-side-filters))}]]))
    :component-did-update
@@ -405,21 +406,27 @@
 
 
 (react/defc- WorkspaceList
-  {:get-initial-state
-   (fn []
-     {:server-response {:disabled-reason :not-loaded}})
-   :render
+  {:render
    (fn [{:keys [props state]}]
      (let [{:keys [server-response]} @state
            workspaces (map
-                       (fn [ws] (assoc ws :status (common/compute-status ws)))
+                       (fn [ws]
+                         ;; GAWB-2872 - detect a nonviable WS data structure and display an inert dummy, instead of exploding
+                         (let [{:keys [name namespace]} (:workspace ws)]
+                           (if (and name namespace)
+                             (assoc ws :status (common/compute-status ws))
+                             {:workspace
+                              {:namespace "(Unknown namespace)"
+                               :name "(Unknown name)"}
+                              :status "Exception"
+                              :accessLevel "NO ACCESS"})))
                        (get-in server-response [:workspaces-response :parsed-response]))
-           {:keys [billing-projects disabled-reason featured-workspaces]} server-response]
+           {:keys [featured-workspaces]} server-response]
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
           [WorkspaceTable
-           (merge props (utils/restructure workspaces billing-projects disabled-reason featured-workspaces))])
+           (merge props (utils/restructure workspaces featured-workspaces))])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount

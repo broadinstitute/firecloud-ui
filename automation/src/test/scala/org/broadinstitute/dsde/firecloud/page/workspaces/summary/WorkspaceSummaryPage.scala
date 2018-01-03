@@ -28,6 +28,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
 
+  def validateLocation(): Unit = {
+    assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
+  }
+
   private val authDomainGroups = Label("auth-domain-groups")
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
