@@ -221,11 +221,12 @@
               [:div {:id div-id}
                [:style {}
                 (str "#" div-id " .markdown-body strong {text-decoration: underline}\n"
-                     "#" div-id ".markdown-body ol {counter-reset: item}\n"
-                     "#" div-id ".markdown-body li:before {content: counters(item, \".\") \". \"; counter-increment: item; margin-left: -2em; position: absolute}\n"
-                     "#" div-id ".markdown-body li li:before {margin-left: -3em}\n"
-                     "#" div-id ".markdown-body li li li:before {margin-left: -4em}\n"
-                     "#" div-id ".markdown-body li {display: block;}")]
+                     "#" div-id " .markdown-body ol {counter-reset: item}\n"
+                     "#" div-id " .markdown-body li:before {content: counters(item, \".\") \".\";\n"
+                                "  counter-increment: item; margin-left: -2em; position: absolute}\n"
+                     "#" div-id " .markdown-body li li:before {margin-left: -3em}\n"
+                     "#" div-id " .markdown-body li li li:before {margin-left: -4em}\n"
+                     "#" div-id " .markdown-body li {display: block}")]
                [markdown/MarkdownView {:text eula}]
                [:div {:style {:padding "1rem" :marginTop "0.5rem"
                               :border style/standard-line :background (:background-light style/colors)}}
