@@ -5,7 +5,9 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
@@ -107,11 +109,11 @@
 
 (react/defc TrialAlertContainer
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (let [{:keys [dismissed? loading? messages error]} @state]
        (when-let [current-trial-state (keyword (:trialState @user-info/saved-user-profile))]
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
-           (let [{:keys [title message warning? link button eula]} (messages current-trial-state)]
+           (let [{:keys [title message warning? link button eulas]} (messages current-trial-state)]
              (apply ;; needed until dmohs/react deals with nested seq's
               flex/box
               {:style {:color "white"
@@ -156,37 +158,9 @@
               (modals/show-modals
                state
                {:displaying-eula?
-                [modals/OKCancelForm
-                 {:header "User License Agreement"
-                  :content [:div {:style {:backgroundColor "white" :padding "1rem"
-                                          :maxHeight 500 :overflow "auto" :whiteSpace "pre-wrap"}}
-                            eula]
-                  :data-test-id "message-modal"
-                  :cancel-text "Refuse"
-                  :ok-button {:text "Accept"
-                              :onClick (fn []
-                                         (utils/ajax-orch
-                                          "/profile/trial/userAgreement"
-                                          {:method :put
-                                           :on-done (fn [{:keys [success?]}]
-                                                      (if-not success?
-                                                        (utils/multi-swap! state (assoc :error "An error occurred. Please try again.")
-                                                                           (dissoc :loading?))
-                                                        (utils/ajax-orch
-                                                         "/profile/trial"
-                                                         {:method :post
-                                                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                                                     (if success?
-                                                                       (do
-                                                                         (user-info/reload-user-profile
-                                                                          #(swap! state dissoc :loading?))
-                                                                         (user-info/reload-billing-projects))
-                                                                       (utils/multi-swap! state (assoc :error (:message (get-parsed-response)))
-                                                                                          (dissoc :loading?))))})))})
-                                         (utils/multi-swap! state (assoc :loading? true)
-                                                            (dissoc :displaying-eula?)))}}]
+                (this :-show-eula-modal eulas)
                 :error
-                (modals/render-error {:text error})})))))))
+                (modals/render-error {:text error :on-dismiss #(swap! state dissoc :error)})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
      (add-watch user-info/saved-user-profile :trial-alerts
@@ -194,4 +168,79 @@
                   (when trialState
                     (if-not (:messages @state)
                       (utils/get-google-bucket-file "trial" #(swap! state assoc :messages %))
-                      (.forceUpdate this))))))})
+                      (.forceUpdate this))))))
+   :-show-eula-modal
+   (fn [{:keys [state]} eulas]
+     (let [{:keys [page-2? terms-agreed? cloud-terms-agreed?]} @state
+           {:keys [broad onix]} eulas
+           accept-eula (fn []
+                         (utils/ajax-orch
+                          "/profile/trial/userAgreement"
+                          {:method :put
+                           :on-done
+                           (fn [{:keys [success?]}]
+                             (if-not success?
+                               (utils/multi-swap! state
+                                                  (assoc :error "An error occurred. Please try again.")
+                                                  (dissoc :loading?))
+                               (utils/ajax-orch
+                                "/profile/trial"
+                                {:method :post
+                                 :on-done
+                                 (fn [{:keys [success? get-parsed-response]}]
+                                   (if success?
+                                     (user-info/reload-user-profile
+                                      #(swap! state dissoc :loading?))
+                                     (utils/multi-swap! state
+                                                        (assoc :error (:message (get-parsed-response)))
+                                                        (dissoc :loading?))))})))})
+                         (utils/multi-swap! state
+                                            (assoc :loading? true)
+                                            (dissoc :displaying-eula?)))]
+       [modals/OKCancelForm
+        {:header "Welcome to the FireCloud Free Credit Program!"
+         :dismiss #(swap! state dissoc :displaying-eula? :page-2? :terms-agreed? :cloud-terms-agreed?)
+         :content
+         (let [div-id (gensym "eula")]
+           [:div {:id div-id
+                  :style {:backgroundColor "white" :padding "1rem" :maxWidth 850}}
+            [:style {}
+             (str "#" div-id " .markdown-body strong {text-decoration: underline}\n"
+                  "#" div-id " .markdown-body ol {counter-reset: item}\n"
+                  "#" div-id " .markdown-body li:before {content: counters(item, \".\") \".\";\n"
+                  "  counter-increment: item; margin-left: -2em; position: absolute}\n"
+                  "#" div-id " .markdown-body li li:before {margin-left: -3em}\n"
+                  "#" div-id " .markdown-body li li li:before {margin-left: -4em}\n"
+                  "#" div-id " .markdown-body li {display: block}")]
+            (if-not page-2?
+              [markdown/MarkdownView {:text broad}]
+              [:div {}
+               [:div {:style {:fontSize "80%"}}
+                [markdown/MarkdownView {:text onix}]]
+               [:div {:style {:padding "1rem" :marginTop "0.5rem"
+                              :border style/standard-line :background (:background-light style/colors)}}
+                [:label {:style {:marginBottom "0.5rem" :display "block"}}
+                 [:input {:type "checkbox" :onChange #(swap! state assoc :terms-agreed? (.. % -target -checked))}]
+                 "I agree to the terms of this Agreement."]
+                [:label {:style {:display "block"}}
+                 [:input {:type "checkbox" :onChange #(swap! state assoc :cloud-terms-agreed? (.. % -target -checked))}]
+                 "I agree to the Google Cloud Terms of Service."]
+                [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
+                 (links/create-external {:href "https://cloud.google.com/terms/"}
+                                        "https://cloud.google.com/terms/")]]])])
+         :data-test-id "eula-modal"
+         :button-bar (flex/box
+                      {:style {:justifyContent "center" :width "100%"}}
+                      (when page-2?
+                        [buttons/Button
+                         {:text "Back"
+                          :style {:marginRight "2rem"}
+                          :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
+                      [buttons/Button
+                       (if-not page-2?
+                         {:text "Review Terms of Service"
+                          :onClick #(swap! state assoc :page-2? true)}
+                         {:text "Accept"
+                          :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
+                                       "You must check the boxes to accept the agreement.")
+                          :onClick accept-eula})])}]))})
