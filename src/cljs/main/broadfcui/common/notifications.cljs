@@ -236,7 +236,7 @@
                 (str "#" div-id " .markdown-body strong {text-decoration: underline}\n"
                      "#" div-id " .markdown-body ol {counter-reset: item}\n"
                      "#" div-id " .markdown-body li:before {content: counters(item, \".\") \".\";\n"
-                                "  counter-increment: item; margin-left: -2em; position: absolute}\n"
+                     "  counter-increment: item; margin-left: -2em; position: absolute}\n"
                      "#" div-id " .markdown-body li li:before {margin-left: -3em}\n"
                      "#" div-id " .markdown-body li li li:before {margin-left: -4em}\n"
                      "#" div-id " .markdown-body li {display: block}")]
@@ -244,10 +244,10 @@
                [:div {:style {:padding "1rem" :marginTop "0.5rem"
                               :border style/standard-line :background (:background-light style/colors)}}
                 [:label {:style {:marginBottom "0.5rem" :display "block"}}
-                 [:input {:type "checkbox" :onChange #(swap! state update :terms-agreed? not)}]
+                 [:input {:type "checkbox" :onChange #(swap! state assoc :terms-agreed? (.. % -target -checked))}]
                  "I agree to the terms of this Agreement."]
                 [:label {:style {:display "block"}}
-                 [:input {:type "checkbox" :onChange #(swap! state update :cloud-terms-agreed? not)}]
+                 [:input {:type "checkbox" :onChange #(swap! state assoc :cloud-terms-agreed? (.. % -target -checked))}]
                  "I agree to the Google Cloud Terms of Service."]
                 [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
                  (links/create-external {:href "https://cloud.google.com/terms/"}
@@ -259,7 +259,7 @@
                         [buttons/Button
                          {:text "Back"
                           :style {:marginRight "2rem"}
-                          :onClick #(swap! state dissoc :page-2?)}])
+                          :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
                       [buttons/Button
                        (if-not page-2?
                          {:text "Review Terms of Service"
