@@ -62,6 +62,7 @@ object Config {
     val AuthDomainUsers = UserSet(makeCredsMap(userDataJson("authdomains")))
     val Students = UserSet(makeCredsMap(userDataJson("students")))
     val NotebooksWhitelisted = UserSet(makeCredsMap(userDataJson("notebookswhitelisted")))
+    val CampaignManager = UserSet(makeCredsMap(userDataJson("campaignManagers")))
 
     // defaults
     val owner = Owners.getUserCredential("hermione")

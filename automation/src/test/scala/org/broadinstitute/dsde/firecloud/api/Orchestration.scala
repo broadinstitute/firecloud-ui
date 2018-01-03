@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.api
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
@@ -9,10 +10,12 @@ import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.broadinstitute.dsde.firecloud.util.Util
 import org.broadinstitute.dsde.firecloud.util.Util.appendUnderscore
+import spray.json._
+import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.duration._
 
-trait Orchestration extends FireCloudClient with LazyLogging {
+trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSupport with DefaultJsonProtocol {
 
   def responseAsList(response: String): List[Map[String, Object]] = {
     mapper.readValue(response, classOf[List[Map[String, Object]]])
@@ -278,6 +281,57 @@ trait Orchestration extends FireCloudClient with LazyLogging {
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
     logger.info(s"Importing metadata: $ns/$wsName $fileName")
     postRequestWithMultipart(apiUrl(s"api/workspaces/$ns/$wsName/importEntities"), fileName, fileContent)
+  }
+
+  object trial {
+
+    case class TrialProjectReport(
+                            unverified: Int,
+                            errored: Int,
+                            available: Int,
+                            claimed: Int)
+
+    def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
+      val enableResponse: String = postRequest(apiUrl(s"api/trial/manager/enable"), Seq(userEmail))
+      val responseJson: JsObject = enableResponse.parseJson.asJsObject
+      val successfulResponseKeys = Seq("Success", "NoChangeRequired")
+      responseJson.fields.map {
+        case f@x if successfulResponseKeys.contains(f._1) =>
+          logger.info(s"${f._1}: ${f._2.toString()}")
+          return
+        case f@y =>
+          logger.error(s"${f._1}: ${f._2.toString()}")
+          throw new Exception(s"Unable to enable user: $userEmail")
+      }
+    }
+
+    def createTrialProjects(count: Int)(implicit token: AuthToken): Unit = {
+      val report: TrialProjectReport = countTrialProjects()(token)
+      if (report.available == 0) {
+        postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=$count"))
+        retry(10.seconds, 5.minutes)({
+          val report: TrialProjectReport = countTrialProjects()(token)
+          val available = List(report.available)
+          available.find(c => c > 0)
+        }) match {
+          case None => throw new Exception("Free tier project creation did not complete")
+          case Some(_) => logger.info("Finished creating free tier project")
+        }
+      }
+      else {
+        logger.info("Available free tier project already exists")
+        // No-op. We have at least one available project to claim.
+      }
+    }
+
+    def countTrialProjects()(implicit token: AuthToken): TrialProjectReport = {
+      val results = postRequest(apiUrl(s"api/trial/manager/projects?operation=count"))
+      logger.info(s"Count Trial Projects: $results")
+      implicit val impTrialProjectReport = jsonFormat4(TrialProjectReport)
+      val report = results.parseJson.convertTo[TrialProjectReport]
+      report
+    }
+
   }
 
 }
