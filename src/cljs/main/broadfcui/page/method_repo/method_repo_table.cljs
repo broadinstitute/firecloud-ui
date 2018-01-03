@@ -80,8 +80,8 @@
                                                                    {:borderTop (when (pos? index) style/standard-line)
                                                                     :alignItems "center"})})
                              :columns
-                             [{:id "certified" :initial-width 40
-                               :filterable? false :sortable? false :resizable? false
+                             [{:header (icons/certified-icon) :id "certified" :initial-width 65
+                               :filterable? false :sortable? true :resizable? false
                                :column-data
                                (fn [{:keys [namespace method-id]}]
                                  (or (contains? certified-namespaces namespace)

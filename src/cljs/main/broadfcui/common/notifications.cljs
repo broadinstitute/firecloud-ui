@@ -193,10 +193,5 @@
                 (fn [_ _ _ {:keys [trialState]}]
                   (when trialState
                     (if-not (:messages @state)
-                      (this :-get-trial-messages)
-                      (.forceUpdate this))))))
-   :-get-trial-messages
-   (fn [{:keys [state]}]
-     (utils/ajax {:url (config/google-bucket-url "trial")
-                  :on-done (fn [{:keys [get-parsed-response]}]
-                             (swap! state assoc :messages (get-parsed-response)))}))})
+                      (utils/get-google-bucket-file "trial" #(swap! state assoc :messages %))
+                      (.forceUpdate this))))))})
