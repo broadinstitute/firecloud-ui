@@ -59,7 +59,7 @@
               (not methods) (spinner "Loading...")
               :else
               [Table {:data-test-id "methods-table"
-                      :persistence-key "method-repo-table2" :v 2
+                      :persistence-key "method-repo-table2" :v 3
                       :data methods
                       :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
                       :tabs {:style {:margin "-0.6rem -1rem 0.3rem" :padding "0 1rem"
@@ -81,18 +81,16 @@
                                                                     :alignItems "center"})})
                              :columns
                              [{:header "Certified" :initial-width 90
-                               :id "certified"
                                :filterable? false :sortable? true :resizable? false
                                :column-data
                                (fn [{:keys [namespace method-id]}]
                                  (or (contains? certified-namespaces namespace)
                                      (contains? certified-methods method-id)))
-                               :as-text
-                               (fn [certified?]
-                                 (when certified? "Certified"))
+                               :as-text (fn [certified?] (if certified? "Certified" "Not Certified"))
+                               :sort-by not
                                :render
                                (fn [certified?]
-                                 (when certified? (icons/certified-icon {:style {:marginLeft -5}})))}
+                                 (when certified? (icons/certified-icon {:style {:display "block" :margin "auto"}})))}
                               {:header "Method" :initial-width 300
                                :column-data :method-id
                                :as-text (fn [{:keys [namespace name]}] (str namespace "/" name))
