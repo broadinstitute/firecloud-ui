@@ -76,7 +76,7 @@
      (js/clearInterval (:interval-id @locals)))
    :-load-service-alerts
    (fn [{:keys [this]} & [first-time?]]
-     (utils/ajax {:url (config/alerts-json-url)
+     (utils/ajax {:url (config/google-bucket-url "alerts")
                   :on-done (partial this :-handle-response first-time?)}))
    :-handle-response
    (fn [{:keys [state]} first-time? {:keys [status-code raw-response]}]
@@ -167,13 +167,8 @@
                 (fn [_ _ _ {:keys [trialState]}]
                   (when trialState
                     (if-not (:messages @state)
-                      (this :-get-trial-messages)
+                      (utils/get-google-bucket-file "trial" #(swap! state assoc :messages %))
                       (.forceUpdate this))))))
-   :-get-trial-messages
-   (fn [{:keys [state]}]
-     (utils/ajax {:url (config/trial-json-url)
-                  :on-done (fn [{:keys [get-parsed-response]}]
-                             (swap! state assoc :messages (get-parsed-response)))}))
    :-show-eula-modal
    (fn [{:keys [state]} eulas]
      (let [{:keys [page-2? terms-agreed? cloud-terms-agreed?]} @state

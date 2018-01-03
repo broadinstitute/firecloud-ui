@@ -435,12 +435,17 @@
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
                  #(swap! state update :server-response assoc :workspaces-response %))})
-     (utils/ajax
-      {:url (config/featured-json-url)
-       :on-done (fn [{:keys [raw-response]}]
-                  (swap! state update :server-response assoc
-                         :featured-workspaces (set (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                                                     parsed))))}))}) ; Simply show no featured workspaces if file is absent or contains invalid JSON
+     (endpoints/get-billing-projects
+      (fn [err-text projects]
+        (if err-text
+          (swap! state update :server-response assoc
+                 :error-message err-text :disabled-reason :error)
+          (swap! state update :server-response assoc
+                 :billing-projects (map :projectName projects)
+                 :disabled-reason (when (empty? projects) :no-billing)))))
+     (utils/get-google-bucket-file
+      "featured-workspaces"
+      #(swap! state update :server-response assoc :featured-workspaces (set %))))})
 
 
 (defn add-nav-paths []
