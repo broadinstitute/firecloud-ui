@@ -10,8 +10,7 @@ import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.broadinstitute.dsde.firecloud.util.Util
 import org.broadinstitute.dsde.firecloud.util.Util.appendUnderscore
-import spray.json._
-import spray.json.DefaultJsonProtocol
+import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.duration._
 
@@ -285,11 +284,10 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
 
   object trial {
 
-    case class TrialProjectReport(
-                            unverified: Int,
-                            errored: Int,
-                            available: Int,
-                            claimed: Int)
+    case class TrialProjectReport(unverified: Int,
+                                  errored: Int,
+                                  available: Int,
+                                  claimed: Int)
 
     def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
       val enableResponse: String = postRequest(apiUrl(s"api/trial/manager/enable"), Seq(userEmail))
@@ -312,7 +310,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         retry(10.seconds, 5.minutes)({
           val report: TrialProjectReport = countTrialProjects()(token)
           val available = List(report.available)
-          available.find(c => c > 0)
+          available.find(count => count > 0)
         }) match {
           case None => throw new Exception("Free tier project creation did not complete")
           case Some(_) => logger.info("Finished creating free tier project")
@@ -327,9 +325,8 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
     def countTrialProjects()(implicit token: AuthToken): TrialProjectReport = {
       val results = postRequest(apiUrl(s"api/trial/manager/projects?operation=count"))
       logger.info(s"Count Trial Projects: $results")
-      implicit val impTrialProjectReport = jsonFormat4(TrialProjectReport)
-      val report = results.parseJson.convertTo[TrialProjectReport]
-      report
+      implicit val impTrialProjectReport: RootJsonFormat[TrialProjectReport] = jsonFormat4(TrialProjectReport)
+      results.parseJson.convertTo[TrialProjectReport]
     }
 
   }
