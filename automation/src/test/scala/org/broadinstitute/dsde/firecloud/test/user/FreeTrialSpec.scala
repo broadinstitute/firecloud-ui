@@ -37,24 +37,22 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
+  private def setUpEnabledUserAndProject(): Unit = {
+    implicit val token: AuthToken = campaignManagerAuthToken
+    api.trial.createTrialProjects(1)
+    api.trial.enableUser(testUser.email)
+  }
+
   private def registerCleanUpForDeleteTrialState(): Unit = {
     implicit val token: AuthToken = userAuthToken
     register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
-  private def createFreeTierProject(): Unit = {
-    logger.info("Creating Free Tier Project")
-    api.trial.createTrialProjects(1)(token = campaignManagerAuthToken)
-  }
-
-  private def enableUser(): Unit = {
-    api.trial.enableUser(testUser.email)(token = campaignManagerAuthToken)
-  }
-
   "A user whose free trial status is" - {
 
-    "blank" - {
+    "Blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
+        implicit val token: AuthToken = userAuthToken
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
@@ -65,10 +63,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "Enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
-        createFreeTierProject()
-        registerCleanUpForDeleteTrialState()
-        enableUser()
-
+        setUpEnabledUserAndProject()
         implicit val token: AuthToken = userAuthToken
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -84,6 +79,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           await condition bannerButton.getState == "ready"
           bannerTitleElement.getText shouldBe "Access Free Credits"
         }
+        registerCleanUpForDeleteTrialState()
       }
     }
 
@@ -106,7 +102,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         registerCleanUpForDeleteTrialState()
         implicit val token: AuthToken = userAuthToken
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
-
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))

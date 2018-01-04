@@ -299,7 +299,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
           return
         case f@y =>
           logger.error(s"${f._1}: ${f._2.toString()}")
-          throw new Exception(s"Unable to enable user: $userEmail")
+          throw new Exception(s"Unable to enable user: $userEmail. Error message: $enableResponse")
       }
     }
 
