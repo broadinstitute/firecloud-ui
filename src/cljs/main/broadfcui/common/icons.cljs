@@ -62,6 +62,13 @@
 (def external-link-icon
   (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
 
+(defn certified-icon
+  ([] (certified-icon {}))
+  ([attributes]
+   [:span (assoc attributes :className (str "fa-stack " (:className attributes)))
+    [:i {:className "fa fa-certificate fa-stack-2x" :style {:color (:state-success style/colors)}}]
+    [:i {:className "fa fa-check fa-stack-1x" :style {:color "white"}}]]))
+
 (react/defc CompleteIcon
   {:get-default-props
    (fn []
