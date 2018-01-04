@@ -307,7 +307,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
       val report: TrialProjectReport = countTrialProjects()(token)
       if (report.available == 0) {
         postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=$count"))
-        retry(10.seconds, 5.minutes)({
+        retry(30.seconds, 6.minutes)({
           val report: TrialProjectReport = countTrialProjects()(token)
           val available = List(report.available)
           available.find(count => count > 0)
