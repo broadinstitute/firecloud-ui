@@ -278,7 +278,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
   object trial {
     def enableUsers(userEmails: Traversable[String])(implicit token: AuthToken): Unit = {
       logger.info(s"Attempting to enable trial users: ${userEmails.mkString(", ")}")
-      postRequest(apiUrl("trial/manager/enable"), userEmails)
+      postRequest(apiUrl("api/trial/manager/enable"), userEmails)
     }
   }
 
