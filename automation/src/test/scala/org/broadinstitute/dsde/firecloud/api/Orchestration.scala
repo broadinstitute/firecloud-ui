@@ -290,7 +290,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
                                   claimed: Int)
 
     def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
-      val enableResponse: String = postRequest(apiUrl(s"api/trial/manager/enable"), Seq(userEmail))
+      val enableResponse: String = postRequest(apiUrl("api/trial/manager/enable"), Seq(userEmail))
       val responseJson: JsObject = enableResponse.parseJson.asJsObject
       val successfulResponseKeys = Seq("Success", "NoChangeRequired")
       responseJson.fields.map {
