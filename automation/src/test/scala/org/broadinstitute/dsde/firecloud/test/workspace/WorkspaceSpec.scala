@@ -336,19 +336,20 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     "who has writer access" - {
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in withWebDriver { implicit driver =>
-          val Seq(user1, user2) = UserPool.chooseStudents(2)
-          implicit val authToken: AuthToken = user1.makeAuthToken()
+          val user = UserPool.chooseStudent
+          val owner = UserPool.chooseProjectOwner
+          implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
             withWorkspace(billingProject, testName) { workspaceName =>
-              withSignIn(user1) { listPage =>
+              withSignIn(owner) { listPage =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                 SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-              detailPage.share(user2.email, "WRITER", false, false, Some(true))
+              detailPage.share(user.email, "WRITER", false, false, Some(true))
               }
-              withSignIn(user2) { listPage2 =>
+              withSignIn(user) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                 val methodConfigTab = detailPage2.goToMethodConfigTab()
                 val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
@@ -361,19 +362,20 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
       "and does have canCompute permission" - {
         "should be able to launch analysis" in withWebDriver { implicit driver =>
-          val Seq(user1, user2) = UserPool.chooseStudents(2)
-          implicit val authToken: AuthToken = user1.makeAuthToken()
+          val user = UserPool.chooseStudent
+          val owner = UserPool.chooseProjectOwner
+          implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
             withWorkspace(billingProject, testName) { workspaceName =>
-              withSignIn(user1) { listPage =>
+              withSignIn(owner) { listPage =>
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                   SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-                detailPage.share(user2.email, "WRITER", false, true, Some(true))
+                detailPage.share(user.email, "WRITER", false, true, Some(true))
               }
-              withSignIn(user2) { listPage2 =>
+              withSignIn(user) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                 val methodConfigTab = detailPage2.goToMethodConfigTab()
                 val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
