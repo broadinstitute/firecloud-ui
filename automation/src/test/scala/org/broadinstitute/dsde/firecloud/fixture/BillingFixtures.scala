@@ -4,9 +4,9 @@ import org.broadinstitute.dsde.firecloud.api.Rawls
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.Suite
+import org.scalatest.TestSuite
 
-trait BillingFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
+trait BillingFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
   def withBillingProject(namePrefix: String)
                         (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     val billingProjectName = namePrefix + "-" + makeRandomId()
