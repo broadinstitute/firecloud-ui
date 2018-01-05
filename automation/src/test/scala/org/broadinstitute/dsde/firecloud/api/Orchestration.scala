@@ -229,6 +229,12 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       logger.info(s"Getting method permissions for $ns / $name")
       parseResponse(getRequest(apiUrl(s"api/methods/$ns/$name/$snapshotId/permissions")))
     }
+
+    def setMethodPermissions(ns: String, name: String, snapshotId: Int, userId: String, role: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Setting method permissions for $ns / $name")
+      val request = Seq(Map("user" -> userId, "role" -> role))
+      postRequest(apiUrl(s"api/methods/$ns/$name/$snapshotId/permissions"), request)
+    }
   }
 
   /*
