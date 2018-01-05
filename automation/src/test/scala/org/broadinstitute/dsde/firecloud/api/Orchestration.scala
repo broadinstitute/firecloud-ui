@@ -313,11 +313,13 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=$count"))
         retry(30.seconds, 10.minutes)({
           val report: TrialProjectReport = countTrialProjects()
-          val available = List(report.available)
-          available.find(count => count > 0)
+          if (report.available >= count)
+            Some(report)
+          else
+            None
         }) match {
-          case None => throw new Exception("Free tier project creation did not complete")
           case Some(_) => logger.info("Finished creating free tier project")
+          case None => throw new Exception("Free tier project creation did not complete")
         }
       }
       else {
