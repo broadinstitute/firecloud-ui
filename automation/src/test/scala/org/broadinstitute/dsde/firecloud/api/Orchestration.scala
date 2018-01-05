@@ -284,10 +284,10 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
 
   object trial {
 
-    case class TrialProjectReport(unverified: Int,
-                                  errored: Int,
-                                  available: Int,
-                                  claimed: Int)
+    case class TrialProjects(unverified: Int,
+                             errored: Int,
+                             available: Int,
+                             claimed: Int)
 
     def enableUser(userEmail: String): Unit = {
       val campaignManager = UserPool.chooseCampaignManager
@@ -309,11 +309,11 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
     def createTrialProjects(count: Int): Unit = {
       val campaignManager = UserPool.chooseCampaignManager
       implicit val token: AuthToken = campaignManager.makeAuthToken()
-      val report: TrialProjectReport = countTrialProjects()
-      if (report.available == 0) {
-        postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=$count"))
+      val trialProjects: TrialProjects = countTrialProjects()
+      if (trialProjects.available < count) {
+        postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=${count - trialProjects.available}"))
         retry(30.seconds, 10.minutes)({
-          val report: TrialProjectReport = countTrialProjects()
+          val report: TrialProjects = countTrialProjects()
           if (report.available >= count)
             Some(report)
           else
@@ -324,18 +324,18 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         }
       }
       else {
-        logger.info("Available free tier project already exists")
+        logger.info("Available free tier project(s) already exist")
         // No-op. We have at least one available project to claim.
       }
     }
 
-    def countTrialProjects(): TrialProjectReport = {
+    def countTrialProjects(): TrialProjects = {
       val campaignManager = UserPool.chooseCampaignManager
       implicit val token: AuthToken = campaignManager.makeAuthToken()
       val results = postRequest(apiUrl(s"api/trial/manager/projects?operation=count"))
       logger.info(s"Count Trial Projects: $results")
-      implicit val impTrialProjectReport: RootJsonFormat[TrialProjectReport] = jsonFormat4(TrialProjectReport)
-      results.parseJson.convertTo[TrialProjectReport]
+      implicit val impTrialProjectReport: RootJsonFormat[TrialProjects] = jsonFormat4(TrialProjects)
+      results.parseJson.convertTo[TrialProjects]
     }
 
   }

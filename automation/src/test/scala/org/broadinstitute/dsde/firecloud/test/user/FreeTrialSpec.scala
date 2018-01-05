@@ -21,7 +21,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
   val adminUser: Credentials = UserPool.chooseAdmin
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
-  val trialKVPKeys = Seq("trialState", "trialBillingProjectName")
+  val trialKVPKeys = Seq("trialState", "trialBillingProjectName", "trialEnabledDate", "trialEnrolledDate",
+    "trialTerminatedDate", "trialExpirationDate", "userAgreed")
 
   var testUser: Credentials = _
   var userAuthToken: AuthToken = _
