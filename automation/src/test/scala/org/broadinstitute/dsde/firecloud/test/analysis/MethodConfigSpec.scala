@@ -41,24 +41,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "launch modal with no default entities" ignore withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
-      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-        SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-      withSignIn(user) { _ =>
-        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-
-        methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
-        val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-        launchModal.verifyNoDefaultEntityMessage() shouldBe true
-        launchModal.xOut()
-      }
-    }
-  }
-
   "launch modal with workflows warning" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
@@ -310,7 +292,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
-    "launch analysis button should be disabled and show error if clicked" ignore withWebDriver { implicit driver =>
+    "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
@@ -323,7 +305,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
 
-            val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
+            val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
             modal.validateLocation shouldBe true
             modal.clickCancel()
           }

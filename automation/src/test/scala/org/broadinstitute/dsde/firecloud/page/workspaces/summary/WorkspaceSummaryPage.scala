@@ -120,10 +120,19 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return
     */
 
-  def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false): WorkspaceSummaryPage = {
+  def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false, grantMethodPermission: Option[Boolean] = None): WorkspaceSummaryPage = {
     sidebar.shareWorkspaceButton.doClick()
     val aclEditor = await ready new AclEditor
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
+    if (grantMethodPermission.isDefined) {
+      val syncModal = new SynchronizeMethodAccessModal()
+      if (syncModal.validateLocation) {
+        grantMethodPermission match {
+          case Some(true) => syncModal.clickOk()
+          case _ => syncModal.clickCancel()
+        }
+      }
+    }
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 

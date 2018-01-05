@@ -21,6 +21,7 @@
        [modals/OKCancelForm
         {:header (if owned-methods "Synchronize Access to Methods" "Unable to Grant Method Access")
          :dismiss dismiss
+         :data-test-id "method-access"
          :show-cancel? owned-methods
          :content
          [:div {:style {:maxWidth 670}}

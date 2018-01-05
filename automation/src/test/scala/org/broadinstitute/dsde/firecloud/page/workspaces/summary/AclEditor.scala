@@ -28,9 +28,14 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
 
     if (share) {
       canShareBox.ensureChecked()
+    } else {
+      canShareBox.ensureUnchecked()
     }
+
     if (compute) {
       canComputeBox.ensureChecked()
+    } else {
+      canComputeBox.ensureUnchecked()
     }
 
     submit()

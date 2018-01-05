@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, Orchestration, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component.Label
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
@@ -173,7 +173,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
       //reader permissions should always be false
-      "should not be able to set/change compute permissions for readers" ignore withWebDriver { implicit driver =>
+      "should not be able to set/change compute permissions for readers" in withWebDriver { implicit driver =>
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
@@ -313,9 +313,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val methodConfigTab = detailPage.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
-            val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-            errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
-            errorModal.clickCancel()
+            val msgModal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
+            msgModal.getMessageText shouldBe "You do not have access to run analysis.\nCancel"
+            msgModal.clickCancel()
           }
         }
 
@@ -335,42 +335,44 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
     "who has writer access" - {
       "and does not have canCompute permission" - {
-        "should see launch analysis button disabled" ignore withWebDriver { implicit driver =>
+        "should see launch analysis button disabled" in withWebDriver { implicit driver =>
           val Seq(user1, user2) = UserPool.chooseStudents(2)
-          implicit val authToken: AuthToken = Config.Users.owner.makeAuthToken()
-          withWorkspace(billingProject, "WorkspaceSpect_writerAccess") { workspaceName =>
-            withSignIn(user1) { listPage =>
-              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+          implicit val authToken: AuthToken = user1.makeAuthToken()
+          val testName = "WorkspaceSpec_writerAccess_withCompute"
+          withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            withWorkspace(billingProject, testName) { workspaceName =>
+              withSignIn(user1) { listPage =>
+              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
+                SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-              api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, user1.email, "OWNER")
               val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-              detailPage.share(user2.email, "WRITER", false, false)
-            }
-            withSignIn(user2) { listPage2 =>
-              val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
-              val methodConfigTab = detailPage2.goToMethodConfigTab()
-              val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
-              val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-              errorModal.getErrorText shouldBe "You do not have access to run analysis.\nCancel"
+              detailPage.share(user2.email, "WRITER", false, false, Some(true))
+              }
+              withSignIn(user2) { listPage2 =>
+                val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
+                val methodConfigTab = detailPage2.goToMethodConfigTab()
+                val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
+                val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
+                errorModal.getMessageText shouldBe "You do not have access to run analysis.\nCancel"
+              }
             }
           }
         }
       }
       "and does have canCompute permission" - {
-        "should be able to launch analysis" ignore withWebDriver { implicit driver =>
+        "should be able to launch analysis" in withWebDriver { implicit driver =>
           val Seq(user1, user2) = UserPool.chooseStudents(2)
           implicit val authToken: AuthToken = user1.makeAuthToken()
-          withWorkspace(billingProject, "WorkspaceSpec_writerAccess") { workspaceName =>
-            withMethod("MethodinWorkspaceSpec", MethodData.SimpleMethod) { methodName =>
-              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
-                SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-              api.methodConfigurations.setMethodConfigPermission(SimpleMethodConfig.configNamespace, s"$methodConfigName", 1, user1.email, "OWNER")
-
+          val testName = "WorkspaceSpec_writerAccess_withCompute"
+          withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            withWorkspace(billingProject, testName) { workspaceName =>
               withSignIn(user1) { listPage =>
+                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
+                  SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-                detailPage.share(user2.email, "WRITER", false, true)
+                detailPage.share(user2.email, "WRITER", false, true, Some(true))
               }
-
               withSignIn(user2) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                 val methodConfigTab = detailPage2.goToMethodConfigTab()
@@ -387,19 +389,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   }
 
   // Experimental
-  "A cloned workspace" - {
-    "should retain the source workspace's authorization domain" ignore withWebDriver { implicit driver =>
-      val user = UserPool.chooseStudent
-      implicit val authToken: AuthToken = user.makeAuthToken()
-      withSignIn(user) { listPage =>
-        withClonedWorkspace(Config.Projects.common, "AuthDomainSpec_share") { cloneWorkspaceName =>
-          val summaryPage = listPage.enterWorkspace(Config.Projects.common, cloneWorkspaceName)
-          // assert that user who cloned the workspace is the owner
-        }
-      }
-
-    }
-  }
 
    "Notebooks whitelist" - {
      "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
