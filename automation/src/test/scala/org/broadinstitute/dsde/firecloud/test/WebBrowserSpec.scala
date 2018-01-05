@@ -122,7 +122,7 @@ trait WebBrowserSpec extends WebBrowserUtil with ExceptionHandling with LazyLogg
     * Override of withScreenshot that works with a remote Chrome driver and
     * lets us control the image file name.
     */
-  override def withScreenshot(f: => Unit)(implicit driver: WebDriver): Unit = {
+  override def withScreenshot[T](f: => T)(implicit driver: WebDriver): T = {
     try {
       f
     } catch {

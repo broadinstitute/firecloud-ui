@@ -4,12 +4,12 @@ import org.broadinstitute.dsde.firecloud.api.AclEntry
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
-import org.scalatest.Suite
+import org.scalatest.TestSuite
 
 /**WorkspaceFixtures
   * Fixtures for creating and cleaning up test workspaces.
   */
-trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
+trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
 
   /**
     * Loan method that creates a workspace that will be cleaned up after the
