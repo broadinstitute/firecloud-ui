@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.Method
 import org.broadinstitute.dsde.firecloud.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
@@ -289,7 +289,9 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
                                   available: Int,
                                   claimed: Int)
 
-    def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
+    def enableUser(userEmail: String): Unit = {
+      val campaignManager = UserPool.chooseCampaignManager
+      implicit val token: AuthToken = campaignManager.makeAuthToken()
       val enableResponse: String = postRequest(apiUrl("api/trial/manager/enable"), Seq(userEmail))
       val responseJson: JsObject = enableResponse.parseJson.asJsObject
       val successfulResponseKeys = Seq("Success", "NoChangeRequired")
@@ -303,12 +305,14 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
       }
     }
 
-    def createTrialProjects(count: Int)(implicit token: AuthToken): Unit = {
-      val report: TrialProjectReport = countTrialProjects()(token)
+    def createTrialProjects(count: Int): Unit = {
+      val campaignManager = UserPool.chooseCampaignManager
+      implicit val token: AuthToken = campaignManager.makeAuthToken()
+      val report: TrialProjectReport = countTrialProjects()
       if (report.available == 0) {
         postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=$count"))
         retry(30.seconds, 10.minutes)({
-          val report: TrialProjectReport = countTrialProjects()(token)
+          val report: TrialProjectReport = countTrialProjects()
           val available = List(report.available)
           available.find(count => count > 0)
         }) match {
@@ -322,7 +326,9 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
       }
     }
 
-    def countTrialProjects()(implicit token: AuthToken): TrialProjectReport = {
+    def countTrialProjects(): TrialProjectReport = {
+      val campaignManager = UserPool.chooseCampaignManager
+      implicit val token: AuthToken = campaignManager.makeAuthToken()
       val results = postRequest(apiUrl(s"api/trial/manager/projects?operation=count"))
       logger.info(s"Count Trial Projects: $results")
       implicit val impTrialProjectReport: RootJsonFormat[TrialProjectReport] = jsonFormat4(TrialProjectReport)

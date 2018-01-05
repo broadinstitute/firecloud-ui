@@ -19,29 +19,27 @@ import scala.util.Try
 class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
 
-  var campaignManager: Credentials = _
+  val adminUser: Credentials = UserPool.chooseAdmin
+  implicit val authToken: AuthToken = adminUser.makeAuthToken()
+  val trialKVPKeys = Seq("trialState", "trialBillingProjectName")
+
   var testUser: Credentials = _
   var userAuthToken: AuthToken = _
   var subjectId : String = _
-  val trialKVPKeys = Seq("trialState", "trialBillingProjectName")
 
   override def beforeEach {
-    campaignManager = UserPool.chooseCampaignManager
     testUser = UserPool.chooseStudent
     userAuthToken = testUser.makeAuthToken()
     subjectId = Orchestration.profile.getUser()(userAuthToken)("userId").toString
-    implicit val token: AuthToken = userAuthToken
     Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
   private def setUpEnabledUserAndProject(): Unit = {
-    val token: AuthToken = campaignManager.makeAuthToken()
-    api.trial.createTrialProjects(1)(token)
-    api.trial.enableUser(testUser.email)(token)
+    api.trial.createTrialProjects(1)
+    api.trial.enableUser(testUser.email)
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
-    implicit val token: AuthToken = testUser.makeAuthToken()
     register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
@@ -49,7 +47,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "Blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
-        implicit val token: AuthToken = testUser.makeAuthToken()
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
@@ -61,7 +58,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject()
-        implicit val token: AuthToken = testUser.makeAuthToken()
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
@@ -93,8 +89,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Terminated" - {
       "should see that they are inactive" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
-        implicit val token: AuthToken = testUser.makeAuthToken()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
+
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
@@ -107,8 +103,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
-        implicit val token: AuthToken = testUser.makeAuthToken()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
