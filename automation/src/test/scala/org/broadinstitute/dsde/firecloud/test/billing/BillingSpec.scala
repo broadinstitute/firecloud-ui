@@ -48,12 +48,12 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
         //be driven by API and not UI
 
         val originalBillingAccount = Google.billing.getBillingProjectAccount(billingProjectName)
-        assertResult(Some(Config.Projects.billingAccountId))(originalBillingAccount)
+        originalBillingAccount shouldBe Some(Config.Projects.billingAccountId)
 
         Google.billing.removeBillingProjectAccount(billingProjectName)
 
         val newBillingAccount = Google.billing.getBillingProjectAccount(billingProjectName)
-        assertResult(None)(newBillingAccount)
+        newBillingAccount shouldBe None
       }
 
       "with a new billing project" - {
