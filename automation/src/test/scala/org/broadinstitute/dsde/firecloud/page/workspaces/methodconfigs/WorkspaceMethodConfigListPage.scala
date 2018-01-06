@@ -4,8 +4,9 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoTable
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page._
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -27,10 +28,10 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
     * necessary for Methods, but not Method Configs
     */
   def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int,
-                                 methodConfigName: String, rootEntityType: Option[String] = None): WorkspaceMethodConfigDetailsPage = {
+                                 methodConfigName: String, rootEntityType: Option[String] = None, grantMethodPermission: Option[Boolean] = None): WorkspaceMethodConfigDetailsPage = {
     openImportConfigModalButton.doClick()
     val chooseSourceModal = await ready new ImportMethodChooseSourceModel()
-    chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
+    chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType, grantMethodPermission)
     await ready new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
@@ -61,12 +62,12 @@ class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireC
   override def awaitReady(): Unit = chooseConfigFromRepoModalButton.awaitVisible()
 
   private val chooseConfigFromRepoModalButton = Button("import-from-repo-button")
-  // private val chooseConfigFromWorkspaceModalButton = Button("copy-from-workspace-button")
 
-  def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
+  def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String], grantMethodPermission: Option[Boolean] = None): Unit = {
     chooseConfigFromRepoModalButton.doClick()
     val importModel = await ready new ImportMethodConfigModal()
-    importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
+    importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType, grantMethodPermission)
+
   }
 }
 
@@ -74,9 +75,39 @@ class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireC
   * Page class for the import method config modal.
   */
 class ImportMethodConfigModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  override def awaitReady(): Unit = Unit
+  override def awaitReady(): Unit = Unit//MethodRepoTable.awaitReady
 
-  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
-    // TODO: test new import flow
+  private val snapshotDropdown = Select("snapshot-dropdown")
+  private val selectConfigButton = Button("select-configuration-button")
+  private val useBlankConfigButton = Button("use-blank-configuration-button")
+  private val methodConfigNameField = TextField("method-config-name-field")
+  private val rootEntitySelect = Select("root-entity-select")
+  private val importMethodButton = Button("import-method-button")
+
+  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String], grantMethodPermission: Option[Boolean]): Unit = {
+    val methodTable = new MethodRepoTable
+    methodTable.filter(methodName)
+    methodTable.enterMethod(methodNamespace, methodName)
+    snapshotDropdown.select(snapshotId.toString)
+    selectConfigButton.doClick()
+    useBlankConfigButton.doClick()
+    methodConfigNameField.setText(methodConfigName)
+    if (rootEntityType.isDefined) rootEntitySelect.select(rootEntityType.get)
+    importMethodButton.doClick()
+    val syncUnableModal = new SynchronizeMethodAccessUnableModal()
+    if (syncUnableModal.validateLocation) {
+      syncUnableModal.clickOk()
+    } else {
+      if (grantMethodPermission.isDefined) {
+        val syncModal = new SynchronizeMethodAccessModal()
+        if (syncModal.validateLocation) {
+          grantMethodPermission match {
+            case Some(true) => syncModal.clickOk()
+            case _ => syncModal.clickCancel()
+          }
+        }
+      }
+    }
+
   }
 }

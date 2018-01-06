@@ -201,6 +201,7 @@
      [modals/OKCancelForm
       {:header "Import Method Configuration"
        :show-cancel? false
+       :data-test-id "import-method-config"
        :dismiss (:dismiss props)
        :content
        [:div {}

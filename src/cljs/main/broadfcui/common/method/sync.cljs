@@ -88,7 +88,7 @@
     :dismiss dismiss
     :show-cancel? false
     :ok-button "OK"
-    :data-test-id "push-message"
+    :data-test-id "method-access-unable"
     :content
     (let [owners (:managers method)
           method-display (get-method-display method)]

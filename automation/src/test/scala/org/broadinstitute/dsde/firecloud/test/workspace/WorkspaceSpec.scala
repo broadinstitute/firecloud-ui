@@ -341,6 +341,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")
             withWorkspace(billingProject, testName) { workspaceName =>
               withSignIn(owner) { listPage =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
@@ -367,6 +368,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")
             withWorkspace(billingProject, testName) { workspaceName =>
               withSignIn(owner) { listPage =>
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),

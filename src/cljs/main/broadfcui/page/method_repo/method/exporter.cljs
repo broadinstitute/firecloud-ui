@@ -127,6 +127,7 @@
        [:div {:style {:width 550}}
         (style/create-form-label "Name")
         [input/TextField {:ref "name-field"
+                          :data-test-id "method-config-name-field"
                           :style {:width "100%"}
                           :defaultValue (if (= selected-config :blank)
                                           method-name
@@ -135,7 +136,7 @@
         (when (= selected-config :blank)
           (list
            (style/create-form-label "Root Entity Type")
-           (style/create-identity-select {:ref "root-entity-type"}
+           (style/create-identity-select {:ref "root-entity-type" :data-test-id "root-entity-select"}
                                          common/root-entity-types)))
         (when-not workspace-id
           (list

@@ -143,7 +143,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   }
 
-  "import a method config into a workspace from the method repo" ignore withWebDriver { implicit driver =>
+  "import a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>

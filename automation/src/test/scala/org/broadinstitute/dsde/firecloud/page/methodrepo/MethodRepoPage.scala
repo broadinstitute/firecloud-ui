@@ -12,7 +12,7 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
   override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 
   override def awaitReady(): Unit = {
-    MethodRepoTable.awaitReady()
+    new MethodRepoTable().awaitReady()
   }
 
   private val newMethodButton = Button("create-method-button")
@@ -23,20 +23,21 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
     createMethodModal.fillOut(attributes)
     createMethodModal.submit()
   }
+}
 
-  object MethodRepoTable extends Table("methods-table") {
-    private def methodLink(namespace: String, name: String) = Link(s"method-link-$namespace-$name")
+class MethodRepoTable(implicit webDriver: WebDriver) extends Table("methods-table") {
+  private def methodLink(namespace: String, name: String) = Link(s"method-link-$namespace-$name")
 
-    def hasMethod(namespace: String, name: String): Boolean = {
-      methodLink(namespace, name).isVisible
-    }
+  def hasMethod(namespace: String, name: String): Boolean = {
+    methodLink(namespace, name).isVisible
+  }
 
-    def enterMethod(namespace: String, name: String): MethodDetailPage = {
-      methodLink(namespace, name).doClick()
-      await ready new MethodDetailPage(namespace, name)
-    }
+  def enterMethod(namespace: String, name: String): MethodDetailPage = {
+    methodLink(namespace, name).doClick()
+    await ready new MethodDetailPage(namespace, name)
   }
 }
+
 
 class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
   private val namespaceField = TextField("namespace-field")

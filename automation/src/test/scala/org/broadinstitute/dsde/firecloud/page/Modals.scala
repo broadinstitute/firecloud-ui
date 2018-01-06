@@ -76,8 +76,8 @@ case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends O
   protected val grantButtonId = "grant-read-permission-button"
 
   def validateLocation: Boolean = {
-    awaitReady()
-    testId("method-access-content").element != null
+//    awaitReady()
+    testId("method-access-content").findElement != None
   }
 
   override def clickOk(): Unit = {
@@ -87,4 +87,16 @@ case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends O
   override def awaitReady(): Unit = await.visible(testId(grantButtonId), 1)
 
 }
+
+case class SynchronizeMethodAccessUnableModal(implicit webDriver: WebDriver) extends OKCancelModal {
+  def validateLocation: Boolean = {
+//    awaitReady()
+    testId("method-access-unable").findElement != None
+  }
+
+  override def awaitReady(): Unit = await.visible(testId("ok-button"), 1)
+
+}
+
+
 

@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.methodrepo
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, UserFixtures}
-import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
+import org.broadinstitute.dsde.firecloud.page.methodrepo.{MethodRepoPage, MethodRepoTable}
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
@@ -27,10 +27,11 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
         // go back to the method repo page and verify that it's in the table
         methodRepoPage.open
-        methodRepoPage.MethodRepoTable.goToTab("My Methods")
-        methodRepoPage.MethodRepoTable.filter(name)
+        val methodTable = new MethodRepoTable()
+        methodTable.goToTab("My Methods")
+        methodTable.filter(name)
 
-        methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true
+        methodTable.hasMethod(namespace, name) shouldBe true
       }
     }
 
@@ -40,19 +41,20 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
           val methodRepoPage = workspaceListPage.goToMethodRepository()
 
           // verify that it's in the table
-          methodRepoPage.MethodRepoTable.goToTab("My Methods")
-          methodRepoPage.MethodRepoTable.filter(name)
+          val methodTable = new MethodRepoTable()
+          methodTable.goToTab("My Methods")
+          methodTable.filter(name)
 
-          methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true
+          methodTable.hasMethod(namespace, name) shouldBe true
 
           // go in and redact it
-          val methodDetailPage = methodRepoPage.MethodRepoTable.enterMethod(namespace, name)
+          val methodDetailPage = methodTable.enterMethod(namespace, name)
 
           methodDetailPage.redact()
 
           // and verify that it's gone
           methodDetailPage.goToMethodRepository()
-          methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe false
+          methodTable.hasMethod(namespace, name) shouldBe false
         }
       }
     }
