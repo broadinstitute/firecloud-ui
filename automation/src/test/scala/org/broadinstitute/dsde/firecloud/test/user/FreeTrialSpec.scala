@@ -20,6 +20,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
+  val campaignManager: Credentials = UserPool.chooseCampaignManager
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
   val trialKVPKeys = Seq("trialState", "trialBillingProjectName", "trialEnabledDate", "trialEnrolledDate",
     "trialTerminatedDate", "trialExpirationDate", "userAgreed")
@@ -36,6 +37,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   }
 
   private def setUpEnabledUserAndProject(): Unit = {
+    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
     api.trial.createTrialProjects(1)
     api.trial.enableUser(testUser.email)
   }
