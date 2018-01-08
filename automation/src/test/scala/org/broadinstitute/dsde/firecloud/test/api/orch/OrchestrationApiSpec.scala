@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.api.orch
 import akka.http.scaladsl.model.StatusCodes
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.GetQueryResultsResponse
-import org.broadinstitute.dsde.firecloud.api.{APIException, Orchestration, Rawls}
+import org.broadinstitute.dsde.firecloud.api.{APIException, Orchestration}
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.BillingFixtures
@@ -90,23 +90,21 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
     }
 
     "should not allow access alteration by non-owners" in {
-      val ownerUser: Credentials = UserPool.chooseProjectOwner
-      val ownerToken: AuthToken = ownerUser.makeAuthToken()
+      val Seq(userA: Credentials, userB: Credentials) = UserPool.chooseStudents(2)
+      val userAToken: AuthToken = userA.makeAuthToken()
+
       val role = "bigquery.jobUser"
-
-      val user: Credentials = UserPool.chooseStudent
-
       val errorMsg = "You must be a project owner"
-      val unownedProject = "broad-dsde-production"
+      val unownedProject = "broad-dsde-dev"
 
       val addEx = intercept[APIException] {
-        Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, user.email, role)(ownerToken)
+        Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       addEx.getMessage should include(errorMsg)
       addEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
 
       val removeEx = intercept[APIException] {
-        Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, user.email, role)(ownerToken)
+        Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       removeEx.getMessage should include(errorMsg)
       removeEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
