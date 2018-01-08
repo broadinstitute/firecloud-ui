@@ -349,10 +349,6 @@
   {:path (str "/clusters")
    :method :get})
 
-(def is-leo-whitelisted
-  {:path (str "/isWhitelisted")
-   :method :get})
-
 
 
 (defn create-submission [workspace-id]
