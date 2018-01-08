@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.api.orch
 
+import akka.http.scaladsl.model.StatusCodes
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.GetQueryResultsResponse
 import org.broadinstitute.dsde.firecloud.api.{APIException, Orchestration, Rawls}
@@ -94,37 +95,21 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       val role = "bigquery.jobUser"
 
       val user: Credentials = UserPool.chooseStudent
-      val userToken: AuthToken = user.makeAuthToken()
 
-      // user is not a project owner
-      val errorMsg1 = "You must be a project owner"
-
-      withBillingProject("auto-goog-role") { projectName =>
-        val addEx = intercept[APIException] {
-          Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(userToken)
-        }
-        addEx.getMessage should include(errorMsg1)
-
-        val removeEx = intercept[APIException] {
-          Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(userToken)
-        }
-        removeEx.getMessage should include(errorMsg1)
-      }(ownerToken)
-
-      // owner is not an owner of this project
-      val errorMsg2 = "The caller does not have permission"
-
-      val otherProject = "broad-dsde-dev"
+      val errorMsg = "You must be a project owner"
+      val unownedProject = "broad-dsde-production"
 
       val addEx = intercept[APIException] {
-        Orchestration.billing.addGoogleRoleToBillingProjectUser(otherProject, user.email, role)(ownerToken)
+        Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, user.email, role)(ownerToken)
       }
-      addEx.getMessage should include(errorMsg2)
+      addEx.getMessage should include(errorMsg)
+      addEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
 
       val removeEx = intercept[APIException] {
-        Orchestration.billing.removeGoogleRoleFromBillingProjectUser(otherProject, user.email, role)(ownerToken)
+        Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, user.email, role)(ownerToken)
       }
-      removeEx.getMessage should include(errorMsg2)
+      removeEx.getMessage should include(errorMsg)
+      removeEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
     }
   }
 }
