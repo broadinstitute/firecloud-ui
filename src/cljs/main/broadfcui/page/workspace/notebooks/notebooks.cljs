@@ -306,7 +306,7 @@
 (react/defc NotebooksContainer
   {:refresh
    (fn [{:keys [this]}]
-     (this :-get-clusters-list-if-whitelisted))
+     (this :-get-clusters))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response show-create-dialog?]} @state
@@ -314,7 +314,7 @@
         [:div {:display "inline-flex"}
          (when show-create-dialog?
            [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                        :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
+                                        :reload-after-create #(this :-get-clusters))])
          [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
          (if server-error
            [comps/ErrorViewer {:error server-error}]
@@ -324,23 +324,24 @@
                                                                         :data-test-id "create-modal-button"
                                                                         :onClick #(swap! state assoc :show-create-dialog? true)}]]
                            :clusters clusters
-                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (this :-is-leo-whitelisted))
-   :-is-leo-whitelisted
-   (fn [{:keys [state this]}]
-     (endpoints/call-ajax-leo
-       {:endpoint endpoints/is-leo-whitelisted
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (do (swap! state assoc :is-leo-whitelisted? true)
-                         (this :-get-clusters-list-if-whitelisted))
-                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
-   :-get-clusters-list-if-whitelisted
+                           :reload-after-delete #(this :-get-clusters))]))]))
+   ;:component-did-mount
+   ;(fn [{:keys [this]}]
+   ;  (this :-is-leo-whitelisted)
+   ;  )
+   ;:-is-leo-whitelisted
+   ;(fn [{:keys [state this]}]
+   ;  (endpoints/call-ajax-leo
+   ;    {:endpoint endpoints/is-leo-whitelisted
+   ;     :headers utils/content-type=json
+   ;     :on-done (fn [{:keys [success? get-parsed-response]}]
+   ;                (if success?
+   ;                  (do (swap! state assoc :is-leo-whitelisted? true)
+   ;                      (this :-get-clusters-list-if-whitelisted))
+   ;                  (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+   :-get-clusters
    (fn [{:keys [props state this]}]
-     (when (:is-leo-whitelisted? @state)
+    ; (when (:is-leo-whitelisted? @state)
        (endpoints/call-ajax-leo
          {:endpoint endpoints/get-clusters-list
           :headers utils/content-type=json
@@ -351,4 +352,5 @@
                        (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
                      (let [statuses (set (map #(:status %) (get-parsed-response)))]
                        (when (or (contains? statuses "Creating") (contains? statuses "Updating") (contains? statuses "Deleting"))
-                         (js/setTimeout (fn [] (this :-get-clusters-list-if-whitelisted)) 10000))))})))})
+                         (js/setTimeout (fn [] (this :-get-clusters)) 10000))))} ;)
+     ))})
