@@ -36,10 +36,10 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
-  private def setUpEnabledUserAndProject(): Unit = {
+  private def setUpEnabledUserAndProject(user: Credentials): Unit = {
     implicit val authToken: AuthToken = campaignManager.makeAuthToken()
     api.trial.createTrialProjects(1)
-    api.trial.enableUser(testUser.email)
+    api.trial.enableUser(user.email)
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
@@ -60,7 +60,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
     "Enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
-        setUpEnabledUserAndProject()
+        setUpEnabledUserAndProject(testUser)
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
