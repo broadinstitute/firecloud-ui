@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "${HOST_IP}" ]; then
-    echo "FATAL ERROR: SSH_HOST undefined."
+    echo "FATAL ERROR: HOST_IP undefined."
     exit 1
 fi
 
