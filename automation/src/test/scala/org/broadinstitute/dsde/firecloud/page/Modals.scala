@@ -63,5 +63,11 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
     testId("message-modal-content").element != null
   }
+
+    def readMessageModalText: String = {
+      readText (testId ("message-modal-content"))
+   }
 }
+
+
 

@@ -99,11 +99,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
     }
   }
-
   "As a non-curator" - {
     "an unpublished workspace" - {
       "with required library attributes" - {
-        "should not see publish button " in withWebDriver { implicit driver =>
+        "should not see publish button" in withWebDriver { implicit driver =>
           val studentUser = UserPool.chooseStudent
           implicit val studentAuthToken: AuthToken = studentUser.makeAuthToken()
           withWorkspace(namespace, "PublishSpec_unpub_withAttributes_") { wsName =>
@@ -116,5 +115,48 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
         }
       }
     }
+
+  }
+
+  "As a user with no TCGA permissions" - {
+    "a published workspace" - {
+      "with TCGA control access" - {
+        "should see a information message about getting TCGA access" in withWebDriver { implicit driver =>
+          //log in as a Curator and create/publish TCGA workspace
+          val curatorUser = UserPool.chooseCurator
+          implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
+
+          api.NIH.addUserToNIH(Config.Users.tcgaJsonWebToken)
+          withWorkspace(namespace, "TCGA_", Set(Config.FireCloud.tcgaAuthDomain)) { wsName =>
+            withCleanUp {
+              val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+              api.library.setLibraryAttributes(namespace, wsName, data)
+              register cleanUp api.library.unpublishWorkspace(namespace, wsName)
+              api.library.publishWorkspace(namespace, wsName)
+
+              //log in as a user with no TCGA access to make sure TCGA info message is displayed to you in Library
+              val studentUser = UserPool.chooseStudent
+              withSignIn(studentUser) { _ =>
+                val page = new DataLibraryPage().open
+                page.hasDataset(wsName) shouldBe true
+                page.openDataset(wsName)
+                //verify that Request Access modal is shown
+                val requestAccessModal = page.RequestAccessModal()
+                requestAccessModal.validateLocation shouldBe true
+                //verify that 'access to TCGA' text is being displayed
+                requestAccessModal.readMessageModalText should startWith(requestAccessModal.tcgaAccessText)
+                requestAccessModal.clickOk()
+
+              }
+
+
+            }
+          }
+        }
+      }
+    }
   }
 }
+
+
+

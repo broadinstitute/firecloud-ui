@@ -179,7 +179,7 @@
                     [:span {}
                      (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
                            target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
-                       [:div {}
+                       [:div {:data-test-id "request-access-text"}
                         (when tcga? tcga-access-instructions)
                         (when target? target-access-instructions)
                         (when (or tcga? target?)
