@@ -120,14 +120,14 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       deleteRequest(apiUrl(s"api/workspaces/$namespace/$name"))
     }
 
-    def updateAcl(namespace: String, name: String, email: String, accessLevel: WorkspaceAccessLevel)(implicit token: AuthToken): Unit = {
-      updateAcl(namespace, name, List(AclEntry(email, accessLevel)))
+    def updateAcl(namespace: String, name: String, email: String, accessLevel: WorkspaceAccessLevel, canShare: Option[Boolean], canCompute: Option[Boolean])(implicit token: AuthToken): Unit = {
+      updateAcl(namespace, name, List(AclEntry(email, accessLevel, canCompute, canShare)))
     }
 
     def updateAcl(namespace: String, name: String, aclEntries: List[AclEntry] = List())(implicit token: AuthToken): Unit = {
       logger.info(s"Updating ACLs for workspace: $namespace/$name $aclEntries")
       patchRequest(apiUrl(s"api/workspaces/$namespace/$name/acl"),
-        aclEntries.map(e => Map("email" -> e.email, "accessLevel" -> e.accessLevel.toString)))
+        aclEntries.map{ e => e.toMap })
     }
 
     def setAttributes(namespace: String, name: String, attributes: Map[String, String])(implicit token: AuthToken): Unit = {
@@ -310,4 +310,18 @@ object WorkspaceAccessLevel extends Enumeration {
   val Writer = Value("WRITER")
 }
 
-case class AclEntry(email: String, accessLevel: WorkspaceAccessLevel)
+case class AclEntry(email: String, accessLevel: WorkspaceAccessLevel, canShare: Option[Boolean] = None, canCompute: Option[Boolean] = None) {
+  def toMap: Map[String,Any] = {
+    val resp: Map[String, Any] = Map("email"->email, "accessLevel"->accessLevel.toString)
+    val shared = canShare match {
+      case Some(sh) => resp ++ Map("canShare"->sh)
+      case None => resp
+    }
+    val compute = canCompute match {
+      case Some(comp) => shared ++ Map("canCompute"->comp)
+      case None => shared
+    }
+    compute
+  }
+}
+

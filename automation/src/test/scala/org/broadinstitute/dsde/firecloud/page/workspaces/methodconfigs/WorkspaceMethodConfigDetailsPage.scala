@@ -122,7 +122,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
   private val entityTable = Table("entity-table")
   private val expressionInput = TextField("define-expression-input")
-  private val emptyDefaultEntitiesMessage = Label("message-well")
+  private val noRowsMessage = Label("message-well")
   private val launchAnalysisButton = Button("launch-button")
   private val numberOfWorkflowsWarning = Label("number-of-workflows-warning")
   private val callCachingCheckbox = Checkbox("call-cache-checkbox")
@@ -156,8 +156,8 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
     launchAnalysisButton.doClick()
   }
 
-  def verifyNoDefaultEntityMessage(): Boolean = {
-    emptyDefaultEntitiesMessage.isVisible
+  def verifyNoRowsMessage(): Boolean = {
+    noRowsMessage.isVisible
   }
 
   def verifyWorkflowsWarning(): Boolean = {

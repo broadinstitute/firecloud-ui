@@ -341,52 +341,47 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
-            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")
-            withWorkspace(billingProject, testName) { workspaceName =>
-              withSignIn(projectOwner) { listPage =>
+            val methodConfigName = methodName + "Config"
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
+            withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
-                SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
+                SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-              detailPage.share(user.email, "WRITER", false, false, Some(true))
-              }
-              withSignIn(user) { listPage2 =>
-                val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, s"$methodConfigName")
-                await ready methodConfigDetailsPage
+              withSignIn(user) { listPage =>
+                val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+                val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
                 errorModal.getMessageText shouldBe noAccessText
+                errorModal.clickCancel()
               }
-            }
-          }
+            }(authTokenOwner)
+          }(authTokenOwner)
         }
       }
       "and does have canCompute permission" - {
         "should be able to launch analysis" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent
-          implicit val authToken: AuthToken = authTokenOwner
+          implicit val authToken: AuthToken = user.makeAuthToken()
           val testName = "WorkspaceSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
-            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")
-            withWorkspace(billingProject, testName) { workspaceName =>
-              withSignIn(projectOwner) { listPage =>
-                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
-                  SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
-                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-                val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-                detailPage.share(user.email, "WRITER", false, true, Some(true))
-              }
-              withSignIn(user) { listPage2 =>
-                val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, s"$methodConfigName")
-                await ready methodConfigDetailsPage
+            val methodConfigName = methodName + "Config"
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
+            withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
+              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
+                SimpleMethodConfig.configNamespace, methodConfigName, 1,
+                SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+              withSignIn(user) { listPage =>
+                val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+                val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
                 launchAnalysisModal.validateLocation shouldBe true
+                launchAnalysisModal.clickCancel()
               }
-            }
-          }
+            }(authTokenOwner)
+          }(authTokenOwner)
         }
       }
     }
-
   }
 
   "Notebooks whitelist" - {
