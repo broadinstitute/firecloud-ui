@@ -325,6 +325,9 @@
                                                                         :onClick #(swap! state assoc :show-create-dialog? true)}]]
                            :clusters clusters
                            :reload-after-delete #(this :-get-clusters))]))]))
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (this :-get-clusters))
    :-get-clusters
    (fn [{:keys [props state this]}]
        (endpoints/call-ajax-leo
