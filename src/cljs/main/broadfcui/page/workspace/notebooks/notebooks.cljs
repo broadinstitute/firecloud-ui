@@ -365,8 +365,8 @@
    (fn [{:keys [props state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
        (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
-         (do (when (contains-statuses clusters ["Running"]) (this :-process-running-clusters)
-             (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))))
+         (do (when (contains-statuses clusters ["Running"]) (this :-process-running-clusters))
+             (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000)))))
 
    :-process-running-clusters
    (fn [{:keys [props state locals this]}]
