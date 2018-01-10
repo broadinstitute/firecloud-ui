@@ -39,6 +39,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   private def setUpEnabledUserAndProject(user: Credentials): Unit = {
     implicit val authToken: AuthToken = campaignManager.makeAuthToken()
     api.trial.createTrialProjects(1)
+    logger.info(s"Attempting to enable user [${user.email}] as campaign manager [${campaignManager.email}]")
     api.trial.enableUser(user.email)
   }
 
@@ -61,6 +62,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
+
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
@@ -85,6 +87,17 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           await condition bannerButton.getState == "ready"
           bannerTitleElement.getText shouldBe "Access Free Credits"
         }
+
+        // Verify that the user has been added to the corresponding billing project
+        val expectedProjectName = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
+        assert(expectedProjectName.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
+
+        val userProjects = api.profile.getUserProjects()(userAuthToken)
+        assert(userProjects.nonEmpty, s"The trial user ${testUser.email} has no projects.")
+
+        val userHasTheRightProject: Boolean = userProjects.exists(_.values.toList.contains(expectedProjectName.get))
+        assert(userHasTheRightProject)
+        
         registerCleanUpForDeleteTrialState()
       }
     }
