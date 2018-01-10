@@ -16,14 +16,14 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummar
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, ShouldMatchers}
+import org.scalatest.{FreeSpec, Matchers}
 
 import scala.collection.JavaConverters._
 import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
-  with ShouldMatchers with WebBrowser with WebBrowserUtil with CleanUp {
+  with Matchers with WebBrowser with WebBrowserUtil with CleanUp {
 
   private def makeTempDownloadDirectory(): String = {
     /*

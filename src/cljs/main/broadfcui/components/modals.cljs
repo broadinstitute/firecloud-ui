@@ -15,11 +15,25 @@
 (defn show-modals [state m]
   (map (fn [[k [modal args]]]
          (when (k @state)
-           [modal (assoc args :dismiss #(swap! state dissoc k))]))
+           [modal (merge {:dismiss #(swap! state dissoc k)} args)]))
        m))
 
 
 (react/defc OKCancelForm
+  "Props:
+
+  header
+  content
+  dismiss - on-dismiss function
+  button-bar
+  ok-button
+  show-cancel?
+  cancel-text
+  show-close?
+  data-test-id
+  get-first-element-dom-node - given focus when specified
+  get-last-element-dom-node - requires get-first
+  cycle-focus? - if hitting tab should exclusively cycle focus between (get-first) and (get-last [or ok button])"
   {:get-default-props
    (fn []
      {:cancel-text "Cancel"

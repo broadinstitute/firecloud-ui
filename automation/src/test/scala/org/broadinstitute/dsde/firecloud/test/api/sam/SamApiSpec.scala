@@ -6,12 +6,13 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToke
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model._
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
+import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount, ServiceAccountName}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
+class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
   def findSaInGoogle(name: ServiceAccountName): Option[ServiceAccount] = {
@@ -39,7 +40,6 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
     Orchestration.profile.registerUser(newUserProfile)
   }
 
-  // TODO: why isn't WorkbenchSubject a ValueObject?  I'd like to use it here
   def removeUser(subjectId: String): Unit = {
     implicit val token: AuthToken = UserPool.chooseAdmin.makeAuthToken()
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
@@ -102,6 +102,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
 
       val petAuthToken = ServiceAccountAuthToken(petAccountEmail)
+      register cleanUp petAuthToken.removePrivateKey()
 
       Sam.user.status()(petAuthToken) shouldBe Some(userStatus)
 
@@ -110,7 +111,6 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
 
       // clean up
 
-      petAuthToken.removePrivateKey()
       Sam.removePet(userStatus.userInfo)
       findPetInGoogle(userStatus.userInfo) shouldBe None
     }
@@ -123,6 +123,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       removeUser(sa.subjectId.value)
 
       implicit val saAuthToken: ServiceAccountAuthToken = ServiceAccountAuthToken(saEmail)
+      register cleanUp saAuthToken.removePrivateKey()
 
       registerAsNewUser(saEmail)
 
@@ -130,8 +131,32 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures {
       Sam.user.status()(saAuthToken).map(_.userInfo.userEmail) shouldBe Some(saEmail.value)
 
       // clean up
-      saAuthToken.removePrivateKey()
+
       removeUser(sa.subjectId.value)
+    }
+
+    "should retrieve a user's proxy group as any user" in {
+      val Seq(user1: Credentials, user2: Credentials) = UserPool.chooseStudents(2)
+      val authToken1: AuthToken = user1.makeAuthToken()
+      val authToken2: AuthToken = user2.makeAuthToken()
+
+      val info1 = Sam.user.status()(authToken1).get.userInfo
+      val info2 = Sam.user.status()(authToken2).get.userInfo
+      val email1 = WorkbenchEmail(Sam.user.status()(authToken1).get.userInfo.userEmail)
+      val email2 = WorkbenchEmail(Sam.user.status()(authToken2).get.userInfo.userEmail)
+      val userId1 = Sam.user.status()(authToken1).get.userInfo.userSubjectId
+      val userId2 = Sam.user.status()(authToken2).get.userInfo.userSubjectId
+
+      val proxyGroup1_1 = Sam.user.proxyGroup(email1)(authToken1)
+      val proxyGroup1_2 = Sam.user.proxyGroup(email1)(authToken2)
+      val proxyGroup2_1 = Sam.user.proxyGroup(email2)(authToken1)
+      val proxyGroup2_2 = Sam.user.proxyGroup(email2)(authToken2)
+
+      // will break when Sam's implementation changes
+      proxyGroup1_1 shouldBe WorkbenchEmail(s"PROXY_$userId1@${Config.GCS.appsDomain}")
+      proxyGroup1_2 shouldBe WorkbenchEmail(s"PROXY_$userId1@${Config.GCS.appsDomain}")
+      proxyGroup2_1 shouldBe WorkbenchEmail(s"PROXY_$userId2@${Config.GCS.appsDomain}")
+      proxyGroup2_2 shouldBe WorkbenchEmail(s"PROXY_$userId2@${Config.GCS.appsDomain}")
     }
   }
 

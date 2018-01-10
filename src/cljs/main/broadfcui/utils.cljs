@@ -39,7 +39,7 @@
      (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)
      (try
        [(js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?) false]
-       (catch js/Object e
+       (catch :default e ; match js/Error and js/Object
          [nil e])))))
 
 
@@ -180,6 +180,16 @@
           (if data
             (.send xhr data)
             (.send xhr)))))))
+
+
+(defn get-google-bucket-file [filename on-done]
+  (ajax
+   {:url (config/google-bucket-url filename)
+    :on-done (fn [{:keys [raw-response]}]
+               ;; Fails gracefully if file is missing or malformed
+               (some->> (parse-json-string raw-response true false)
+                        first
+                        on-done))}))
 
 
 (defonce server-down? (atom false))

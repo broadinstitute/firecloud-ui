@@ -248,7 +248,7 @@
                    :as-text :clusterName :sort-by :clusterName
                    :render
                    (fn [cluster]
-                     (if (= (:status cluster) "Running")
+                     (if (or (= (:status cluster) "Running") (= (:status cluster) "Error"))
                        (links/create-internal
                          {:data-test-id "x-button"
                           :id (:id props)

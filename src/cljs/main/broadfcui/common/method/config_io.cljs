@@ -75,7 +75,7 @@
                                 :as-text :task
                                 :render (fn [{:keys [task]}]
                                           [:div {:style (clip table-style/table-cell-plank-left)} task])}
-                               {:header "Variable" :initial-width 180
+                               {:header "Variable" :initial-width 220
                                 :as-text (fn [{:keys [variable optional?]}]
                                            (str variable (when optional? " (optional)")))
                                 :sort-by (comp string/lower-case :text)
@@ -84,7 +84,7 @@
                                                                 (merge table-style/table-cell-plank-middle
                                                                        table-style/table-cell-optional)
                                                                 table-style/table-cell-plank-middle))} variable])}
-                               {:header "Type" :initial-width 120
+                               {:header "Type" :initial-width 110
                                 :sort-by :type
                                 :as-text (fn [{:keys [type optional?]}]
                                            (str type (when optional? " (optional)")))
@@ -96,7 +96,7 @@
                                                         table-style/table-cell-plank-right))}
                                    (or type "unknown")])}]
                               (when values
-                                [{:header "Attribute" :initial-width 200
+                                [{:header "Attribute" :initial-width 360
                                   :as-text :value
                                   :sort-by :text
                                   :render
@@ -121,7 +121,7 @@
                                           [:span {:style {:color (:text-lighter style/colors)}}
                                            (if optional? "Optional" "Required")])])])}])
                               (when invalid-values
-                                [{:header "Message" :initial-width 400
+                                [{:header "Message" :initial-width 200
                                   :as-text :error-message :sort-by :text
                                   :render
                                   (fn [{:keys [optional? error-message]}]

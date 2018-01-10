@@ -1,15 +1,14 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
-import org.scalatest.Suite
+import org.scalatest.TestSuite
 
-trait UserFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
+trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
