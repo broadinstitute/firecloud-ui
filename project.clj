@@ -2,7 +2,7 @@
   :dependencies
   [
    [inflections "0.13.0"]
-   [dmohs/react "1.3.0"]
+   [dmohs/react "master-SNAPSHOT"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.946"]
