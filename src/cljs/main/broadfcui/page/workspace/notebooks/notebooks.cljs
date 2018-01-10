@@ -1,7 +1,7 @@
 (ns broadfcui.page.workspace.notebooks.notebooks
   (:require
    [dmohs.react :as react]
-   [clojure.set]
+   [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -69,7 +69,7 @@
   (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster)))
 
 (defn- contains-statuses [clusters statuses]
-  (not-empty (clojure.set/intersection (set statuses) (set (map #(:status %) clusters)))))
+  (seq (set/intersection (set statuses) (set (map :status clusters)))))
 
 (react/defc- ClusterCreator
   {:refresh
@@ -329,17 +329,19 @@
                           :clusters clusters
                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (do (this :-is-leo-whitelisted)
-         (.addEventListener js/window "message" (this :-handle-postmessage-event))))
+   (fn [{:keys [this locals]}]
+     (let [notebook-listener (this :-notebook-extension-listener)]
+       (do (swap! locals assoc :-notebook-extension-listener notebook-listener)
+           (this :-is-leo-whitelisted)
+           (.addEventListener js/window "message" notebook-listener))))
 
    :component-will-unmount
    (fn [{:keys [this locals]}]
      (do (swap! locals assoc :dead? true)
-         (.removeEventListener js/window "message" (this :-handle-postmessage-event))))
+         (.removeEventListener js/window "message" (:-notebook-extension-listener @locals))))
 
    ; Communicates with the Leo notebook extension
-   :-handle-postmessage-event
+   :-notebook-extension-listener
    #(fn [e]
      (when (and (= (config/leonardo-url-root) (.-origin e))
                 (= "bootstrap-auth.request" (.. e -data -type)))
@@ -365,8 +367,8 @@
      (let [{:keys [server-response]} @state
            {:keys [clusters]} server-response]
        (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
-         (do (when contains-statuses clusters ["Running"]) (this :-process-running-clusters)
-             (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000)))))
+         (do (when (contains-statuses clusters ["Running"]) (this :-process-running-clusters)
+             (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))))
 
    :-process-running-clusters
    (fn [{:keys [props state locals this]}]
