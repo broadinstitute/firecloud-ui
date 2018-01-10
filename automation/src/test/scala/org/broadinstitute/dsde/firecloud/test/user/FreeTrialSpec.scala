@@ -107,7 +107,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
 
         val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
         val errMsg = "The trial user's billing project should have been removed from the billing account."
-        assert(billingAccountUponTermination !== billingAccountUponEnrollment, errMsg)
+        assert(billingAccountUponTermination.isEmpty, errMsg)
 
         registerCleanUpForDeleteTrialState()
       }
