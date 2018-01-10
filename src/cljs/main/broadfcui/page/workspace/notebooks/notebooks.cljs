@@ -357,10 +357,10 @@
                   (if success?
                     (do (swap! state assoc :is-leo-whitelisted? true)
                         (this :-get-clusters-list-if-whitelisted)
-                        (this :-schedule-cookie-refresh))
+                        (this :-schedule-cookie-refresh-if-whitelisted))
                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
-   :-schedule-cookie-refresh
+   :-schedule-cookie-refresh-if-whitelisted
    (fn [{:keys [props state locals this]}]
      (let [{:keys [server-response]} @state
            {:keys [clusters]} server-response]
