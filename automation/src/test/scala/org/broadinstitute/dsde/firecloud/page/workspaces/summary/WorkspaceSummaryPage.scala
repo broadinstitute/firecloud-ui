@@ -32,9 +32,22 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
   }
 
+  def waitForGoogleBucket(): Unit = {
+    while (shouldWaitForBucketAccess) {
+      Thread sleep 1000
+      goToSummaryTab()
+    }
+  }
+
   private val authDomainGroups = Label("auth-domain-groups")
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
+  private val noBucketAccess = testId("no-bucket-access")
+
+  def shouldWaitForBucketAccess : Boolean = {
+    val elem = find(noBucketAccess)
+    elem.isDefined && elem.get.text.contains("unavailable")
+  }
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = getState == "ready"

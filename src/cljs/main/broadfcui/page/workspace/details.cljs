@@ -41,7 +41,8 @@
      [:div {:style {:backgroundColor "#efdcd7"
                     :fontSize "small"
                     :padding "4px 0"
-                    :textAlign "center"}}
+                    :textAlign "center"}
+            :data-test-id "no-bucket-access"}
       (cond (= 404 bucket-status-code)
             (str "The Google bucket associated with this workspace"
                  " does not exist. Please contact help@firecloud.org.")
