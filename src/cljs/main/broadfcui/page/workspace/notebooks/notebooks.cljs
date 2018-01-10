@@ -330,19 +330,18 @@
                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
    (fn [{:keys [this locals]}]
-     (let [notebook-listener (this :-notebook-extension-listener)]
-       (do (swap! locals assoc :-notebook-extension-listener notebook-listener)
-           (this :-is-leo-whitelisted)
-           (.addEventListener js/window "message" notebook-listener))))
+     (do (this :-is-leo-whitelisted)
+         (.addEventListener js/window "message" (react/method this :-notebook-extension-listener))))
 
    :component-will-unmount
    (fn [{:keys [this locals]}]
      (do (swap! locals assoc :dead? true)
-         (.removeEventListener js/window "message" (:-notebook-extension-listener @locals))))
+         (.removeEventListener js/window "message" (react/method this :-notebook-extension-listener))))
 
-   ; Communicates with the Leo notebook extension
+   ; Communicates with the Leo notebook extension.
+   ; Use with `react/method` to return a stable binding to the function.
    :-notebook-extension-listener
-   #(fn [e]
+   (fn [_ e]
      (when (and (= (config/leonardo-url-root) (.-origin e))
                 (= "bootstrap-auth.request" (.. e -data -type)))
        (.postMessage (.-source e)
@@ -372,7 +371,7 @@
    :-process-running-clusters
    (fn [{:keys [props state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state
-           running-clusters (filter #(= "Running" :status) clusters)]
+           running-clusters (filter #(= "Running" (:status %)) clusters)]
        (doseq [cluster running-clusters]
          (utils/ajax
            {:url (str (leo-notebook-url cluster) "/setCookie")
