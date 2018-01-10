@@ -286,7 +286,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
       parseResponseAs[Map[String, String]](getRequest(apiUrl(s"register/profile")))
     }
 
-    def getUserProjects()(implicit token: AuthToken): List[Map[String, String]] = {
+    def getUserBillingProjects()(implicit token: AuthToken): List[Map[String, String]] = {
       parseResponseAs[List[Map[String, String]]](getRequest(apiUrl(s"api/profile/billing")))
     }
   }
@@ -314,6 +314,20 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         case f@y =>
           logger.error(s"${f._1}: ${f._2.toString()}")
           throw new Exception(s"Unable to enable user: $userEmail. Error message: $enableResponse")
+      }
+    }
+
+    def terminateUser(userEmail: String)(implicit token: AuthToken): Unit = {
+      val terminateResponse: String = postRequest(apiUrl("api/trial/manager/terminate"), Seq(userEmail))
+      val responseJson: JsObject = terminateResponse.parseJson.asJsObject
+      val successfulResponseKeys = Seq("Success", "NoChangeRequired")
+      responseJson.fields.map {
+        case f@x if successfulResponseKeys.contains(f._1) =>
+          logger.info(s"${f._1}: ${f._2.toString()}")
+          return
+        case f@y =>
+          logger.error(s"${f._1}: ${f._2.toString()}")
+          throw new Exception(s"Unable to terminate user: $userEmail. Error message: $terminateResponse")
       }
     }
 

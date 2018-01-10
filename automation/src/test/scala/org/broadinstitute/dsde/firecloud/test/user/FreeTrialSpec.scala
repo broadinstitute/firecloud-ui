@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.{Orchestration, Thurloe}
+import org.broadinstitute.dsde.firecloud.api.{Google, Orchestration, Thurloe}
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
@@ -60,7 +60,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
 
         withSignIn(testUser) { _ =>
@@ -89,15 +89,26 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         }
 
         // Verify that the user has been added to the corresponding billing project
-        val expectedProjectName = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
-        assert(expectedProjectName.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
+        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
+        assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
 
-        val userProjects = api.profile.getUserProjects()(userAuthToken)
-        assert(userProjects.nonEmpty, s"The trial user ${testUser.email} has no projects.")
+        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
+        assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
 
-        val userHasTheRightProject: Boolean = userProjects.exists(_.values.toList.contains(expectedProjectName.get))
-        assert(userHasTheRightProject)
-        
+        val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
+        assert(userHasTheRightBillingProject)
+
+        // Verify that the user's project is removed from the account upon termination
+        val ownerAuthToken = UserPool.chooseProjectOwner.makeAuthToken()
+        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+        assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
+
+        api.trial.terminateUser(testUser.email)
+
+        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+        val errMsg = "The trial user's billing project should have been removed from the billing account."
+        assert(billingAccountUponTermination !== billingAccountUponEnrollment, errMsg)
+
         registerCleanUpForDeleteTrialState()
       }
     }
