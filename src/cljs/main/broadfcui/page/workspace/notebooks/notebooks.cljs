@@ -65,6 +65,8 @@
 (defn create-inline-form-label [text]
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
 
+(defn- leo-notebook-url [cluster]
+  (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster) "/setCookie"))
 
 (react/defc- ClusterCreator
   {:refresh
@@ -262,10 +264,7 @@
                    :render
                    (fn [cluster]
                      (if (= (:status cluster) "Running")
-                       (links/create-external
-                        {:href (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster))
-                         :onClick #(utils/set-notebooks-access-token-cookie (utils/get-access-token))}
-                        (:clusterName cluster))
+                       (links/create-external {:href (leo-notebook-url cluster)} (:clusterName cluster))
                        (:clusterName cluster)))}
                   {:header "Status" :initial-width 100
                    :column-data :status

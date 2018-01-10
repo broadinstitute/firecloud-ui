@@ -103,22 +103,12 @@
     "local.broadinstitute.org"
     (string/join "." (rest (string/split js/window.location.hostname ".")))))
 
-(defn get-leo-cookie-domain []
-  (if (= "local.broadinstitute.org" js/window.location.hostname)
-    "broadinstitute.org"
-    (string/join "." (rest (string/split js/window.location.hostname ".")))))
-
 (defn delete-access-token-cookie []
   (.remove goog.net.cookies "FCtoken" "/" (get-cookie-domain)))
 
 (defn set-access-token-cookie [token]
   (if token
-    (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain))
-    (delete-access-token-cookie)))
-
-(defn set-notebooks-access-token-cookie [token]
-  (if token
-    (.set goog.net.cookies "FCtoken" token -1 "/" (get-leo-cookie-domain))
+    (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain) true) ; secure cookie
     (delete-access-token-cookie)))
 
 (defn refresh-access-token [] (set-access-token-cookie (get-access-token)))
