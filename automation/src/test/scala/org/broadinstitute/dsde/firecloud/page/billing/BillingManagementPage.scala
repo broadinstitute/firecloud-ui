@@ -17,7 +17,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
   with Page with PageUtil[BillingManagementPage] {
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
-  override def awaitReady: Unit = {
+  override def awaitReady(): Unit = {
     billingProjectTable.awaitReady()
   }
 
@@ -95,16 +95,24 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
   * Page class for the modal for creating a billing project.
   */
 class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  override def awaitReady(): Unit = projectNameInput.awaitVisible()
+  override def awaitReady(): Unit = await condition {
+    projectNameInput.isVisible || noBillingAccountsLink.isVisible
+  }
 
   private val projectNameInput = TextField("project-name-input")
   private def billingAccountButton(name: String) = Link(name + "-radio")
 
+  private val noBillingAccountsLink = Link("no-billing-accounts-link")
+
+  def areAccountsAvailable(): Boolean = projectNameInput.isVisible
+
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
+    if (noBillingAccountsLink.isVisible)
+      throw new IllegalStateException("No billing projects available")
+
     projectNameInput.setText(projectName)
     billingAccountButton(billingAccountName).doClick()
-    clickOk()
-    projectNameInput.awaitNotVisible()
+    submit()
   }
 }
 

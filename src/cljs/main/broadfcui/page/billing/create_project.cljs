@@ -33,8 +33,10 @@
               [comps/ErrorViewer {:error (:details error)}])
             :else
             (if (empty? billing-accounts)
-              [:div {} "You do not have any billing accounts available. "
-               (links/create-external {:href (config/billing-account-guide-url)}
+              [:div {}
+               "You do not have any billing accounts available. "
+               (links/create-external {:data-test-id "no-billing-accounts-link"
+                                       :href (config/billing-account-guide-url)}
                                       "Learn how to create a billing account.")]
               [:div {:style {:width 750}
                      :data-test-id "create-billing-project-form"}
