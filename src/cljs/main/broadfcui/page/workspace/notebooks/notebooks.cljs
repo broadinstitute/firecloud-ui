@@ -351,14 +351,14 @@
    :-is-leo-whitelisted
    (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
-       {:endpoint endpoints/is-leo-whitelisted
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (do (swap! state assoc :is-leo-whitelisted? true)
-                         (this :-get-clusters-list-if-whitelisted)
-                         (this :-schedule-cookie-refresh))
-                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+      {:endpoint endpoints/is-leo-whitelisted
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (do (swap! state assoc :is-leo-whitelisted? true)
+                        (this :-get-clusters-list-if-whitelisted)
+                        (this :-schedule-cookie-refresh))
+                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
    :-schedule-cookie-refresh
    (fn [{:keys [props state locals this]}]
@@ -387,16 +387,16 @@
    (fn [{:keys [props state locals this]}]
      (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
        (endpoints/call-ajax-leo
-         {:endpoint endpoints/get-clusters-list
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (if success?
-                       (when-not (= (:clusters @state) (get-parsed-response))
-                         (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
-                       (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
-                     ; If there are pending cluster statuses, schedule another 'list clusters' call 10 seconds from now.
-                     ; Otherwise, call the /setCookie endpoint for all running clusters immediately.
-                     (if (contains-statuses (get-parsed-response) ["Creating" "Updating" "Deleting"])
-                       (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000)
-                       (this :-process-running-clusters)))})))})
+        {:endpoint endpoints/get-clusters-list
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (when-not (= (:clusters @state) (get-parsed-response))
+                        (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
+                    ; If there are pending cluster statuses, schedule another 'list clusters' call 10 seconds from now.
+                    ; Otherwise, call the /setCookie endpoint for all running clusters immediately.
+                    (if (contains-statuses (get-parsed-response) ["Creating" "Updating" "Deleting"])
+                      (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000)
+                      (this :-process-running-clusters)))})))})
 
