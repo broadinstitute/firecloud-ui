@@ -364,17 +364,15 @@
 
    :-schedule-cookie-refresh-if-whitelisted
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [server-response]} @state
-           {:keys [clusters]} server-response]
+     (let [{{:keys [clusters]} :server-response} @state]
        (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
          (do (when (contains-statuses clusters ["Running"]) (this :-process-running-clusters)
              (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))))
 
    :-process-running-clusters
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [server-response]} @state
-           {:keys [clusters]} server-response
-           running-clusters (filter #(= "Running" (:status %)) clusters)]
+     (let [{{:keys [clusters]} :server-response} @state
+           running-clusters (filter #(= "Running" :status) clusters)]
        (doseq [cluster running-clusters]
          (utils/ajax
            {:url (str (leo-notebook-url cluster) "/setCookie")
