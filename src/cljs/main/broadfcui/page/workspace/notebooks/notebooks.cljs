@@ -66,7 +66,7 @@
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
 
 (defn- leo-notebook-url [cluster]
-  (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster) "/setCookie"))
+  (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster) "/setCookie?redirect"))
 
 (react/defc- ClusterCreator
   {:refresh
