@@ -2,6 +2,7 @@
   (:require
    [broadfcui.common :as common]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    ))
 
 (defonce saved-user-profile (atom false))
