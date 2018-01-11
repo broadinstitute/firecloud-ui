@@ -26,9 +26,8 @@
 
 (react/defc- MethodConfigurationsList
   {:reload
-   (fn [{:keys [state this props]}]
+   (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     ((:request-refresh props))
      (this :load))
    :render
    (fn [{:keys [props state]}]
@@ -111,6 +110,6 @@
                                                (assoc config-id :name %))
                    :after-delete #(nav/go-to-path :workspace-method-configs workspace-id)})]
           [MethodConfigurationsList
-           (merge (select-keys props [:workspace-id :workspace :request-refresh])
+           (merge (select-keys props [:workspace-id :workspace])
                   {:ref "method-config-list"
                    :on-config-imported #(nav/go-to-path :workspace-method-config workspace-id %)})])]))})

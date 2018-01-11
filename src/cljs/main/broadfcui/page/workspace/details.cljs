@@ -139,21 +139,21 @@
                              (utils/restructure workspace-id workspace workspace-error request-refresh))])
                ANALYSIS (react/create-element
                          [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
+               NOTEBOOKS (react/create-element
+                          [notebooks-tab/Page
+                           (merge {:ref NOTEBOOKS}
+                                  (utils/restructure workspace-id workspace))])
                CONFIGS (react/create-element
                         [method-configs-tab/Page
                          (merge {:ref CONFIGS
                                  :on-submission-success #(nav/go-to-path :workspace-submission workspace-id %)}
-                                (utils/restructure workspace-id workspace request-refresh bucket-access?)
+                                (utils/restructure workspace-id workspace bucket-access?)
                                 (select-keys props [:config-id]))])
                MONITOR (react/create-element
                         [monitor-tab/Page
                          (merge {:ref MONITOR}
                                 (utils/restructure workspace-id workspace)
-                                (select-keys props [:submission-id :workflow-id]))])
-               NOTEBOOKS (react/create-element
-                          [notebooks-tab/Page
-                           (merge {:ref NOTEBOOKS}
-                                  (utils/restructure workspace-id workspace))]))))]]))
+                                (select-keys props [:submission-id :workflow-id]))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
