@@ -8,10 +8,10 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -148,8 +148,8 @@
 
 (react/defc- OperationDialog
   {:render
-   (fn [{:keys [state]}]
-     [comps/OKCancelForm
+   (fn [{:keys [props state]}]
+     [modals/OKCancelForm
       {:header "Operation Details"
        :content
        (let [server-response (:server-response @state)]
@@ -161,7 +161,8 @@
            :else
            [CodeMirror {:text (:raw-response server-response)}]))
        :show-cancel? false
-       :ok-button {:text "Done" :onClick modal/pop-modal}}])
+       :dismiss (:dismiss props)
+       :ok-button {:text "Done" :onClick #((:dismiss props))}}])
 
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -176,11 +177,6 @@
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
-(defn- operation-link [workspace-id job-id]
-  ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
-  [:a {:href "javascript:;"
-       :onClick #(modal/push-modal [OperationDialog (utils/restructure workspace-id job-id)])} job-id])
-
 (react/defc- CallDetail
   {:get-initial-state
    (fn []
@@ -188,6 +184,8 @@
    :render
    (fn [{:keys [props state]}]
      [:div {:style {:marginTop "1em"}}
+      (when (:show-operation-dialog? @state)
+        [OperationDialog (:operation-dialog-props @state)])
       [:div {:style {:display "inline-block" :marginRight "1em"}}
        (let [workflow-name (workflow-name (:label props))
              call-name (call-name (:label props))]
@@ -202,7 +200,16 @@
            [:div {:style {:padding "0.5em 0 0 0.5em"}}
             [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
             [:div {:style {:paddingLeft "0.5em"}}
-             (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
+             (create-field "Operation"
+                           ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
+                           [:a {:href "javascript:;"
+                                :onClick (fn [_]
+                                           (swap! state assoc
+                                                  :show-operation-dialog? true
+                                                  :operation-dialog-props {:workspace-id (:workspace-id props)
+                                                                           :job-id (data "jobId")
+                                                                           :dismiss #(swap! state dissoc :show-operation-dialog?)}))}
+                            (data "jobId")])
              (let [status (data "executionStatus")]
                (create-field "Status" (moncommon/icon-for-call-status status) status))
              (when (= (get-in data ["callCaching" "effectiveCallCachingMode"]) "ReadAndWriteCache")

@@ -11,15 +11,15 @@
 (defonce modal-constructor (atom nil))
 
 
-(defn- show-message [disabled? on-dismiss]
+(defn- show-message [disabled? dismiss]
   (cond (true? disabled?)
-        (@modal-constructor :message {:header "Disabled" :text "This action is disabled" :on-dismiss on-dismiss})
+        (@modal-constructor :message {:header "Disabled" :text "This action is disabled" :dismiss dismiss})
         (common/renderable? disabled?)
-        (@modal-constructor :message {:header "Disabled" :text disabled? :on-dismiss on-dismiss})
+        (@modal-constructor :message {:header "Disabled" :text disabled? :dismiss dismiss})
         (map? disabled?)
         (@modal-constructor
          (if (= (:type disabled?) :error) :error :message)
-         (assoc disabled? :on-dismiss on-dismiss))))
+         (assoc disabled? :dismiss dismiss))))
 
 
 (defn- make-default-test-id [{:keys [text icon]}]
@@ -66,8 +66,8 @@
           (show-message disabled? #(swap! state dissoc :show-message?)))
         text
         (some->> icon (icons/render-icon {:style (if text
-                                            {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
-                                            {:fontSize 18})}))]))})
+                                                   {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
+                                                   {:fontSize 18})}))]))})
 
 
 (react/defc SidebarButton

@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.method.sync :as sync-common]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.modals :as modals]
@@ -27,6 +26,8 @@
    (fn [{:keys [state]}]
      [:div {}
       (blocker (:banner @state))
+      (when-let [error (:sync-error @state)]
+        (modals/render-error {:text error :dismiss #(swap! state dissoc :sync-error)}))
       (modals/show-modals
        state
        {:show-sync-modal?
@@ -45,7 +46,7 @@
                     (swap! state dissoc :banner)
                     (if success?
                       (this :-perform-sync-logic (get-parsed-response))
-                      (comps/push-error status-text)))})))
+                      (swap! state assoc :sync-error status-text)))})))
    :-perform-sync-logic
    (fn [{:keys [state]} parsed-perms-report]
      (let [method-report (first (:referencedMethods parsed-perms-report))]

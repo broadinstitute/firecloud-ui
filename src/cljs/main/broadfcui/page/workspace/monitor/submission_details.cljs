@@ -7,12 +7,12 @@
    [broadfcui.common.duration :as duration]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -120,23 +120,25 @@
 (react/defc- AbortButton
   {:render
    (fn [{:keys [state this]}]
-     (when (:aborting-submission? @state)
-       (blocker "Aborting submission..."))
-     [buttons/SidebarButton
-      {:data-test-id "submission-abort-button"
-       :color :state-exception :style :light :margin :top
-       :text "Abort" :icon :warning
-       :onClick (fn [_]
-                  (comps/push-confirm
-                   {:text "Are you sure you want to abort this submission?"
-                    :on-confirm
-                    [buttons/Button {:data-test-id "submission-abort-modal-confirm-button"
-                                     :text "Abort Submission"
-                                     :onClick #(this :abort-submission)}]}))}])
-   :abort-submission
+     [:div {}
+      (when (:aborting-submission? @state)
+        (blocker "Aborting submission..."))
+      (when-let [abort-error (:abort-error @state)]
+        (modals/render-error {:text abort-error :dismiss #(swap! state dissoc :abort-error)}))
+      (when (:confirming? @state)
+        (modals/render-confirm {:text "Are you sure you want to abort this submission?"
+                                :confirm {:data-test-id "submission-abort-modal-confirm-button"
+                                          :text "Abort Submission"
+                                          :onClick #(this :-abort-submission)}
+                                :dismiss #(swap! state dissoc :confirming?)}))
+      [buttons/SidebarButton
+       {:data-test-id "submission-abort-button"
+        :color :state-exception :style :light :margin :top
+        :text "Abort" :icon :warning
+        :onClick #(swap! state assoc :confirming? true)}]])
+   :-abort-submission
    (fn [{:keys [props state]}]
-     (modal/pop-modal)
-     (swap! state assoc :aborting-submission? true)
+     (swap! state assoc :aborting-submission? true :confirming? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
        :headers utils/content-type=json
@@ -144,8 +146,7 @@
                   (swap! state dissoc :aborting-submission?)
                   (if success?
                     ((:on-abort props))
-                    (comps/push-error
-                     (str "Error in aborting the job : " status-text))))}))})
+                    (swap! state assoc :abort-error (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page

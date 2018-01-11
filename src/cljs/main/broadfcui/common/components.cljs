@@ -3,21 +3,14 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
-   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
-
-
-(declare push-error)
-(declare create-error-message)
 
 
 (react/defc AnimatedEllipsis
@@ -226,65 +219,6 @@
               :more-above? (pos? scroll-top)
               :more-below? (< (+ scroll-top inner-height) scroll-height))))})
 
-;; Deprecated. If you are touching code that uses this, please migrate to use
-;; org.broadinstitute.uicomps.modal.OKCancelForm
-(react/defc OKCancelForm
-  {:get-default-props
-   (fn []
-     {:show-cancel? true
-      :show-close? true})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
-           cancel-text (or cancel-text "Cancel")]
-       [:div {}
-        [:div {:style {:display "flex" :align-items "flex-start"
-                       :borderBottom style/standard-line
-                       :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}
-               :data-test-id data-test-id}
-         header
-         flex/spring
-         (when show-close? (buttons/x-button modal/pop-modal))]
-        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
-         content
-         (when (or show-cancel? ok-button)
-           [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
-            (when show-cancel?
-              [:a {:className "cancel"
-                   :style {:marginRight (when ok-button 27) :marginTop 2
-                           :display "inline-block"
-                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                           :color (:button-primary style/colors)}
-                   :href "javascript:;"
-                   :data-test-id "cancel-button"
-                   :onClick modal/pop-modal
-                   :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
-               cancel-text])
-            (when ok-button
-              (cond (string? ok-button) [buttons/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
-                    (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
-                    :else ok-button))])]]))
-   :component-did-mount
-   (fn [{:keys [props refs]}]
-     (when-let [get-first (:get-first-element-dom-node props)]
-       (common/focus-and-select (get-first))
-       (when-let [get-last (or (:get-last-element-dom-node props)
-                               #(react/find-dom-node (@refs "ok-button")))]
-         (.addEventListener
-          (get-first) "keydown"
-          (common/create-key-handler [:tab] #(.-shiftKey %)
-                                     (fn [e] (.preventDefault e)
-                                       (when (:cycle-focus? props)
-                                         (.focus (get-last))))))
-         (.addEventListener
-          (get-last)
-          "keydown"
-          (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                     (fn [e] (.preventDefault e)
-                                       (when (:cycle-focus? props)
-                                         (.focus (get-first)))))))))})
 
 (defn no-billing-projects-message []
   [:div {:data-test-id "no-billing-projects-message" :style {:textAlign "center"}}
@@ -292,44 +226,6 @@
    (links/create-external {:href (config/billing-project-guide-url)
                            :style {:display "block"}}
                           "Learn how to create a billing project.")])
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-ok-cancel-modal [props]
-  (modal/push-modal [OKCancelForm props]))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-message [{:keys [header message]}]
-  (push-ok-cancel-modal
-   {:header (or header "Message")
-    :data-test-id "push-message"
-    :content [:div {:style {:maxWidth 500}} message]
-    :show-cancel? false :ok-button "OK"}))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-error [content]
-  (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id "error-modal"}
-             (icons/render-icon {:style {:color (:state-exception style/colors)
-                                  :marginRight "0.5em"}} :error)
-             "Error"]
-    :data-test-id "push-error"
-    :content [:div {:style {:maxWidth "50vw"} :data-test-id "error-text"} content]
-    :show-cancel? false :ok-button "OK"}))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-error-response [error-response]
-  (push-error [ErrorViewer {:error error-response}]))
-
-;; Deprecated. If you are touching code that uses this, please migrate to use broadfcui.components.modals
-(defn push-confirm [{:keys [header text on-confirm]}]
-  (push-ok-cancel-modal
-   {:header (or header "Confirm")
-    :content [:div {:style {:maxWidth 500}} text]
-    :ok-button on-confirm}))
-
-(defn create-error-message [thing]
-  (when (common/renderable? thing)
-    #(push-error thing)))
 
 
 ;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
