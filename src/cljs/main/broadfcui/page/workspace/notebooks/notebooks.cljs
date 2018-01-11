@@ -391,12 +391,14 @@
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      (when-not (= (:clusters @state) (get-parsed-response))
-                        (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
-                      (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
-                    ; If there are pending cluster statuses, schedule another 'list clusters' call 10 seconds from now.
-                    ; Otherwise, call the /setCookie endpoint for all running clusters immediately.
-                    (if (contains-statuses (get-parsed-response) ["Creating" "Updating" "Deleting"])
-                      (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000)
-                      (this :-process-running-clusters)))})))})
-
+                      (let [filtered-clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))]
+                        ; Update the state with the current cluster list
+                        (when-not (= (:clusters @state) filtered-clusters)
+                          (swap! state assoc :server-response {:clusters filtered-clusters}))
+                        ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
+                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
+                          (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000))
+                        ; If thre are running clusters, call the /setCookie endpoint immediately.
+                        (when (contains-statuses filtered-clusters ["Running"])
+                          (this :-process-running-clusters)))
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))})
