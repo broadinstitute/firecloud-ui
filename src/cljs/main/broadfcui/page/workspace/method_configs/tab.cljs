@@ -28,7 +28,7 @@
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     (this :load))
+     (this :-load))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [server-response methods importing?]} @state
@@ -71,8 +71,8 @@
                  (spinner "Loading configurations...")])]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load))
-   :load
+     (this :-load))
+   :-load
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
