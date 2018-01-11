@@ -5,6 +5,7 @@ services:
     volumes:
       - work:/w
       - jar-cache:/root/.m2
+      - node-modules:/w/node_modules
     working_dir: /w
     command: bash
     stdin_open: true
@@ -34,4 +35,6 @@ services:
 volumes:
   work:
   jar-cache:
+    external: true
+  node-modules:
     external: true

@@ -7,9 +7,7 @@
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.946"]
    ]
-  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
-            ; [lein-ancient "0.6.14"] ; check for outdated dependencies, uncomment and run `lein ancient` to use
-            ]
+  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.9.7"]]
               :figwheel {:css-dirs ["resources/public"]}
@@ -49,9 +47,4 @@
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
                                            :output-dir "resources/public/target/build"
-                                           :output-to "resources/public/target/compiled.js"}}}}
-  :resource {:resource-paths ["src/static"]
-             :target-path "resources/public"
-             :excludes [#".*\.DS_Store"]
-             :skip-stencil [#"src/static/assets/.*"]
-             :extra-values {:vtag ~(.getTime (java.util.Date.))}})
+                                           :output-to "resources/public/target/compiled.js"}}}})
