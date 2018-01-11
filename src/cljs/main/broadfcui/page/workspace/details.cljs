@@ -158,8 +158,9 @@
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
    :component-will-receive-props
-   (fn [{:keys [this after-update]}]
-     (after-update this :-refresh-workspace))
+   (fn [{:keys [props next-props this after-update]}]
+     (when (not= (:tab-name props) (:tab-name next-props))
+       (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
      (when-not (contains? @whitelisted-users (utils/get-user-email))
