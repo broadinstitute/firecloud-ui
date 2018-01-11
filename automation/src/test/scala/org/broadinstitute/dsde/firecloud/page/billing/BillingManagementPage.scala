@@ -35,6 +35,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     * @param billingAccountName the billing account for the new project
     */
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
+    await ready createBillingProjectButton
     createBillingProjectButton.doClick()
     val modal = await ready new CreateBillingProjectModal
     modal.createBillingProject(projectName, billingAccountName)
