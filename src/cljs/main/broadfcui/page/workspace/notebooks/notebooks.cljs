@@ -398,7 +398,7 @@
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
                         (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
                           (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000))
-                        ; If thre are running clusters, call the /setCookie endpoint immediately.
+                        ; If there are running clusters, call the /setCookie endpoint immediately.
                         (when (contains-statuses filtered-clusters ["Running"])
                           (this :-process-running-clusters)))
                       (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))})
