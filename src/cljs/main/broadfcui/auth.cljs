@@ -18,6 +18,9 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (js-invoke js/gapi "load" "auth2" #(this :-handle-auth2-loaded)))
+   ;(js-invoke js/gapi "load" "auth2" #(this :-handle-auth2-loaded))
+   ;(.. js/gapi load auth2 #(this :-handle-auth2-loaded))
+   ;(.auth2 (.load js/gapi) #(this :-handle-auth2-loaded)))
    :-handle-auth2-loaded
    (fn [{:keys [props]}]
      (let [{:keys [on-loaded]} props
