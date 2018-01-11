@@ -307,8 +307,8 @@
 (react/defc NotebooksContainer
   {:refresh
    (fn [{:keys [this]}]
-     (do (this :-get-clusters-list-if-whitelisted)
-         (this :-schedule-cookie-refresh-if-whitelisted)))
+     (this :-get-clusters-list-if-whitelisted)
+     (this :-schedule-cookie-refresh-if-whitelisted))
 
    :render
    (fn [{:keys [props state this]}]
@@ -330,13 +330,13 @@
                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
    (fn [{:keys [this locals]}]
-     (do (this :-is-leo-whitelisted)
-         (.addEventListener js/window "message" (react/method this :-notebook-extension-listener))))
+     (this :-is-leo-whitelisted)
+     (.addEventListener js/window "message" (react/method this :-notebook-extension-listener)))
 
    :component-will-unmount
    (fn [{:keys [this locals]}]
-     (do (swap! locals assoc :dead? true)
-         (.removeEventListener js/window "message" (react/method this :-notebook-extension-listener))))
+     (swap! locals assoc :dead? true)
+     (.removeEventListener js/window "message" (react/method this :-notebook-extension-listener)))
 
    ; Communicates with the Leo notebook extension.
    ; Use with `react/method` to return a stable binding to the function.
@@ -365,13 +365,14 @@
    (fn [{:keys [props state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
        (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
-         (do (when (contains-statuses clusters ["Running"]) (this :-process-running-clusters))
-             (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000)))))
+         (when (contains-statuses clusters ["Running"])
+           (this :-process-running-clusters))
+         (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))
 
    :-process-running-clusters
    (fn [{:keys [props state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state
-           running-clusters (filter #(= "Running" (:status %)) clusters)]
+           running-clusters (filter (comp (partial = "Running") :status) clusters)]
        (doseq [cluster running-clusters]
          (utils/ajax
            {:url (str (leo-notebook-url cluster) "/setCookie")
