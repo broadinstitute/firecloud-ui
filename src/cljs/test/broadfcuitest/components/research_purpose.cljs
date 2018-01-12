@@ -1,36 +1,36 @@
-; import ReactTestUtils from 'react-dom/test-utils';
-; dmohs.react
-
 (ns broadfcuitest.components.research-purpose
   (:require
-   ;[cljs.test :refer-macros [deftest testing is are use-fixtures]]
-   ;[cljs-react-test.simulate :as tu]
-   ;[cljs-react-test.utils :as sim]
    [dmohs.react :as react]
    [cljs.test :refer [deftest is testing]]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
+   [broadfcui.page.library.library-page :as library]
    [broadfcui.utils :as utils]
    ))
 
-;(def ^:dynamic c)
+(deftest translate-research-purpose
+  (testing "empty RP"
+    (is (= (library/translate-research-purpose {:ds {}}) {"NMDS" false, "NCTRL" false, "NAGR" false, "POA" false, "NCU" false, "DS" []})))
+  (testing "complicated RP"
+    (is (= (library/translate-research-purpose {:poa true,
+                                                :ds
+                                                {"http://purl.obolibrary.org/obo/DOID_0050433"
+                                                 "fatal familial insomnia",
+                                                 "http://purl.obolibrary.org/obo/DOID_4325"
+                                                 "Ebola hemorrhagic fever"},
+                                                :control true}) {"NMDS" false,
+                                                                 "NCTRL" true,
+                                                                 "NAGR" false,
+                                                                 "POA" true,
+                                                                 "NCU" false,
+                                                                 "DS"
+                                                                 ["http://purl.obolibrary.org/obo/DOID_0050433"
+                                                                  "http://purl.obolibrary.org/obo/DOID_4325"]}))))
 
-;(use-fixtures :each (fn [test-fn]
-;                      (binding [c (tu/new-container!)]
-;                        (test-fn)
-;                        (tu/unmount! c))))
-
-(deftest show-modal
-  (testing "can we reference the component at all"
-    (is (some? [ResearchPurposeSection {:research-purpose-values nil :on-search nil}])))) ; this is just a vector literal, not a react comp...
-
+;; Can't interact with the component because I haven't figured out how to import that part of React
 (deftest a-react-test
-  (let [;app-state (atom {})
-        ;_ (react test-component app-state {:target c})
-        component (react/render (react/create-element ResearchPurposeSection {:research-purpose-values nil :on-search (fn [options] (utils/cljslog options))}) (utils/get-app-root-element))
-        ;component (react/create-element ResearchPurposeSection)
-        ]
-    (testing "does something happen?"
-      (utils/cljslog "something did happen")
-      (component :-search)
-     ;(cljs-react-test.simulate.click component nil))
-    )))
+  (let [component
+        (react/render (react/create-element ResearchPurposeSection
+                                            {:research-purpose-values nil
+                                             :on-search (fn [options] (is (= {:ds {}} options)))}) (utils/get-app-root-element))]
+    (testing "empty RP component test"
+      (component :-search))))
