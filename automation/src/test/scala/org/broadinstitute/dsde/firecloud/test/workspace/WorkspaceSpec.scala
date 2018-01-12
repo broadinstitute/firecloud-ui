@@ -26,7 +26,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   val billingProject: String = Config.Projects.default
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
-  val noAccessText = "You do not have access to run analysis.\nCancel"
+  val noAccessText = "You do not have access to run analysis.\nOK"
 
   "A user" - {
     "with a billing project" - {
@@ -351,9 +351,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                 workspacePage.waitForGoogleBucket()
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
-                val messageModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
+                val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
                 errorModal.getMessageText shouldBe noAccessText
-                errorModal.clickCancel()
+                errorModal.clickOk()
               }
             }(authTokenOwner)
           }(authTokenOwner)
@@ -377,7 +377,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
                 launchAnalysisModal.validateLocation shouldBe true
-                launchAnalysisModal.clickCancel()
+                launchAnalysisModal.clickOk()
               }
             }(authTokenOwner)
           }(authTokenOwner)

@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{ErrorModal, MessageModal, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{MessageModal, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -38,7 +38,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def openLaunchAnalysisModal(): LaunchAnalysisModal = {
-    openLaunchAnalysisModalButton.doClick()
+    clickLaunchAnalysis()
     await ready new LaunchAnalysisModal
   }
 

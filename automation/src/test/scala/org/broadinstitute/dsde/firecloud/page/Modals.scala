@@ -55,7 +55,7 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
     readText(testId("message-modal-content"))
   }
 
-  override def awaitReady(): Unit = cancelButton.awaitVisible()
+  override def awaitReady(): Unit = okButton.awaitVisible()
 
 }
 
