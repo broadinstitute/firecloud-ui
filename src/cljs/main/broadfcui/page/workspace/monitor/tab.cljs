@@ -67,7 +67,7 @@
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     (this :load-submissions))
+     (this :-load-submissions))
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
@@ -80,8 +80,8 @@
          (render-submissions-table (:workspace-id props) submissions (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load-submissions))
-   :load-submissions
+     (this :-load-submissions))
+   :-load-submissions
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-submissions (:workspace-id props))
