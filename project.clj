@@ -6,7 +6,9 @@
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.946"]
-   [cljs-react-test "0.1.4-SNAPSHOT"]
+   ;[cljs-react-test "0.1.4-SNAPSHOT"]
+   ;[cljsjs/react-with-addons "15.2.0-0"]
+   ;[cljsjs/react-dom "15.2.0-0" :exclusions [cljsjs/react]]
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
             ; [lein-ancient "0.6.14"] ; check for outdated dependencies, uncomment and run `lein ancient` to use
