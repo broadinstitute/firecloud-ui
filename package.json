@@ -32,6 +32,9 @@
     "url-loader": "^0.6.2",
     "webpack": "^3.10.0"
   },
+  "engines": {
+    "node": "~8"
+  },
   "scripts": {
     "postinstall": "rebuild-node-sass",
     "webpack": "webpack"
