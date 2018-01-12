@@ -44,6 +44,10 @@ if [ "$ENV" = "prod" ]; then
   TEST_ENTRYPOINT="testOnly -- -n ProdTest"
 fi
 
+if [ "$ENV" = "qa" ]; then
+  TEST_ENTRYPOINT="testOnly *FreeTrialSpec"
+fi
+
 if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then
   HUB_COMPOSE=hub-compose.yml
 else
