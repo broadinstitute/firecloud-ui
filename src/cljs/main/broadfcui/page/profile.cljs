@@ -179,13 +179,6 @@
      [:div {:style {:clear "both" :margin "0.5em 0"}}
       [:label {}
        (style/create-form-label label)
-       #_(this :render-text-field key true
-               (@user-info/saved-user-profile key)
-               (when valid-email-or-empty
-                 (-> @utils/auth2-atom
-                     (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
-               [(when required (input/nonempty label))
-                (when valid-email-or-empty (input/valid-email-or-empty label))])
        [input/TextField {:style {:width 200}
                          :data-test-id key
                          :defaultValue (@user-info/saved-user-profile key)
@@ -196,22 +189,6 @@
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
-   :render-disabled-field
-   (fn [{:keys [this]} key label value]
-     [:div {:style {:clear "both" :margin "0.5em 0"}}
-      [:label {}
-       (style/create-form-label label)
-
-       (this :render-text-field key true value)]])
-   :render-text-field
-   (fn [{:keys [state]} key enabled default-value placeholder predicates]
-     [input/TextField {:style {:width 200}
-                       :data-test-id key
-                       :defaultValue (utils/log default-value)
-                       :ref (name key)
-                       :placeholder placeholder
-                       :predicates predicates
-                       :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}])
    :component-will-mount
    (fn [{:keys [state]}]
      (when-not @user-info/saved-user-profile
