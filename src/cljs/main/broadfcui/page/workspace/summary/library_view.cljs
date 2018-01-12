@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.spinner :refer [spinner]]
@@ -13,13 +12,14 @@
    ))
 
 
-
+(def ^:private wizard-keys [:library-schema :workspace :workspace-id :request-refresh :can-share? :owner? :curator? :writer? :catalog-with-read?])
 
 (react/defc LibraryView
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           wizard-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh :can-share? :owner? :curator? :writer? :catalog-with-read?])
+           wizard-properties (merge (select-keys props wizard-keys)
+                                    {:dismiss #(swap! state dissoc :showing-catalog-wizard?)})
            orsp-id (:library:orsp library-attributes)]
        [Collapse
         {:style {:marginBottom "2rem"}
@@ -27,10 +27,12 @@
          :title-expand
          (style/create-section-header
           (links/create-internal {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
-                                  :onClick #(modal/push-modal [CatalogWizard wizard-properties])}
+                                  :onClick #(swap! state assoc :showing-catalog-wizard? true)}
                                  "Edit..."))
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+          (when (:showing-catalog-wizard? @state)
+            [CatalogWizard wizard-properties])
           (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :primary))
           (when (:expanded? @state)
             [:div {}

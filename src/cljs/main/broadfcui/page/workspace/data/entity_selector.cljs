@@ -2,8 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]

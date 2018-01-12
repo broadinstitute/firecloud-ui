@@ -5,7 +5,6 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.links :as links]
    [broadfcui.common.management-utils :as management-utils]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
@@ -113,7 +112,11 @@
            :toolbar
            {:get-items
             (constantly
-             [flex/spring
+             [(when (:show-create-billing-project? @state)
+                [CreateBillingProjectDialog
+                 {:on-success #(this :reload)
+                  :dismiss #(swap! state dissoc :show-create-billing-project?)}])
+              flex/spring
               [buttons/Button
                {:data-test-id "begin-create-billing-project"
                 :text "Create New Billing Project..."
@@ -121,17 +124,13 @@
                 (fn []
                   (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
                           (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
-                    (modal/push-modal
-                     [CreateBillingProjectDialog
-                      {:on-success #(this :reload)}])
+                    (swap! state assoc :show-create-billing-project? true)
                     (do
                       (utils/add-user-listener
                        ::billing
                        (fn [_]
                          (utils/remove-user-listener ::billing)
-                         (modal/push-modal
-                          [CreateBillingProjectDialog
-                           {:on-success #(this :reload)}])))
+                         (swap! state assoc :show-create-billing-project? true)))
                       (js-invoke
                        @utils/auth2-atom
                        "grantOfflineAccess"

@@ -5,11 +5,11 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
@@ -25,8 +25,8 @@
                 :onClick #(swap! state update :crumbs (comp vec (partial take 1)))}]})
    :render
    (fn [{:keys [state props]}]
-     [comps/OKCancelForm
-      {:header "Import Metadata" :show-cancel? false
+     [modals/OKCancelForm
+      {:header "Import Metadata" :show-cancel? false :dismiss (:dismiss props)
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
@@ -65,9 +65,19 @@
 
 (react/defc WorkspaceData
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
+        (when (:show-importer? @state)
+          [MetadataImporter
+           (merge
+            (select-keys props [:workspace-id])
+            {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
+             :import-type "data"
+             :on-data-imported #((@refs "entity-table") :refresh
+                                 :entity-type (or % (:selected-entity-type @state))
+                                 :reinitialize? true)
+             :dismiss #(swap! state dissoc :show-importer?)})])
         (cond workspace-error (style/create-server-error-message workspace-error)
               workspace (this :-render-data))
         (when (:selected-entity @state)
@@ -76,17 +86,6 @@
                            :entity-type (name selected-entity-type)
                            :entity-name selected-entity
                            :update-parent-state (partial this :update-state)}]))]))
-   :-handle-import-data-click
-   (fn [{:keys [props state refs]}]
-     (modal/push-modal
-      [MetadataImporter
-       (merge
-        (select-keys props [:workspace-id])
-        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
-         :import-type "data"
-         :on-data-imported #((@refs "entity-table") :refresh
-                             :entity-type (or % (:selected-entity-type @state))
-                             :reinitialize? true)})]))
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
@@ -102,7 +101,7 @@
              [buttons/Button {:text "Import Metadata..."
                               :style {:marginLeft "auto"}
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                              :onClick #(this :-handle-import-data-click)}]])
+                              :onClick #(swap! state assoc :show-importer? true)}]])
           :on-entity-type-selected #(utils/multi-swap! state (assoc :selected-entity-type %) (dissoc :selected-entity))
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
@@ -140,8 +139,8 @@
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
        (links/create-internal
-        {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
-        entity-name)))
+         {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
+         entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
      ((@refs "entity-table") :refresh

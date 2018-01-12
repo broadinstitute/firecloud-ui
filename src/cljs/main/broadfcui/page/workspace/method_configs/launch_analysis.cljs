@@ -8,11 +8,11 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.checkbox :refer [Checkbox]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -108,11 +108,12 @@
 (react/defc- Form
   {:render
    (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
-      {:header "Launch Analysis"
+     [modals/OKCancelForm
+      {:data-test-id "launch-analysis-modal"
+       :header "Launch Analysis"
        :content (react/create-element (render-form state props))
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(this :launch) :data-test-id "launch-button"}
-       :data-test-id "launch-analysis-modal"}])
+       :dismiss (:dismiss props)}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-cromwell-version
@@ -138,22 +139,21 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :launching?)
                       (if success?
-                        (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
+                        ((:on-success props) (:submissionId (get-parsed-response)))
                         (swap! state assoc :launch-server-error (get-parsed-response false))))}))
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
-(react/defc- LaunchAnalysisButton
+(react/defc LaunchAnalysisButton
   {:render
-   (fn [{:keys [props]}]
-     [buttons/Button
-      {:data-test-id "open-launch-analysis-modal-button"
-       :text "Launch Analysis..."
-       :disabled? (:disabled? props)
-       :onClick #(modal/push-modal
-                  [Form (select-keys props [:config-id :workspace-id :column-defaults
-                                            :root-entity-type :on-success :cromwell-version])])}])})
-
-
-(defn render-button [props]
-  (react/create-element LaunchAnalysisButton props))
+   (fn [{:keys [props state]}]
+     [:div {}
+      (when (:show-modal? @state)
+        [Form (assoc (select-keys props [:config-id :workspace-id :column-defaults
+                                         :root-entity-type :on-success :cromwell-version])
+                :dismiss #(swap! state dissoc :show-modal?))])
+      [buttons/Button
+       {:data-test-id "open-launch-analysis-modal-button"
+        :text "Launch Analysis..."
+        :disabled? (:disabled? props)
+        :onClick #(swap! state assoc :show-modal? true)}]])})

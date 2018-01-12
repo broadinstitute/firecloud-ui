@@ -314,9 +314,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val methodConfigTab = detailPage.goToMethodConfigTab()
             val methodConfigDetailsPage = methodConfigTab.openMethodConfig(SimpleMethodConfig.configNamespace, s"$methodConfigName")
-            val msgModal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
-            msgModal.getMessageText shouldBe noAccessText
-            msgModal.clickCancel()
+            val messageModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
+            messageModal.getMessageText shouldBe noAccessText
+            messageModal.clickOk()
           }
         }
 
@@ -351,7 +351,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                 workspacePage.waitForGoogleBucket()
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
-                val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonMessage()
+                val messageModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
                 errorModal.getMessageText shouldBe noAccessText
                 errorModal.clickCancel()
               }

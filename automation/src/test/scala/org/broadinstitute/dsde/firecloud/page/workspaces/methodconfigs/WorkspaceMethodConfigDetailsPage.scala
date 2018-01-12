@@ -42,7 +42,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     await ready new LaunchAnalysisModal
   }
 
-  def clickLaunchAnalysisButtonMessage(): MessageModal = {
+  def clickLaunchAnalysisButtonError(): MessageModal = {
     clickLaunchAnalysis()
     await ready new MessageModal
   }

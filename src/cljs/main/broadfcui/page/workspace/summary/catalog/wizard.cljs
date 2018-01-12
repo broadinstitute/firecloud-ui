@@ -4,10 +4,10 @@
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
@@ -116,56 +116,53 @@
         :required-attributes (library-utils/find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
+     (let [{:keys [library-schema can-share? owner? writer? catalog-with-read? dismiss]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state
            editable? (or writer? catalog-with-read?)
            set-discoverable? (or can-share? catalog-with-read? owner?)]
-       ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
-       [:div {}
-        (when (:submitting? @state)
-          (blocker "Submitting..."))
-        (flex/box
-         {:style {:borderBottom style/standard-line
-                  :padding "20px 48px 18px"
-                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         "Catalog Dataset"
-         flex/spring
-         (buttons/x-button modal/pop-modal))
-        [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
-         [:div {:style {:display "flex" :width 850 :height 400}}
-          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
-          [comps/ScrollFader
-           {:ref "scroller"
-            :outer-style {:flex "1 1 auto"
-                          :border style/standard-line :boxSizing "border-box"
-                          :backgroundColor "white"}
-            :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
-            :content
-            (react/create-element
-             (let [page-count (count (:wizard library-schema))
-                   [questions enumerate] (library-utils/get-questions-for-page working-attributes library-schema page-num)
-                   {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values working-attributes)
-                                                                      questions required-attributes)]
-               (cond
-                 (< page-num page-count)
-                 [Questions (merge {:ref "wizard-page"
-                                    :key page-num
-                                    :missing-properties (set/union invalid invalid-properties)
-                                    :attributes working-attributes}
-                                   (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
-                 (= page-num page-count)
-                 [DiscoverabilityPage
-                  (merge
-                   {:ref "wizard-page"
-                    :set-discoverable? (or can-share? catalog-with-read? owner?)}
-                   (select-keys working-attributes [:library:discoverableByGroups])
-                   (select-keys @locals [:library-groups])
-                   (select-keys props [:library-schema]))]
-                 (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
-         (when validation-error
-           [:div {:style {:marginTop "1em" :color (:state-exception style/colors) :textAlign "center"}}
-            validation-error])
-         [comps/ErrorViewer {:error submit-error}]
+       [modals/OKCancelForm
+        {:header "Catalog Dataset"
+         :dismiss dismiss
+         :content
+         (react/create-element
+          [:div {}
+           (when (:submitting? @state)
+             (blocker "Submitting..."))
+           [:div {:style {:display "flex" :width 850 :height 400}}
+            (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
+            [comps/ScrollFader
+             {:ref "scroller"
+              :outer-style {:flex "1 1 auto"
+                            :border style/standard-line :boxSizing "border-box"
+                            :backgroundColor "white"}
+              :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
+              :content
+              (react/create-element
+               (let [page-count (count (:wizard library-schema))
+                     [questions enumerate] (library-utils/get-questions-for-page working-attributes library-schema page-num)
+                     {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values working-attributes)
+                                                                        questions required-attributes)]
+                 (cond
+                   (< page-num page-count)
+                   [Questions (merge {:ref "wizard-page"
+                                      :key page-num
+                                      :missing-properties (clojure.set/union invalid invalid-properties)
+                                      :attributes working-attributes}
+                                     (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
+                   (= page-num page-count)
+                   [DiscoverabilityPage
+                    (merge
+                     {:ref "wizard-page"
+                      :set-discoverable? (or can-share? catalog-with-read? owner?)}
+                     (select-keys working-attributes [:library:discoverableByGroups])
+                     (select-keys @locals [:library-groups])
+                     (select-keys props [:library-schema]))]
+                   (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
+           (when validation-error
+             [:div {:style {:marginTop "1em" :color (:state-exception style/colors) :textAlign "center"}}
+              validation-error])
+           [comps/ErrorViewer {:error submit-error}]])
+         :button-bar
          (flex/box
           {:style {:marginTop 40}}
           (flex/strut 80)
@@ -191,7 +188,7 @@
                              :onClick #(this :submit editable? set-discoverable?)
                              :disabled? (or (and published? (not-empty invalid-properties))
                                             (not (and save-permissions last-page)))
-                             :style {:width 80}}]))]]))
+                             :style {:width 80}}]))}]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
@@ -257,6 +254,6 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
                       (if success?
-                        (do (modal/pop-modal)
+                        (do ((:dismiss props))
                             ((:request-refresh props)))
                         (swap! state assoc :submit-error (get-parsed-response false))))}))))})

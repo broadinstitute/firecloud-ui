@@ -7,7 +7,6 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
@@ -109,8 +108,7 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?
-                        (do (modal/pop-modal)
-                            (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                        (nav/go-to-path :workspace-summary {:namespace project :name name})
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-do-clone
    (fn [{:keys [props refs state]}]
@@ -135,8 +133,7 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?
-                        (do (modal/pop-modal)
-                            (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                        (nav/go-to-path :workspace-summary {:namespace project :name name})
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]
