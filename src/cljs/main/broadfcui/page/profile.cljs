@@ -131,7 +131,12 @@
             (this :render-nested-field :institutionalProgram "Institutional Program" true)
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
-               (style/create-form-label "Proxy Group")
+               [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
+                "Proxy Group"
+                (dropdown/render-info-box
+                 {:text
+                  [:div {} "For more information about proxy groups, see the "
+                   (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=11185"} "user guide") "."]})]
                [:div {:data-test-id "proxyGroupEmail"
                       :style {:fontSize "88%" :padding "0.5em"}} (:userProxyGroupEmail @state)]])
             (common/clear-both)
