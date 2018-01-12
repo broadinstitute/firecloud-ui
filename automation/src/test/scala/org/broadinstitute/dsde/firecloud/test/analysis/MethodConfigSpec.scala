@@ -51,8 +51,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         methodConfigName, SimpleMethodConfig.snapshotId, Map.empty, Map.empty, "participant_set")
       withSignIn(user) { _ =>
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, billingProject, methodConfigName).open
-
-//        methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
         val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.verifyNoRowsMessage() shouldBe true
         launchModal.xOut()
