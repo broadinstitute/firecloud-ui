@@ -9,7 +9,8 @@ const definePlugin = new webpack.DefinePlugin({
         NODE_ENV: JSON.stringify(process.env.NODE_ENV) // to make sure it's parseable
     }
 });
-const copyWebpackPlugin = new CopyWebpackPlugin([{
+
+const copyDestinations = [{
     context: 'src/static',
     from: {
         glob: '**',
@@ -21,10 +22,19 @@ const copyWebpackPlugin = new CopyWebpackPlugin([{
         else
             return content;
     }
-}]);
+}];
+if (process.env.NODE_ENV !== 'production') {
+    copyDestinations.push({
+        context: 'target',
+        from: {
+            glob: 'build',
+            dot: false
+        }
+    });
+}
+const copyWebpackPlugin = new CopyWebpackPlugin(copyDestinations);
 
 const plugins = [commonsChunkPlugin, definePlugin, copyWebpackPlugin];
-
 if (process.env.NODE_ENV === 'production') {
     plugins.push(new UglifyJSPlugin());
 }

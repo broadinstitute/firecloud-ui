@@ -31,3 +31,6 @@ require('./styles/select2.scss');
 require('font-awesome/css/font-awesome.css');
 
 require('./styles/react-shims.scss');
+
+// lastly, the actual application
+require('../target/main');

@@ -21,7 +21,6 @@
                   ;; in all dev builds.
                   :main "broadfcuitest.testrunner"
                   :optimizations :none
-                  :asset-path "target/build"
                   :pretty-print true
                   :anon-fn-naming-policy :mapped
                   :preloads [devtools.preload]
@@ -40,11 +39,10 @@
                   :fn-invoke-direct true
                   :elide-asserts true
                   :language-out :ecmascript5
-                  :optimize-constants true
-                  :output-dir "build"}}}}}}
-  :target-path "resources/public/target"
+                  :optimize-constants true}}}}}}
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
-                                           :output-dir "resources/public/target/build"
-                                           :output-to "resources/public/target/compiled.js"}}}})
+                                           :output-dir "target/build"
+                                           :output-to "target/main.js"
+                                           :asset-path "build"}}}})
