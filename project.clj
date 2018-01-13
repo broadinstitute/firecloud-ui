@@ -9,8 +9,8 @@
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
   :profiles {:dev
-             {:dependencies [[binaryage/devtools "0.9.7"]]
-              :figwheel {:css-dirs ["resources/public"]}
+             {:dependencies [[binaryage/devtools "0.9.8"]]
+              :figwheel true
               :cljsbuild
               {:builds
                {:client
