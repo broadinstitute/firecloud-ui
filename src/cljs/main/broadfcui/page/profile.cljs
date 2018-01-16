@@ -123,12 +123,12 @@
            @user-info/saved-user-profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
-            (this :render-nested-field :firstName "First Name" true)
-            (this :render-nested-field :lastName "Last Name" true)
-            (this :render-field :title "Title" true)
-            (this :render-field :contactEmail "Contact Email for Notifications (if different)" false true)
-            (this :render-nested-field :institute "Institute" true)
-            (this :render-nested-field :institutionalProgram "Institutional Program" true)
+            (this :render-nested-field :firstName "First Name")
+            (this :render-nested-field :lastName "Last Name")
+            (this :render-field :title "Title")
+            (this :render-field :contactEmail "Contact Email for Notifications (if different)" :optional :email)
+            (this :render-nested-field :institute "Institute")
+            (this :render-nested-field :institutionalProgram "Institutional Program")
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
                [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
@@ -145,10 +145,10 @@
             [:div {:style {:fontSize "88%"}}
              (this :render-radio-field :nonProfitStatus "Profit")
              (this :render-radio-field :nonProfitStatus "Non-Profit")]
-            (this :render-field :pi "Principal Investigator/Program Lead" true)
-            (this :render-nested-field :programLocationCity "City" true)
-            (this :render-nested-field :programLocationState "State/Province" true)
-            (this :render-nested-field :programLocationCountry "Country" true)
+            (this :render-field :pi "Principal Investigator/Program Lead")
+            (this :render-nested-field :programLocationCity "City")
+            (this :render-nested-field :programLocationState "State/Province")
+            (this :render-nested-field :programLocationCountry "Country")
             (common/clear-both)
             (when-not (:new-registration? props)
               [NihLink (select-keys props [:nih-token])])]
@@ -161,27 +161,32 @@
                :onChange #(swap! state assoc-in [:values key] value)}]
       value])
    :render-nested-field
-   (fn [{:keys [state]} key label required]
-     [:div {:style {:float "left" :margin "0.5em 0"}}
-      (style/create-form-label label)
-      [input/TextField {:style {:marginRight "1em" :width 200}
-                        :data-test-id key
-                        :defaultValue (@user-info/saved-user-profile key)
-                        :ref (name key)
-                        :predicates [(when required (input/nonempty label))]
-                        :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
+   (fn [{:keys [state]} key label & flags]
+     (let [flag-set (set flags)
+           required? (not (flag-set :optional))]
+       [:div {:style {:float "left" :margin "0.5em 0"}}
+        (style/create-form-label label)
+        [input/TextField {:style {:marginRight "1em" :width 200}
+                          :data-test-id key
+                          :defaultValue (@user-info/saved-user-profile key)
+                          :ref (name key)
+                          :predicates [(when required? (input/nonempty label))]
+                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]))
    :render-field
-   (fn [{:keys [state]} key label required valid-email-or-empty]
-     [:div {:style {:clear "both" :margin "0.5em 0"}}
-      (style/create-form-label label)
-      [input/TextField {:style {:width 200}
-                        :data-test-id key
-                        :defaultValue (@user-info/saved-user-profile key)
-                        :ref (name key)
-                        :placeholder (when valid-email-or-empty (utils/get-user-email))
-                        :predicates [(when required (input/nonempty label))
-                                     (when valid-email-or-empty (input/valid-email-or-empty label))]
-                        :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
+   (fn [{:keys [state]} key label & flags]
+     (let [flag-set (set flags)
+           required? (not (flag-set :optional))
+           email? (flag-set :email)]
+       [:div {:style {:clear "both" :margin "0.5em 0"}}
+        (style/create-form-label label)
+        [input/TextField {:style {:width 200}
+                          :data-test-id key
+                          :defaultValue (@user-info/saved-user-profile key)
+                          :ref (name key)
+                          :placeholder (when email? (utils/get-user-email))
+                          :predicates [(when required? (input/nonempty label))
+                                       (when email? (input/valid-email-or-empty label))]
+                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]))
    :component-will-mount
    (fn [{:keys [state]}]
      (when-not @user-info/saved-user-profile
