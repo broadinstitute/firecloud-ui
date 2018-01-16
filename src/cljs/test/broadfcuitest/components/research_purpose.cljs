@@ -25,12 +25,3 @@
                                                                  "DS"
                                                                  ["http://purl.obolibrary.org/obo/DOID_0050433"
                                                                   "http://purl.obolibrary.org/obo/DOID_4325"]}))))
-
-;; Can't interact with the component because I haven't figured out how to import that part of React
-(deftest a-react-test
-  (let [component
-        (react/render (react/create-element ResearchPurposeSection
-                                            {:research-purpose-values {:ds {}}
-                                             :on-search (fn [options] (is (= {:ds {}} options)))}) (utils/get-app-root-element))]
-    (testing "empty RP component test"
-      (component :-search))))
