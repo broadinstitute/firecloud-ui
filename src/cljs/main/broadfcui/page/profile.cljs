@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as components]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
@@ -123,12 +124,14 @@
            @user-info/saved-user-profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
-            (this :render-nested-field :firstName "First Name")
-            (this :render-nested-field :lastName "Last Name")
+            (flex/box {}
+                      (this :render-field :firstName "First Name")
+                      (this :render-field :lastName "Last Name"))
             (this :render-field :title "Title")
             (this :render-field :contactEmail "Contact Email for Notifications (if different)" :optional :email)
-            (this :render-nested-field :institute "Institute")
-            (this :render-nested-field :institutionalProgram "Institutional Program")
+            (flex/box {}
+                      (this :render-field :institute "Institute")
+                      (this :render-field :institutionalProgram "Institutional Program"))
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
                [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
@@ -142,42 +145,31 @@
             (common/clear-both)
             [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
             (style/create-form-label "Non-Profit Status")
-            [:div {:style {:fontSize "88%"}}
-             (this :render-radio-field :nonProfitStatus "Profit")
-             (this :render-radio-field :nonProfitStatus "Non-Profit")]
+            (flex/box {:style {:fontSize "88%"}}
+                      (this :render-radio-field :nonProfitStatus "Profit")
+                      (this :render-radio-field :nonProfitStatus "Non-Profit"))
             (this :render-field :pi "Principal Investigator/Program Lead")
-            (this :render-nested-field :programLocationCity "City")
-            (this :render-nested-field :programLocationState "State/Province")
-            (this :render-nested-field :programLocationCountry "Country")
+            (flex/box {}
+                      (this :render-field :programLocationCity "City")
+                      (this :render-field :programLocationState "State/Province")
+                      (this :render-field :programLocationCountry "Country"))
             (common/clear-both)
             (when-not (:new-registration? props)
               [NihLink (select-keys props [:nih-token])])]
            :else (spinner "Loading User Profile...")))
    :render-radio-field
    (fn [{:keys [state]} key value]
-     [:label {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
+     [:label {:style {:margin "0 1em 0.5em 0" :padding "0.5em 0"}}
       [:input {:type "radio" :value value :name key
                :checked (= value (get-in @state [:values key] (@user-info/saved-user-profile key)))
                :onChange #(swap! state assoc-in [:values key] value)}]
       value])
-   :render-nested-field
-   (fn [{:keys [state]} key label & flags]
-     (let [flag-set (set flags)
-           required? (not (flag-set :optional))]
-       [:div {:style {:float "left" :margin "0.5em 0"}}
-        (style/create-form-label label)
-        [input/TextField {:style {:marginRight "1em" :width 200}
-                          :data-test-id key
-                          :defaultValue (@user-info/saved-user-profile key)
-                          :ref (name key)
-                          :predicates [(when required? (input/nonempty label))]
-                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]))
    :render-field
    (fn [{:keys [state]} key label & flags]
      (let [flag-set (set flags)
            required? (not (flag-set :optional))
            email? (flag-set :email)]
-       [:div {:style {:clear "both" :margin "0.5em 0"}}
+       [:div {:style {:margin "0.5em 1em 0.5em 0"}}
         (style/create-form-label label)
         [input/TextField {:style {:width 200}
                           :data-test-id key
