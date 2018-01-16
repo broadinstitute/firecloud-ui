@@ -30,7 +30,7 @@
 (deftest a-react-test
   (let [component
         (react/render (react/create-element ResearchPurposeSection
-                                            {:research-purpose-values nil
+                                            {:research-purpose-values {:ds {}}
                                              :on-search (fn [options] (is (= {:ds {}} options)))}) (utils/get-app-root-element))]
     (testing "empty RP component test"
       (component :-search))))
