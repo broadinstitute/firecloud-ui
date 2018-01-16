@@ -14,7 +14,7 @@
   (endpoints/profile-get
    (fn [{:keys [success? get-parsed-response] :as response}]
      (when success?
-       (save-user-profile (common/parse-profile (get-parsed-response false))))
+       (save-user-profile (common/parse-profile (get-parsed-response))))
      (when on-done (on-done response)))))
 
 (defonce saved-ready-billing-project-names (atom []))
