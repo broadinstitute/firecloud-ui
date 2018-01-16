@@ -1,8 +1,6 @@
 (ns broadfcuitest.components.research-purpose
   (:require
-   [dmohs.react :as react]
    [cljs.test :refer [deftest is testing]]
-   [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.page.library.library-page :as library]
    [broadfcui.utils :as utils]
    ))
