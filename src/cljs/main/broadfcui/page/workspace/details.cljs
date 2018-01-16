@@ -140,27 +140,28 @@
                              (utils/restructure workspace-id workspace workspace-error request-refresh))])
                ANALYSIS (react/create-element
                          [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
+               NOTEBOOKS (react/create-element
+                          [notebooks-tab/Page
+                           (merge {:ref NOTEBOOKS}
+                                  (utils/restructure workspace-id workspace))])
                CONFIGS (react/create-element
                         [method-configs-tab/Page
                          (merge {:ref CONFIGS
                                  :on-submission-success #(nav/go-to-path :workspace-submission workspace-id %)}
-                                (utils/restructure workspace-id workspace request-refresh bucket-access?)
+                                (utils/restructure workspace-id workspace bucket-access?)
                                 (select-keys props [:config-id]))])
                MONITOR (react/create-element
                         [monitor-tab/Page
                          (merge {:ref MONITOR}
                                 (utils/restructure workspace-id workspace)
-                                (select-keys props [:submission-id :workflow-id]))])
-               NOTEBOOKS (react/create-element
-                          [notebooks-tab/Page
-                           (merge {:ref NOTEBOOKS}
-                                  (utils/restructure workspace-id workspace))]))))]]))
+                                (select-keys props [:submission-id :workflow-id]))]))))]]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
    :component-will-receive-props
-   (fn [{:keys [this after-update]}]
-     (after-update this :-refresh-workspace))
+   (fn [{:keys [props next-props this after-update]}]
+     (when (not= (:tab-name props) (:tab-name next-props))
+       (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
      (when-not (contains? @whitelisted-users (utils/get-user-email))
