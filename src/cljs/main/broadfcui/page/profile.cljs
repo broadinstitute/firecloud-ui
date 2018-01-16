@@ -248,13 +248,12 @@
           values
           (fn [{:keys [success? get-parsed-response]}]
             (swap! state (fn [s]
-                           (let [new-state (dissoc s :in-progress? :validation-errors)
-                                 parsed (get-parsed-response false)]
+                           (let [new-state (dissoc s :in-progress? :validation-errors)]
                              (if-not success?
                                (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
-                                 (user-info/save-user-profile (common/parse-profile parsed))
+                                 (user-info/reload-user-profile)
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)
