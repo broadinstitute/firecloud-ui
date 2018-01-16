@@ -10,7 +10,6 @@
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.9.8"]]
-              :figwheel true
               :cljsbuild
               {:builds
                {:client
@@ -20,6 +19,7 @@
                  {;; Use this namespace (which requires main) so that testing is readily available
                   ;; in all dev builds.
                   :main "broadfcuitest.testrunner"
+                  :output-dir "resources/public/build"
                   :optimizations :none
                   :pretty-print true
                   :anon-fn-naming-policy :mapped
@@ -41,8 +41,10 @@
                   :language-out :ecmascript5
                   :optimize-constants true}}}}}}
   :clean-targets ^{:protect false} [:target-path]
-  :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
-                                :compiler {:main "broadfcui.main"
-                                           :output-dir "target/build"
-                                           :output-to "target/main.js"
-                                           :asset-path "build"}}}})
+  :cljsbuild {:builds
+              {:client
+               {:source-paths ["src/cljs/main"]
+                :compiler {:main "broadfcui.main"
+                           :output-dir "target/build"
+                           :output-to "target/main.js"
+                           :asset-path "build"}}}})

@@ -10,7 +10,7 @@ const definePlugin = new webpack.DefinePlugin({
     }
 });
 
-const copyDestinations = [{
+const copyWebpackPlugin = new CopyWebpackPlugin([{
     context: 'src/static',
     from: {
         glob: '**',
@@ -22,17 +22,7 @@ const copyDestinations = [{
         else
             return content;
     }
-}];
-if (process.env.NODE_ENV !== 'production') {
-    copyDestinations.push({
-        context: 'target',
-        from: {
-            glob: 'build',
-            dot: false
-        }
-    });
-}
-const copyWebpackPlugin = new CopyWebpackPlugin(copyDestinations);
+}]);
 
 const plugins = [commonsChunkPlugin, definePlugin, copyWebpackPlugin];
 if (process.env.NODE_ENV === 'production') {
