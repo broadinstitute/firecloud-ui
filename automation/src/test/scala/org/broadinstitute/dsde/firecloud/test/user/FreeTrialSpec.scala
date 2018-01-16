@@ -88,26 +88,26 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           bannerTitleElement.getText shouldBe "Access Free Credits"
         }
 
-        // Verify that the user has been added to the corresponding billing project
-        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
-        assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
-
-        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
-        assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
-
-        val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
-        assert(userHasTheRightBillingProject)
-
-        // Verify that the user's project is removed from the account upon termination
-        val ownerAuthToken = UserPool.chooseProjectOwner.makeAuthToken()
-        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
-        assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
-
-        api.trial.terminateUser(testUser.email)
-
-        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
-        val errMsg = "The trial user's billing project should have been removed from the billing account."
-        assert(billingAccountUponTermination.isEmpty, errMsg)
+//        // Verify that the user has been added to the corresponding billing project
+//        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
+//        assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
+//
+//        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
+//        assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
+//
+//        val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
+//        assert(userHasTheRightBillingProject)
+//
+//        // Verify that the user's project is removed from the account upon termination
+//        val ownerAuthToken = UserPool.chooseProjectOwner.makeAuthToken()
+//        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+//        assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
+//
+//        api.trial.terminateUser(testUser.email)
+//
+//        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+//        val errMsg = "The trial user's billing project should have been removed from the billing account."
+//        assert(billingAccountUponTermination.isEmpty, errMsg)
 
         registerCleanUpForDeleteTrialState()
       }

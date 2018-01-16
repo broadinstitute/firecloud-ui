@@ -10,10 +10,7 @@ trait AuthToken {
 
   val httpTransport = GoogleNetHttpTransport.newTrustedTransport
   val jsonFactory = JacksonFactory.getDefaultInstance
-  val authScopes = Seq("profile", "email", "openid", "https://www.googleapis.com/auth/devstorage.full_control", "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/drive")
+  val authScopes = Seq("profile", "email", "openid", "https://www.googleapis.com/auth/devstorage.full_control", "https://www.googleapis.com/auth/cloud-platform")
 
   lazy val value: String = makeToken()
 
