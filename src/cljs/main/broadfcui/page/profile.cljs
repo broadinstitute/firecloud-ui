@@ -157,7 +157,7 @@
    (fn [{:keys [state]} key value]
      [:label {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
       [:input {:type "radio" :value value :name key
-               :checked (= (@user-info/saved-user-profile key) value)
+               :checked (= value (get-in @state [:values key] (@user-info/saved-user-profile key)))
                :onChange #(swap! state assoc-in [:values key] value)}]
       value])
    :render-nested-field
