@@ -15,11 +15,12 @@
                                                  "fatal familial insomnia",
                                                  "http://purl.obolibrary.org/obo/DOID_4325"
                                                  "Ebola hemorrhagic fever"},
-                                                :control true}) {"NMDS" false,
-                                                                 "NCTRL" true,
-                                                                 "NAGR" false,
-                                                                 "POA" true,
-                                                                 "NCU" false,
-                                                                 "DS"
-                                                                 ["http://purl.obolibrary.org/obo/DOID_0050433"
-                                                                  "http://purl.obolibrary.org/obo/DOID_4325"]}))))
+                                                :control true})
+           {"NMDS" false,
+            "NCTRL" true,
+            "NAGR" false,
+            "POA" true,
+            "NCU" false,
+            "DS"
+            ["http://purl.obolibrary.org/obo/DOID_0050433"
+             "http://purl.obolibrary.org/obo/DOID_4325"]}))))
