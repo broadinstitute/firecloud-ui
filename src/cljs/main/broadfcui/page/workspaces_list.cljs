@@ -21,7 +21,6 @@
    [broadfcui.net :as net]
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -435,14 +434,6 @@
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
                  #(swap! state update :server-response assoc :workspaces-response %))})
-     (endpoints/get-billing-projects
-      (fn [err-text projects]
-        (if err-text
-          (swap! state update :server-response assoc
-                 :error-message err-text :disabled-reason :error)
-          (swap! state update :server-response assoc
-                 :billing-projects (map :projectName projects)
-                 :disabled-reason (when (empty? projects) :no-billing)))))
      (utils/get-google-bucket-file
       "featured-workspaces"
       #(swap! state update :server-response assoc :featured-workspaces (set %))))})

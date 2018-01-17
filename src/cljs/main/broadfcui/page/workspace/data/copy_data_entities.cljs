@@ -4,10 +4,10 @@
    [clojure.string :as string]
    [clojure.walk :as walk]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.modal :as modal]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
@@ -22,6 +22,8 @@
        [:div {:style {:margin "1em"}}
         (when (:copying? @state)
           (blocker "Copying..."))
+        (when (:show-import-result? @state)
+          (this :render-import-result))
         [EntitySelector {:ref "EntitySelector"
                          :type (:type props)
                          :selected-workspace-bucket (:selected-workspace-bucket props)
@@ -40,7 +42,7 @@
                                          (swap! state assoc :selection-error true)
                                          (this :perform-copy selected)))}]]]]))
    :perform-copy
-   (fn [{:keys [props state this]} selected re-link?]
+   (fn [{:keys [props state]} selected re-link?]
      (utils/multi-swap! state (assoc :copying? true) (dissoc :selection-error :server-error))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props) re-link?)
@@ -49,26 +51,26 @@
                  :entityNames (map :name selected)}
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :copying?)
+                  (swap! state assoc :copying? nil :show-import-result? true
+                         :import-result (get-parsed-response false) :selected selected)
                   (when success?
-                    ((:on-data-imported props) (:type props)))
-                  (this :show-import-result (get-parsed-response false) selected))}))
-   :show-import-result
-   (fn [{:keys [this props]} parsed-response selected]
+                    ((:on-data-imported props) (:type props))))}))
+   :render-import-result
+   (fn [{:keys [props state this]}]
      (let [formatted-response (walk/postwalk
                                #(case %
                                   "entityName" "ID"
                                   "entityType" "Type"
                                   "conflicts" "Conflicting linked entities"
                                   %)
-                               parsed-response)
+                               (:import-result @state))
            copied (formatted-response "entitiesCopied")
            hard-conflicts (formatted-response "hardConflicts")
            soft-conflicts (walk/postwalk
                            #(if (= (second %) []) nil %)
                            (formatted-response "softConflicts"))
            import-type (:type props)]
-       (comps/push-ok-cancel-modal
+       [modals/OKCancelForm
         {:header (if (not-empty copied)
                    "Import Successful"
                    "Unable to Import")
@@ -124,12 +126,13 @@
                                             to confirm that they are actually the same."]
                                            [:div {} "All other attributes of the source will be imported normally."]]}]})]])]
          :show-cancel? (not-empty soft-conflicts)
+         :dismiss #(swap! state dissoc :show-import-result?)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"
                        :onClick (fn []
-                                  (modal/pop-modal)
-                                  (this :perform-copy selected true))}
-                      "OK")})))})
+                                  (swap! state dissoc :show-import-result?)
+                                  (this :perform-copy (:selected @state) true))}
+                      "OK")}]))})
 
 
 (react/defc- Page

@@ -2,15 +2,14 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.utils :as utils]
@@ -116,6 +115,14 @@
          [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
          :title-expand
          [:div {:style {:flexGrow 1 :fontSize "125%" :fontWeight 500}}
+          (when (:show-import? @state)
+            [modals/OKCancelForm
+             {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
+              :dismiss #(swap! state dissoc :show-import?)
+              :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
+                        [import-data/Page (merge (select-keys props [:workspace-id])
+                                                 {:on-data-imported (:request-refresh props)}
+                                                 {:import-type "workspace-attributes"})]]}])
           (when-not editing?
             [:span {:style {:fontSize "initial" :fontWeight "initial"}}
              [:a {:style {:textDecoration "none" :marginLeft "1em"}
@@ -128,13 +135,7 @@
              (when writer?
                [buttons/Button {:text "Import Attributes..."
                                 :style {:float "right" :marginTop -7}
-                                :onClick #(modal/push-modal
-                                           [comps/OKCancelForm
-                                            {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
-                                             :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
-                                                       [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                                {:on-data-imported (:request-refresh props)}
-                                                                                {:import-type "workspace-attributes"})]]}])}])])]
+                                :onClick #(swap! state assoc :show-import? true)}])])]
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.}}
           (if editing?

@@ -1,7 +1,7 @@
 (ns broadfcui.page.workspace.notebooks.notebooks
   (:require
    [dmohs.react :as react]
-   [clojure.set]
+   [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -65,6 +65,11 @@
 (defn create-inline-form-label [text]
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
 
+(defn- leo-notebook-url [cluster]
+  (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster)))
+
+(defn- contains-statuses [clusters statuses]
+  (seq (set/intersection (set statuses) (set (map :status clusters)))))
 
 (react/defc- ClusterCreator
   {:refresh
@@ -228,7 +233,6 @@
                       (do ((:dismiss props)) ((:reload-after-delete props))) ;if success, update the table?
                       (swap! state assoc :server-error (get-parsed-response false))))})))})
 
-
 (react/defc- NotebooksTable
   {:render
    (fn [{:keys [state props]}]
@@ -262,10 +266,7 @@
                    :render
                    (fn [cluster]
                      (if (= (:status cluster) "Running")
-                       (links/create-external
-                        {:href (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster))
-                         :onClick #(utils/set-notebooks-access-token-cookie (utils/get-access-token))}
-                        (:clusterName cluster))
+                       (links/create-external {:href (leo-notebook-url cluster)} (:clusterName cluster))
                        (:clusterName cluster)))}
                   {:header "Status" :initial-width 100
                    :column-data :status
@@ -306,49 +307,98 @@
 (react/defc NotebooksContainer
   {:refresh
    (fn [{:keys [this]}]
-     (this :-get-clusters-list-if-whitelisted))
+     (this :-get-clusters-list-if-whitelisted)
+     (this :-schedule-cookie-refresh-if-whitelisted))
+
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response show-create-dialog?]} @state
            {:keys [clusters server-error]} server-response]
-        [:div {:display "inline-flex"}
-         (when show-create-dialog?
-           [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                        :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
-         [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
-         (if server-error
-           [comps/ErrorViewer {:error server-error}]
-           (if clusters
-             [NotebooksTable
-              (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
-                                                                        :data-test-id "create-modal-button"
-                                                                        :onClick #(swap! state assoc :show-create-dialog? true)}]]
-                           :clusters clusters
-                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
+       [:div {:display "inline-flex"}
+        (when show-create-dialog?
+          [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
+                                       :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
+        [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
+        (if server-error
+          [comps/ErrorViewer {:error server-error}]
+          (if clusters
+            [NotebooksTable
+             (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
+                                                                       :data-test-id "create-modal-button"
+                                                                       :onClick #(swap! state assoc :show-create-dialog? true)}]]
+                          :clusters clusters
+                          :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (this :-is-leo-whitelisted))
+   (fn [{:keys [this locals]}]
+     (this :-is-leo-whitelisted)
+     (.addEventListener js/window "message" (react/method this :-notebook-extension-listener)))
+
+   :component-will-unmount
+   (fn [{:keys [this locals]}]
+     (swap! locals assoc :dead? true)
+     (.removeEventListener js/window "message" (react/method this :-notebook-extension-listener)))
+
+   ; Communicates with the Leo notebook extension.
+   ; Use with `react/method` to return a stable binding to the function.
+   :-notebook-extension-listener
+   (fn [_ e]
+     (when (and (= (config/leonardo-url-root) (.-origin e))
+                (= "bootstrap-auth.request" (.. e -data -type)))
+       (.postMessage (.-source e)
+         (clj->js {:type "bootstrap-auth.response" :body {:googleClientId (config/google-client-id)}})
+         (config/leonardo-url-root))))
+
+   ; Checks if the user is on the Leo whitelist
    :-is-leo-whitelisted
    (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
-       {:endpoint endpoints/is-leo-whitelisted
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (do (swap! state assoc :is-leo-whitelisted? true)
-                         (this :-get-clusters-list-if-whitelisted))
-                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+      {:endpoint endpoints/is-leo-whitelisted
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (do (swap! state assoc :is-leo-whitelisted? true)
+                        (this :-get-clusters-list-if-whitelisted)
+                        (this :-schedule-cookie-refresh-if-whitelisted))
+                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+
+   :-schedule-cookie-refresh-if-whitelisted
+   (fn [{:keys [props state locals this]}]
+     (let [{{:keys [clusters]} :server-response} @state]
+       (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
+         (when (contains-statuses clusters ["Running"])
+           (this :-process-running-clusters))
+         (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))
+
+   :-process-running-clusters
+   (fn [{:keys [props state locals this]}]
+     (let [{{:keys [clusters]} :server-response} @state
+           running-clusters (filter (comp (partial = "Running") :status) clusters)]
+       (doseq [cluster running-clusters]
+         (utils/ajax
+           {:url (str (leo-notebook-url cluster) "/setCookie")
+            :headers {"Authorization" (str "Bearer " (utils/get-access-token))}
+            :with-credentials? true
+            :cross-domain true
+            :on-done (fn [{:keys [success? raw-response]}]
+                       (when-not success?
+                         (swap! state assoc :server-error raw-response)))}))))
+
    :-get-clusters-list-if-whitelisted
-   (fn [{:keys [props state this]}]
-     (when (:is-leo-whitelisted? @state)
+   (fn [{:keys [props state locals this]}]
+     (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
        (endpoints/call-ajax-leo
-         {:endpoint endpoints/get-clusters-list
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (if success?
-                       (when-not (= (:clusters @state) (get-parsed-response))
-                         (swap! state assoc :server-response {:clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))}))
-                       (swap! state assoc :server-response {:server-error (get-parsed-response false)}))
-                     (let [statuses (set (map #(:status %) (get-parsed-response)))]
-                       (when (or (contains? statuses "Creating") (contains? statuses "Updating") (contains? statuses "Deleting"))
-                         (js/setTimeout (fn [] (this :-get-clusters-list-if-whitelisted)) 10000))))})))})
+        {:endpoint endpoints/get-clusters-list
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (let [filtered-clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))]
+                        ; Update the state with the current cluster list
+                        (when-not (= (:clusters @state) filtered-clusters)
+                          (swap! state assoc :server-response {:clusters filtered-clusters}))
+                        ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
+                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
+                          (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000))
+                        ; If there are running clusters, call the /setCookie endpoint immediately.
+                        (when (contains-statuses filtered-clusters ["Running"])
+                          (this :-process-running-clusters)))
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))})
