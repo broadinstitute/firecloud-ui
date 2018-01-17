@@ -229,25 +229,27 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "abort a workflow" in withWebDriver { implicit driver =>
+  "abort a submission" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_abort_workflow") { workspaceName =>
+    withWorkspace(billingProject, "TestSpec_FireCloud_abort_submission") { workspaceName =>
       val shouldUseCallCaching = false
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-        SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
+        MethodData.SimpleMethod, SimpleMethodConfig.configNamespace, methodName, 1,
+        SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
-        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-        val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
+        val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
         //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
         submissionDetailsPage.abortSubmission()
         submissionDetailsPage.waitUntilSubmissionCompletes()
-        submissionDetailsPage.verifyWorkflowAborted() shouldBe true
+        submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
       }
     }
   }
+
 
   "delete a method config from a workspace" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner

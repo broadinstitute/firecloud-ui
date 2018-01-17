@@ -349,7 +349,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               withSignIn(user) { listPage =>
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-                workspacePage.waitForGoogleBucket()
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
                 errorModal.getMessageText shouldBe noAccessText
@@ -373,11 +372,10 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               withSignIn(user) { listPage =>
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-                workspacePage.waitForGoogleBucket()
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
                 launchAnalysisModal.validateLocation shouldBe true
-                launchAnalysisModal.clickOk()
+                launchAnalysisModal.clickCancel()
               }
             }(authTokenOwner)
           }(authTokenOwner)

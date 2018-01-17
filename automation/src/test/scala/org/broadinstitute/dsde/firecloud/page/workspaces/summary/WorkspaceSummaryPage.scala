@@ -26,6 +26,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       enabled(testId("workspace-details-error")) ||
       (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
     }
+    waitForGoogleBucket()
   }
 
   def validateLocation(): Unit = {
