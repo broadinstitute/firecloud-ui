@@ -238,7 +238,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
-      "can be cloned and have a group added to the auth domain" ignore withWebDriver { implicit driver =>
+      "can be cloned and have a group added to the auth domain" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
