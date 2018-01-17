@@ -46,22 +46,13 @@ abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudVie
   }
 }
 
-case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  def validateLocation(implicit webDriver: WebDriver): Boolean = {
-    testId("error-modal").element != null
-  }
-
-  def getErrorText: String = {
-    readText(testId("message-modal-content"))
-  }
-
-  override def awaitReady(): Unit = cancelButton.awaitVisible()
-
-}
-
 case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
   def validateLocation: Boolean = {
     testId("message-modal-content").element != null
+  }
+
+  def getMessageText: String = {
+    readText(testId("message-modal-content"))
   }
 }
 

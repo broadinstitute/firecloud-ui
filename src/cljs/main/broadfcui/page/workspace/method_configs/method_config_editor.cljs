@@ -10,11 +10,12 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
-   [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
+   [broadfcui.page.workspace.method-configs.launch-analysis :refer [LaunchAnalysisButton]]
    [broadfcui.page.workspace.method-configs.publish :as publish]
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
@@ -170,6 +171,10 @@
            methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
        [:div {}
         (blocker (:blocker @state))
+        (when (:showing-error-popup? @state)
+          (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
+        (when-let [error-response (:error-response @state)]
+          (modals/render-error-response {:error error-response :dismiss #(swap! state dissoc :error-response)}))
         [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
@@ -189,7 +194,7 @@
        [:div {:style {:flex "1 1 auto" :minWidth 0} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
-           (launch/render-button {:workspace-id (:workspace-id props)
+           [LaunchAnalysisButton {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
                                   :column-defaults (:workspace-column-defaults workspace-attributes)
                                   :root-entity-type rootEntityType
@@ -202,7 +207,7 @@
                                                         " to the Google Bucket associated with this workspace.")
                                                    redacted?
                                                    "The method snapshot this config references has been redacted.")
-                                  :on-success (:on-submission-success props)})])
+                                  :on-success (:on-submission-success props)}]])
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
@@ -312,7 +317,7 @@
                           ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
                           (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
                                                    (dissoc :redacted?)))
-                      (comps/push-error-response (get-parsed-response false))))})))
+                      (swap! state assoc :error-response (get-parsed-response false))))})))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
@@ -354,7 +359,11 @@
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]
-                      (if success?
+                      (if-not success?
+                        (utils/multi-swap! state (assoc :redacted? true
+                                                        :showing-error-popup? true
+                                                        :wdl-parse-error (:message response))
+                                                 (dissoc :blocker))
                         (endpoints/call-ajax-orch
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (:methodRepoMethod response)
@@ -371,8 +380,4 @@
                                                                  :validOutputs {})
                                                 :inputs-outputs (get-parsed-response)
                                                 :redacted? false)
-                                         (swap! state assoc :error (:message (get-parsed-response))))))})
-                        (do
-                          (utils/multi-swap! state (assoc :redacted? true :wdl-parse-error (:message response))
-                                                   (dissoc :blocker))
-                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
+                                         (swap! state assoc :error (:message (get-parsed-response))))))}))))})))})

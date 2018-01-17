@@ -129,6 +129,16 @@
             (this :render-field :contactEmail "Contact Email for Notifications (if different)" false true)
             (this :render-nested-field :institute "Institute" true)
             (this :render-nested-field :institutionalProgram "Institutional Program" true)
+            (when-not (:new-registration? props)
+              [:div {:style {:clear "both" :margin "0.5em 0"}}
+               [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
+                "Proxy Group"
+                (dropdown/render-info-box
+                 {:text
+                  [:div {} "For more information about proxy groups, see the "
+                   (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=11185"} "user guide") "."]})]
+               [:div {:data-test-id "proxyGroupEmail"
+                      :style {:fontSize "88%" :padding "0.5em"}} (:userProxyGroupEmail @state)]])
             (common/clear-both)
             [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
             [:div {}
@@ -186,7 +196,13 @@
         (fn [{:keys [success? status-text]}]
           (if success?
             (swap! state assoc :loaded-profile? true)
-            (swap! state assoc :error-message status-text))))))})
+            (swap! state assoc :error-message status-text)))))
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/proxy-group (-> @utils/auth2-atom
+                                            (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :userProxyGroupEmail (get-parsed-response))))}))})
 
 
 (react/defc- Page
