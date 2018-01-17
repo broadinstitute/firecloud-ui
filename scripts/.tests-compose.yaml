@@ -10,28 +10,16 @@ services:
     command: bash
     stdin_open: true
     tty: true
-  phantomjs:
-    image: wernight/phantomjs:2
+    environment:
+      - npm_config_unsafe_perm="true"
+  slimerjs:
+    image: evpavel/slimerjs-alpine
     volumes:
       - work:/w
     working_dir: /w
     command: bash
     stdin_open: true
     tty: true
-  mkdir:
-    image: broadinstitute/clojure-node
-    volumes:
-      - work:/w
-    working_dir: /w
-    command: mkdir -p resources/public
-  server:
-    depends_on:
-      - mkdir
-    image: broadinstitute/clojure-node
-    volumes:
-      - work:/w
-    working_dir: /w/resources/public
-    command: bash -c 'npm install -g node-static && static -a 0.0.0.0 -p 80'
 volumes:
   work:
   jar-cache:
