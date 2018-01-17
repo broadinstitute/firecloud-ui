@@ -36,6 +36,8 @@ object Config {
   object GCS {
     val pathToQAPem = gcsConfig.getString("qaPemFile")
     val qaEmail = gcsConfig.getString("qaEmail")
+    val trialBillingPemFile = gcsConfig.getString("trialBillingPemFile")
+    val trialBillingPemFileClientId = gcsConfig.getString("trialBillingPemFileClientId")
     val appsDomain = gcsConfig.getString("appsDomain")
   }
 

@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.{Google, Orchestration, Thurloe}
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, TrialBillingAccountAuthToken}
 import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
@@ -99,13 +99,13 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         assert(userHasTheRightBillingProject)
 
         // Verify that the user's project is removed from the account upon termination
-        val ownerAuthToken = UserPool.chooseProjectOwner.makeAuthToken()
-        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+        val trialAuthToken = TrialBillingAccountAuthToken()
+        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
 
         api.trial.terminateUser(testUser.email)
 
-        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(ownerAuthToken)
+        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         val errMsg = "The trial user's billing project should have been removed from the billing account."
         assert(billingAccountUponTermination.isEmpty, errMsg)
 
