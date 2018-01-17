@@ -6,12 +6,12 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :as table]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -20,9 +20,10 @@
 (react/defc- AddUserDialog
   {:render
    (fn [{:keys [props state this refs]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header (str "Add user to " (:group-name props))
        :ok-button {:text "Add User" :onClick #(this :-add-user)}
+       :dismiss (:dismiss props)
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
@@ -51,15 +52,14 @@
        (utils/multi-swap! state (assoc :fails fails) (dissoc :server-error))
        (when-not fails
          (let [role (common/get-trimmed-text refs "role")
-               {:keys [endpoint on-add]} props]
+               {:keys [endpoint on-add dismiss]} props]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch
             {:endpoint (endpoint role email)
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :adding?)
                         (if success?
-                          (do (modal/pop-modal)
-                              (on-add))
+                          (do (dismiss) (on-add))
                           (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 
@@ -76,6 +76,14 @@
                 (header (:data @state)))
               (when (:removing? @state)
                 (blocker "Removing user..."))
+              (when (:showing-add-user-dialog? @state)
+                [AddUserDialog {:dismiss #(swap! state dissoc :showing-add-user-dialog?)
+                                :endpoint (:add-endpoint props)
+                                :group-name (:group-name props)
+                                :user (:user-term props)
+                                :admin (:admin-term props)
+                                :on-add #(this :-load-data)
+                                :footer (:add-member-footer props)}])
               [table/Table
                {:data (table-data data)
                 :body {:behavior {:reorderable-columns? false}
@@ -108,14 +116,7 @@
                             [buttons/Button
                              {:data-test-id "billing-project-add-user-button"
                               :text "Add User..." :icon :add-new
-                              :onClick (fn [_]
-                                         (modal/push-modal
-                                          [AddUserDialog {:endpoint (:add-endpoint props)
-                                                          :group-name (:group-name props)
-                                                          :user (:user-term props)
-                                                          :admin (:admin-term props)
-                                                          :on-add #(this :-load-data)
-                                                          :footer (:add-member-footer props)}]))}]])}}]
+                              :onClick #(swap! state assoc :showing-add-user-dialog? true)}]])}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]

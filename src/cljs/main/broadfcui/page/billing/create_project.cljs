@@ -6,9 +6,9 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -17,8 +17,8 @@
 
 (react/defc CreateBillingProjectDialog
   {:render
-   (fn [{:keys [state this]}]
-     [comps/OKCancelForm
+   (fn [{:keys [props state this]}]
+     [modals/OKCancelForm
       {:header "Create Billing Project"
        :content
        (react/create-element
@@ -94,8 +94,9 @@
                          billing-accounts)]]
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
-       :ok-button {:onClick (when (seq (:billing-accounts @state))
-                              #(this :create-billing-project))}}])
+       :dismiss (:dismiss props)
+       :ok-button (when (seq (:billing-accounts @state))
+                    #(this :create-billing-project))}])
    :component-did-mount
    (fn [{:keys [this]}]
      (this :get-billing-accounts))
@@ -113,7 +114,8 @@
                     :error {:code status-code :details (if parse-error? raw-response parsed)}))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
-     (let [account (:selected-account @state)]
+     (let [{:keys [dismiss on-success]} props
+           account (:selected-account @state)]
        (when-not account
          (swap! state assoc :account-errors ["Please select a billing account"]))
        (let [[name & fails] (input/get-and-validate refs "name-field")]
@@ -127,6 +129,5 @@
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :creating?)
                         (if success?
-                          (do ((:on-success props))
-                              (modal/pop-modal))
+                          (do (dismiss) (on-success))
                           (swap! state assoc :server-error (get-parsed-response false))))})))))})

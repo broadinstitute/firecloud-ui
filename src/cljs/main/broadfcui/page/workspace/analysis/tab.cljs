@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
-   [broadfcui.common.modal :as modal]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.page.workspace.analysis.igv :refer [IGVContainer]]
    [broadfcui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
@@ -15,23 +14,22 @@
 (react/defc Page
   {:refresh
    (fn [])
-   :show-track-selection-dialog
-   (fn [{:keys [props state]}]
-     (modal/push-modal
-      [TrackSelectionDialog
-       (assoc props
-         :tracks (:tracks @state)
-         :on-ok #(swap! state assoc :tracks %))]))
    :get-initial-state
    (fn [{:keys [props]}]
      {:tracks (get @tracks-cache (:workspace-id props) [])})
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state]}]
      [:div {}
+      (when (:show-track-selection-dialog? @state)
+        [TrackSelectionDialog
+         (assoc props
+           :dismiss #(swap! state dissoc :show-track-selection-dialog?)
+           :tracks (:tracks @state)
+           :on-ok #(swap! state assoc :tracks %))])
       [IGVContainer {:tracks (:tracks @state)}]
       [buttons/Button {:text "Select Tracks..."
                        :style {:float "right" :marginTop "1rem"}
-                       :onClick #(this :show-track-selection-dialog)}]
+                       :onClick #(swap! state assoc :show-track-selection-dialog? true)}]
       (common/clear-both)])
    :component-will-unmount
    (fn [{:keys [props state]}]
