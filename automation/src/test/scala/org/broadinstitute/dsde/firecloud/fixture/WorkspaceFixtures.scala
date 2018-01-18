@@ -1,9 +1,10 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 import org.broadinstitute.dsde.firecloud.api.AclEntry
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.service.test.CleanUp
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.util.Util.{appendUnderscore, makeUuid}
 import org.scalatest.TestSuite
 
 /**WorkspaceFixtures

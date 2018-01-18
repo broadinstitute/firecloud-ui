@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.firecloud.config.UserPool
+import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec

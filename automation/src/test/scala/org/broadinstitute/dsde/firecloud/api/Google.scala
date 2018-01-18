@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.workbench.auth.AuthToken
 
 /**
   * Created by mbemis on 1/5/18.

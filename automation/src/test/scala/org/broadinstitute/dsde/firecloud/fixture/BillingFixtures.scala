@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 import org.broadinstitute.dsde.firecloud.api.{Orchestration, Rawls}
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
-import org.broadinstitute.dsde.firecloud.test.CleanUp
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.service.test.CleanUp
 import org.scalatest.TestSuite
 
 import scala.util.Random

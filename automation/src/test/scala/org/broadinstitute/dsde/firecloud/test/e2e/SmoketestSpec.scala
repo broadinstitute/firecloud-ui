@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.e2e
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.fixture.{SimpleMethodConfig, TestData, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage

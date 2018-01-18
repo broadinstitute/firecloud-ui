@@ -8,8 +8,8 @@ import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration
-import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
+import org.broadinstitute.dsde.workbench.config.Config
+import org.broadinstitute.dsde.workbench.service.util.ExceptionHandling
 import org.openqa.selenium.chrome.{ChromeDriverService, ChromeOptions}
 import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
 import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}

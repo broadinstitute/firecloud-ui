@@ -1,8 +1,8 @@
 package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.Config
 
 /**
   * Rawls API service client. This should only be used when Orchestration does

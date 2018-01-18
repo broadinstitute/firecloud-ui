@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.dao
 
 import akka.actor.ActorSystem
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.google.{HttpGoogleBigQueryDAO, HttpGoogleIamDAO}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}

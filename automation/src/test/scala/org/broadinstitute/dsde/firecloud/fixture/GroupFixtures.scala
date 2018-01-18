@@ -2,10 +2,11 @@ package org.broadinstitute.dsde.firecloud.fixture
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration.groups.GroupRole
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config._
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.firecloud.util.Util
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config._
+import org.broadinstitute.dsde.workbench.service.test.CleanUp
+import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.util.Util
 import org.scalatest.TestSuite
 
 /**

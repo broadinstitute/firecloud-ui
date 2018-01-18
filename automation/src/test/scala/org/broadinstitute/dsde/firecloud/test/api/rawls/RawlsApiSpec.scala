@@ -2,12 +2,13 @@ package org.broadinstitute.dsde.firecloud.test.api.rawls
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.api.{Rawls, Sam}
-import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.service.Sam
+import org.broadinstitute.dsde.firecloud.api.{Rawls}
+import org.broadinstitute.dsde.workbench.service.Sam.user.UserStatusDetails
+import org.broadinstitute.dsde.workbench.auth.{AuthToken, ServiceAccountAuthToken}
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
-import org.broadinstitute.dsde.firecloud.test.CleanUp
+import org.broadinstitute.dsde.workbench.service.test.CleanUp
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount}
 import org.scalatest.{FreeSpec, Matchers}
 
