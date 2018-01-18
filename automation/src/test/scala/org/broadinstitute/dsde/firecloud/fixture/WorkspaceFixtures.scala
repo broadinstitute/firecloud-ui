@@ -42,12 +42,4 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
       }
     }
   }
-
-  def withClonedWorkspace(namespace: String, namePrefix: String, authDomain: Set[String] = Set.empty)
-                         (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
-    withWorkspace(namespace, namePrefix, authDomain) { _ =>
-      val cloneNamePrefix = appendUnderscore(namePrefix) + "clone"
-      withWorkspace(namespace, cloneNamePrefix, authDomain)(testCode)
-    }
-  }
 }
