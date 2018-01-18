@@ -16,7 +16,7 @@ case class Button(queryString: QueryString)(implicit webDriver: WebDriver)
   private val enabledState = "enabled"
   private val disabledState = "disabled"
 
-  def isStateEnabled: Boolean = getState == enabledState
-  def isStateDisabled: Boolean = getState == disabledState
+  def isStateEnabled: Boolean = { awaitVisible(); getState == enabledState }
+  def isStateDisabled: Boolean = { awaitVisible(); getState == disabledState }
   def awaitEnabled(): Unit = awaitState(enabledState)
 }
