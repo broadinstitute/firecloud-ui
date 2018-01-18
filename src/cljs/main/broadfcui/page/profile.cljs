@@ -170,15 +170,16 @@
            required? (not (flag-set :optional))
            email? (flag-set :email)]
        [:div {:style {:margin "0.5em 1em 0.5em 0"}}
-        (style/create-form-label label)
-        [input/TextField {:style {:width 200}
-                          :data-test-id key
-                          :defaultValue (@user-info/saved-user-profile key)
-                          :ref (name key)
-                          :placeholder (when email? (utils/get-user-email))
-                          :predicates [(when required? (input/nonempty label))
-                                       (when email? (input/valid-email-or-empty label))]
-                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]))
+        [:label {}
+         (style/create-form-label label)
+         [input/TextField {:style {:width 200}
+                           :data-test-id key
+                           :defaultValue (@user-info/saved-user-profile key)
+                           :ref (name key)
+                           :placeholder (when email? (utils/get-user-email))
+                           :predicates [(when required? (input/nonempty label))
+                                        (when email? (input/valid-email-or-empty label))]
+                           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
    :component-will-mount
    (fn [{:keys [state]}]
      (when-not @user-info/saved-user-profile
