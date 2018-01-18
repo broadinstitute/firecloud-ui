@@ -30,7 +30,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   var userAuthToken: AuthToken = _
   var subjectId : String = _
 
-  override def withFixture(test: NoArgTest) = {
+  override def withFixture(test: NoArgTest): Outcome = {
     if (isRetryable(test)) withFixture(test, 3) else super.withFixture(test)
   }
 
@@ -73,7 +73,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" taggedAs Retryable in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
 
         withSignIn(testUser) { _ =>
@@ -127,7 +127,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Terminated" - {
-      "should see that they are inactive" in withWebDriver { implicit driver =>
+      "should see that they are inactive" taggedAs Retryable in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
@@ -141,7 +141,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Disabled" - {
-      "should not see the free trial banner" in withWebDriver { implicit driver =>
+      "should not see the free trial banner" taggedAs Retryable in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
