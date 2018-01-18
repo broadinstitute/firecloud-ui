@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.api.sam
 
-import org.broadinstitute.dsde.firecloud.api.{Orchestration, Sam, Thurloe}
+import org.broadinstitute.dsde.firecloud.api.{Orchestration, Sam}
 import org.broadinstitute.dsde.firecloud.api.Sam.user.UserStatusDetails
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToken}
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
@@ -8,12 +8,15 @@ import org.broadinstitute.dsde.workbench.model._
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount, ServiceAccountName}
+import org.broadinstitute.dsde.workbench.service.Thurloe
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
+
+  val thurloe = new Thurloe(Config.FireCloud.thurloeApiUrl, Config.FireCloud.fireCloudId)
 
   def findSaInGoogle(name: ServiceAccountName): Option[ServiceAccount] = {
     googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name).futureValue
@@ -45,7 +48,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
     if (Sam.admin.doesUserExist(subjectId).getOrElse(false)) {
       Sam.admin.deleteUser(subjectId)
     }
-    Thurloe.keyValuePairs.deleteAll(subjectId)
+    thurloe.keyValuePairs.deleteAll(subjectId)
   }
 
   "Sam test utilities" - {

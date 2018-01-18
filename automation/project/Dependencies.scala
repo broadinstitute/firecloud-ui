@@ -20,6 +20,9 @@ object Dependencies {
   val workbenchGoogleV = "0.11-7ad0aa8"
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
 
+  val workbenchServiceV = "0.0.1-alpha-b350837-SNAP"
+  val workbenchService: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % workbenchServiceV % "test" classifier "tests" excludeAll excludeWorkbenchModel
+
   val rootDependencies = Seq(
     // proactively pull in latest versions of Jackson libs, instead of relying on the versions
     // specified as transitive dependencies, due to OWASP DependencyCheck warnings for earlier versions.
@@ -49,6 +52,7 @@ object Dependencies {
     workbenchModel,
     workbenchMetrics,
     workbenchGoogle,
+    workbenchService,
 
     // required by workbenchGoogle
     "com.typesafe.akka" %% "akka-http-spray-json" % "10.0.6" % "provided"

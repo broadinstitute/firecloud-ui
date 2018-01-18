@@ -1,13 +1,14 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.{Orchestration, Thurloe}
+import org.broadinstitute.dsde.firecloud.api.Orchestration
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.component.{Button, Label, TestId}
-import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.Thurloe
 import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try
@@ -18,6 +19,8 @@ import scala.util.Try
   */
 class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
+
+  val thurloe = new Thurloe(Config.FireCloud.thurloeApiUrl, Config.FireCloud.fireCloudId)
 
   val adminUser: Credentials = UserPool.chooseAdmin
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
@@ -31,11 +34,11 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     testUser = UserPool.chooseStudent
     userAuthToken = testUser.makeAuthToken()
     subjectId = Orchestration.profile.getUser()(userAuthToken)("userId").toString
-    Try(Thurloe.keyValuePairs.delete(subjectId, "trialState"))
+    Try(thurloe.keyValuePairs.delete(subjectId, "trialState"))
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
-    register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
+    register cleanUp thurloe.keyValuePairs.delete(subjectId, "trialState")
   }
 
   "A user whose free trial status is" - {
@@ -53,7 +56,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should see the free trial banner and be able to enroll" ignore withWebDriver { implicit driver => // ignored until trial admin group is ready in fiab
         registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
+        thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -72,7 +75,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Terminated" - {
       "should see that they are inactive" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
+        thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -86,7 +89,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+        thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
