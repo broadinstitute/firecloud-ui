@@ -30,6 +30,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   var userAuthToken: AuthToken = _
   var subjectId : String = _
 
+  //  https://stackoverflow.com/a/48264490/818054
   override def withFixture(test: NoArgTest): Outcome = {
     if (isRetryable(test)) withFixture(test, 3) else super.withFixture(test)
   }
@@ -37,7 +38,10 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   def withFixture(test: NoArgTest, count: Int): Outcome = {
     val outcome = super.withFixture(test)
     outcome match {
-      case Failed(_) | Canceled(_) => if (count == 1) super.withFixture(test) else withFixture(test, count - 1)
+      case Failed(_) | Canceled(_) => {
+        logger.info(s"Retrying (left = $count)")
+        if (count == 1) super.withFixture(test) else withFixture(test, count - 1)
+      }
       case other => other
     }
   }
