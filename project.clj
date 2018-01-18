@@ -4,14 +4,14 @@
    [inflections "0.13.0"]
    [dmohs/react "1.3.0"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
-   [org.clojure/clojure "1.8.0"]
+   [org.clojure/clojure "1.9.0"]
    [org.clojure/clojurescript "1.9.946"]
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"] [lein-resource "17.06.1"]
             ; [lein-ancient "0.6.14"] ; check for outdated dependencies, uncomment and run `lein ancient` to use
             ]
   :profiles {:dev
-             {:dependencies [[binaryage/devtools "0.9.7"]]
+             {:dependencies [[binaryage/devtools "0.9.9"]]
               :figwheel {:css-dirs ["resources/public"]}
               :cljsbuild
               {:builds
