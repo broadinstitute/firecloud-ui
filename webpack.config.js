@@ -38,8 +38,7 @@ module.exports = {
     },
     output: {
         filename: '[name]-deps.bundle.js',
-        path: path.join(__dirname, "resources/public/"),
-        library: 'webpackDeps'
+        path: path.join(__dirname, "resources/public/")
     },
     module: {
         rules: [
