@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
-import .retry
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

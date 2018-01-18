@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.workbench.service.test.CleanUp
 import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
-import .retry
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest._
 
 import scala.concurrent.duration.DurationLong
