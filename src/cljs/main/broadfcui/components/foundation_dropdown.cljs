@@ -17,50 +17,43 @@
      {:icon-name :information})
    :component-will-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :dropdown-id (gensym "dropdown-")))
-   :render
-   (fn [{:keys [props locals]}]
-     [:button {:className (str "button-reset " (:button-class props))
-               :data-toggle (:dropdown-id @locals)
-               :style (merge {:cursor "pointer" :padding "0 0.5rem"
-                              :fontSize 16 :lineHeight "1rem"}
-                             (:button-style props))}
-      (:button-contents props)])
-   :component-did-mount
-   (fn [{:keys [this locals]}]
      (let [dropdown-container (.createElement js/document "div")]
        (swap! locals assoc :dropdown-container dropdown-container)
        (.insertBefore js/document.body dropdown-container (utils/get-app-root-element))
-       (this :-render-dropdown)
-       (.foundation (js/$ (:dropdown-element @locals)))))
-   :component-will-receive-props
-   (fn [{:keys [this after-update]}]
-     ;; Wait until props have been updated so we don't have to use next-props here.
-     (after-update this :-render-dropdown))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (react/unmount-component-at-node (:dropdown-container @locals))
-     (.remove (:dropdown-container @locals)))
-   :-render-dropdown
-   (fn [{:keys [this props state locals]}]
+       (swap! locals assoc :dropdown-id (gensym "dropdown-"))))
+   :render
+   (fn [{:keys [props locals state this]}]
      (let [{:keys [contents dropdown-class]} props
            {:keys [dropdown-container dropdown-id]} @locals]
-       (react/render
-        (react/create-element
-         ;; empty string makes react attach a property with no value
-         [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
-                :ref (this :-create-dropdown-ref-handler)
-                :style (merge
-                        {:whiteSpace "normal"}
-                        (:style props)
-                        (when (= (get-in props [:style :width]) :auto)
-                          {:width (.-clientWidth (react/find-dom-node this))
-                           :boxSizing "border-box" :minWidth 120}))}
-          (when (:render-contents? @state)
-            contents)])
-        dropdown-container)))
+       [:button {:className (str "button-reset " (:button-class props))
+                 :data-toggle (:dropdown-id @locals)
+                 :style (merge {:cursor "pointer" :padding "0 0.5rem"
+                                :fontSize 16 :lineHeight "1rem"}
+                               (:button-style props))}
+        (:button-contents props)
+        (js/ReactDOM.createPortal
+         (react/create-element
+          ;; empty string makes react attach a property with no value
+          [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
+                 :ref (this :-create-dropdown-ref-handler)
+                 :style (merge
+                         {:whiteSpace "normal"}
+                         (:style props)
+                         (when (= (get-in props [:style :width]) :auto)
+                           {:width (:width @state)
+                            :boxSizing "border-box" :minWidth 120}))}
+           contents])
+         dropdown-container)]))
+   :component-did-mount
+   (fn [{:keys [props this state locals]}]
+     (when (= (get-in props [:style :width]) :auto)
+       (swap! state assoc :width (.-clientWidth (react/find-dom-node this))))
+     (.foundation (js/$ (:dropdown-element @locals))))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.remove (:dropdown-container @locals)))
    :-create-dropdown-ref-handler
-   (fn [{:keys [this props state after-update locals]}]
+   (fn [{:keys [this props locals]}]
      (common/create-element-ref-handler
       {:store locals
        :element-key :dropdown-element
@@ -82,15 +75,9 @@
                                    (pos? (.-length (.find element$ (.-target e)))))
                        (.foundation element$ "close")
                        (clean-up)))]
-             (.on element$ "hide.zf.dropdown"
-                  (fn [_]
-                    (swap! state dissoc :render-contents?)
-                    (after-update #(this :-render-dropdown))))
              (.on button$
                   "click"
                   (fn [_]
-                    (swap! state assoc :render-contents? true)
-                    (after-update #(this :-render-dropdown))
                     (when (:close-on-click props)
                       (.on element$ "click.zf.dropdown" close-on-element-click))
                     (.on (js/$ "body") "click.zf.dropdown" close-on-body-click))))))
