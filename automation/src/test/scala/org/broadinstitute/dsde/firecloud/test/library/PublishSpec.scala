@@ -112,8 +112,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 val clonedWsName = wsName + "_clone"
                 register cleanUp api.workspaces.delete(namespace, clonedWsName)
                 wspage.cloneWorkspace(namespace, clonedWsName)
-                //TODO: do I need to instantiate a new page? no..
-                wspage.hasPublishButton shouldBe true
+                wspage.hasPublishButton shouldBe true  // this will fail if the Unpublish button is displayed.
                 val page = new DataLibraryPage().open
                 page.hasDataset(clonedWsName) shouldBe false
               }
@@ -145,7 +144,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   "DUOS autocomplete" - {
     "should give multiple results for a partial word" in withWebDriver { implicit driver =>
       val user = UserPool.chooseAnyUser
-      implicit val authToken: AuthToken = user.makeAuthToken() //TODO: there no need for an auth token, except that the api wrapper expects one
+      // there is no need for an auth token for this test, except that the api wrapper expects one
+      implicit val authToken: AuthToken = user.makeAuthToken()
       val partialTextQuery = "dis"
       val result = api.library.duosAutocomplete(partialTextQuery)
       val resultCount = partialTextQuery.r.findAllMatchIn(result).length
