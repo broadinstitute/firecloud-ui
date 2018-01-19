@@ -1,13 +1,13 @@
-var page = require('webpage').create();
+const page = require('webpage').create();
 
-var logToken = 'e54b0a2b-0934-400f-bf3a-68d01dcde2df';
-var loggingWorks = false;
-var someTestsFailed = false;
+const logToken = 'e54b0a2b-0934-400f-bf3a-68d01dcde2df';
+let loggingWorks = false;
+let someTestsFailed = false;
 
 function installConsoleListener() {
   page.onConsoleMessage = function(msg) {
     if (msg.substring(0, logToken.length) === logToken) {
-      var commandString = msg.substring(logToken.length);
+      const commandString = msg.substring(logToken.length);
       if (commandString === 'started') {
         loggingWorks = true;
       } else if(commandString === 'fail') {
@@ -19,7 +19,7 @@ function installConsoleListener() {
   };
 }
 
-page.open('http://server/', function(status) {
+page.open('file:///w/resources/public/index.html', function(status) {
   installConsoleListener();
   page.evaluate(function(logToken) {
     console.log(logToken + 'started');
@@ -37,10 +37,10 @@ page.open('http://server/', function(status) {
   }, logToken);
   if (!loggingWorks) {
     console.log('Failed to read test output.');
-    phantom.exit(2);
+    slimer.exit(2);
   } else if (someTestsFailed) {
-    phantom.exit(1);
+    slimer.exit(1);
   } else {
-    phantom.exit();
+    slimer.exit();
   }
 });
