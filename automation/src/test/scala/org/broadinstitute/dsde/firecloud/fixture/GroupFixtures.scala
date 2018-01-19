@@ -6,12 +6,12 @@ import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.config._
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util
-import org.scalatest.Suite
+import org.scalatest.TestSuite
 
 /**
   * Fixtures for creating and cleaning up test groups.
   */
-trait GroupFixtures extends CleanUp with LazyLogging { self: WebBrowserSpec with Suite =>
+trait GroupFixtures extends CleanUp with LazyLogging { self: WebBrowserSpec with TestSuite =>
 
   def groupNameToEmail(groupName: String): String = s"GROUP_$groupName@${Config.GCS.appsDomain}"
 

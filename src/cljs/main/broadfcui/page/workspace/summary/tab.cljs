@@ -7,11 +7,11 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
@@ -26,6 +26,7 @@
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    ))
 
@@ -33,7 +34,7 @@
 (react/defc- DeleteDialog
   {:render
    (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header "Confirm Delete"
        :content
        [:div {}
@@ -44,6 +45,7 @@
                     (when (:published? props) " and unpublish the workspace from the Data Library")
                     ".")]
         [comps/ErrorViewer {:error (:server-error @state)}]]
+       :dismiss (:dismiss props)
        :ok-button {:text "Delete" :onClick #(this :delete)}}])
    :delete
    (fn [{:keys [props state]}]
@@ -53,7 +55,7 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :deleting?)
                   (if success?
-                    (do (modal/pop-modal) (nav/go-to-path :workspaces))
+                    (nav/go-to-path :workspaces)
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 (react/defc- StorageCostEstimate
@@ -104,11 +106,12 @@
 
 (react/defc Summary
   {:component-will-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
+   (fn [{:keys [this locals]}]
+     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary"))
+     (add-watch user-info/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
    :render
    (fn [{:keys [state props this refs]}]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response popup-error]} @state
            {:keys [workspace workspace-id request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {:data-test-id "summary-tab"
@@ -116,6 +119,11 @@
                                      "updating"
                                      ;; TODO: "loading" state
                                      :else "ready")}
+        (when popup-error
+          (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
+        (when-let [error-response (:error-response @state)]
+          (modals/render-error-response {:error-response error-response
+                                         :dismiss #(swap! state dissoc :error-response)}))
         [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
         (if server-error
           (style/create-server-error-message server-error)
@@ -148,25 +156,37 @@
      (swap! state dissoc :updating-attrs? :editing?)
      (when-not (= (:workspace-id props) (:workspace-id next-props))
        (this :refresh)))
+   :component-will-unmount
+   (fn []
+     (remove-watch user-info/saved-ready-billing-project-names :ws-summary))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
      (let [{:keys [workspace workspace-id request-refresh]} props
            {:keys [label-id body-id]} @locals
-           {:keys [editing?]
-            {:keys [library-schema billing-projects curator?]} :server-response} @state
+           {:keys [editing? billing-loaded?]
+            {:keys [library-schema curator? billing-error?]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
+           billing-projects @user-info/saved-ready-billing-project-names
            status (common/compute-status workspace)
-           publishable? (and curator? (or catalog-with-read? owner?))]
+           published? (:library:published library-attributes)
+           publisher? (and curator? (or catalog-with-read? owner?))
+           publishable? (and curator? (or catalog-with-read? owner?))
+           show-publish-message (fn [p] (swap! state assoc :showing-publish-message? true :publish-message p))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:cloning? @state)
           [create/CreateDialog
            {:dismiss #(swap! state dissoc :cloning?)
             :workspace-id workspace-id
             :description description
-            :auth-domain (set (map :membersGroupName authorizationDomain))
-            :billing-projects billing-projects}])
+            :auth-domain (set (map :membersGroupName authorizationDomain))}])
+        (when (:deleting? @state)
+          [DeleteDialog (assoc (utils/restructure workspace-id published?)
+                          :dismiss #(swap! state dissoc :deleting?))])
+        (when (:showing-publish-message? @state)
+          (modals/render-message (assoc (:publish-message @state)
+                                   :dismiss #(swap! state dissoc :showing-publish-message? :publish-message))))
         [:span {:id label-id}
          [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
@@ -187,6 +207,11 @@
                    :style {:width 270}}
              (when-not ready?
                (blocker "Loading..."))
+             (when (:showing-catalog-wizard? @state)
+               [CatalogWizard
+                (assoc (utils/restructure library-schema workspace workspace-id can-share?
+                                          owner? curator? writer? catalog-with-read? request-refresh)
+                  :dismiss #(swap! state dissoc :showing-catalog-wizard?))])
              (when (and can-share? (not editing?))
                [buttons/SidebarButton
                 {:data-test-id "share-workspace-button"
@@ -198,9 +223,7 @@
                 {:data-test-id "catalog-button"
                  :style :light :color :button-primary :margin :top
                  :icon :catalog :text "Catalog Dataset..."
-                 :onClick #(modal/push-modal
-                            [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
-                                                              owner? curator? writer? catalog-with-read? request-refresh)])}])
+                 :onClick #(swap! state assoc :showing-catalog-wizard? true)}])
              (when (and publishable? (not editing?))
                (let [working-attributes (library-utils/get-initial-attributes workspace)
                      questions (->> (range (count (:wizard library-schema)))
@@ -208,9 +231,9 @@
                                     (apply concat))
                      required-attributes (library-utils/find-required-attributes library-schema)]
                  (if (:library:published library-attributes)
-                   [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
+                   [publish/UnpublishButton (utils/restructure workspace-id request-refresh show-publish-message)]
                    [publish/PublishButton
-                    (merge (utils/restructure workspace-id request-refresh)
+                    (merge (utils/restructure workspace-id request-refresh show-publish-message)
                            {:disabled? (cond (empty? library-attributes)
                                              "Dataset attributes must be created before publishing."
                                              (seq (library-utils/validate-required
@@ -218,59 +241,62 @@
                                                    questions required-attributes))
                                              "All required dataset attributes must be set before publishing.")})])))
 
-             (when (or owner? writer?)
-               (if-not editing?
-                 [buttons/SidebarButton
-                  {:style :light :color :button-primary :margin :top
-                   :text "Edit" :icon :edit
-                   :onClick #(swap! state assoc :editing? true)}]
-                 [:div {}
-                  [buttons/SidebarButton
-                   {:style :light :color :button-primary :margin :top
-                    :text "Save" :icon :done
-                    :onClick (fn [_]
-                               (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
-                                     new-description ((@refs "description") :get-trimmed-text)
-                                     new-tags ((@refs "tags-autocomplete") :get-tags)]
-                                 (if error
-                                   (comps/push-error error)
-                                   (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
-                  [buttons/SidebarButton
-                   {:style :light :color :state-exception :margin :top
-                    :text "Cancel Editing" :icon :cancel
-                    :onClick #(swap! state dissoc :editing?)}]]))
-             (when-not editing?
+           (when (or owner? writer?)
+             (if-not editing?
                [buttons/SidebarButton
-                {:data-test-id "open-clone-workspace-modal-button"
-                 :style :light :margin :top :color :button-primary
-                 :text "Clone..." :icon :clone
-                 :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-                 :onClick #(swap! state assoc :cloning? true)}])
-             (when (and owner? (not editing?))
+                {:style :light :color :button-primary :margin :top
+                 :text "Edit" :icon :edit
+                 :onClick #(swap! state assoc :editing? true)}]
+               [:div {}
+                [buttons/SidebarButton
+                 {:style :light :color :button-primary :margin :top
+                  :text "Save" :icon :done
+                  :onClick (fn [_]
+                             (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
+                                   new-description ((@refs "description") :get-trimmed-text)
+                                   new-tags ((@refs "tags-autocomplete") :get-tags)]
+                               (if error
+                                 (swap! state assoc :popup-error error)
+                                 (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
+                [buttons/SidebarButton
+                 {:style :light :color :state-exception :margin :top
+                  :text "Cancel Editing" :icon :cancel
+                  :onClick #(swap! state dissoc :editing?)}]]))
+           (when-not editing?
+             [buttons/SidebarButton
+              {:data-test-id "open-clone-workspace-modal-button"
+               :style :light :margin :top :color :button-primary
+               :text (if (or billing-loaded? billing-error?)
+                         "Clone..."
+                         (spinner {:style {:margin 0}} "Getting billing info..."))
+                 :icon :clone
+               :disabled? (cond
+                              (not billing-loaded?) "Project billing data has not yet been loaded."
+                              billing-error? "Unable to load billing projects from the server."
+                              (empty? billing-projects) (comps/no-billing-projects-message))
+               :onClick #(swap! state assoc :cloning? true)}])
+           (when (and owner? (not editing?))
+             [buttons/SidebarButton
+              {:style :light :margin :top :color :button-primary
+               :text (if isLocked "Unlock" "Lock")
+               :icon (if isLocked :unlock :lock)
+               :onClick #(this :-lock-or-unlock isLocked)}])
+           (when (and owner? (not editing?))
                [buttons/SidebarButton
-                {:style :light :margin :top :color :button-primary
-                 :text (if isLocked "Unlock" "Lock")
-                 :icon (if isLocked :unlock :lock)
-                 :onClick #(this :-lock-or-unlock isLocked)}])
-             (when (and owner? (not editing?))
-               (let [published? (:library:published library-attributes)
-                     publisher? (and curator? (or catalog-with-read? owner?))]
-                 [buttons/SidebarButton
-                  {:data-test-id "delete-workspace-button"
-                   :style :light :margin :top :color (if isLocked :text-lighter :state-exception)
-                   :text "Delete" :icon :delete
-                   :disabled? (cond isLocked
-                                    "This workspace is locked."
-                                    (and published? (not publisher?))
-                                    {:type :error :header "Alert" :icon-color :state-warning
-                                     :text [:div {}
-                                            [:p {:style {:margin 0}}
-                                             "This workspace is published in the Data Library and cannot be deleted. "
-                                             "Contact a library curator to ask them to first unpublish the workspace."]
-                                            [:p {}
-                                             "If you are unable to contact a curator, contact help@firecloud.org."]]})
-                   :onClick #(modal/push-modal
-                              [DeleteDialog (utils/restructure workspace-id published?)])}]))])}]]))
+                {:data-test-id "delete-workspace-button"
+                 :style :light :margin :top :color (if isLocked :text-lighter :state-exception)
+                 :text "Delete" :icon :delete
+                 :disabled? (cond isLocked
+                                  "This workspace is locked."
+                                  (and published? (not publisher?))
+                                  {:type :error :header "Alert" :icon-color :state-warning
+                                   :text [:div {}
+                                          [:p {:style {:margin 0}}
+                                           "This workspace is published in the Data Library and cannot be deleted. "
+                                           "Contact a library curator to ask them to first unpublish the workspace."]
+                                          [:p {}
+                                           "If you are unable to contact a curator, contact help@firecloud.org."]]})
+                 :onClick #(swap! state assoc :deleting? true)}])])}]]))
    :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
@@ -370,9 +396,7 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:request-refresh props))
-                    (do
-                      (swap! state dissoc :updating-attrs?)
-                      (comps/push-error-response (get-parsed-response false)))))}))
+                    (swap! state assoc :updating-attrs? nil :error-response (get-parsed-response false))))}))
    :-lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? (not locked-now?))
@@ -381,9 +405,8 @@
        :on-done (fn [{:keys [success? status-text status-code]}]
                   (when-not success?
                     (if (and (= status-code 409) (not locked-now?))
-                      (comps/push-error
-                       "Could not lock workspace, one or more analyses are currently running")
-                      (comps/push-error (str "Error: " status-text))))
+                      (swap! state assoc :popup-error "Could not lock workspace, one or more analyses are currently running")
+                      (swap! state assoc :popup-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
                   ((:request-refresh props)))}))
    :refresh
@@ -391,12 +414,11 @@
      (swap! state dissoc :server-response)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (endpoints/get-billing-projects
-      (fn [err-text projects]
+     (user-info/reload-billing-projects
+      (fn [err-text]
         (if err-text
-          (swap! state update :server-response assoc :server-error err-text)
-          (swap! state update :server-response
-                 assoc :billing-projects (map :projectName projects)))))
+          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
+          (swap! state assoc :billing-loaded? true))))
      (endpoints/get-library-attributes
       (fn [{:keys [success? get-parsed-response]}]
         (if success?

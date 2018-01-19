@@ -3,17 +3,17 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
 
 (react/defc CreateGroupDialog
   {:render
-   (fn [{:keys [state this]}]
-     [comps/OKCancelForm
+   (fn [{:keys [props state this]}]
+     [modals/OKCancelForm
       {:header "Create Group"
        :content
        (react/create-element
@@ -34,6 +34,7 @@
           input/hint-alphanumeric_-]
 
          [comps/ErrorViewer {:error (:server-error @state)}]])
+       :dismiss (:dismiss props)
        :ok-button #(this :create-group)}])
    :create-group
    (fn [{:keys [props state refs]}]
@@ -48,5 +49,5 @@
                       (swap! state dissoc :creating?)
                       (if success?
                         (do ((:on-success props))
-                            (modal/pop-modal))
+                            ((:dismiss props)))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))})

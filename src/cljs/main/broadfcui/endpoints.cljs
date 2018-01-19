@@ -460,6 +460,10 @@
   {:path (str "/workspaces/" (id-path workspace-id) "/storageCostEstimate")
    :method :get})
 
+(defn proxy-group [email]
+  {:path (str "/proxyGroup/" email)
+   :method :get})
+
 (defn list-method-snapshots [namespace name]
   {:path (str "/methods?namespace=" namespace "&name=" name)
    :method :get})

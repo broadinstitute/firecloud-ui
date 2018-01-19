@@ -5,7 +5,6 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.management-utils :as management-utils]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
@@ -75,20 +74,20 @@
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
                     (links/create-internal
-                     {:style {:color (:state-exception style/colors)}
-                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
-                     (icons/render-icon {} :delete))))}]}
+                      {:style {:color (:state-exception style/colors)}
+                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
+                      (icons/render-icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly
-         [flex/spring
+         [(when (:show-create-group? @state)
+            [CreateGroupDialog
+             {:dismiss #(swap! state dissoc :show-create-group?)
+              :on-success #(this :-load-data)}])
+          flex/spring
           [buttons/Button
            {:text "Create New Group..."
-            :onClick
-            (fn []
-              (modal/push-modal
-               [CreateGroupDialog
-                {:on-success #(this :-load-data)}]))}]])}}])
+            :onClick #(swap! state assoc :show-create-group? true)}]])}}])
    :-delete-group
    (fn [{:keys [state this]}]
      (utils/multi-swap! state (assoc :deleting? true) (dissoc :delete-modal?))
@@ -100,12 +99,12 @@
                    (this :-load-data)))}))
    :-render-confirmation
    (fn [{:keys [state this]}]
-     (modals/render-message
+     (modals/render-confirm
       {:text (str "Are you sure you want to delete the group " (:group-name @state) "?")
-       :on-confirm #(this :-delete-group)
-       :on-dismiss #(swap! state dissoc :delete-modal?)}))
+       :confirm {:text "Delete" :onClick #(this :-delete-group)}
+       :dismiss #(swap! state dissoc :delete-modal?)}))
    :-render-deletion-actions
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state]}]
      (net/render-with-ajax
       (:delete-response @state)
       (constantly nil)
@@ -117,7 +116,7 @@
           {:text (if (= 409 (:statusCode parsed-response))
                    "This group cannot be deleted because it is in use."
                    (:message parsed-response))
-           :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
+           :dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
 
 (react/defc- Page
   {:render

@@ -51,6 +51,8 @@
          (react/create-element
           [:div {:style {:width "80vw"}}
            (blocker (:banner @state))
+           (when-let [error-message (:complete-error @state)]
+             (modals/render-error {:text error-message :dismiss #(swap! state dissoc :complete-error)}))
 
            [:div {:style {:display "flex" :justifyContent "space-between"}}
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
@@ -190,8 +192,8 @@
                  (this :-complete (build-new-entity-id get-parsed-response))
                  (utils/multi-swap! state (assoc :upload-error (get-parsed-response false)) (dissoc :banner))))})))))
    :-complete
-   (fn [{:keys [props]} new-entity-id & [error-message]]
+   (fn [{:keys [props state]} new-entity-id & [error-message]]
      ((:dismiss props))
      ((:on-created props) :method new-entity-id)
      (when error-message
-       (comps/push-error error-message)))})
+       (swap! state assoc :complete-error error-message)))})

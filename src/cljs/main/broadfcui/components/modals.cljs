@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
@@ -14,11 +15,25 @@
 (defn show-modals [state m]
   (map (fn [[k [modal args]]]
          (when (k @state)
-           [modal (assoc args :dismiss #(swap! state dissoc k))]))
+           [modal (merge {:dismiss #(swap! state dissoc k)} args)]))
        m))
 
 
 (react/defc OKCancelForm
+  "Props:
+
+  header
+  content
+  dismiss - on-dismiss function
+  button-bar
+  ok-button
+  show-cancel?
+  cancel-text
+  show-close?
+  data-test-id
+  get-first-element-dom-node - given focus when specified
+  get-last-element-dom-node - requires get-first
+  cycle-focus? - if hitting tab should exclusively cycle focus between (get-first) and (get-last [or ok button])"
   {:get-default-props
    (fn []
      {:cancel-text "Cancel"
@@ -58,10 +73,9 @@
                    cancel-text])
                 (when ok-button
                   (cond
-                    (string? ok-button)
-                    [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                    (string? ok-button) [buttons/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
                     (fn? ok-button) [buttons/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [buttons/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
+                    (map? ok-button) [buttons/Button (merge {:text "OK" :ref "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))]))]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))
@@ -85,7 +99,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(defn render-error [{:keys [header text on-dismiss icon-color]}]
+(defn render-error [{:keys [header text dismiss icon-color]}]
   [OKCancelForm
    {:data-test-id "error-modal"
     :header [:div {:style {:display "inline-flex" :align-items "center"}}
@@ -93,13 +107,28 @@
                                          :marginRight "0.5rem"}} :error)
              (or header "Error")]
     :content [:div {:style {:width 500}} text]
-    :dismiss on-dismiss
+    :dismiss dismiss
     :show-cancel? false :ok-button "OK"}])
 
-(defn render-message [{:keys [header text on-confirm on-dismiss]}]
+(defn render-error-response [{:keys [error-response] :as params}]
+  (render-error (assoc (dissoc params :error-response)
+                  :text [comps/ErrorViewer {:error error-response}])))
+
+(defn render-message [{:keys [header text dismiss]}]
+  (assert (and text dismiss) "Message modal must have :text and :dismiss")
   [OKCancelForm
    {:data-test-id "message-modal"
     :header (or header "Confirm")
     :content [:div {:style {:width 500}} text]
-    :ok-button on-confirm
-    :dismiss on-dismiss}])
+    :show-cancel? false
+    :ok-button dismiss
+    :dismiss dismiss}])
+
+(defn render-confirm [{:keys [header text confirm dismiss]}]
+  (assert (and text confirm dismiss) "Confirm modal must have :text, :confirm, and :dismiss")
+  [OKCancelForm
+   {:data-test-id "confirmation-modal"
+    :header (or header "Confirm")
+    :content [:div {:style {:width 500}} text]
+    :ok-button confirm
+    :dismiss dismiss}])

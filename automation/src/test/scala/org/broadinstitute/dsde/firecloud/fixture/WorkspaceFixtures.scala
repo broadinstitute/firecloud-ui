@@ -4,12 +4,12 @@ import org.broadinstitute.dsde.firecloud.api.AclEntry
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.firecloud.util.Util.{appendUnderscore, makeUuid}
-import org.scalatest.Suite
+import org.scalatest.TestSuite
 
 /**WorkspaceFixtures
   * Fixtures for creating and cleaning up test workspaces.
   */
-trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
+trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
 
   /**
     * Loan method that creates a workspace that will be cleaned up after the
@@ -40,14 +40,6 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
           api.workspaces.delete(namespace, workspaceName)
         } catch nonFatalAndLog(s"Error deleting workspace in withWorkspace clean-up: $namespace/$workspaceName")
       }
-    }
-  }
-
-  def withClonedWorkspace(namespace: String, namePrefix: String, authDomain: Set[String] = Set.empty)
-                         (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
-    withWorkspace(namespace, namePrefix, authDomain) { _ =>
-      val cloneNamePrefix = appendUnderscore(namePrefix) + "clone"
-      withWorkspace(namespace, cloneNamePrefix, authDomain)(testCode)
     }
   }
 }

@@ -31,7 +31,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               page.clickPublishButton()
               val messageModal = MessageModal()
               messageModal.validateLocation shouldBe true
-              messageModal.clickCancel()
+              messageModal.clickOk()
             }
           }
         }

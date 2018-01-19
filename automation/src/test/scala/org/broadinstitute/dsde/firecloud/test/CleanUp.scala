@@ -2,14 +2,14 @@ package org.broadinstitute.dsde.firecloud.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.util.ExceptionHandling
-import org.scalatest.{Outcome, Suite, SuiteMixin}
+import org.scalatest.{Outcome, TestSuite, TestSuiteMixin}
 
 import scala.collection.mutable
 
 /**
   * Mix-in for cleaning up data created during a test.
   */
-trait CleanUp extends SuiteMixin with ExceptionHandling with LazyLogging { self: Suite =>
+trait CleanUp extends TestSuiteMixin with ExceptionHandling with LazyLogging { self: TestSuite =>
 
   private val cleanUpFunctions = mutable.MutableList[() => Any]()
 
@@ -93,7 +93,7 @@ trait CleanUp extends SuiteMixin with ExceptionHandling with LazyLogging { self:
     }
   }
 
-  private def runCleanUpFunctions() = {
+  private def runCleanUpFunctions(): Unit = {
     cleanUpFunctions foreach { f => try f() catch nonFatalAndLog("Error in clean-up function") }
     cleanUpFunctions.clear()
   }

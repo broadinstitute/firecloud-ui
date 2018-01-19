@@ -26,11 +26,29 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       enabled(testId("workspace-details-error")) ||
       (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
     }
+    waitForGoogleBucket()
+  }
+
+  def validateLocation(): Unit = {
+    assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
+  }
+
+  def waitForGoogleBucket(): Unit = {
+    while (shouldWaitForBucketAccess) {
+      Thread sleep 1000
+      goToSummaryTab()
+    }
   }
 
   private val authDomainGroups = Label("auth-domain-groups")
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
+  private val noBucketAccess = testId("no-bucket-access")
+
+  def shouldWaitForBucketAccess : Boolean = {
+    val elem = find(noBucketAccess)
+    elem.isDefined && elem.get.text.contains("unavailable")
+  }
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = getState == "ready"
@@ -116,10 +134,19 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return
     */
 
-  def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false): WorkspaceSummaryPage = {
+  def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false, grantMethodPermission: Option[Boolean] = None): WorkspaceSummaryPage = {
     sidebar.shareWorkspaceButton.doClick()
     val aclEditor = await ready new AclEditor
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
+    if (grantMethodPermission.isDefined) {
+      val syncModal = new SynchronizeMethodAccessModal()
+      if (syncModal.validateLocation) {
+        grantMethodPermission match {
+          case Some(true) => syncModal.clickOk()
+          case _ => syncModal.clickCancel()
+        }
+      }
+    }
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 

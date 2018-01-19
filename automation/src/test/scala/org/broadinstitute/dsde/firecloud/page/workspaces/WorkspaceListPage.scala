@@ -113,3 +113,5 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
     submit()
   }
 }
+
+class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal

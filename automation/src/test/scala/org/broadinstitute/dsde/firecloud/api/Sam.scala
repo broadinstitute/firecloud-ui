@@ -25,10 +25,8 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
 
   def petName(userInfo: UserStatusDetails) = ServiceAccountName(s"pet-${userInfo.userSubjectId}")
 
-  def removePet(userInfo: UserStatusDetails): Unit = {
-    Sam.admin.deletePetServiceAccount(userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
-    // TODO: why is this necessary?  GAWB-2867
-    googleIamDAO.removeServiceAccount(GoogleProject(Config.Projects.default), petName(userInfo)).futureValue
+  def removePet(project: String, userInfo: UserStatusDetails): Unit = {
+    Sam.admin.deletePetServiceAccount(project, userInfo.userSubjectId)(UserPool.chooseAdmin.makeAuthToken())
   }
 
   object admin {
@@ -46,9 +44,9 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
       }
     }
 
-    def deletePetServiceAccount(userSubjectId: String)(implicit token: AuthToken): Unit = {
-      logger.info(s"Deleting pet service account for user $userSubjectId")
-      deleteRequest(url + s"api/admin/user/$userSubjectId/petServiceAccount")
+    def deletePetServiceAccount(project: String, userSubjectId: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Deleting pet service account in project $project for user $userSubjectId")
+      deleteRequest(url + s"api/admin/user/$userSubjectId/petServiceAccount/$project")
     }
   }
 
@@ -61,10 +59,16 @@ object Sam extends FireCloudClient with LazyLogging with ScalaFutures{
       parseResponseOption[UserStatus](getRequest(url + "register/user"))
     }
 
-    def petServiceAccountEmail()(implicit token: AuthToken): WorkbenchEmail = {
+    def petServiceAccountEmail(project: String)(implicit token: AuthToken): WorkbenchEmail = {
       logger.info(s"Getting pet service account email")
-      val petEmailStr = parseResponseAs[String](getRequest(url + "api/user/petServiceAccount"))
+      val petEmailStr = parseResponseAs[String](getRequest(url + s"api/google/user/petServiceAccount/$project"))
       WorkbenchEmail(petEmailStr)
+    }
+
+    def proxyGroup(userEmail: WorkbenchEmail)(implicit token: AuthToken): WorkbenchEmail = {
+      logger.info(s"Getting proxy group email for user ${userEmail.value}")
+      val proxyGroupEmailStr = parseResponseAs[String](getRequest(url + s"api/google/user/proxyGroup/${userEmail.value}"))
+      WorkbenchEmail(proxyGroupEmailStr)
     }
   }
 }
