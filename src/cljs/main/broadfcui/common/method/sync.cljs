@@ -23,6 +23,7 @@
    (fn [{:keys [props state this]}]
      [modals/OKCancelForm
       {:header "Synchronize Access to Method"
+       :data-test-id "method-access"
        :dismiss (:dismiss props)
        :content
        (react/create-element

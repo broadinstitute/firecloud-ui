@@ -49,7 +49,7 @@ To generate a Docker container automatically and run the tests inside of it:
 * `dev`
 	* Environment of your FiaB..
 * Vault auth token
-	* Defaults to reading it from `~/.vault-token`.
+	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
 * Working directory
 	* Defaults to `$PWD`.
 
@@ -78,7 +78,7 @@ Also run the config render script. If you are planning on running the firecloud 
 * Working directory
 	* Defaults to `$PWD`.
 * Vault auth token
-	* Defaults to reading it from `~/.vault-token`.
+	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
 * `dev`
 	* Environment of your FiaB.
 * Local UI

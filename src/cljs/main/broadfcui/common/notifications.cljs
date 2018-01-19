@@ -1,7 +1,6 @@
 (ns broadfcui.common.notifications
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
@@ -54,6 +53,9 @@
    (fn [{:keys [this state]}]
      (let [{:keys [service-alerts]} @state]
        [:div {}
+        (when (:show-new-service-alert-message? @state)
+          (modals/render-message {:header "New Service Alert" :text "See the page header for details."
+                                  :dismiss #(swap! state dissoc :show-new-service-alert-message?)}))
         (map #(render-alert % (partial this :-remove-alert %)) service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
@@ -101,8 +103,7 @@
                                 (inc (:failed-retries @state))
                                 0))
        (when (and (seq new) (not first-time?))
-         (comps/push-message
-          {:header "New Service Alert" :message "See the page header for details."}))))
+         (swap! state assoc :show-new-service-alert-message? true))))
    :-remove-alert
    (fn [{:keys [state]} alert]
      (swap! state update :service-alerts #(filter (partial not= alert) %)))})

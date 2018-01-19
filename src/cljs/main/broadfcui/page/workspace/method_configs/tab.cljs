@@ -26,10 +26,9 @@
 
 (react/defc- MethodConfigurationsList
   {:reload
-   (fn [{:keys [state this props]}]
+   (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
-     ((:request-refresh props))
-     (this :load))
+     (this :-load))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [server-response methods importing?]} @state
@@ -72,8 +71,8 @@
                  (spinner "Loading configurations...")])]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load))
-   :load
+     (this :-load))
+   :-load
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -111,6 +110,6 @@
                                                (assoc config-id :name %))
                    :after-delete #(nav/go-to-path :workspace-method-configs workspace-id)})]
           [MethodConfigurationsList
-           (merge (select-keys props [:workspace-id :workspace :request-refresh])
+           (merge (select-keys props [:workspace-id :workspace])
                   {:ref "method-config-list"
                    :on-config-imported #(nav/go-to-path :workspace-method-config workspace-id %)})])]))})

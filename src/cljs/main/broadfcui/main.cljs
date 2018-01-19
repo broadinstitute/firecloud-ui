@@ -9,7 +9,6 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
@@ -120,7 +119,7 @@
    (fn [{:keys [this state]}]
      (user-info/reload-user-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
-        (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+        (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
           (cond
             (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
             (swap! state assoc :registration-status :registered)
@@ -133,10 +132,11 @@
               (set! (.-errorMessage this) status-text)
               (swap! state assoc :registration-status :error)))))))})
 
-(defn- show-system-status-dialog [maintenance-mode?]
-  (comps/push-ok-cancel-modal
+(defn- render-system-status-dialog [maintenance-mode? dismiss]
+  [modals/OKCancelForm
    {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
     :show-cancel? false
+    :dismiss dismiss
     :content (if maintenance-mode?
                [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
                    We should be back online shortly. For more information, please see "
@@ -145,11 +145,11 @@
                [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
                 [:a {:href "http://status.firecloud.org/" :target "_blank"}
                  "http://status.firecloud.org/"]
-                " for more information."])}))
+                " for more information."])}])
 
 
-(defn- show-js-exception [e]
-  (comps/push-ok-cancel-modal
+(defn- render-js-exception [e dismiss]
+  [modals/OKCancelForm
    {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
                                            :marginRight "1rem"}}
                                          :warning)
@@ -165,7 +165,7 @@
                (aget e "message")
                [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Source: "]
                (aget e "filename")]]
-    :show-cancel? false :ok-button "OK"}))
+    :show-cancel? false :dismiss dismiss :ok-button "OK"}])
 
 (react/defc- App
   {:handle-hash-change
@@ -197,7 +197,7 @@
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
                                 :text (auth/render-forced-sign-in-error error)
-                                :on-dismiss #(swap! state dissoc :force-sign-in-error)}))
+                                :dismiss #(swap! state dissoc :force-sign-in-error)}))
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))
@@ -229,7 +229,9 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                js/window "error" show-js-exception)))}]
+                                js/window "error"
+                                (fn [e]
+                                  (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -242,23 +244,29 @@
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
+         (when (:showing-system-down-dialog? @state)
+           (render-system-status-dialog
+            (:maintenance-mode? @state)
+            #(swap! state dissoc :showing-system-down-dialog? :maintenance-mode?)))
+         (when (:showing-js-error-dialog? @state)
+           (render-js-exception
+            (:js-error @state)
+            #(swap! state dissoc :showing-js-error-dialog? :js-error)))
          ;; As low as possible on the page so it will be the frontmost component when displayed.
-         [old-modal/Component {:ref "modal"}]
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
-   (fn [{:keys [this refs locals]}]
+   (fn [{:keys [state this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
       utils/server-down? :server-watcher
       (fn [_ _ _ down-now?]
         (when down-now?
-          (show-system-status-dialog false))))
+          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
      (add-watch
       utils/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
-          (show-system-status-dialog true))))
-     (old-modal/set-instance! (@refs "modal"))
+          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
