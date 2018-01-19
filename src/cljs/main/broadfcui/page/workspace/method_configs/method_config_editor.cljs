@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
