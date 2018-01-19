@@ -115,6 +115,7 @@
                   :text [comps/ErrorViewer {:error error-response}])))
 
 (defn render-message [{:keys [header text dismiss]}]
+  (assert (and text dismiss) "Message modal must have :text and :dismiss")
   [OKCancelForm
    {:data-test-id "message-modal"
     :header (or header "Confirm")
@@ -124,6 +125,7 @@
     :dismiss dismiss}])
 
 (defn render-confirm [{:keys [header text confirm dismiss]}]
+  (assert (and text confirm dismiss) "Confirm modal must have :text, :confirm, and :dismiss")
   [OKCancelForm
    {:data-test-id "confirmation-modal"
     :header (or header "Confirm")

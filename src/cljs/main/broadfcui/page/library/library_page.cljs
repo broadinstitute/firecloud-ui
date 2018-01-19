@@ -148,7 +148,7 @@
                          (modals/render-message
                           {:header "Request Access"
                            :text (:request-access-message @state)
-                           :confirm #(swap! state dissoc :show-request-access? :request-access-message)}))
+                           :dismiss #(swap! state dissoc :show-request-access? :request-access-message)}))
                        [:div {:style {:fontSize "112%"}}
                         ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
                         [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
