@@ -82,20 +82,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
               // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
               //            Thread sleep 500
-//
-//              retry[Boolean](100.milliseconds, 1.minute)({
-//                val libraryPage = wspage.goToDataLibrary()
-//                if (libraryPage.hasDataset(wsName))
-//                  None
-//                else Some(false)
-//              }) match {
-//                case None => fail()
-//                case Some(s) => s shouldBe false
-//              }
 
-              val page = new DataLibraryPage().open
-              page.hasDataset(wsName) shouldBe false
-
+              retry[Boolean](100.milliseconds, 1.minute)({
+                val libraryPage = wspage.goToDataLibrary()
+                if (libraryPage.hasDataset(wsName))
+                  None
+                else Some(false)
+              }) match {
+                case None => fail()
+                case Some(s) => s shouldBe false
+              }
             }
 
           }
@@ -124,32 +120,6 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             }
           }
         }
-        "with a non-default discoverableByGroups" - {
-          "should be cloned without copying discoverableByGroups" in withWebDriver { implicit driver =>
-            val curatorUser = UserPool.chooseCurator
-            implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
-            withWorkspace(namespace, "PublishSpec_curator_clone_with_discoverable_") { wsName =>
-              withCleanUp {
-                val data = LibraryData.metadata + ("library:datasetName" -> wsName)
-                api.library.setLibraryAttributes(namespace, wsName, data)
-//                register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-//                api.library.publishWorkspace(namespace, wsName)
-                withSignIn(curatorUser) { _ =>
-                  val wspage = new WorkspaceSummaryPage(namespace, wsName).open
-                  val clonedWsName = wsName + "_clone"
-                  register cleanUp api.workspaces.delete(namespace, clonedWsName)
-                  wspage.cloneWorkspace(namespace, clonedWsName)
-                  //TODO: start here -- verify the DBG
-                  //TODO: do I need to instantiate a new page? no..
-//                  wspage.hasPublishButton shouldBe true
-//                  val page = new DataLibraryPage().open
-//                  page.hasDataset(clonedWsName) shouldBe false
-                }
-              }
-            }
-          }
-        }
-
       }
     }
   }
