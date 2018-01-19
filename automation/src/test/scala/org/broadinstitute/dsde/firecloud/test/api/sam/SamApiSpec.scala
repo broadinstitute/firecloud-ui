@@ -115,7 +115,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
       findPetInGoogle(userStatus.userInfo) shouldBe None
     }
 
-    "should not treat non-pet service accounts as pets" in {
+    "should not treat non-pet service accounts as pets" ignore {
       val saEmail = WorkbenchEmail(Config.GCS.qaEmail)
       val sa = findSaInGoogle(google.toAccountName(saEmail)).get
 
