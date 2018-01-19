@@ -8,8 +8,7 @@ import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest._
-import org.scalatest.tagobjects.Retryable
+import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try
 
@@ -18,7 +17,7 @@ import scala.util.Try
   * Tests for new user registration scenarios.
   */
 class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
-  with UserFixtures with CleanUp with LazyLogging with Retries {
+  with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
   val campaignManager: Credentials = UserPool.chooseCampaignManager
@@ -29,22 +28,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   var testUser: Credentials = _
   var userAuthToken: AuthToken = _
   var subjectId : String = _
-
-  //  https://stackoverflow.com/a/48264490/818054
-  override def withFixture(test: NoArgTest): Outcome = {
-    if (isRetryable(test)) withFixture(test, 3) else super.withFixture(test)
-  }
-
-  def withFixture(test: NoArgTest, count: Int): Outcome = {
-    val outcome = super.withFixture(test)
-    outcome match {
-      case Failed(_) | Canceled(_) => {
-        logger.info(s"Retrying (left = $count)")
-        if (count == 1) super.withFixture(test) else withFixture(test, count - 1)
-      }
-      case other => other
-    }
-  }
 
   override def beforeEach {
     testUser = UserPool.chooseStudent
@@ -67,7 +50,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   "A user whose free trial status is" - {
 
     "Blank" - {
-      "should not see the free trial banner" taggedAs Retryable in withWebDriver { implicit driver =>
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
@@ -77,7 +60,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" taggedAs Retryable in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
 
         withSignIn(testUser) { _ =>
@@ -131,7 +114,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Terminated" - {
-      "should see that they are inactive" taggedAs Retryable in withWebDriver { implicit driver =>
+      "should see that they are inactive" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
@@ -145,7 +128,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Disabled" - {
-      "should not see the free trial banner" taggedAs Retryable in withWebDriver { implicit driver =>
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
