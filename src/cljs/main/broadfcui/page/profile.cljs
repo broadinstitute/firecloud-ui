@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as components]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
@@ -123,12 +124,14 @@
            @user-info/saved-user-profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
-            (this :render-nested-field :firstName "First Name" true)
-            (this :render-nested-field :lastName "Last Name" true)
-            (this :render-field :title "Title" true)
-            (this :render-field :contactEmail "Contact Email for Notifications (if different)" false true)
-            (this :render-nested-field :institute "Institute" true)
-            (this :render-nested-field :institutionalProgram "Institutional Program" true)
+            (flex/box {}
+                      (this :render-field :firstName "First Name")
+                      (this :render-field :lastName "Last Name"))
+            (this :render-field :title "Title")
+            (this :render-field :contactEmail "Contact Email for Notifications (if different)" :optional :email)
+            (flex/box {}
+                      (this :render-field :institute "Institute")
+                      (this :render-field :institutionalProgram "Institutional Program"))
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
                [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
@@ -141,54 +144,42 @@
                       :style {:fontSize "88%" :padding "0.5em"}} (:userProxyGroupEmail @state)]])
             (common/clear-both)
             [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
-            [:div {}
-             [:div {:style {:marginTop "0.5em" :fontSize "88%"}} "Non-Profit Status"]
-             [:div {:style {:fontSize "88%"}}
-              (this :render-radio-field :nonProfitStatus "Profit")
-              (this :render-radio-field :nonProfitStatus "Non-Profit")]]
-            (this :render-field :pi "Principal Investigator/Program Lead" true)
-            [:div {}
-             (this :render-nested-field :programLocationCity "City" true)
-             (this :render-nested-field :programLocationState "State/Province" true)
-             (this :render-nested-field :programLocationCountry "Country" true)]
+            (style/create-form-label "Non-Profit Status")
+            (flex/box {:style {:fontSize "88%"}}
+                      (this :render-radio-field :nonProfitStatus "Profit")
+                      (this :render-radio-field :nonProfitStatus "Non-Profit"))
+            (this :render-field :pi "Principal Investigator/Program Lead")
+            (flex/box {}
+                      (this :render-field :programLocationCity "City")
+                      (this :render-field :programLocationState "State/Province")
+                      (this :render-field :programLocationCountry "Country"))
             (common/clear-both)
             (when-not (:new-registration? props)
-              [:div {} [NihLink (select-keys props [:nih-token])]])]
+              [NihLink (select-keys props [:nih-token])])]
            :else (spinner "Loading User Profile...")))
    :render-radio-field
    (fn [{:keys [state]} key value]
-     [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
-      [:label {}
-       [:input {:type "radio" :value value :name key
-                :checked (= (@user-info/saved-user-profile key) value)
-                :onChange #(swap! state assoc-in [:values key] value)}]
-       value]])
-   :render-nested-field
-   (fn [{:keys [state]} key label required]
-     [:div {:style {:float "left" :marginBottom "0.5em" :marginTop "0.5em"}}
-      [:label {}
-       [:div {:style {:fontSize "88%"}} label]]
-      [input/TextField {:style {:marginRight "1em" :width 200}
-                        :data-test-id key
-                        :defaultValue (@user-info/saved-user-profile key)
-                        :ref (name key)
-                        :predicates [(when required (input/nonempty label))]
-                        :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
+     [:label {:style {:margin "0 1em 0.5em 0" :padding "0.5em 0"}}
+      [:input {:type "radio" :value value :name key
+               :checked (= value (get-in @state [:values key] (@user-info/saved-user-profile key)))
+               :onChange #(swap! state assoc-in [:values key] value)}]
+      value])
    :render-field
-   (fn [{:keys [state]} key label required valid-email-or-empty]
-     [:div {:style {:clear "both" :margin "0.5em 0"}}
-      [:label {}
-       (style/create-form-label label)
-       [input/TextField {:style {:width 200}
-                         :data-test-id key
-                         :defaultValue (@user-info/saved-user-profile key)
-                         :ref (name key)
-                         :placeholder (when valid-email-or-empty
-                                        (-> @utils/auth2-atom
-                                            (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
-                         :predicates [(when required (input/nonempty label))
-                                      (when valid-email-or-empty (input/valid-email-or-empty label))]
-                         :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
+   (fn [{:keys [state]} key label & flags]
+     (let [flag-set (set flags)
+           required? (not (flag-set :optional))
+           email? (flag-set :email)]
+       [:div {:style {:margin "0.5em 1em 0.5em 0"}}
+        [:label {}
+         (style/create-form-label label)
+         [input/TextField {:style {:width 200}
+                           :data-test-id key
+                           :defaultValue (@user-info/saved-user-profile key)
+                           :ref (name key)
+                           :placeholder (when email? (utils/get-user-email))
+                           :predicates [(when required? (input/nonempty label))
+                                        (when email? (input/valid-email-or-empty label))]
+                           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
    :component-will-mount
    (fn [{:keys [state]}]
      (when-not @user-info/saved-user-profile
@@ -214,9 +205,8 @@
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
-        [:div {}
-         [Form (merge {:ref "form"}
-                      (select-keys props [:new-registration? :nih-token]))]]
+        [Form (merge {:ref "form"}
+                     (select-keys props [:new-registration? :nih-token]))]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
@@ -242,7 +232,7 @@
    :save
    (fn [{:keys [props state refs]}]
      (utils/multi-swap! state (dissoc :server-error :validation-errors)
-                        (assoc :in-progress? true))
+                              (assoc :in-progress? true))
      (let [values ((@refs "form") :get-values)
            validation-errors ((@refs "form") :validation-errors)]
        (cond
@@ -251,17 +241,16 @@
           values
           (fn [{:keys [success? get-parsed-response]}]
             (swap! state (fn [s]
-                           (let [new-state (dissoc s :in-progress? :validation-errors)
-                                 parsed (get-parsed-response false)]
+                           (let [new-state (dissoc s :in-progress? :validation-errors)]
                              (if-not success?
                                (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
-                                 (user-info/save-user-profile (common/parse-profile parsed))
+                                 (user-info/reload-user-profile)
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)
-                            (assoc :validation-errors validation-errors)))))})
+                                  (assoc :validation-errors validation-errors)))))})
 
 (defn render [props]
   (react/create-element Page props))

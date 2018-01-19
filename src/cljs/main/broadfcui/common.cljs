@@ -149,8 +149,8 @@
     (str "$" (.toFixed (js/parseFloat amount) 2))))
 
 (defn parse-profile [unparsed-profile]
-  (let [unparsed-values (get unparsed-profile "keyValuePairs")]
-    (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
+  (let [unparsed-values (:keyValuePairs unparsed-profile)]
+    (into {} (map (fn [{:keys [key value]}] [(keyword key) value]) unparsed-values))))
 
 (defn row->workspace-id [row]
   (select-keys row [:namespace :name]))

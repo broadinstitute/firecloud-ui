@@ -12,13 +12,14 @@ IFS=$'\n\t'
 set -exo pipefail
 
 function clj_build() {
+    docker pull broadinstitute/clojure-node
     docker run --rm \
       -w /work \
       -v "$PWD":/work \
       -v maven-cache:/root/.m2 \
       -e npm_config_unsafe_perm="true" \
       broadinstitute/clojure-node \
-      bash -c 'lein with-profile deploy do clean, resource, cljsbuild once && npm install && NODE_ENV=production npm run webpack'
+      bash -c 'lein with-profile deploy do clean, cljsbuild once && npm install && NODE_ENV=production npm run webpack'
 
 }
 
