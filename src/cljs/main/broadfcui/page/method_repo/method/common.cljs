@@ -70,7 +70,8 @@
 
              :else
              [Table
-              {:data resolved-configs
+              {:data-test-id "config-table"
+               :data resolved-configs
                :body {:empty-message "You don't have access to any published configurations for this method."
                       :style (utils/deep-merge table-style/table-light
                                                {:table {:backgroundColor "white"}}
