@@ -18,6 +18,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
+  val autocompleteTextQueryPrefix: String = "dis"
 
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
@@ -101,7 +102,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
         "should be cloned without copying the published status" in withWebDriver { implicit driver =>
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
-          withWorkspace(namespace, "PublishSpec_curator_clone_published_") { wsName =>
+          withWorkspace(namespace, "PublishSpec_curator_cloning_published") { wsName =>
             withCleanUp {
               val data = LibraryData.metadata + ("library:datasetName" -> wsName)
               api.library.setLibraryAttributes(namespace, wsName, data)
@@ -146,11 +147,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       val user = UserPool.chooseAnyUser
       // there is no need for an auth token for this test, except that the api wrapper expects one
       implicit val authToken: AuthToken = user.makeAuthToken()
-      val partialTextQuery = "dis"
-      val result = api.library.duosAutocomplete(partialTextQuery)
-      val resultCount = partialTextQuery.r.findAllMatchIn(result).length
+      val result = api.library.duosAutocomplete(autocompleteTextQueryPrefix)
+      val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
       println(resultCount)
-      (resultCount > 5) shouldBe true
+      resultCount should be > 5
     }
   }
 }

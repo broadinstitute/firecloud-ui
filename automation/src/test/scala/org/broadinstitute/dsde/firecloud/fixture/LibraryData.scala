@@ -22,6 +22,6 @@ object LibraryData {
      "library:useLimitationOption"->"orsp",
      "library:technology"->Seq("is an optional","array attribute"),
      "library:orsp"->"some orsp",
-     "_discoverableByGroups"->Seq("all_broad_users")) //Keep this non-default for Lib clone testcase
+     "_discoverableByGroups"->Seq("all_broad_users"))
 
 }
