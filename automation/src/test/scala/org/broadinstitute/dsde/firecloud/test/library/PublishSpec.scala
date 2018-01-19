@@ -18,7 +18,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
-  val autocompleteTextQueryPrefix: String = "dis"
+  val autocompleteTextQueryPrefix: String = "cance"  // partial string of "cancer" to test autocomplete
+  val minNumOfResults: Int = 5
 
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
@@ -150,7 +151,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       val result = api.library.duosAutocomplete(autocompleteTextQueryPrefix)
       val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
       println(resultCount)
-      resultCount should be > 5
+      resultCount should be > minNumOfResults
     }
   }
 }
