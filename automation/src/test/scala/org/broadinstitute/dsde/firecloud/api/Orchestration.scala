@@ -161,6 +161,11 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       logger.info(s"Unpublishing workspace: $ns/$name")
       deleteRequest(apiUrl(s"api/library/$ns/$name/published"))
     }
+
+    def duosAutocomplete(query: String)(implicit token: AuthToken): String = {
+      logger.info(s"DUOS Autocomplete: $query")
+      parseResponse(getRequest(apiUrl(s"duos/autocomplete/$query")))
+    }
   }
 
   /*
