@@ -57,7 +57,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
       logger.info(s"Creating billing project: $projectName $billingAccount")
       postRequest(apiUrl("api/billing"), Map("projectName" -> projectName, "billingAccount" -> billingAccount))
 
-      retry(10.seconds, 10.minutes)({
+      retry(10.seconds, 20.minutes)({
               val response: String = parseResponse(getRequest(apiUrl("api/profile/billing")))
               val projects: List[Map[String, Object]] = responseAsList(response)
               projects.find((e) =>
@@ -162,6 +162,11 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
     def unpublishWorkspace(ns: String, name: String)(implicit token: AuthToken): String = {
       logger.info(s"Unpublishing workspace: $ns/$name")
       deleteRequest(apiUrl(s"api/library/$ns/$name/published"))
+    }
+
+    def duosAutocomplete(query: String)(implicit token: AuthToken): String = {
+      logger.info(s"DUOS Autocomplete: $query")
+      parseResponse(getRequest(apiUrl(s"duos/autocomplete/$query")))
     }
   }
 
