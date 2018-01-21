@@ -19,8 +19,8 @@
    (common/create-element-ref-handler-method
     {:did-mount
      (fn [_ el]
-       (.foundation (js/$ (react/find-dom-node el)))
+       (.foundation (js/$ el))
        (js* "$(window).trigger('load');"))
      :will-unmount
      (fn [_ el]
-       (.foundation (js/$ (react/find-dom-node el)) "destroy"))})})
+       (.foundation (js/$ el) "destroy"))})})

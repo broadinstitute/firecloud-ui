@@ -105,7 +105,7 @@
    (fn []
      {:table-key (gensym)})
    :render
-   (fn [{:keys [props state after-update]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [editing? writer?]} props]
        [Collapse
         {:data-test-id "attribute-editor"
@@ -143,9 +143,7 @@
              [buttons/Button {:icon :add-new :text "Add new"
                               :onClick (fn [_]
                                          (utils/multi-swap! state (assoc :table-key (gensym))
-                                                                  (update :attributes conj ["" ""]))
-                                         ;; have to do this by ID not ref, since the fields are generated within Table
-                                         (after-update #(.focus (.getElementById js/document "focus"))))}]])
+                                                                  (update :attributes conj ["" ""])))}]])
           [Table
            {:data-test-id "workspace-attributes"
             :key (:table-key @state)
@@ -177,14 +175,12 @@
                                 :as-text (constantly nil)
                                 :render
                                 (fn [{:keys [key index]}]
-                                  (style/create-text-field (merge
-                                                            {:data-test-id (str key "-key")
-                                                             :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                                             :defaultValue key
-                                                             :onChange #(swap! state update-in [:attributes index]
-                                                                               assoc 0 (-> % .-target .-value))}
-                                                            (when (= index (-> (:attributes @state) count dec))
-                                                              {:id "focus"}))))}
+                                  (style/create-text-field {:data-test-id (str key "-key")
+                                                            :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                            :defaultValue key
+                                                            :onChange #(swap! state update-in [:attributes index]
+                                                                              assoc 0 (-> % .-target .-value))
+                                                            :autoFocus (= index (-> (:attributes @state) count dec))}))}
                                {:id "value" :header (header "Value") :initial-width :auto :resizable? false
                                 :as-text (constantly nil)
                                 :render

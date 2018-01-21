@@ -4,12 +4,12 @@
    [inflections "0.13.0"]
    [dmohs/react "1.3.0"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
-   [org.clojure/clojure "1.8.0"]
+   [org.clojure/clojure "1.9.0"]
    [org.clojure/clojurescript "1.9.946"]
    ]
   :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
   :profiles {:dev
-             {:dependencies [[binaryage/devtools "0.9.8"]]
+             {:dependencies [[binaryage/devtools "0.9.9"]]
               :cljsbuild
               {:builds
                {:client
