@@ -3,10 +3,10 @@ package org.broadinstitute.dsde.firecloud.test.api.orch
 import akka.http.scaladsl.model.StatusCodes
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.GetQueryResultsResponse
-import org.broadinstitute.dsde.firecloud.fixture.BillingFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
+import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
 import org.broadinstitute.dsde.workbench.model.google.GoogleProject
 import org.broadinstitute.dsde.workbench.service.{APIException, Orchestration}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
