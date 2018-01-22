@@ -2,8 +2,10 @@ window.React = require('react');
 window.ReactDOM = require('react-dom');
 window.createReactClass = require('create-react-class');
 
-exports.ReactAutosuggest = require('react-autosuggest');
-exports.ReactLoadScript = require('react-load-script');
+window.webpackDeps = {};
+
+window.webpackDeps.ReactAutosuggest = require('react-autosuggest');
+window.webpackDeps.ReactLoadScript = require('react-load-script');
 
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
@@ -31,3 +33,6 @@ require('./styles/select2.scss');
 require('font-awesome/css/font-awesome.css');
 
 require('./styles/react-shims.scss');
+
+// lastly, the actual application
+require('../target/main');

@@ -19,6 +19,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val namespace: String = Config.Projects.default
+  val autocompleteTextQueryPrefix: String = "cance"  // partial string of "cancer" to test autocomplete
+  val minNumOfResults: Int = 5
 
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
@@ -98,6 +100,29 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           }
         }
       }
+      "when cloned" - {
+        "should be cloned without copying the published status" in withWebDriver { implicit driver =>
+          val curatorUser = UserPool.chooseCurator
+          implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
+          withWorkspace(namespace, "PublishSpec_curator_cloning_published") { wsName =>
+            withCleanUp {
+              val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+              api.library.setLibraryAttributes(namespace, wsName, data)
+              register cleanUp api.library.unpublishWorkspace(namespace, wsName)
+              api.library.publishWorkspace(namespace, wsName)
+              withSignIn(curatorUser) { _ =>
+                val wspage = new WorkspaceSummaryPage(namespace, wsName).open
+                val clonedWsName = wsName + "_clone"
+                register cleanUp api.workspaces.delete(namespace, clonedWsName)
+                wspage.cloneWorkspace(namespace, clonedWsName)
+                wspage.hasPublishButton shouldBe true  // this will fail if the Unpublish button is displayed.
+                val page = new DataLibraryPage().open
+                page.hasDataset(clonedWsName) shouldBe false
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -116,6 +141,18 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           }
         }
       }
+    }
+  }
+
+  "DUOS autocomplete" - {
+    "should give multiple results for a partial word" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseAnyUser
+      // there is no need for an auth token for this test, except that the api wrapper expects one
+      implicit val authToken: AuthToken = user.makeAuthToken()
+      val result = api.library.duosAutocomplete(autocompleteTextQueryPrefix)
+      val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
+      println(resultCount)
+      resultCount should be > minNumOfResults
     }
   }
 }

@@ -22,7 +22,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
   "A user" - {
     "with a billing account" - {
       // Need to tweak background sign-in to make this test work
-      "should be able to create a billing project" in withWebDriver { implicit driver =>
+      "should be able to create a billing project" ignore withWebDriver { implicit driver =>
         val userOwner = UserPool.chooseProjectOwner
         implicit val authToken: AuthToken = userOwner.makeAuthToken()
 
@@ -80,7 +80,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
         }
 
-        "should be able to create a workspace in the billing project" in withWebDriver { implicit driver =>
+        "should be able to create a workspace in the billing project" ignore withWebDriver { implicit driver =>
           // Create new billing project
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()

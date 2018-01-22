@@ -31,14 +31,17 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   private val WAITING_STATES = Array("Queued","Launching")
   private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
   val SUCCESS_STATUS = "Succeeded"
-  private val FAILED_STATUS  = "Failed"
-  private val ABORTED_STATUS  = "Aborted"
+  val FAILED_STATUS  = "Failed"
+  val ABORTED_STATUS  = "Aborted"
 
   private val SUBMISSION_COMPLETE_STATES = Array("Done", SUCCESS_STATUS, FAILED_STATUS, ABORTED_STATUS)
 
+  def getSubmissionStatus: String = {
+    submissionStatusLabel.getText
+  }
+
   def isSubmissionDone: Boolean = {
-    val status = submissionStatusLabel.getText
-    SUBMISSION_COMPLETE_STATES.contains(status)
+    SUBMISSION_COMPLETE_STATES.contains(getSubmissionStatus)
   }
 
   def getSubmissionId: String = {

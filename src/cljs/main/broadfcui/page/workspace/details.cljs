@@ -41,7 +41,8 @@
      [:div {:style {:backgroundColor "#efdcd7"
                     :fontSize "small"
                     :padding "4px 0"
-                    :textAlign "center"}}
+                    :textAlign "center"}
+            :data-test-id "no-bucket-access"}
       (cond (= 404 bucket-status-code)
             (str "The Google bucket associated with this workspace"
                  " does not exist. Please contact help@firecloud.org.")
@@ -111,11 +112,9 @@
            (dropdown/render-icon-dropdown
             {:icon-name :bell :icon-color (:text-light style/colors)
              :position "bottom"
-             :button-class "float-right"
+             :button {:className "float-right"}
              :ref (fn [instance] (swap! locals assoc :infobox instance))
-             :contents [notifications/WorkspaceComponent
-                        (merge (select-keys props [:workspace-id])
-                               {:close-self #((:infobox @locals) :close)})]})}]]
+             :contents [notifications/WorkspaceComponent (select-keys props [:workspace-id])]})}]]
         (tab-bar/create-bar (merge {:tabs tabs
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
@@ -159,7 +158,7 @@
      (this :-refresh-workspace))
    :component-will-receive-props
    (fn [{:keys [props next-props this after-update]}]
-     (when (not= (:tab-name props) (:tab-name next-props))
+     (when (some identity (utils/changes [:tab-name :workspace-id] props next-props))
        (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]

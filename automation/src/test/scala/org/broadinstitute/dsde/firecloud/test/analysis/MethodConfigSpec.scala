@@ -42,19 +42,18 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "launch modal with no default entities" ignore withWebDriver { implicit driver =>
+  "launch modal with no default entities" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
+    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities", cleanUp = false) { workspaceName =>
+      val methodConfigName = workspaceName + "MethodConfig"
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-        SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod, billingProject,
+        methodConfigName, SimpleMethodConfig.snapshotId, Map.empty, Map.empty, "participant_set")
       withSignIn(user) { _ =>
-        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-
-        methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, billingProject, methodConfigName).open
         val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-        launchModal.verifyNoDefaultEntityMessage() shouldBe true
+        launchModal.verifyNoRowsMessage() shouldBe true
         launchModal.xOut()
       }
     }
@@ -231,25 +230,27 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "abort a workflow" in withWebDriver { implicit driver =>
+  "abort a submission" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_abort_workflow") { workspaceName =>
+    withWorkspace(billingProject, "TestSpec_FireCloud_abort_submission") { workspaceName =>
       val shouldUseCallCaching = false
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-        SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
+        MethodData.SimpleMethod, SimpleMethodConfig.configNamespace, methodName, 1,
+        SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
-        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-        val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
+        val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
+        val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
         //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
         submissionDetailsPage.abortSubmission()
         submissionDetailsPage.waitUntilSubmissionCompletes()
-        submissionDetailsPage.verifyWorkflowAborted() shouldBe true
+        submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
       }
     }
   }
+
 
   "delete a method config from a workspace" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
@@ -311,7 +312,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
-    "launch analysis button should be disabled and show error if clicked" ignore withWebDriver { implicit driver =>
+    "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
@@ -326,7 +327,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
             val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
             modal.validateLocation shouldBe true
-            modal.clickCancel()
+            modal.clickOk()
           }
 
         }
