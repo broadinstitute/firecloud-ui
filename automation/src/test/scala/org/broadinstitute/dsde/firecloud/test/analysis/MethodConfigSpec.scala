@@ -3,12 +3,12 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, Tags, WebBrowserSpec}
+import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 
@@ -168,10 +168,10 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         val methodConfigPage = workspaceListPage.enterWorkspace(billingProject, workspaceName).goToMethodConfigTab()
 
         val methodConfigDetailsPage = methodConfigPage.importMethodConfigFromRepo(
-          SimpleMethodConfig.configNamespace,
-          SimpleMethodConfig.configName,
-          SimpleMethodConfig.snapshotId,
-          methodConfigName)
+          MethodData.SimpleMethod.methodNamespace,
+          MethodData.SimpleMethod.methodName,
+          MethodData.SimpleMethod.snapshotId,
+          SimpleMethodConfig.configName)
 
         methodConfigDetailsPage.isLoaded shouldBe true
       }
