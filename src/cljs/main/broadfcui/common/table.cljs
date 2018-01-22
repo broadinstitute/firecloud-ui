@@ -108,7 +108,7 @@
          :rows []
          :data-test-state "initializing")))
    :render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [data-test-state rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
            {:keys [data-test-id toolbar sidebar tabs body paginator style]} props
@@ -130,11 +130,13 @@
            (let [button-props (:column-edit-button toolbar)]
              [:div {:style (:style button-props)}
               [FoundationDropdown
-               {:data-test-id data-test-id
-                :button-contents [buttons/Button (:button button-props)]
-                :dropdown-class "bottom"
-                :style {:padding 0 :border "none"}
-                :contents [ColumnEditor (utils/restructure columns column-display update-column-display fixed-column-count)]}]]))
+               {:button {:contents [buttons/Button (:button button-props)]}
+                :dropdown {:className "bottom"
+                           :style {:padding 0 :border "none"}
+                           :contents
+                           [ColumnEditor (merge {:dismiss #((@locals :editor-dropdown) :close)}
+                                                (utils/restructure columns column-display update-column-display fixed-column-count))]}
+                :ref #(swap! locals assoc :editor-dropdown %)}]]))
          (when (and (:filterable? behavior) (not (contains? external-query-params :filter-text)))
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}

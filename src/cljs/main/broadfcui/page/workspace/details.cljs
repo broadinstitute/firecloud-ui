@@ -112,11 +112,9 @@
            (dropdown/render-icon-dropdown
             {:icon-name :bell :icon-color (:text-light style/colors)
              :position "bottom"
-             :button-class "float-right"
+             :button {:className "float-right"}
              :ref (fn [instance] (swap! locals assoc :infobox instance))
-             :contents [notifications/WorkspaceComponent
-                        (merge (select-keys props [:workspace-id])
-                               {:close-self #((:infobox @locals) :close)})]})}]]
+             :contents [notifications/WorkspaceComponent (select-keys props [:workspace-id])]})}]]
         (tab-bar/create-bar (merge {:tabs tabs
                                     :context-id workspace-id
                                     :active-tab (or active-tab SUMMARY)}
