@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud
 
-import org.broadinstitute.dsde.firecloud.test.WebBrowserUtil
+import org.broadinstitute.dsde.workbench.service.test.{Awaiter, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 
@@ -8,7 +8,7 @@ import org.scalatest.selenium.WebBrowser
   * Parent class for all pages and components.
   */
 abstract class FireCloudView(implicit webDriver: WebDriver)
-  extends WebBrowser with WebBrowserUtil {
+  extends Awaiter with WebBrowser with WebBrowserUtil {
   def awaitReady(): Unit
 
   def readText(q: Query): String = {

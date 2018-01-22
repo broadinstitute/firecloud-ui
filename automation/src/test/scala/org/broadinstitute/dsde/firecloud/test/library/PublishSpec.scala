@@ -1,13 +1,13 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
-import org.broadinstitute.dsde.workbench.auth.{AuthToken, UserAuthToken}
+import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page._
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.workbench.service.test.CleanUp
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest._
 

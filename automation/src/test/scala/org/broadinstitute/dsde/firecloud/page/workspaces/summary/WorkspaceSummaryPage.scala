@@ -1,13 +1,13 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
-import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel
-import org.broadinstitute.dsde.firecloud.api.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
 import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
+import org.broadinstitute.dsde.workbench.config.Config
+import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
+import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

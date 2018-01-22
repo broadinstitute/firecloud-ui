@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.workbench.config.UserPool
-import org.broadinstitute.dsde.workbench.service.test.CleanUp
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
+import org.broadinstitute.dsde.workbench.config.UserPool
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 

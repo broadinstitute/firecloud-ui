@@ -1,11 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.methodrepo
 
-import org.broadinstitute.dsde.workbench.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, MethodFixtures, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
-import org.broadinstitute.dsde.workbench.service.test.CleanUp
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 

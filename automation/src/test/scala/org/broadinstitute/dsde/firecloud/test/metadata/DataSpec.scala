@@ -1,19 +1,19 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import java.io.{File, PrintWriter}
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.workbench.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.workbench.service.test.CleanUp
-import org.broadinstitute.dsde.firecloud.test.{WebBrowserSpec, WebBrowserUtil}
-import org.broadinstitute.dsde.firecloud.fixture._
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.fixture._
+import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FreeSpec, Matchers}

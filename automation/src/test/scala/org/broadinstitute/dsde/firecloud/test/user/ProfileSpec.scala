@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
-import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.config.UserPool
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{FreeSpec, Matchers}
 
 class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers {

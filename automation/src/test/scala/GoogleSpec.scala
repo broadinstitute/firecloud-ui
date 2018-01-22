@@ -1,4 +1,4 @@
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{FlatSpec, Matchers, ParallelTestExecution}
 import org.scalatest.selenium.WebBrowser
 

@@ -1,8 +1,8 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.broadinstitute.dsde.firecloud.api.{Orchestration, Rawls}
-import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.service.{Orchestration, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.CleanUp
 import org.scalatest.TestSuite
 
