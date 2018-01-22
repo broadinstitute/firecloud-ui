@@ -77,7 +77,7 @@
                                                {:table {:backgroundColor "white"}}
                                                style)
                       :behavior {:reorderable-columns? false}
-                      :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false
+                      :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false :filterable? false
                                  :column-data :compatible?
                                  :as-text (fn [c] (when-not c (str "This configuration is not fully compatible with snapshot " snapshot-id)))
                                  :render (fn [c] (when-not c
