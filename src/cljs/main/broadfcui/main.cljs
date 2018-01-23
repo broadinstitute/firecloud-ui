@@ -119,7 +119,7 @@
    (fn [{:keys [this state]}]
      (user-info/reload-user-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
-        (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+        (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
           (cond
             (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
             (swap! state assoc :registration-status :registered)

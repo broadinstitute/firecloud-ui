@@ -6,21 +6,22 @@ import org.broadinstitute.dsde.firecloud.auth.{AuthToken, ServiceAccountAuthToke
 import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model._
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
+import org.broadinstitute.dsde.firecloud.fixture.BillingFixtures
 import org.broadinstitute.dsde.firecloud.test.CleanUp
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccount, ServiceAccountName}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
+class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp with BillingFixtures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
-  def findSaInGoogle(name: ServiceAccountName): Option[ServiceAccount] = {
-    googleIamDAO.findServiceAccount(GoogleProject(Config.Projects.default), name).futureValue
+  def findSaInGoogle(project: String, name: ServiceAccountName): Option[ServiceAccount] = {
+    googleIamDAO.findServiceAccount(GoogleProject(project), name).futureValue
   }
 
-  def findPetInGoogle(userInfo: UserStatusDetails): Option[ServiceAccount] = {
-    findSaInGoogle(Sam.petName(userInfo))
+  def findPetInGoogle(project: String, userInfo: UserStatusDetails): Option[ServiceAccount] = {
+    findSaInGoogle(project, Sam.petName(userInfo))
   }
 
   def registerAsNewUser(email: WorkbenchEmail)(implicit authToken: AuthToken): Unit = {
@@ -83,46 +84,51 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp {
       val anyUser: Credentials = UserPool.chooseAnyUser
       val userAuthToken: AuthToken = anyUser.makeAuthToken()
 
+      val owner: Credentials = UserPool.chooseProjectOwner
+      val ownerAuthToken: AuthToken = owner.makeAuthToken()
+
       // set auth tokens explicitly to control which credentials are used
 
       val userStatus = Sam.user.status()(userAuthToken).get
 
-      // ensure known state for pet (not present)
+      withBillingProject("auto-sam") { projectName =>
+        // ensure known state for pet (not present)
 
-      Sam.removePet(userStatus.userInfo)
-      findPetInGoogle(userStatus.userInfo) shouldBe None
+        Sam.removePet(projectName, userStatus.userInfo)
+        findPetInGoogle(projectName, userStatus.userInfo) shouldBe None
 
-      val petAccountEmail = Sam.user.petServiceAccountEmail()(userAuthToken)
-      petAccountEmail.value should not be userStatus.userInfo.userEmail
-      findPetInGoogle(userStatus.userInfo).map(_.email) shouldBe Some(petAccountEmail)
-
-
-      // first call should create pet.  confirm that a second call to create/retrieve gives the same results
-      Sam.user.petServiceAccountEmail()(userAuthToken) shouldBe petAccountEmail
+        val petAccountEmail = Sam.user.petServiceAccountEmail(projectName)(userAuthToken)
+        petAccountEmail.value should not be userStatus.userInfo.userEmail
+        findPetInGoogle(projectName, userStatus.userInfo).map(_.email) shouldBe Some(petAccountEmail)
 
 
-      val petAuthToken = ServiceAccountAuthToken(petAccountEmail)
-      register cleanUp petAuthToken.removePrivateKey()
+        // first call should create pet.  confirm that a second call to create/retrieve gives the same results
+        Sam.user.petServiceAccountEmail(projectName)(userAuthToken) shouldBe petAccountEmail
 
-      Sam.user.status()(petAuthToken) shouldBe Some(userStatus)
 
-      // who is my pet -> who is my user's pet -> it's me
-      Sam.user.petServiceAccountEmail()(petAuthToken) shouldBe petAccountEmail
+        val petAuthToken = ServiceAccountAuthToken(GoogleProject(projectName), petAccountEmail)
+        register cleanUp petAuthToken.removePrivateKey()
 
-      // clean up
+        Sam.user.status()(petAuthToken) shouldBe Some(userStatus)
 
-      Sam.removePet(userStatus.userInfo)
-      findPetInGoogle(userStatus.userInfo) shouldBe None
+        // who is my pet -> who is my user's pet -> it's me
+        Sam.user.petServiceAccountEmail(projectName)(petAuthToken) shouldBe petAccountEmail
+
+        // clean up
+
+        Sam.removePet(projectName, userStatus.userInfo)
+        findPetInGoogle(projectName, userStatus.userInfo) shouldBe None
+      }(ownerAuthToken)
     }
 
     "should not treat non-pet service accounts as pets" in {
       val saEmail = WorkbenchEmail(Config.GCS.qaEmail)
-      val sa = findSaInGoogle(google.toAccountName(saEmail)).get
+      val sa = findSaInGoogle(Config.Projects.default, google.toAccountName(saEmail)).get
 
       // ensure clean state: SA's user not registered
       removeUser(sa.subjectId.value)
 
-      implicit val saAuthToken: ServiceAccountAuthToken = ServiceAccountAuthToken(saEmail)
+      implicit val saAuthToken: ServiceAccountAuthToken = ServiceAccountAuthToken(GoogleProject(Config.Projects.default), saEmail)
       register cleanUp saAuthToken.removePrivateKey()
 
       registerAsNewUser(saEmail)

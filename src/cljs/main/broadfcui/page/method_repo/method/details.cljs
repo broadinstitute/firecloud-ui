@@ -179,7 +179,6 @@
                   [:span {} (if method selected-snapshot-id "Loading...")]
                   [:span {:style {:marginLeft "0.25rem" :fontSize 8 :lineHeight "inherit"}} "▼"]])
          :width :auto
-         :button-style {}
          :items (vec (map
                       (fn [{:keys [snapshotId]}]
                         {:text snapshotId
