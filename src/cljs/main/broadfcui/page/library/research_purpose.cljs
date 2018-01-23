@@ -19,7 +19,8 @@
    (fn [{:keys [props state this]}]
      (filter/section
       {:title (links/create-internal
-                {:onClick #(this :-show-modal)}
+                {:data-test-id "show-research-purpose-modal"
+                 :onClick #(this :-show-modal)}
                 "Filter by Research Purpose")
        :on-clear #(this :-search true)
        :content (let [{:keys [research-purpose-values]} props
@@ -34,7 +35,7 @@
    (fn [{:keys [state this]}]
      [modals/OKCancelForm
       {:header [:div {:style {:lineHeight 1.3}}
-                [:div {} "Filter by Research Purpose"]
+                [:div {:data-test-id "research-purpose-modal-title"} "Filter by Research Purpose"]
                 [:div {:style {:fontSize "initial" :color (:text-light style/colors)}}
                  [:em {} "Powered by "] [:b {} "DUOS"]]]
        :dismiss #(swap! state dissoc :showing-modal?)
