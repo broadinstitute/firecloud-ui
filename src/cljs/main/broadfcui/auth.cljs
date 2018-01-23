@@ -176,7 +176,8 @@
                                        (constantly (clj->js {:access_token auth-token}))
                                        :getBasicProfile
                                        (constantly (clj->js {:getEmail (constantly email)
-                                                             :getId (constantly sub)}))}))
+                                                             :getId (constantly sub)}))
+                                       :hasGrantedScopes (constantly true)}))
                                     :listen (constantly nil)}
                                    :signOut on-sign-out})]
                        (utils/set-google-auth2-instance! auth2)
