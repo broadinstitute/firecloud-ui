@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
