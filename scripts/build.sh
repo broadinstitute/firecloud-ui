@@ -62,7 +62,9 @@ while [ "$1" != "" ]; do
     case $1 in
         compile) clj_build ;;
         -d | --docker) shift
-                       docker_cmd $1
+                       echo $1
+                       DOCKER_CMD=$1
+                       docker_cmd
                        ;;
     esac
     shift
