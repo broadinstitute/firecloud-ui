@@ -745,6 +745,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
               checkVisibleAndAccessible(user, projectName, workspaceName)
+              api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
               checkNoAccess(user, projectName, workspaceName)
             }
