@@ -598,6 +598,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkNoAccess(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
           }
         }
       }
@@ -688,6 +690,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkNoAccess(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
           }
         }
       }
@@ -734,6 +738,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkNoAccess(user, projectName, workspaceName)
+
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
           }
         }
       }
