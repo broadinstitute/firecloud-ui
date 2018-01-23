@@ -15,7 +15,6 @@ trap clean_up EXIT HUP INT QUIT PIPE TERM 0 20
 docker-compose -p fcuitests -f scripts/.tests-compose.yaml pull
 
 docker volume create --name=jar-cache
-docker volume create --name=node-modules
 
 docker-compose -p fcuitests -f scripts/.tests-compose.yaml up -d
 
