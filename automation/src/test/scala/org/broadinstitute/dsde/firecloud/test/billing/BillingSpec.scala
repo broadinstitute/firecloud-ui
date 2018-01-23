@@ -124,6 +124,8 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
           // verify running a method
           withSignIn(user) { _ =>
+            api.workspaces.waitForBucketReadAccess(billingProjectName, workspaceName)
+
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
             val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 

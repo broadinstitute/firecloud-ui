@@ -371,6 +371,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               withSignIn(user) { listPage =>
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()

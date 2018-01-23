@@ -106,6 +106,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           val headers1 = List("participant_id")
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
@@ -142,6 +143,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           workspaceDataTab.dataTable.hideColumn("test2")
         }
         withSignIn(owner) { _ =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
@@ -178,6 +180,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
         }
         withSignIn(owner) { _ =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
@@ -215,6 +218,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           workspaceDataTab.dataTable.hideColumn("test3")
         }
         withSignIn(owner) { _ =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
