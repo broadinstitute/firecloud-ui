@@ -28,7 +28,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
         val billingProjectName = "billing-spec-create-" + makeRandomId() // is this a unique ID?
 
-        withSignInReal(userOwner) { _ =>
+        withSignIn(userOwner) { _ =>
           val billingPage = new BillingManagementPage().open
           logger.info(s"Creating billing project: $billingProjectName")
 
