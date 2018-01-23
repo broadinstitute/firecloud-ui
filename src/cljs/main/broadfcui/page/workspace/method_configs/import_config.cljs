@@ -51,13 +51,15 @@
                 "Import as:"]
                [:div {:style {:float "left" :marginRight "0.5rem"}}
                 (style/create-form-label "Namespace")
-                [input/TextField {:ref "namespace"
+                [input/TextField {:data-test-id "namespace-field"
+                                  :ref "namespace"
                                   :defaultValue (:namespace loaded-config)
                                   :placeholder "Required"
                                   :predicates [(input/nonempty "Namespace")]}]]
                [:div {:style {:float "left"}}
                 (style/create-form-label "Name")
-                [input/TextField {:ref "name"
+                [input/TextField {:data-test-id "name-field"
+                                  :ref "name"
                                   :defaultValue (:name loaded-config)
                                   :placeholder "Required"
                                   :predicates [(input/nonempty "Name")]}]]
@@ -114,11 +116,13 @@
         (cond error-message (style/create-server-error-message error-message)
               configs
               (ws-common/method-config-selector
-               {:configs configs
+               {:data-test-id "method-configs-import-table"
+                :configs configs
                 :render-name
                 (fn [config]
                   (links/create-internal
-                   {:onClick #(push-page {:breadcrumb-text (id->str config)
+                   {:data-test-id (str (:name config) "-link")
+                    :onClick #(push-page {:breadcrumb-text (id->str config)
                                           :component [ConfirmWorkspaceConfig
                                                       (assoc props :config config)]})}
                    (:name config)))})
