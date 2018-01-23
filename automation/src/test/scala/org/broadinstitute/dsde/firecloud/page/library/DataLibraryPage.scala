@@ -40,7 +40,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def openResearchPurposeModal(): Unit = {
-    rpModalLink.click
+    rpModalLink.doClick()
   }
 
   def isShowingResearchPurposeModal: Boolean = {
