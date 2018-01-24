@@ -16,6 +16,7 @@ object LibraryData {
     "library:datatype" -> Seq("data", "type"),
     "library:dataCategory" -> Seq("data", "category"),
     "library:dataUseRestriction" -> "dur",
+    "library:useLimitationOption" -> "skip",
     "library:studyDesign" -> "study",
     "library:cellType" -> "cell",
     "library:requiresExternalApproval" -> false,

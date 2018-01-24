@@ -132,7 +132,7 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         aclEntries.map{ e => e.toMap })
     }
 
-    def setAttributes(namespace: String, name: String, attributes: Map[String, String])(implicit token: AuthToken): Unit = {
+    def setAttributes(namespace: String, name: String, attributes: Map[String, Any])(implicit token: AuthToken): Unit = {
       logger.info(s"Setting attributes for workspace: $namespace/$name $attributes")
       patchRequest(apiUrl(s"api/workspaces/$namespace/$name/setAttributes"), attributes)
     }

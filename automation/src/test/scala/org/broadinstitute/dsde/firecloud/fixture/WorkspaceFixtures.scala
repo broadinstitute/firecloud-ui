@@ -24,7 +24,7 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
     */
   def withWorkspace(namespace: String, namePrefix: String, authDomain: Set[String] = Set.empty,
                     aclEntries: List[AclEntry] = List(),
-                    attributes: Option[Map[String, String]] = None,
+                    attributes: Option[Map[String, Any]] = None,
                     cleanUp: Boolean = true)
                    (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     val workspaceName = appendUnderscore(namePrefix) + makeUuid
