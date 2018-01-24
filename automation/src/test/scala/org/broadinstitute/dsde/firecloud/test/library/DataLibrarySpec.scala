@@ -35,7 +35,6 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
 
   "For a dataset with tags" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
-    print(curatorUser.email)
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tags)) { wsName =>
       withCleanUp {
