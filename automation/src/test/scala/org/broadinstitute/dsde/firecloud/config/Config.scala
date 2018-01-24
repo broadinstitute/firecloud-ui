@@ -36,6 +36,8 @@ object Config {
   object GCS {
     val pathToQAPem = gcsConfig.getString("qaPemFile")
     val qaEmail = gcsConfig.getString("qaEmail")
+    val trialBillingPemFile = gcsConfig.getString("trialBillingPemFile")
+    val trialBillingPemFileClientId = gcsConfig.getString("trialBillingPemFileClientId")
     val appsDomain = gcsConfig.getString("appsDomain")
   }
 
@@ -62,6 +64,7 @@ object Config {
     val AuthDomainUsers = UserSet(makeCredsMap(userDataJson("authdomains")))
     val Students = UserSet(makeCredsMap(userDataJson("students")))
     val NotebooksWhitelisted = UserSet(makeCredsMap(userDataJson("notebookswhitelisted")))
+    val CampaignManager = UserSet(makeCredsMap(userDataJson("campaignManagers")))
 
     // defaults
     val owner = Owners.getUserCredential("hermione")

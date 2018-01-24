@@ -107,6 +107,7 @@ docker run -e FC_INSTANCE=$FC_INSTANCE \
     -P --rm -t -e CHROME_URL="http://hub:4444/" ${HOST_MAPPING} \
     -v $WORKING_DIR/target/application.conf:/app/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
+    -v $WORKING_DIR/target/trial-billing-account.pem:/app/src/test/resources/trial-billing-account.pem \
     -v $WORKING_DIR/target/users.json:/app/src/test/resources/users.json \
     -v $WORKING_DIR/chrome/downloads:/app/chrome/downloads \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
