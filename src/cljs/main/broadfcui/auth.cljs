@@ -2,13 +2,14 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
-   [broadfcui.common.links :as links]))
+   ))
 
 (react/defc GoogleAuthLibLoader
   {:render
