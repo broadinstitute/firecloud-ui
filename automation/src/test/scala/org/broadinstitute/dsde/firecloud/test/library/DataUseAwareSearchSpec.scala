@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component.Label
 import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
@@ -11,8 +13,9 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
-  "Open the page" - {
-    "Open the RP modal" in withWebDriver { implicit driver =>
+  // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
+  "Data Library" - {
+    "Open and close the RP modal" in withWebDriver { implicit driver =>
       val user = UserPool.chooseAnyUser
 
       withSignIn(user) { _ =>
@@ -21,6 +24,31 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         page.openResearchPurposeModal()
 
         page.isShowingResearchPurposeModal shouldBe true
+
+        page.dismissResearchPurposeModal()
+
+        page.isShowingResearchPurposeModal shouldBe false
+      }
+    }
+
+    "Select options in the RP modal and generate breadcrumbs" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseAnyUser
+
+      withSignIn(user) { _ =>
+        val page = new DataLibraryPage().open
+
+        page.openResearchPurposeModal()
+
+        page.selectRPCheckbox("control")
+        page.selectRPCheckbox("poa")
+
+        page.executeRPSearch()
+
+        page.isShowingResearchPurposeModal shouldBe false
+
+        Label("control-tag").isVisible shouldBe true
+        Label("poa-tag").isVisible shouldBe true
+        Label("commercial-tag").isVisible shouldBe false // We didn't select this one
       }
     }
   }

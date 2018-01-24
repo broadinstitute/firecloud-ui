@@ -70,7 +70,8 @@
            :selected-ids (keys (:selected-diseases @state))})])])
    :-render-checkbox
    (fn [{:keys [state]} label code]
-     [Checkbox {:style {:margin "0.75rem 0"}
+     [Checkbox {:data-test-id (str (name code) "-checkbox")
+                :style {:margin "0.75rem 0"}
                 :label [:span {}
                         label
                         [:span {:style {:marginLeft "0.3rem" :fontSize "66%" :verticalAlign "middle"}}

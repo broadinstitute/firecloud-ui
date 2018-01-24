@@ -18,6 +18,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private val searchField = SearchField("library-search-input")
   private val rpModalLink = Link("show-research-purpose-modal")
   private val rpModalTitleLabel = Label("research-purpose-modal-title")
+  private val rpDismissButton = Button("x-button")
+  private val rpSearchButton = Button("ok-button")
 
   override def awaitReady: Unit = {
     LibraryTable.awaitReady()
@@ -43,7 +45,19 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     rpModalLink.doClick()
   }
 
+  def dismissResearchPurposeModal(): Unit = {
+    rpDismissButton.doClick()
+  }
+
   def isShowingResearchPurposeModal: Boolean = {
     rpModalTitleLabel.isVisible
+  }
+
+  def selectRPCheckbox(code: String): Unit = {
+    Checkbox(s"$code-checkbox").ensureChecked()
+  }
+
+  def executeRPSearch(): Unit = {
+    rpSearchButton.doClick()
   }
 }
