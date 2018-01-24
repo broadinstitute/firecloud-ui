@@ -41,7 +41,7 @@ else
 fi
 
 if [ "$ENV" = "prod" ]; then
-  TEST_ENTRYPOINT="testOnly -- -n ProdTest"
+  TEST_ENTRYPOINT="testOnly *BillingSpec"
 fi
 
 if [ "$FC_INSTANCE" = "alpha" ] || [ "$FC_INSTANCE" = "prod" ]; then

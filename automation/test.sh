@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SBT_CMD=${1-"testOnly -- -l ProdTest"}
+SBT_CMD=${1:-"testOnly *BillingSpec"}
 echo $SBT_CMD
 
 set -o pipefail
