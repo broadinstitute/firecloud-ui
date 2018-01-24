@@ -221,10 +221,14 @@
                [:div {:style {:padding "1rem" :marginTop "0.5rem"
                               :border style/standard-line :background (:background-light style/colors)}}
                 [:label {:style {:marginBottom "0.5rem" :display "block"}}
-                 [:input {:type "checkbox" :onChange #(swap! state assoc :terms-agreed? (.. % -target -checked))}]
+                 [:input {:type "checkbox"
+                          :onChange #(swap! state assoc :terms-agreed? (.. % -target -checked))
+                          :data-test-id "agree-terms"}]
                  "I agree to the terms of this Agreement."]
                 [:label {:style {:display "block"}}
-                 [:input {:type "checkbox" :onChange #(swap! state assoc :cloud-terms-agreed? (.. % -target -checked))}]
+                 [:input {:type "checkbox"
+                          :onChange #(swap! state assoc :cloud-terms-agreed? (.. % -target -checked))
+                          :data-test-id "agree-cloud-terms"}]
                  "I agree to the Google Cloud Terms of Service."]
                 [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
                  (links/create-external {:href "https://cloud.google.com/terms/"}
@@ -240,8 +244,10 @@
                       [buttons/Button
                        (if-not page-2?
                          {:text "Review Terms of Service"
+                          :data-test-id "review-terms-of-service"
                           :onClick #(swap! state assoc :page-2? true)}
                          {:text "Accept"
+                          :data-test-id "accept-terms-of-service"
                           :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
                                        "You must check the boxes to accept the agreement.")
                           :onClick accept-eula})])}]))})

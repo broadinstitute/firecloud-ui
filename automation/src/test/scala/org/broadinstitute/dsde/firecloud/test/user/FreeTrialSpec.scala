@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.component.{Button, Label, TestId}
+import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -20,27 +20,35 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
+  val campaignManager: Credentials = UserPool.chooseCampaignManager
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
+  val trialKVPKeys = Seq("trialState", "trialBillingProjectName", "trialEnabledDate", "trialEnrolledDate",
+    "trialTerminatedDate", "trialExpirationDate", "userAgreed")
 
   var testUser: Credentials = _
   var userAuthToken: AuthToken = _
   var subjectId : String = _
 
-
   override def beforeEach {
     testUser = UserPool.chooseStudent
     userAuthToken = testUser.makeAuthToken()
     subjectId = Orchestration.profile.getUser()(userAuthToken)("userId").toString
-    Try(Thurloe.keyValuePairs.delete(subjectId, "trialState"))
+    Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
+  }
+
+  private def setUpEnabledUserAndProject(user: Credentials): Unit = {
+    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
+    api.trial.createTrialProjects(1)
+    api.trial.enableUser(user.email)
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
-    register cleanUp Thurloe.keyValuePairs.delete(subjectId, "trialState")
+    register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
   "A user whose free trial status is" - {
 
-    "blank" - {
+    "Blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -51,21 +59,33 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should see the free trial banner and be able to enroll" ignore withWebDriver { implicit driver => // ignored until trial admin group is ready in fiab
-        registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Enabled")
-
+      "should see the free trial banner and be able to enroll" in withWebDriver { implicit driver =>
+        setUpEnabledUserAndProject(testUser)
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
           bannerTitleElement.isVisible shouldBe true
           bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
 
-          val bannerButton = Button(TestId("trial-banner-button"))
+          val bannerButton = await ready Button(TestId("trial-banner-button"))
           bannerButton.doClick()
+
+          val reviewButton = await ready Button(TestId("review-terms-of-service"))
+          reviewButton.doClick()
+
+          val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
+          agreeTermsCheckbox.ensureChecked()
+
+          val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
+          agreeCloudTermsCheckbox.ensureChecked()
+
+          val acceptButton = await ready Button(TestId("accept-terms-of-service"))
+          acceptButton.doClick()
+
           await condition bannerButton.getState == "ready"
           bannerTitleElement.getText shouldBe "Access Free Credits"
         }
+        registerCleanUpForDeleteTrialState()
       }
     }
 
