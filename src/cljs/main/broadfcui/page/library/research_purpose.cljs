@@ -53,7 +53,8 @@
    :-render-disease-question
    (fn [{:keys [state this]}]
      [:div {:style {:position "relative"}}
-      [Checkbox {:style {:margin "0.75rem 0"}
+      [Checkbox {:data-test-id "disease-focused-research-checkbox"
+                 :style {:margin "0.75rem 0"}
                  :label "Disease focused research"
                  :checked? (:disease-checked? @state)
                  :on-change (fn [new-val]
