@@ -296,6 +296,10 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
     def getUser()(implicit token: AuthToken): Map[String, String] = {
       parseResponseAs[Map[String, String]](getRequest(apiUrl(s"register/profile")))
     }
+
+    def getUserBillingProjects()(implicit token: AuthToken): List[Map[String, String]] = {
+      parseResponseAs[List[Map[String, String]]](getRequest(apiUrl(s"api/profile/billing")))
+    }
   }
 
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken): String = {
@@ -310,25 +314,36 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
                              available: Int,
                              claimed: Int)
 
-    def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
-      logger.info(s"Enabling user [$userEmail] as campaign manager")
-      val enableResponse: String = postRequest(apiUrl("api/trial/manager/enable"), Seq(userEmail))
-      val responseJson: JsObject = enableResponse.parseJson.asJsObject
+    private def checkUserStatusUpdate(userEmail: String, update: String, response: String): Unit = {
       val successfulResponseKeys = Seq("Success", "NoChangeRequired")
-      responseJson.fields.map {
+
+      response.parseJson.asJsObject.fields.map {
         case f@x if successfulResponseKeys.contains(f._1) =>
           logger.info(s"${f._1}: ${f._2.toString()}")
           return
         case f@y =>
           logger.error(s"${f._1}: ${f._2.toString()}")
-          throw new Exception(s"Unable to enable user: $userEmail. Error message: $enableResponse")
+          throw new Exception(s"Unable to $update trial user: $userEmail. Error message: $response")
       }
+    }
+
+    def enableUser(userEmail: String)(implicit token: AuthToken): Unit = {
+      val enableResponse: String = postRequest(apiUrl("api/trial/manager/enable"), Seq(userEmail))
+
+      checkUserStatusUpdate(userEmail, "enable", enableResponse)
+    }
+
+    def terminateUser(userEmail: String)(implicit token: AuthToken): Unit = {
+      val terminateResponse: String = postRequest(apiUrl("api/trial/manager/terminate"), Seq(userEmail))
+
+      checkUserStatusUpdate(userEmail, "terminate", terminateResponse)
     }
 
     def createTrialProjects(count: Int)(implicit token: AuthToken): Unit = {
       val trialProjects: TrialProjects = countTrialProjects()
       if (trialProjects.available < count) {
         postRequest(apiUrl(s"api/trial/manager/projects?operation=create&count=${count - trialProjects.available}"))
+
         retry(30.seconds, 10.minutes)({
           val report: TrialProjects = countTrialProjects()
           if (report.available >= count)
