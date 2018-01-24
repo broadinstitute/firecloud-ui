@@ -76,12 +76,12 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
       withBillingProject("auto-goog-role") { projectName =>
         roles foreach { role =>
-          val addEx = intercept[APIException] {
+          val addEx = intercept[RestException] {
             Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
           }
           addEx.getMessage should include(role)
 
-          val removeEx = intercept[APIException] {
+          val removeEx = intercept[RestException] {
             Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
           }
           removeEx.getMessage should include(role)
@@ -97,13 +97,13 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       val errorMsg = "You must be a project owner"
       val unownedProject = "broad-dsde-dev"
 
-      val addEx = intercept[APIException] {
+      val addEx = intercept[RestException] {
         Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       addEx.getMessage should include(errorMsg)
       addEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
 
-      val removeEx = intercept[APIException] {
+      val removeEx = intercept[RestException] {
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       removeEx.getMessage should include(errorMsg)
