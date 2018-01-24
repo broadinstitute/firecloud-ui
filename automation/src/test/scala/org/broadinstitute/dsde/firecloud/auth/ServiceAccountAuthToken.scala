@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream
 import java.util
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.dao.Google.googleIamDAO
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.model.google.{GoogleProject, ServiceAccountKey}
