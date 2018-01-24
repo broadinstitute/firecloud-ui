@@ -1,8 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{MethodTable, Modal}
 import org.openqa.selenium.WebDriver
 
@@ -12,8 +12,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {
 
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     chooseConfigFromRepoButton.doClick()
-    val importView = await ready new SelectMethodView()
-    importView
+    (await ready new SelectMethodView())
       .selectMethod(methodNamespace, methodName)
       .confirm()
       .selectConfiguration(methodNamespace, methodConfigName, snapshotId)
@@ -22,8 +21,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {
 
   def copyConfigFromWorkspace(workspaceNamespace: String, workspaceName: String, configName: String): Unit = {
     copyConfigFromWorkspaceButton.doClick()
-    val importView = await ready new ChooseWorkspaceView()
-    importView
+    (await ready new ChooseWorkspaceView())
       .selectWorkspace(workspaceNamespace, workspaceName)
       .selectConfig(configName)
       .importAsIs()
