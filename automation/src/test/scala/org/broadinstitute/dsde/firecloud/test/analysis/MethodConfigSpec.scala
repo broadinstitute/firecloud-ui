@@ -171,6 +171,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             billingProject, sourceWorkspaceName, method.methodNamespace, method.methodName)
 
           methodConfigDetailsPage.isLoaded shouldBe true
+          methodConfigDetailsPage.methodConfigName shouldBe method.methodName
         }
       }
     }
