@@ -11,5 +11,8 @@ trait Clickable { this: Component =>
   /**
     * Click on the element modeled by this Component
     */
-  def doClick()(implicit webDriver: WebDriver): Unit = click on query
+  def doClick()(implicit webDriver: WebDriver): Unit = {
+    scrollToVisible()
+    click on query
+  }
 }
