@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.component.Label
+import org.broadinstitute.dsde.firecloud.component.{Button, Label, TextField}
 import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
@@ -49,6 +49,27 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         Label("control-tag").isVisible shouldBe true
         Label("poa-tag").isVisible shouldBe true
         Label("commercial-tag").isVisible shouldBe false // We didn't select this one
+      }
+    }
+
+    "The ontology autocomplete exists and works" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseAnyUser
+
+      withSignIn(user) { _ =>
+        val page = new DataLibraryPage().open
+
+        page.openResearchPurposeModal()
+
+        page.selectRPCheckbox("disease-focused-research")
+
+        TextField("research-purpose-ontology-autocomplete").setText("fatal")
+
+        val ffi = Button("suggestion-http://purl.obolibrary.org/obo/DOID_0050433") // fatal familial insomnia
+        ffi.isVisible shouldBe true
+
+        ffi.doClick()
+
+        Label("doid:0050433-tag").isVisible shouldBe true
       }
     }
   }

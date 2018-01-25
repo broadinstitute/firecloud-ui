@@ -46,7 +46,7 @@
                         ((or render-suggestion
                              (fn [{:keys [label id definition]}]
                                (react/create-element
-                                [:div {}
+                                [:div {:data-test-id (str "suggestion-" id)}
                                  [:div {:style {:lineHeight "1.5em"}}
                                   label
                                   [:small {:style {:float "right"}} id]]
