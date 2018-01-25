@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.component.{Button, Label, TextField}
+import org.broadinstitute.dsde.firecloud.component.{Button, Label, SearchField}
 import org.broadinstitute.dsde.firecloud.config.UserPool
 import org.broadinstitute.dsde.firecloud.fixture.{UserFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
@@ -62,12 +62,16 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         page.selectRPCheckbox("disease-focused-research")
 
-        TextField("ontology-autosuggest-text-input").setText("fatal")
+        SearchField("ontology-autosuggest-text-input").setText("fatal")
+
+        Thread sleep 400
 
         val ffi = Button("suggestion-http://purl.obolibrary.org/obo/DOID_0050433") // fatal familial insomnia
         ffi.isVisible shouldBe true
 
         ffi.doClick()
+
+        Thread sleep 400
 
         Label("doid:0050433-tag").isVisible shouldBe true
       }
