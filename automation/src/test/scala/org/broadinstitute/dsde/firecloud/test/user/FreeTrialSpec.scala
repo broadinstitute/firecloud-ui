@@ -60,7 +60,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" ignore withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
 
         withSignIn(testUser) { _ =>
