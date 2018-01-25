@@ -109,6 +109,7 @@ docker run -e FC_INSTANCE=$FC_INSTANCE \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/src/test/resources/firecloud-account.pem \
     -v $WORKING_DIR/target/trial-billing-account.pem:/app/src/test/resources/trial-billing-account.pem \
     -v $WORKING_DIR/target/users.json:/app/src/test/resources/users.json \
+    -v $WORKING_DIR/test-reports:/app/test-reports \
     -v $WORKING_DIR/chrome/downloads:/app/chrome/downloads \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v $WORKING_DIR/output:/app/output \
