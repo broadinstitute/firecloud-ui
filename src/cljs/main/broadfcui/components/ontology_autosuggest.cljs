@@ -60,4 +60,5 @@
     :on-change on-change
     :on-submit on-submit
     :theme {:input {:width "100%" :marginBottom 0}
-            :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}])
+            :suggestionsContainerOpen {:marginTop -1 :width "100%"}}
+    :data-test-id "ontology-autosuggest-text-input"}])

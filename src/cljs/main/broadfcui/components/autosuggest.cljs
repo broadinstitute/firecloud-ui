@@ -29,6 +29,7 @@
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
   :value (required when not caching)
+  :data-test-id - if you're doing Selenium things
 
   Other props to pass through to input element go in :inputProps.
 
@@ -52,7 +53,7 @@
      {:value (or (:value props) (:default-value props))})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
+     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value data-test-id]} props
            {:keys [suggestions]} @state
            value (or (:value (if caching? @state props)) "")
            get-suggestions (cond
@@ -115,6 +116,9 @@
                                                        [:loading] (spinner "Loading...")
                                                        [:error] [:div {:style {:margin "1em"}} "Error loading results."]
                                                        (.-children arg))])))
+                   :renderInputComponent (fn [inputProps]
+                                           (react/create-element
+                                            [:input (assoc (js->clj inputProps) "data-test-id" data-test-id)]))
                    :theme
                    {:container {}
                     :containerOpen {}

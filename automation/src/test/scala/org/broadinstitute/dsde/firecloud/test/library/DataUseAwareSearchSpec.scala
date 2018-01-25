@@ -62,7 +62,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         page.selectRPCheckbox("disease-focused-research")
 
-        TextField("research-purpose-ontology-autocomplete").setText("fatal")
+        TextField("ontology-autosuggest-text-input").setText("fatal")
 
         val ffi = Button("suggestion-http://purl.obolibrary.org/obo/DOID_0050433") // fatal familial insomnia
         ffi.isVisible shouldBe true
