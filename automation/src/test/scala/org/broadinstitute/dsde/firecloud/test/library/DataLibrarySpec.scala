@@ -14,7 +14,6 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
 
   "For a dataset with consent codes" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
-    print(curatorUser.email)
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec_consentcodes_") { wsName =>
       withCleanUp {
