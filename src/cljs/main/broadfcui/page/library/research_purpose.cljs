@@ -19,7 +19,8 @@
    (fn [{:keys [props state this]}]
      (filter/section
       {:title (links/create-internal
-                {:onClick #(this :-show-modal)}
+                {:data-test-id "show-research-purpose-modal"
+                 :onClick #(this :-show-modal)}
                 "Filter by Research Purpose")
        :on-clear #(this :-search true)
        :content (let [{:keys [research-purpose-values]} props
@@ -34,7 +35,7 @@
    (fn [{:keys [state this]}]
      [modals/OKCancelForm
       {:header [:div {:style {:lineHeight 1.3}}
-                [:div {} "Filter by Research Purpose"]
+                [:div {:data-test-id "research-purpose-modal-title"} "Filter by Research Purpose"]
                 [:div {:style {:fontSize "initial" :color (:text-light style/colors)}}
                  [:em {} "Powered by "] [:b {} "DUOS"]]]
        :dismiss #(swap! state dissoc :showing-modal?)
@@ -52,7 +53,8 @@
    :-render-disease-question
    (fn [{:keys [state this]}]
      [:div {:style {:position "relative"}}
-      [Checkbox {:style {:margin "0.75rem 0"}
+      [Checkbox {:data-test-id "disease-focused-research-checkbox"
+                 :style {:margin "0.75rem 0"}
                  :label "Disease focused research"
                  :checked? (:disease-checked? @state)
                  :on-change (fn [new-val]
@@ -69,7 +71,8 @@
            :selected-ids (keys (:selected-diseases @state))})])])
    :-render-checkbox
    (fn [{:keys [state]} label code]
-     [Checkbox {:style {:margin "0.75rem 0"}
+     [Checkbox {:data-test-id (str (name code) "-checkbox")
+                :style {:margin "0.75rem 0"}
                 :label [:span {}
                         label
                         [:span {:style {:marginLeft "0.3rem" :fontSize "66%" :verticalAlign "middle"}}

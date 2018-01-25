@@ -194,7 +194,7 @@
    count])
 
 (defn render-tag
-  ([tag] (render-tag {} tag))
+  ([tag] (render-tag {:data-test-id (str (string/lower-case tag) "-tag")} tag))
   ([props & children]
    [:div (utils/deep-merge {:style {:display "inline-block" :background (:tag-background colors)
                                     :color (:tag-foreground colors) :margin "0.1rem"
