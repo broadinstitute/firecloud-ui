@@ -24,8 +24,8 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
         withSignIn(curatorUser) { _ =>
           val page = new DataLibraryPage().waitForDataset(wsName)
           if (page.isDefined) {
-            val codes: List[String] = page.get.getConsentCodes()
-            List("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
+            val codes: Seq[String] = page.get.getConsentCodes()
+            Seq("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
           }
         }
       }
@@ -44,8 +44,8 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
         withSignIn(curatorUser) { _ =>
           val page = new DataLibraryPage().waitForDataset(wsName)
           if (page.isDefined) {
-            val codes: List[String] = page.get.getTags()
-            List("testing", "diabetes") should contain allElementsOf codes
+            val codes: Seq[String] = page.get.getTags()
+            Seq("testing", "diabetes") should contain allElementsOf codes
           }
         }
       }

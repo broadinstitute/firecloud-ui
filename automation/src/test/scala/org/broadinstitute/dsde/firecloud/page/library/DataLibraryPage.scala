@@ -1,16 +1,14 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
-import java.util
 
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.firecloud.util.Retry.retry
-import org.openqa.selenium.{By, WebDriver, WebElement}
+import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration.DurationLong
 
 /**
@@ -77,12 +75,12 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     rpSearchButton.doClick()
   }
 
-  def getConsentCodes(): List[String] = {
+  def getConsentCodes(): Seq[String] = {
     consentCodes.awaitVisible()
     consentCodes.getTags
   }
 
-  def getTags(): List[String] = {
+  def getTags(): Seq[String] = {
     tags.awaitVisible()
     tags.getTags
   }
