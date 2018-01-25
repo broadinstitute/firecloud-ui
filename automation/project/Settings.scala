@@ -27,7 +27,7 @@ object Settings {
   )
 
   val testSettings = List(
-    testOptions in Test += Tests.Argument("-oF")
+    testOptions in Test += Tests.Argument("-oF", "-u", "test-reports")
   )
 
   //common settings for all sbt subprojects
