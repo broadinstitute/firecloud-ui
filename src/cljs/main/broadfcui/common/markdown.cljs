@@ -36,6 +36,10 @@
    (fn [{:keys [state this]}]
      (assert (not (this :-controlled?)) "Trying to read text from a controlled component")
      (:text @state))
+   :set-text
+   (fn [{:keys [state this]} text]
+     (assert (not (this :-controlled?)) "Trying to set text on a controlled component")
+     (swap! state assoc :text text))
    :get-initial-state
    (fn [{:keys [props this]}]
      (merge
@@ -44,7 +48,8 @@
         {:text (or (:initial-text props) "")})))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [mode]} @state
+     (let [{:keys [data-test-id value on-change toolbar-style toolbar-items initial-slider-position]} props
+           {:keys [mode]} @state
            tab (fn [mode-key label]
                  (let [selected? (= mode-key mode)]
                    [:div {:data-test-id (test-utils/text->test-id label "tab")
@@ -55,28 +60,30 @@
                           :onClick #(swap! state assoc :mode mode-key)}
                     label]))
            controlled? (this :-controlled?)
-           text (if controlled? (:value props) (:text @state))
+           text (if controlled? value (:text @state))
            markdown-view [MarkdownView {:text text}]
            text-area (style/create-text-area {:data-test-id "markdown-editor-text-area"
                                               :value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
                                                            (if controlled?
-                                                             ((:on-change props) new-value)
+                                                             (on-change new-value)
                                                              (swap! state assoc :text new-value)))
                                               :style {:width "100%" :height "100%" :minHeight 200
                                                       :resize (if (= mode :edit) "vertical" "none")}})]
-       [:div {:data-test-id (:data-test-id props)}
-        [:div {:style {:marginTop "0.5rem"}}
+       [:div {:data-test-id data-test-id}
+        [:div {:style (merge {:display "flex" :alignItems "baseline" :marginTop "0.5rem"}
+                             toolbar-style)}
          (tab :edit "Edit")
          (tab :preview "Preview")
-         (tab :side-by-side "Side-by-side")]
+         (tab :side-by-side "Side-by-side")
+         (list* toolbar-items)]
         (case mode
           :edit text-area
           :preview [:div {:style {:paddingTop "0.5rem"}} markdown-view]
           :side-by-side [SplitPane
                          {:left text-area :overflow-left "initial"
                           :right [:div {:style {:marginLeft 2}} markdown-view]
-                          :initial-slider-position (or (:initial-slider-position props) 500)}])]))
+                          :initial-slider-position (or initial-slider-position 500)}])]))
    :-controlled?
    (fn [{:keys [props]}]
      (contains? props :value))})

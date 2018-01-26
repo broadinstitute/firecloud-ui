@@ -5,9 +5,10 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.markdown :as markdown]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
@@ -34,6 +35,25 @@
 (defn- build-new-entity-id [get-parsed-response]
   (let [{:keys [namespace name snapshotId]} (get-parsed-response)]
     (assoc (utils/restructure namespace name) :snapshot-id snapshotId)))
+
+
+(defn- strip-comment-leaders
+  "Takes the comment (or blank) lines retrieved from the top of a WDL file (as a seq of strings),
+   finds the most common number of '#' characters to start non-blank lines, and removes that many
+   '#' characters from each line"
+  [comment-or-blank-lines]
+  (let [most-common-hash-count (->> comment-or-blank-lines
+                                    (remove string/blank?)
+                                    (map (comp count (partial re-find #"#+")))
+                                    frequencies (sort-by val) last key)
+        pattern (re-pattern (str "^#{" most-common-hash-count "}.*"))
+        trimmed-lines (map (fn [line]
+                             (string/trim
+                              (if (re-matches pattern line)
+                                (apply str (drop most-common-hash-count line))
+                                line)))
+                           comment-or-blank-lines)]
+    trimmed-lines))
 
 
 (react/defc CreateMethodDialog
@@ -132,7 +152,11 @@
            [markdown/MarkdownEditor {:data-test-id "documentation-field"
                                      :ref "documentation"
                                      :initial-text (:documentation info)
-                                     :initial-slider-position 650}]
+                                     :initial-slider-position 650
+                                     :toolbar-items [(flex/strut 50)
+                                                     (links/create-internal
+                                                      {:onClick #(this :-populate-description-from-wdl)}
+                                                      "Populate from WDL comment")]}]
            (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:data-test-id "synopsis-field"
                                      :ref "synopsis"
@@ -159,6 +183,11 @@
    :-set-wdl-text
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))
+   :-populate-description-from-wdl
+   (fn [{:keys [refs]}]
+     (let [wdl-text-lines (string/split-lines ((@refs "wdl-editor") :call-method "getValue"))
+           comment-or-blank-lines (take-while (some-fn string/blank? #(string/starts-with? % "#")) wdl-text-lines)]
+       ((@refs "documentation") :set-text (string/join "\n" (strip-comment-leaders comment-or-blank-lines)))))
    :-create-method
    (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
