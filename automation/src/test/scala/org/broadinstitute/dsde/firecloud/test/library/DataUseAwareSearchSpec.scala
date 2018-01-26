@@ -70,16 +70,19 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         SearchField("ontology-autosuggest").setText("fatal")
 
-        await enabled testId("suggestion-http://purl.obolibrary.org/obo/DOID_0050433")
+        val suggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
+        val tagId = "doid:0050433-tag"
 
-        val ffi = Button("suggestion-http://purl.obolibrary.org/obo/DOID_0050433") // fatal familial insomnia
+        await enabled testId(suggestionId) // has a timeout so test will not hang if suggestion never shows
+
+        val ffi = Button(suggestionId)
         ffi.isVisible shouldBe true
 
         ffi.doClick()
 
-        await enabled testId("doid:0050433-tag")
+        await enabled testId(tagId)
 
-        Label("doid:0050433-tag").isVisible shouldBe true
+        Label(tagId).isVisible shouldBe true
       }
     }
   }
