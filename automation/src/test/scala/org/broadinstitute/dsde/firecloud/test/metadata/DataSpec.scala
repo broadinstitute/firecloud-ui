@@ -409,7 +409,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id"))
     }
 
-    "with workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+    "with workspace defaults, with user preferences, new columns" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),

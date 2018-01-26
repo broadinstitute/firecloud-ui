@@ -121,7 +121,7 @@ class SamApiSpec extends FreeSpec with Matchers with ScalaFutures with CleanUp w
       }(ownerAuthToken)
     }
 
-    "should not treat non-pet service accounts as pets" in {
+    "should not treat non-pet service accounts as pets" ignore {
       // Use sam service account when this test moves to sam
       val saEmail = WorkbenchEmail(Config.GCS.qaEmail)
 
