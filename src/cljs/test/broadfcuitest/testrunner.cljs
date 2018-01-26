@@ -6,6 +6,7 @@
    broadfcuitest.components.research-purpose
    broadfcuitest.config
    broadfcuitest.duration
+   broadfcuitest.strip-comment-leaders
    broadfcuitest.style
    broadfcuitest.utils
    ))
@@ -16,4 +17,5 @@
   (cljs.test/run-tests 'broadfcuitest.style)
   (cljs.test/run-tests 'broadfcuitest.components.buttons)
   (cljs.test/run-tests 'broadfcuitest.components.research-purpose)
+  (cljs.test/run-tests 'broadfcuitest.strip-comment-leaders)
   )
