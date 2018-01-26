@@ -83,6 +83,8 @@
                :style :light :color :state-exception
                :text "Redact" :icon :delete :margin :bottom
                :onClick #(swap! state assoc :deleting? true)}])
+           ;; There is no cookie-authed route for methods, so we can't just link to it
+           ;; What we can do is create a link to a fake file in memory and click it automatically on behalf of the user
            [buttons/SidebarButton
             {:data-test-id "download-button"
              :style :light :color :button-primary
