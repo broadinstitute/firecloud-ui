@@ -28,10 +28,10 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
         // go back to the method repo page and verify that it's in the table
         methodRepoPage.open
-        methodRepoPage.MethodRepoTable.goToTab("My Methods")
-        methodRepoPage.MethodRepoTable.filter(name)
+        methodRepoPage.methodRepoTable.goToTab("My Methods")
+        methodRepoPage.methodRepoTable.filter(name)
 
-        methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true
+        methodRepoPage.methodRepoTable.hasMethod(namespace, name) shouldBe true
       }
     }
 
@@ -41,19 +41,19 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
           val methodRepoPage = workspaceListPage.goToMethodRepository()
 
           // verify that it's in the table
-          methodRepoPage.MethodRepoTable.goToTab("My Methods")
-          methodRepoPage.MethodRepoTable.filter(name)
+          methodRepoPage.methodRepoTable.goToTab("My Methods")
+          methodRepoPage.methodRepoTable.filter(name)
 
-          methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe true
+          methodRepoPage.methodRepoTable.hasMethod(namespace, name) shouldBe true
 
           // go in and redact it
-          val methodDetailPage = methodRepoPage.MethodRepoTable.enterMethod(namespace, name)
+          val methodDetailPage = methodRepoPage.methodRepoTable.enterMethod(namespace, name)
 
           methodDetailPage.redact()
 
           // and verify that it's gone
           methodDetailPage.goToMethodRepository()
-          methodRepoPage.MethodRepoTable.hasMethod(namespace, name) shouldBe false
+          methodRepoPage.methodRepoTable.hasMethod(namespace, name) shouldBe false
         }
       }
     }

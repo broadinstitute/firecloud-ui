@@ -70,13 +70,14 @@
 
              :else
              [Table
-              {:data resolved-configs
+              {:data-test-id "config-table"
+               :data resolved-configs
                :body {:empty-message "You don't have access to any published configurations for this method."
                       :style (utils/deep-merge table-style/table-light
                                                {:table {:backgroundColor "white"}}
                                                style)
                       :behavior {:reorderable-columns? false}
-                      :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false
+                      :columns [{:id "compatible?" :initial-width 30 :resizable? false :sortable? false :filterable? false
                                  :column-data :compatible?
                                  :as-text (fn [c] (when-not c (str "This configuration is not fully compatible with snapshot " snapshot-id)))
                                  :render (fn [c] (when-not c

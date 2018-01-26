@@ -5,10 +5,30 @@ import org.broadinstitute.dsde.firecloud.component.Button
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.openqa.selenium.WebDriver
 
-abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudView {
+abstract class Modal(implicit webDriver: WebDriver) extends FireCloudView {
+  protected val xButton = Button("x-button")
+
+  override def awaitReady(): Unit = {
+    xButton.awaitVisible()
+  }
+
+  def awaitDismissed(): Unit = {
+    xButton.awaitNotVisible()
+  }
+
+  def clickXButton(): Unit = {
+    xButton.doClick()
+  }
+
+  def xOut(): Unit = {
+    clickXButton()
+    awaitDismissed()
+  }
+}
+
+abstract class OKCancelModal(implicit webDriver: WebDriver) extends Modal {
   protected val okButton = Button("ok-button")
   protected val cancelButton = Button("cancel-button")
-  protected val xButton = Button("x-button")
 
   def clickOk(): Unit = {
     okButton.doClick()
@@ -18,18 +38,6 @@ abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudVie
     cancelButton.doClick()
   }
 
-  def clickXButton(): Unit = {
-    xButton.doClick()
-  }
-
-  override def awaitReady(): Unit = {
-    okButton.awaitVisible()
-  }
-
-  def awaitDismissed(): Unit = {
-    okButton.awaitNotVisible()
-  }
-
   def submit(): Unit = {
     clickOk()
     awaitDismissed()
@@ -37,11 +45,6 @@ abstract class OKCancelModal(implicit webDriver: WebDriver) extends FireCloudVie
 
   def cancel(): Unit = {
     clickCancel()
-    awaitDismissed()
-  }
-
-  def xOut(): Unit = {
-    clickXButton()
     awaitDismissed()
   }
 }

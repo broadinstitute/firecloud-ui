@@ -11,10 +11,9 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
 
   override val url: String = s"${Config.FireCloud.baseUrl}#methods"
 
-  override def awaitReady(): Unit = {
-    MethodRepoTable.awaitReady()
-  }
+  override def awaitReady(): Unit = methodRepoTable.awaitReady()
 
+  val methodRepoTable = new MethodRepoTable()
   private val newMethodButton = Button("create-method-button")
 
   def createNewMethod(attributes: Map[String, String]): Unit = {
@@ -22,19 +21,6 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
     val createMethodModal = await ready new CreateMethodModal()
     createMethodModal.fillOut(attributes)
     createMethodModal.submit()
-  }
-
-  object MethodRepoTable extends Table("methods-table") {
-    private def methodLink(namespace: String, name: String) = Link(s"method-link-$namespace-$name")
-
-    def hasMethod(namespace: String, name: String): Boolean = {
-      methodLink(namespace, name).isVisible
-    }
-
-    def enterMethod(namespace: String, name: String): MethodDetailPage = {
-      methodLink(namespace, name).doClick()
-      await ready new MethodDetailPage(namespace, name)
-    }
   }
 }
 
