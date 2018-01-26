@@ -28,7 +28,7 @@ class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
   private val namespaceField = TextField("namespace-field")
   private val nameField = TextField("name-field")
   private val synopsisField = TextField("synopsis-field")
-  private val documentationField = TextArea("documentation-field")
+  private val documentationField = MarkdownEditor("documentation-field")
   private val wdlField = WDLField("wdl-field")
 
   def fillOut(attributes: Map[String, String]): Unit = {

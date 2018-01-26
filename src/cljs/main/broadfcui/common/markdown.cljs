@@ -4,6 +4,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.split-pane :refer [SplitPane]]
+   [broadfcui.test-utils :as test-utils]
    [broadfcui.utils :as utils]
    ))
 
@@ -46,7 +47,8 @@
      (let [{:keys [mode]} @state
            tab (fn [mode-key label]
                  (let [selected? (= mode-key mode)]
-                   [:div {:style {:display "inline-block"
+                   [:div {:data-test-id (test-utils/text->test-id label "tab")
+                          :style {:display "inline-block"
                                   :border style/standard-line :padding "3px 8px" :cursor "pointer"
                                   :color (when selected? "white")
                                   :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
@@ -55,14 +57,15 @@
            controlled? (this :-controlled?)
            text (if controlled? (:value props) (:text @state))
            markdown-view [MarkdownView {:text text}]
-           text-area (style/create-text-area {:value text
+           text-area (style/create-text-area {:data-test-id "markdown-editor-text-area"
+                                              :value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
                                                            (if controlled?
                                                              ((:on-change props) new-value)
                                                              (swap! state assoc :text new-value)))
                                               :style {:width "100%" :height "100%" :minHeight 200
                                                       :resize (if (= mode :edit) "vertical" "none")}})]
-       [:div {}
+       [:div {:data-test-id (:data-test-id props)}
         [:div {:style {:marginTop "0.5rem"}}
          (tab :edit "Edit")
          (tab :preview "Preview")

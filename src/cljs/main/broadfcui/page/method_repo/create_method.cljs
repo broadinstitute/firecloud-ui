@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -80,11 +81,10 @@
                                      :maxLength 80
                                      :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
-           (style/create-text-area {:data-test-id "documentation-field"
-                                    :ref "documentation"
-                                    :defaultValue (:documentation info)
-                                    :style {:width "100%"}
-                                    :rows 5})
+           [markdown/MarkdownEditor {:data-test-id "documentation-field"
+                                     :ref "documentation"
+                                     :initial-text (:documentation info)
+                                     :initial-slider-position 650}]
            ;; This key is changed every time a file is selected causing React to completely replace the
            ;; element. Otherwise, if a user selects the same file (even after having modified it), the
            ;; browser will not fire the onChange event.
@@ -161,7 +161,8 @@
    :-create-method
    (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           [synopsis documentation snapshotComment] (common/get-trimmed-text refs "synopsis" "documentation" "snapshot-comment")
+           [synopsis snapshotComment] (common/get-trimmed-text refs "synopsis" "snapshot-comment")
+           documentation ((@refs "documentation") :get-trimmed-text)
            wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)

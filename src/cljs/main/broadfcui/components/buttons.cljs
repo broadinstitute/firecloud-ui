@@ -1,10 +1,10 @@
 (ns broadfcui.components.buttons
   (:require
    [dmohs.react :as react]
-   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
+   [broadfcui.test-utils :as test-utils]
    ))
 
 
@@ -24,11 +24,7 @@
 
 (defn- make-default-test-id [{:keys [text icon]}]
   (if text
-    (-> text
-        string/lower-case
-        (string/replace-all #"\s+" "-")
-        (string/replace-all #"[^a-z\-]" "")
-        (str "-button"))
+    (test-utils/text->test-id text "button")
     (str (name icon) "-button")))
 
 
