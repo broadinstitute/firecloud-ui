@@ -52,7 +52,7 @@
      {:value (or (:value props) (:default-value props))})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value data-test-id]} props
+     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
            {:keys [suggestions]} @state
            value (or (:value (if caching? @state props)) "")
            get-suggestions (cond
