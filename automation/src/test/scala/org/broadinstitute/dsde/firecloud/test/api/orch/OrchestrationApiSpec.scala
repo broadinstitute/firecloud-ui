@@ -3,15 +3,19 @@ package org.broadinstitute.dsde.firecloud.test.api.orch
 import akka.http.scaladsl.model.StatusCodes
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.GetQueryResultsResponse
-import org.broadinstitute.dsde.firecloud.api.{APIException, Orchestration}
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.BillingFixtures
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
+import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
+import org.broadinstitute.dsde.workbench.service.{Orchestration, RestException}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
-import org.broadinstitute.dsde.firecloud.dao.Google.googleBigQueryDAO
 import org.broadinstitute.dsde.workbench.model.google.GoogleProject
+import org.broadinstitute.dsde.workbench.service.util.Retry
+
+import scala.concurrent.duration._
+import scala.util.Try
 
 class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with Eventually
   with BillingFixtures {
@@ -59,7 +63,11 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
 
-        val postRoleFailure = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), shakespeareQuery).failed.futureValue
+        val postRoleFailure = Retry.retry(1.second, 10.seconds) {
+          // retry this because removing google roles is not always immediate
+          Try { googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), shakespeareQuery).failed.futureValue }.toOption
+        }.get
+
         postRoleFailure shouldBe a[GoogleJsonResponseException]
         preRoleFailure.getMessage should include(user.email)
         preRoleFailure.getMessage should include(projectName)
@@ -76,12 +84,12 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
       withBillingProject("auto-goog-role") { projectName =>
         roles foreach { role =>
-          val addEx = intercept[APIException] {
+          val addEx = intercept[RestException] {
             Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
           }
           addEx.getMessage should include(role)
 
-          val removeEx = intercept[APIException] {
+          val removeEx = intercept[RestException] {
             Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
           }
           removeEx.getMessage should include(role)
@@ -97,13 +105,13 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       val errorMsg = "You must be a project owner"
       val unownedProject = "broad-dsde-dev"
 
-      val addEx = intercept[APIException] {
+      val addEx = intercept[RestException] {
         Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       addEx.getMessage should include(errorMsg)
       addEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
 
-      val removeEx = intercept[APIException] {
+      val removeEx = intercept[RestException] {
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, userB.email, role)(userAToken)
       }
       removeEx.getMessage should include(errorMsg)

@@ -4,11 +4,11 @@ import java.io.File
 import java.text.SimpleDateFormat
 
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
-import org.broadinstitute.dsde.firecloud.util.Util
+import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
