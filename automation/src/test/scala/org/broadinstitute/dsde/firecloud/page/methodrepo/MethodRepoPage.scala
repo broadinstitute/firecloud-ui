@@ -27,15 +27,15 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
 class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
   private val namespaceField = TextField("namespace-field")
   private val nameField = TextField("name-field")
-  private val synopsisField = TextField("synopsis-field")
-  private val documentationField = MarkdownEditor("documentation-field")
   private val wdlField = WDLField("wdl-field")
+  private val documentationField = MarkdownEditor("documentation-field")
+  private val synopsisField = TextField("synopsis-field")
 
   def fillOut(attributes: Map[String, String]): Unit = {
     namespaceField.setText(attributes("namespace"))
     nameField.setText(attributes("name"))
-    synopsisField.setText(attributes("synopsis"))
-    documentationField.setText(attributes("documentation"))
     wdlField.fillWDL(attributes("payload"))
+    documentationField.setText(attributes("documentation"))
+    synopsisField.setText(attributes("synopsis"))
   }
 }

@@ -74,17 +74,7 @@
                                :predicates [(input/nonempty-alphanumeric_-period "Method name")]}]
              (style/create-textfield-hint input/hint-alphanumeric_-period)]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
-           (style/create-form-label "Synopsis (optional, 80 characters max)")
-           (style/create-text-field {:data-test-id "synopsis-field"
-                                     :ref "synopsis"
-                                     :defaultValue (:synopsis info)
-                                     :maxLength 80
-                                     :style {:width "100%"}})
-           (style/create-form-label "Documentation (optional)")
-           [markdown/MarkdownEditor {:data-test-id "documentation-field"
-                                     :ref "documentation"
-                                     :initial-text (:documentation info)
-                                     :initial-slider-position 650}]
+
            ;; This key is changed every time a file is selected causing React to completely replace the
            ;; element. Otherwise, if a user selects the same file (even after having modified it), the
            ;; browser will not fire the onChange event.
@@ -138,6 +128,17 @@
                                             #(swap! state assoc :undo-history
                                                     (js->clj (self :call-method "historySize")))))}]
            [:div {:style {:padding "0.25rem"}}]
+           (style/create-form-label "Documentation (optional)")
+           [markdown/MarkdownEditor {:data-test-id "documentation-field"
+                                     :ref "documentation"
+                                     :initial-text (:documentation info)
+                                     :initial-slider-position 650}]
+           (style/create-form-label "Synopsis (optional, 80 characters max)")
+           (style/create-text-field {:data-test-id "synopsis-field"
+                                     :ref "synopsis"
+                                     :defaultValue (:synopsis info)
+                                     :maxLength 80
+                                     :style {:width "100%"}})
            (style/create-form-label "Snapshot Comment (optional)")
            (style/create-text-area {:data-test-id "snapshot-comment-field"
                                     :ref "snapshot-comment"
