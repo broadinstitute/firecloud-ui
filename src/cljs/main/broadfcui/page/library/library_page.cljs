@@ -112,11 +112,13 @@
                      {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
                       :column-data :library:numSubjects :initial-width 100}
                      {:id "library:consentCodes" :header (:title (:library:consentCodes attributes))
+                      :data-test-id "consent-codes"
                       :column-data :library:consentCodes :initial-width 180
                       :as-text (fn [data] (string/join ", " (sort data)))
                       :sortable? false
                       :render render-tags}
                      {:id "tag:tags" :header (:title (:tag:tags attributes))
+                      :data-test-id "tags"
                       :column-data :tag:tags :initial-width 180
                       :as-text (fn [data] (string/join ", " (sort data)))
                       :sortable? false

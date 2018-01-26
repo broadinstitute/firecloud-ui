@@ -194,13 +194,14 @@
    count])
 
 (defn render-tag
-  ([tag] (render-tag {:data-test-id (str (string/lower-case tag) "-tag")} tag))
-  ([props & children]
+  ([tag] (render-tag {} tag))
+  ([props tag]
    [:div (utils/deep-merge {:style {:display "inline-block" :background (:tag-background colors)
                                     :color (:tag-foreground colors) :margin "0.1rem"
-                                    :borderRadius 3 :padding "0.2rem 0.5rem"}}
+                                    :borderRadius 3 :padding "0.2rem 0.5rem"}
+                            :data-test-id (str (string/lower-case tag) "-tag")}
                            props)
-    children]))
+    tag]))
 
 (defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])

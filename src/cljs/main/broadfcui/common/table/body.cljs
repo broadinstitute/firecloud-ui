@@ -69,11 +69,12 @@
                                     (f (utils/restructure index row))))
                     :onClick (when on-row-click
                                #(on-row-click index row))})
-       (map (fn [{:keys [width visible? column-data render as-text]}]
+       (map (fn [{:keys [width visible? column-data render as-text data-test-id]}]
               (when visible?
                 (let [column-value (column-data row)
                       rendered (render column-value)]
                   [:div {:data-test-class "table-cell"
+                         :data-test-id data-test-id
                          :style (merge {:boxSizing "border-box"} (flex-params width) (:cell style) (:body-cell style))
                          :title (cond as-text (as-text column-value)
                                       (string? rendered) rendered)}
