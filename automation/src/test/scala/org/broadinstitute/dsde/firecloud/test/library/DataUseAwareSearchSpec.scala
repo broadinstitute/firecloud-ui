@@ -15,18 +15,24 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {
-    "Open and close the RP modal" in withWebDriver { implicit driver =>
+    "Repeatedly open and close the RP modal" in withWebDriver { implicit driver =>
       val user = UserPool.chooseAnyUser
 
       withSignIn(user) { _ =>
         val page = new DataLibraryPage().open
 
-        page.openResearchPurposeModal()
+        page.isShowingResearchPurposeModal shouldBe false
 
+        page.openResearchPurposeModal()
         page.isShowingResearchPurposeModal shouldBe true
 
         page.dismissResearchPurposeModal()
+        page.isShowingResearchPurposeModal shouldBe false
 
+        page.openResearchPurposeModal()
+        page.isShowingResearchPurposeModal shouldBe true
+
+        page.dismissResearchPurposeModal()
         page.isShowingResearchPurposeModal shouldBe false
       }
     }
