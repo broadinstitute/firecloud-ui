@@ -82,7 +82,18 @@
               {:data-test-id "redact-button"
                :style :light :color :state-exception
                :text "Redact" :icon :delete :margin :bottom
-               :onClick #(swap! state assoc :deleting? true)}])]}]]))
+               :onClick #(swap! state assoc :deleting? true)}])
+           [buttons/SidebarButton
+            {:data-test-id "download-button"
+             :style :light :color :button-primary
+             :text "Download WDL" :icon :download :margin :bottom
+             :onClick #(let [payload-blob (js/Blob. (js/Array. (:payload selected-snapshot)) {:type "text/plain"})
+                             payload-object-url (.createObjectURL js/URL payload-blob)
+                             hidden-download-link (.getElementById js/document "hidden-download-link")]
+                         (set! (.-href hidden-download-link) payload-object-url)
+                         (set! (.-download hidden-download-link) (str (:name selected-snapshot) ".wdl"))
+                         (.click hidden-download-link))}]
+           [:a {:id "hidden-download-link"}]]}]]))
    :-render-main
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation snapshotComment]} (:selected-snapshot props)

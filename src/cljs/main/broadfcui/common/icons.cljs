@@ -23,6 +23,7 @@
    :disclosure-opened "fa-caret-down"
    :done "fa-check"
    :done-circle "fa-check-circle"
+   :download "fa-cloud-download"
    :edit "fa-pencil"
    :email "fa-envelope-o"
    :error "fa-exclamation-circle"
