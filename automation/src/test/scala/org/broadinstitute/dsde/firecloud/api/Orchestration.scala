@@ -132,6 +132,10 @@ trait Orchestration extends FireCloudClient with LazyLogging with SprayJsonSuppo
         aclEntries.map{ e => e.toMap })
     }
 
+    /*
+     * The values in the attributes map should be either String or Seq[String]. An Either is not used because the object
+     * mapper that converts scala to json represents the either in the json string.
+     */
     def setAttributes(namespace: String, name: String, attributes: Map[String, Any])(implicit token: AuthToken): Unit = {
       logger.info(s"Setting attributes for workspace: $namespace/$name $attributes")
       patchRequest(apiUrl(s"api/workspaces/$namespace/$name/setAttributes"), attributes)
