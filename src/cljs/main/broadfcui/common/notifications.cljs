@@ -151,11 +151,23 @@
                     (icons/render-icon
                      {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
                      :external-link))]))
-              [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
-                        :style {:alignSelf "center" :fontSize "1.5rem" :padding "1rem"
-                                :color "white" :cursor "pointer"}
-                        :title "Hide for now"}
-               (icons/render-icon {} :close)]
+              [:div {:style {:alignSelf "center" :padding "1rem" :display "flex"
+                             :flexDirection "column"}}
+               [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
+                         :style {:display "block"
+                                 :alignSelf "center" :fontSize "1.5rem"
+                                 :color "white" :cursor "pointer"}
+                         :title "Hide for now"}
+                (icons/render-icon {} :close)]
+               (when (= current-trial-state :Terminated)
+                 (links/create-internal
+                   {:style {:fontSize "small" :color "white" :marginTop "0.5rem"}
+                    :onClick (fn []
+                               (utils/ajax-orch
+                                "/profile/trial?operation=finalize"
+                                {:method :post
+                                 :on-done user-info/reload-user-profile}))}
+                   "Hide forever"))]
               (modals/show-modals
                state
                {:displaying-eula?
