@@ -3,15 +3,15 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.Rawls
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
-import org.broadinstitute.dsde.firecloud.api.Google
-import org.broadinstitute.dsde.firecloud.fixture.{MethodData, SimpleMethodConfig, TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{FreeSpec, Ignore, Matchers}
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
+import org.broadinstitute.dsde.workbench.auth.{AuthToken}
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.{MethodData, SimpleMethodConfig}
+import org.broadinstitute.dsde.workbench.service.{Rawls, Google}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.scalatest.{FreeSpec, Matchers}
 
 /**
   * Tests related to billing accounts.
