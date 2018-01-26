@@ -62,7 +62,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         page.selectRPCheckbox("disease-focused-research")
 
-        SearchField("ontology-autosuggest-text-input").setText("fatal")
+        SearchField("research-purpose-autosuggest").setText("fatal")
 
         Thread sleep 400
 

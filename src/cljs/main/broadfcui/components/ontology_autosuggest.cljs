@@ -36,7 +36,7 @@
   [Autosuggest
    {:ref ref
     :value value
-    :inputProps (or input-props {})
+    :inputProps (assoc input-props :data-test-id "research-purpose-autosuggest")
     :url "/autocomplete/"
     :service-prefix "/duos"
     :caching? true
@@ -60,5 +60,4 @@
     :on-change on-change
     :on-submit on-submit
     :theme {:input {:width "100%" :marginBottom 0}
-            :suggestionsContainerOpen {:marginTop -1 :width "100%"}}
-    :data-test-id "ontology-autosuggest-text-input"}])
+            :suggestionsContainerOpen {:marginTop -1 :width "100%"}}}])

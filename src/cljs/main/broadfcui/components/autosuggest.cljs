@@ -29,7 +29,6 @@
   :caching? (optional) - set true to have re-renders managed internally
   :default-value (optional when caching)
   :value (required when not caching)
-  :data-test-id - if you're doing Selenium things
 
   Other props to pass through to input element go in :inputProps.
 
@@ -116,9 +115,6 @@
                                                        [:loading] (spinner "Loading...")
                                                        [:error] [:div {:style {:margin "1em"}} "Error loading results."]
                                                        (.-children arg))])))
-                   :renderInputComponent (fn [inputProps]
-                                           (react/create-element
-                                            [:input (assoc (js->clj inputProps) "data-test-id" data-test-id)]))
                    :theme
                    {:container {}
                     :containerOpen {}
