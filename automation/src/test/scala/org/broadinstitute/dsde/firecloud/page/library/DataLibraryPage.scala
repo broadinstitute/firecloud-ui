@@ -27,6 +27,9 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
+  private val tagsSearchField = SearchField(CSSQuery("#app span.select2-container input.select2-search__field[type='search']"))
+  private val tagsSelect = new Select(CSSQuery("select:not([data-test-id='per-page'])"))
+
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()
@@ -83,6 +86,30 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
     val nonTcgaAccessText = "Please contact dbGAP and request access for workspace"
   }
+
+  /**
+    * type a string and select from Select
+    *
+    */
+  def doTagsSearch(tag: String): Boolean = {
+    LibraryTable.getRows
+    tagsSearchField.setText(tag)
+
+    val texts: List[String] = readAllText(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
+
+    // webDriver.findElement(By.cssSelector("span.select2-dropdown ul.select2-results__options li"))
+    // val webElement = findAll(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
+
+    if (texts.iterator.exists(_.contains(tag))) {
+      tagsSelect.select(tag)
+      LibraryTable.awaitReady()
+      true
+    }
+    false
+  }
+
+
+
 }
 
 
