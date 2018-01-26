@@ -75,10 +75,10 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         await enabled testId(suggestionId) // has a timeout so test will not hang if suggestion never shows
 
-        val ffi = Button(suggestionId)
-        ffi.isVisible shouldBe true
+        val ffiSuggestion = Button(suggestionId)
+        ffiSuggestion.isVisible shouldBe true
 
-        ffi.doClick()
+        ffiSuggestion.doClick()
 
         await enabled testId(tagId)
 
