@@ -36,7 +36,7 @@
   [Autosuggest
    {:ref ref
     :value value
-    :inputProps (assoc input-props :data-test-id "research-purpose-autosuggest")
+    :inputProps (assoc input-props :data-test-id "ontology-autosuggest")
     :url "/autocomplete/"
     :service-prefix "/duos"
     :caching? true
