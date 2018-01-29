@@ -1,7 +1,7 @@
 (ns broadfcui.page.method-repo.method.wdl
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.codemirror :refer [PipelineAndWDL]]
    [broadfcui.utils :as utils]
    ))
 
@@ -9,6 +9,6 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:margin "2.5rem 1.5rem 1rem"}}
-      [CodeMirror {:text (:wdl props)}]])
+      [PipelineAndWDL {:wdl (:wdl props) :read-only? true}]])
    :refresh
    (constantly nil)})
