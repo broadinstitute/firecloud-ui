@@ -17,6 +17,7 @@
        (cond
          error? [:p {} (:text props)]
          loaded? [:div {:className "markdown-body"
+                        :style (:view-style props)
                         :dangerouslySetInnerHTML #js{"__html"
                                                      (if-let [text (:text props)]
                                                        (.render @markdown-instance text)
@@ -49,19 +50,22 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [data-test-id value on-change toolbar-style toolbar-items initial-slider-position]} props
-           {:keys [mode]} @state
+           {:keys [text mode]} @state
            tab (fn [mode-key label]
                  (let [selected? (= mode-key mode)]
                    [:div {:data-test-id (test-utils/text->test-id label "tab")
-                          :style {:display "inline-block"
-                                  :border style/standard-line :padding "3px 8px" :cursor "pointer"
+                          :style {:border style/standard-line :padding "3px 8px" :cursor "pointer"
                                   :color (when selected? "white")
                                   :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
                           :onClick #(swap! state assoc :mode mode-key)}
                     label]))
            controlled? (this :-controlled?)
-           text (if controlled? value (:text @state))
-           markdown-view [MarkdownView {:text text}]
+           text (if controlled? value text)
+           markdown-view [MarkdownView {:text text
+                                        :view-style {:backgroundColor "white"
+                                                     :padding "5px 8px"
+                                                     :border style/standard-line :borderRadius 2
+                                                     :height "100%" :boxSizing "border-box"}}]
            text-area (style/create-text-area {:data-test-id "markdown-editor-text-area"
                                               :value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
@@ -79,10 +83,10 @@
          (list* toolbar-items)]
         (case mode
           :edit text-area
-          :preview [:div {:style {:paddingTop "0.5rem"}} markdown-view]
+          :preview markdown-view
           :side-by-side [SplitPane
                          {:left text-area :overflow-left "initial"
-                          :right [:div {:style {:marginLeft 2}} markdown-view]
+                          :right markdown-view
                           :initial-slider-position (or initial-slider-position 500)}])]))
    :-controlled?
    (fn [{:keys [props]}]
