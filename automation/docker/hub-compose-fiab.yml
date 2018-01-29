@@ -8,8 +8,9 @@ services:
       - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$FC_INSTANCE"
     environment:
-      # Prevent nodes from giving up after 30 seconds of inactivity (yes, this is configured on the hub rather than the nodes)
-      SE_OPTS: -timeout 360
+      # Prevent nodes from giving up after during inactivity (yes, this is configured on the hub rather than the nodes)
+      # This can save tests that inadvertently place expensive setup operations at the start of withWebDriver blocks
+      SE_OPTS: -timeout 660
     logging:
       driver: syslog
       options:
