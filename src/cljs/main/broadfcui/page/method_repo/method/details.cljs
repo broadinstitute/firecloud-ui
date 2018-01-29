@@ -116,22 +116,28 @@
                     [:div {}
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
-                     (when (:public selected-snapshot)
-                       [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
-                        [:span {:style {:fontWeight 500}}"Import URL for this WDL"]
-                        (let [{:keys [namespace name snapshotId]} selected-snapshot
-                              link (str (config/api-url-root)
-                                        "/ga4gh/v1/tools/"
-                                        namespace
-                                        ":"
-                                        name
-                                        "/versions/"
-                                        snapshotId
-                                        "/plain-WDL/descriptor")]
-                          [:input {:type "text" :readOnly true :value link
-                                   :style {:cursor "unset" :fontSize "1rem" :width 300
-                                           :display "block" :marginTop "0.25rem"}
-                                   :onClick #(.. % -target select)}])])])
+                     [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
+                      (let [payload-blob (js/Blob. (js/Array. (:payload selected-snapshot)) {:type "text/plain"})
+                            payload-object-url (.createObjectURL js/URL payload-blob)]
+                        [:a {:href payload-object-url
+                             :download (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl")}
+                         "Download WDL..."])
+                      (when (:public selected-snapshot)
+                        [:div {:style {:marginTop "0.5rem"}}
+                         [:span {:style {:fontWeight 500}}"Import URL for this WDL"]
+                         (let [{:keys [namespace name snapshotId]} selected-snapshot
+                               link (str (config/api-url-root)
+                                         "/ga4gh/v1/tools/"
+                                         namespace
+                                         ":"
+                                         name
+                                         "/versions/"
+                                         snapshotId
+                                         "/plain-WDL/descriptor")]
+                           [:input {:type "text" :readOnly true :value link
+                                    :style {:cursor "unset" :fontSize "1rem" :width 300
+                                            :display "block" :marginTop "0.25rem"}
+                                    :onClick #(.. % -target select)}])])]])
                CONFIGS (react/create-element
                         [configs/Configs
                          (merge {:ref CONFIGS}
