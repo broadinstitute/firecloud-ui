@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.firecloud.page.{MessageModal, OKCancelModal, Page
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver)
+class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
 
   override def awaitReady(): Unit = {

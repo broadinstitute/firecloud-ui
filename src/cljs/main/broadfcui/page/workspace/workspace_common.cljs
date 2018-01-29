@@ -19,7 +19,8 @@
   (assert workspaces "No workspaces given")
   (assert on-workspace-selected "on-workspace-selected not provided")
   [Table
-   {:data workspaces
+   {:data-test-id "workspace-selector-table"
+    :data workspaces
     :body {:empty-message "There are no workspaces to display."
            :style table-style/table-heavy
            :behavior {:reorderable-columns? false}
@@ -28,9 +29,10 @@
              :column-data (comp :namespace :workspace)}
             {:header "Name" :initial-width 150
              :as-text (comp :name :workspace) :sort-by :text
-             :render (fn [ws]
-                       (links/create-internal {:onClick #(on-workspace-selected ws)}
-                                              (get-in ws [:workspace :name])))}
+             :render (fn [{:keys [workspace] :as ws}]
+                       (links/create-internal {:data-test-id (str (:namespace workspace) "-" (:name workspace) "-link")
+                                               :onClick #(on-workspace-selected ws)}
+                                              (:name workspace)))}
             {:header "Created By" :initial-width 200
              :column-data (comp :createdBy :workspace)}
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})
@@ -46,11 +48,11 @@
   (select-keys config [:namespace :name]))
 
 
-(defn method-config-selector [{:keys [configs render-name toolbar-items]}]
+(defn method-config-selector [{:keys [data-test-id configs render-name toolbar-items]}]
   (assert configs "No configs given")
   (assert render-name "No name renderer given")
   [Table
-   {:data-test-id "method-configs-table"
+   {:data-test-id (or data-test-id "method-configs-table")
     :data configs
     :body {:empty-message "There are no method configurations to display."
            :style table-style/table-heavy
