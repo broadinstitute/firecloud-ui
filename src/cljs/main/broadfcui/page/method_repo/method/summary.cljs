@@ -82,21 +82,7 @@
               {:data-test-id "redact-button"
                :style :light :color :state-exception
                :text "Redact" :icon :delete :margin :bottom
-               :onClick #(swap! state assoc :deleting? true)}])
-           ;; There is no cookie-authed route for methods, so we can't just link to it
-           ;; What we can do is create a link to a fake file in memory and click it automatically on behalf of the user
-           [buttons/SidebarButton
-            {:data-test-id "download-button"
-             :style :light :color :button-primary
-             :text "Download WDL" :icon :download :margin :bottom
-             :onClick #(let [payload-blob (js/Blob. (js/Array. (:payload selected-snapshot)) {:type "text/plain"})
-                             payload-object-url (.createObjectURL js/URL payload-blob)
-                             hidden-download-link (.getElementById js/document "hidden-download-link")]
-                         (set! (.-href hidden-download-link) payload-object-url)
-                         (set! (.-download hidden-download-link) (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl"))
-                         (.click hidden-download-link)
-                         (.revokeObjectURL js/URL payload-object-url))}]
-           [:a {:id "hidden-download-link"}]]}]]))
+               :onClick #(swap! state assoc :deleting? true)}])]}]]))
    :-render-main
    (fn [{:keys [props locals]}]
      (let [{:keys [synopsis managers createDate documentation snapshotComment]} (:selected-snapshot props)
