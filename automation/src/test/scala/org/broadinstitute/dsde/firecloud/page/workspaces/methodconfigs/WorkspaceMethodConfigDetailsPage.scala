@@ -2,14 +2,14 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.config.Config
+import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{MessageModal, OKCancelModal, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
-class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, methodConfigName: String)(implicit webDriver: WebDriver)
+class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
 
   override def awaitReady(): Unit = {

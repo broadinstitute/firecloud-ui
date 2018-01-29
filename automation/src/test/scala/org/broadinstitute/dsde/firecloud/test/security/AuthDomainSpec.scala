@@ -1,17 +1,15 @@
 package org.broadinstitute.dsde.firecloud.test.security
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
-import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.Orchestration.billing.BillingProjectRole
-import org.broadinstitute.dsde.firecloud.api.Orchestration.groups.GroupRole
-import org.broadinstitute.dsde.firecloud.api.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{BillingFixtures, GroupFixtures, UserFixtures, WorkspaceFixtures}
-import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
+import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
+import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
 import org.scalatest._
 

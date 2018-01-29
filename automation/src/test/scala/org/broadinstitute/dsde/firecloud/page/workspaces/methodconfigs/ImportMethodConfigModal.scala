@@ -1,23 +1,37 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{MethodTable, Modal}
 import org.openqa.selenium.WebDriver
 
 class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {
-  private val chooseConfigFromRepoModalButton = Button("import-from-repo-button")
-  // private val chooseConfigFromWorkspaceModalButton = Button("copy-from-workspace-button")
+  private val chooseConfigFromRepoButton = Button("import-from-repo-button")
+  private val copyConfigFromWorkspaceButton = Button("copy-from-workspace-button")
 
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
-    chooseConfigFromRepoModalButton.doClick()
-    val importView = await ready new ImportFromMethodRepoView()
-    importView.select(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
+    chooseConfigFromRepoButton.doClick()
+    (await ready new SelectMethodView())
+      .selectMethod(methodNamespace, methodName)
+      .confirm()
+      .selectConfiguration(methodNamespace, methodConfigName, snapshotId)
+      .confirm()
+  }
+
+  def copyConfigFromWorkspace(workspaceNamespace: String, workspaceName: String, configName: String): Unit = {
+    copyConfigFromWorkspaceButton.doClick()
+    (await ready new ChooseWorkspaceView())
+      .selectWorkspace(workspaceNamespace, workspaceName)
+      .selectConfig(configName)
+      .importAsIs()
   }
 }
 
-private class ImportFromMethodRepoView(implicit webDriver: WebDriver) extends FireCloudView {
+/////////////////////////////////
+// Import from Method Repo views:
+
+private class SelectMethodView(implicit webDriver: WebDriver) extends FireCloudView {
   private val methodRepoTable = new MethodTable[MethodSummaryView]() {
     override protected def awaitInnerPage(namespace: String, name: String): MethodSummaryView = {
       await ready new MethodSummaryView
@@ -26,12 +40,8 @@ private class ImportFromMethodRepoView(implicit webDriver: WebDriver) extends Fi
 
   override def awaitReady(): Unit = methodRepoTable.awaitReady()
 
-  def select(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
-    methodRepoTable
-      .enterMethod(methodNamespace, methodName)
-      .confirm()
-      .selectConfiguration(methodNamespace, methodConfigName, snapshotId) // seems like the wrong way to supply namespace?
-      .confirm()
+  def selectMethod(methodNamespace: String, methodName: String): MethodSummaryView = {
+    methodRepoTable.enterMethod(methodNamespace, methodName)
   }
 }
 
@@ -69,6 +79,54 @@ private class ConfirmMethodRepoImportView(implicit webDriver: WebDriver) extends
 
   def confirm(): Unit = {
     importMethodButton.doClick()
-    // TODO: await/return WorkspaceMethodConfigDetailsPage?
+  }
+}
+
+
+/////////////////////////////
+// Copy from workspace views:
+
+private class ChooseWorkspaceView(implicit webDriver: WebDriver) extends FireCloudView {
+  private val workspaceTable = Table("workspace-selector-table")
+  private def workspaceLink(namespace: String, name: String) = Link(s"$namespace-$name-link")
+
+  override def awaitReady(): Unit = workspaceTable.awaitReady()
+
+  def selectWorkspace(namespace: String, name: String): ChooseConfigView = {
+    workspaceTable.filter(name)
+    workspaceLink(namespace, name).doClick()
+    await ready new ChooseConfigView()
+  }
+}
+
+private class ChooseConfigView(implicit webDriver: WebDriver) extends FireCloudView {
+  private val configsTable = Table("method-configs-import-table")
+  private def configLink(name: String) = Link(s"$name-link")
+
+  override def awaitReady(): Unit = configsTable.awaitReady()
+
+  def selectConfig(name: String): ConfirmConfigCopyView = {
+    configsTable.filter(name)
+    configLink(name).doClick()
+    await ready new ConfirmConfigCopyView()
+  }
+}
+
+private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends FireCloudView {
+  private val namespaceField = TextField("namespace-field")
+  private val nameField = TextField("name-field")
+  private val importButton = Button("import-button")
+
+  override def awaitReady(): Unit = importButton.awaitEnabled()
+
+  def importAsIs(): Unit = importAs()
+
+  def importAs(namespace: Option[String] = None, name: Option[String] = None): Unit = {
+    if (namespace.isDefined)
+      namespaceField.setText(namespace.get)
+    if (name.isDefined)
+      nameField.setText(name.get)
+
+    importButton.doClick()
   }
 }

@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
-import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
+import org.broadinstitute.dsde.workbench.config.Config
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -17,7 +17,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
   private val openImportConfigModalButton: Button = Button("import-config-button")
-  private val methodConfigsTable = Table("method-configs-table")
+  private val methodConfigsTable = Table("method-configs-tab-table")
   private def methodConfigLinkId(methodName: String) = Link(s"method-config-$methodName-link")
 
 //To-Do: Make this accept method namespace and participant
@@ -31,6 +31,14 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
     val importModal = await ready new ImportMethodConfigModal()
     importModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
     await ready new WorkspaceMethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
+  }
+
+  def copyMethodConfigFromWorkspace(workspaceNamespace: String, workspaceName: String,
+                                    configNamespace: String, configName: String): WorkspaceMethodConfigDetailsPage = {
+    openImportConfigModalButton.doClick()
+    val importModal = await ready new ImportMethodConfigModal()
+    importModal.copyConfigFromWorkspace(workspaceNamespace, workspaceName, configName)
+    await ready new WorkspaceMethodConfigDetailsPage(namespace, name, configNamespace, configName)
   }
 
   def importConfigButtonEnabled(): Boolean = openImportConfigModalButton.isStateEnabled

@@ -47,7 +47,8 @@
           error-message (style/create-server-error-message error-message)
           (and configs methods)
           (ws-common/method-config-selector
-           {:configs (map #(add-redacted-attribute % methods) configs)
+           {:data-test-id "method-configs-tab-table"
+            :configs (map #(add-redacted-attribute % methods) configs)
             :render-name (fn [config]
                            (links/create-internal
                             {:data-test-id (str "method-config-" (:name config) "-link")
