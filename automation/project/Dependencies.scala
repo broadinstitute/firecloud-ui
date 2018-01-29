@@ -6,7 +6,7 @@ object Dependencies {
   val akkaHttpV = "10.0.10"
 
   val serviceTestV = "0.1-a45247c-SNAP"
-
+  
   val workbenchModelV  = "0.8-d97f551"
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetricsV  = "0.3-7ad0aa8"
