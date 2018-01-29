@@ -13,13 +13,14 @@
 (react/defc MarkdownView
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [loaded? error?]} @state]
+     (let [{:keys [text style]} props
+           {:keys [loaded? error?]} @state]
        (cond
-         error? [:p {} (:text props)]
+         error? [:p {} text]
          loaded? [:div {:className "markdown-body"
-                        :style (:view-style props)
+                        :style style
                         :dangerouslySetInnerHTML #js{"__html"
-                                                     (if-let [text (:text props)]
+                                                     (if text
                                                        (.render @markdown-instance text)
                                                        "")}}]
          :else
@@ -62,10 +63,11 @@
            controlled? (this :-controlled?)
            text (if controlled? value text)
            markdown-view [MarkdownView {:text text
-                                        :view-style {:backgroundColor "white"
-                                                     :padding "5px 8px"
-                                                     :border style/standard-line :borderRadius 2
-                                                     :height "100%" :boxSizing "border-box"}}]
+                                        :style {:display "table"
+                                                :backgroundColor "white"
+                                                :padding "5px 8px"
+                                                :border style/standard-line :borderRadius 2
+                                                :height "100%" :boxSizing "border-box"}}]
            text-area (style/create-text-area {:data-test-id "markdown-editor-text-area"
                                               :value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
