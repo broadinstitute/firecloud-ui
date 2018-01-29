@@ -54,6 +54,10 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
     testId("message-modal-content").element != null
   }
 
+  def readMessageModalText: String = {
+    readText (testId ("message-modal-content"))
+  }
+
   def getMessageText: String = {
     readText(testId("message-modal-content"))
   }
@@ -77,4 +81,6 @@ case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends O
   override def awaitReady(): Unit = await.visible(testId(grantButtonId), 1)
 
 }
+
+
 
