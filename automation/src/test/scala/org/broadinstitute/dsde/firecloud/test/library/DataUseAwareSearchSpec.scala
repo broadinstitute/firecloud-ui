@@ -69,21 +69,40 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         page.selectRPCheckbox("disease-focused-research")
 
+        // Disease 1
         SearchField("ontology-autosuggest").setText("fatal")
 
-        val suggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
-        val tagId = "doid:0050433-tag"
+        val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
+        val ffiTagId = "doid:0050433-tag"
 
-        await enabled testId(suggestionId) // has a timeout so test will not hang if suggestion never shows
+        await enabled testId(ffiSuggestionId) // has a timeout so test will not hang if suggestion never shows
 
-        val ffiSuggestion = Button(suggestionId)
+        val ffiSuggestion = Button(ffiSuggestionId)
         ffiSuggestion.isVisible shouldBe true
 
         ffiSuggestion.doClick()
 
-        await enabled testId(tagId)
+        await enabled testId(ffiTagId)
 
-        Label(tagId).isVisible shouldBe true
+        Label(ffiTagId).isVisible shouldBe true
+
+        // Disease 2
+        SearchField("ontology-autosuggest").setText("brux")
+
+        val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846" // bruxism
+        val brxTagId = "doid:2846-tag"
+
+        await enabled testId(brxSuggestionId) // has a timeout so test will not hang if suggestion never shows
+
+        val brxSuggestion = Button(brxSuggestionId)
+        brxSuggestion.isVisible shouldBe true
+
+        brxSuggestion.doClick()
+
+        await enabled testId(brxTagId)
+
+        Label(brxTagId).isVisible shouldBe true
+        Label(ffiTagId).isVisible shouldBe true // previously-selected tag still there
       }
     }
   }
