@@ -30,12 +30,12 @@
 
 
 (defn- row->text [row columns]
-  (map (fn [column]
-         (let [func (or (:as-text column) str)
-               column-data-fn (or (:column-data column) identity)
-               column-data (column-data-fn row)]
-           (func column-data)))
-       columns))
+  (keep (fn [column]
+          (let [func (or (:as-text column) str)
+                column-data-fn (or (:column-data column) identity)
+                column-data (column-data-fn row)]
+            (func column-data)))
+        columns))
 
 (defn- apply-tab [{:keys [predicate]} data]
   (if predicate

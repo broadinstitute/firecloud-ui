@@ -3,12 +3,13 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, UserAuthToken}
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{TestData, _}
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, Tags, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.{WorkspaceFixtures, MethodFixtures, MethodData, SimpleMethodConfig}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 
@@ -160,16 +161,18 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
 
   }
 
-  "import a method config into a workspace from the method repo" ignore withWebDriver { implicit driver =>
+  "import a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_config_from_workspace") { workspaceName =>
-      api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-      withSignIn(user) { _ =>
-        val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-        val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(SimpleMethodConfig.configNamespace,
-          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, methodConfigName)
-        //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
+      withSignIn(user) { workspaceListPage =>
+        val methodConfigPage = workspaceListPage.enterWorkspace(billingProject, workspaceName).goToMethodConfigTab()
+
+        val methodConfigDetailsPage = methodConfigPage.importMethodConfigFromRepo(
+          MethodData.SimpleMethod.methodNamespace,
+          MethodData.SimpleMethod.methodName,
+          MethodData.SimpleMethod.snapshotId,
+          SimpleMethodConfig.configName)
 
         methodConfigDetailsPage.isLoaded shouldBe true
       }

@@ -1,13 +1,13 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.api.{Google, Orchestration, Thurloe}
-import org.broadinstitute.dsde.firecloud.auth.{AuthToken, TrialBillingAccountAuthToken}
 import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
-import org.broadinstitute.dsde.firecloud.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.auth.{AuthToken, TrialBillingAccountAuthToken}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Thurloe}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try

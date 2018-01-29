@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.broadinstitute.dsde.firecloud.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.firecloud.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
 
