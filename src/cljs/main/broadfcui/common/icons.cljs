@@ -23,7 +23,7 @@
    :disclosure-opened "fa-caret-down"
    :done "fa-check"
    :done-circle "fa-check-circle"
-   :download "fa-cloud-download"
+   :download "fa-download"
    :edit "fa-pencil"
    :email "fa-envelope-o"
    :error "fa-exclamation-circle"
@@ -60,8 +60,14 @@
 
 (def fw-icon-width "1.28571429rem")
 
+(defn render-inline-icon [icon]
+  (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} icon))
+
 (def external-link-icon
-  (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
+  (render-inline-icon :external-link))
+
+(def download-icon
+  (render-inline-icon :download))
 
 (defn certified-icon
   ([] (certified-icon {}))

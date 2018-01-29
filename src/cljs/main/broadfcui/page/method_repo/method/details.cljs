@@ -117,11 +117,10 @@
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
                      [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem"}}
-                      (let [payload-blob (js/Blob. (js/Array. (:payload selected-snapshot)) {:type "text/plain"})
-                            payload-object-url (.createObjectURL js/URL payload-blob)]
-                        [:a {:href payload-object-url
-                             :download (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl")}
-                         "Download WDL..."])
+                      (links/create-download-from-object
+                       "Download WDL"
+                       (:payload selected-snapshot)
+                       (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl"))
                       (when (:public selected-snapshot)
                         [:div {:style {:marginTop "0.5rem"}}
                          [:span {:style {:fontWeight 500}}"Import URL for this WDL"]
