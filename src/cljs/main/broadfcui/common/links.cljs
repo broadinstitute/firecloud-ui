@@ -11,11 +11,14 @@
                         attributes)
    contents])
 
-(defn create-download [label url filename]
-  [:a {:href url
-       :download filename}
-   label
-   icons/download-icon])
+(defn create-download
+  ([label url]
+   (create-download label url nil)) ; nil :download is fine with React
+  ([label url filename]
+   [:a {:href url
+        :download filename}
+    label
+    icons/download-icon]))
 
 (defn create-download-from-object [label object filename]
   (let [payload-blob (js/Blob. (js/Array. object) {:type "text/plain"})
