@@ -116,7 +116,7 @@
                     [:div {}
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
-                     [:div {:style {:marginLeft "1.5rem" :marginBottom "0.5rem" :marginTop "1.5rem"}}
+                     [:div {:style {:margin "1.5rem 0 0.5rem 1.5rem"}}
                       (links/create-download-from-object
                        "Download WDL"
                        (:payload selected-snapshot)

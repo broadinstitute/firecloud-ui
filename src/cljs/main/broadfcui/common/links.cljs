@@ -19,7 +19,7 @@
 
 (defn create-download-from-object [label object filename]
   (let [payload-blob (js/Blob. (js/Array. object) {:type "text/plain"})
-        payload-object-url (.createObjectURL js/URL payload-blob)]
+        payload-object-url (js/URL.createObjectURL payload-blob)]
     (create-download label payload-object-url filename)))
 
 (defn create-external [attributes & contents]
