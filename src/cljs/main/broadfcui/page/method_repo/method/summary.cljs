@@ -93,7 +93,7 @@
                              payload-object-url (.createObjectURL js/URL payload-blob)
                              hidden-download-link (.getElementById js/document "hidden-download-link")]
                          (set! (.-href hidden-download-link) payload-object-url)
-                         (set! (.-download hidden-download-link) (str (:name selected-snapshot) ".wdl"))
+                         (set! (.-download hidden-download-link) (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl"))
                          (.click hidden-download-link)
                          (.revokeObjectURL js/URL payload-object-url))}]
            [:a {:id "hidden-download-link"}]]}]]))
