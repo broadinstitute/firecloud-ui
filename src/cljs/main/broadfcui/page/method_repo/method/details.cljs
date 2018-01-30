@@ -117,10 +117,10 @@
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
                      [:div {:style {:margin "1.5rem 0 0.5rem 1.5rem"}}
-                      [links/ObjectDownloadLink
-                       {:label "Download WDL"
-                        :object (:payload selected-snapshot)
-                        :filename (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl")}]
+                      (links/create-download-from-object
+                       "Download WDL"
+                       (:payload selected-snapshot)
+                       (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl"))
                       (when (:public selected-snapshot)
                         [:div {:style {:marginTop "1.5rem"}}
                          [:span {:style {:fontWeight 500}} "Import URL for this WDL"]
