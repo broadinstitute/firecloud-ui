@@ -31,11 +31,11 @@ if (process.env.NODE_ENV === 'production') {
 
 module.exports = {
     entry: {
-        base: "./src/base-deps.js",
-        codemirror: "./src/codemirror-deps.js",
-        igv: "./src/igv-deps.js",
-        markdown: "./src/markdown-deps.js",
-        pipeline: "./src/pipeline-deps.js"
+        base: "./src/js/base-deps.js",
+        codemirror: "./src/js/codemirror-deps.js",
+        igv: "./src/js/igv-deps.js",
+        markdown: "./src/js/markdown-deps.js",
+        pipeline: "./src/js/pipeline-deps.js"
     },
     output: {
         filename: '[name]-deps.bundle.js',

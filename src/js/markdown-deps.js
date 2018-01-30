@@ -1,2 +1,2 @@
 window.webpackDeps.MarkdownIt = require('markdown-it');
-require('./styles/markdown.scss');
+require('../styles/markdown.scss');
