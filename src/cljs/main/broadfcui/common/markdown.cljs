@@ -67,7 +67,7 @@
                                                 :backgroundColor "white"
                                                 :padding "5px 8px"
                                                 :border style/standard-line :borderRadius 2
-                                                :height "100%" :boxSizing "border-box"}}]
+                                                :height "100%" :width "100%" :boxSizing "border-box"}}]
            text-area (style/create-text-area {:data-test-id "markdown-editor-text-area"
                                               :value text
                                               :onChange #(let [new-value (-> % .-target .-value)]
