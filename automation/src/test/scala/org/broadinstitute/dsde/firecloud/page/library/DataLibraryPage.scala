@@ -85,4 +85,24 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.getTags
   }
 
+  def enterRPOntologySearchText(text: String): Unit = {
+    SearchField("ontology-autosuggest").setText(text)
+  }
+
+  def isSuggestionVisible(suggestionTestId: String): Boolean = {
+    await enabled testId(suggestionTestId) // has a timeout so test will not hang if suggestion never shows
+    val ffiSuggestion = Button(suggestionTestId)
+    ffiSuggestion.isVisible
+  }
+
+  def selectSuggestion(suggestionTestId: String, tagTestId: String): Unit = {
+    val ffiSuggestion = Button(suggestionTestId)
+    ffiSuggestion.doClick()
+  }
+
+  def isTagSelected(tagTestId: String): Boolean = {
+    await enabled testId(tagTestId)
+    Label(tagTestId).isVisible
+  }
+
 }
