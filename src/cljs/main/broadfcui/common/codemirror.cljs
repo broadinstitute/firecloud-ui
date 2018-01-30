@@ -3,13 +3,10 @@
    [dmohs.react :as react]
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
-   [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
    ))
 
 (defonce ^:private codemirror-constructor (atom false))
-
-(defonce ^:private pipeline-constructor (atom false))
 
 (defn- regex-escape [s]
   (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))
@@ -106,70 +103,3 @@
        (-> (@locals :codemirror-instance)
            (js-invoke "getDoc")
            (js-invoke "setValue" (:text next-props)))))})
-
-(react/defc PipelineBuilder
-  {:component-will-receive-props
-   (fn [{:keys [this next-props]}]
-     (this :-render-pipeline (:wdl next-props)))
-   :render
-   (fn [{:keys [props state locals this]}]
-     (let [{:keys [loaded? error?]} @state]
-       [:div {:ref #(swap! locals assoc :wrapper %)}
-        (cond
-          error? [:h2 {} "Couldn't load visualizer."]
-          (not loaded?) [ScriptLoader
-                         {:on-error #(swap! state assoc :error? true)
-                          :on-load (fn []
-                                     (when-not @pipeline-constructor
-                                       (reset! pipeline-constructor (aget js/window "webpackDeps" "PipelineBuilder")))
-                                     (this :-render-pipeline (:wdl props))
-                                     (swap! state assoc :loaded? true))
-                          :path "pipeline-deps.bundle.js"}])
-        [:div {:data-test-id (:data-test-id props)
-               :ref #(swap! locals assoc :container %)
-               :style (when loaded? {:border style/standard-line :min-height 500})}]]))
-   :-render-pipeline
-   (fn [{:keys [locals props]} wdl]
-     (let [{:keys [read-only?]} props
-           {:keys [container wrapper]} @locals
-           Visualizer (.-Visualizer @pipeline-constructor)
-           diagram (Visualizer. container read-only?)
-           recalculate-size #(.setDimensions (.-paper diagram)
-                                             (- (.-clientWidth wrapper) 2) (- (.-clientHeight wrapper) 2))]
-       (.then (.parse @pipeline-constructor wdl)
-              (fn [res]
-                (.attachTo diagram
-                           (aget (.-model res) 0))))
-       (.addEventListener wrapper "onresize" recalculate-size)
-       (recalculate-size)
-       (when read-only?
-         (.disableSelection diagram))))})
-
-(react/defc PipelineAndWDL
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [mode]} @state
-           {:keys [wdl read-only?]} props
-           mode (or mode :code)
-           tab (fn [mode-key label]
-                 (let [selected? (= mode-key mode)]
-                   [:div {:style {:display "inline-block"
-                                  :border style/standard-line :padding "3px 8px" :cursor "pointer"
-                                  :color (when selected? "white")
-                                  :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
-                          :onClick #(swap! state assoc :mode mode-key)}
-                    label]))
-           pipeline-view [PipelineBuilder {:wdl wdl :read-only? read-only?}]
-           code-mirror [CodeMirror {:text wdl :read-only? read-only?}]]
-       [:div {}
-        [:div {}
-         (tab :code "Code")
-         (tab :preview "Preview")
-         (tab :side-by-side "Side-by-side")]
-        (case mode
-          :code code-mirror
-          :preview pipeline-view
-          :side-by-side [SplitPane
-                         {:left code-mirror :right pipeline-view
-                          ;; initial position is the center of the screen, taking into consideration side padding in the WDL tab
-                          :initial-slider-position (str "calc(50vw - 1.5rem - 25px)")}])]))})
