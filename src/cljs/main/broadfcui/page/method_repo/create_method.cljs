@@ -42,15 +42,15 @@
    finds the most common number of '#' characters to start non-blank lines, and removes that many
    '#' characters from each line"
   [comment-or-blank-lines]
-  (let [most-common-hash-count (->> comment-or-blank-lines
-                                    (remove string/blank?)
-                                    (map (comp count (partial re-find #"#+")))
-                                    frequencies (sort-by val) last key)
-        pattern (re-pattern (str "^#{" most-common-hash-count "}.*"))
+  (let [most-common-hash-count (some->> comment-or-blank-lines
+                                        (remove string/blank?)
+                                        (map (comp count (partial re-find #"#+") string/trim))
+                                        frequencies (sort-by val) last key)
+        pattern (re-pattern (str "^\\s*#{" most-common-hash-count "}.*"))
         trimmed-lines (map (fn [line]
                              (string/trim
                               (if (re-matches pattern line)
-                                (apply str (drop most-common-hash-count line))
+                                (->> line string/trim (drop most-common-hash-count) (apply str))
                                 line)))
                            comment-or-blank-lines)]
     trimmed-lines))
@@ -188,7 +188,7 @@
    :-populate-description-from-wdl
    (fn [{:keys [refs]}]
      (let [wdl-text-lines (string/split-lines ((@refs "wdl-editor") :call-method "getValue"))
-           comment-or-blank-lines (take-while (some-fn string/blank? #(string/starts-with? % "#")) wdl-text-lines)]
+           comment-or-blank-lines (take-while (some-fn string/blank? (partial re-find #"^\s*#")) wdl-text-lines)]
        ((@refs "documentation") :set-text (string/join "\n" (strip-comment-leaders comment-or-blank-lines)))))
    :-create-method
    (fn [{:keys [state locals refs this]}]

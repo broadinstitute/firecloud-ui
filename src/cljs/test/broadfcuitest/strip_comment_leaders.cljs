@@ -34,4 +34,16 @@
              "## B"
              "## C"
              "#D"
-             "##E"])))))
+             "##E"]))))
+  (testing "trims everything correctly"
+    (is (= ["A"
+            "B"
+            "C"
+            "D"
+            "E"]
+           (strip-comment-leaders
+            ["###   A"
+             " ###B"
+             "  ### C"
+             "### D"
+             " ### E"])))))
