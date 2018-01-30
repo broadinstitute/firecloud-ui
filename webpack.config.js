@@ -64,11 +64,6 @@ module.exports = {
             { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, use: "file-loader" }
         ]
     },
-    resolve: {
-        alias: {
-            underscore: 'lodash',
-        },
-    },
     plugins: plugins,
     watchOptions: {
         ignored: /node_modules/
