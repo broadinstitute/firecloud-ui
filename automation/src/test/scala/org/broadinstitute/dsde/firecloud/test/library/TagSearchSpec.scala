@@ -1,10 +1,11 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
-import org.broadinstitute.dsde.firecloud.config.{Config, UserPool}
-import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
-import org.broadinstitute.dsde.firecloud.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 
 class TagSearchSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with Matchers with BeforeAndAfterAll {
