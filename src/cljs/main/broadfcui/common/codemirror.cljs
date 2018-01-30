@@ -180,4 +180,4 @@
              :side-by-side [SplitPane
                             {:left code-mirror :right pipeline-view
                              ;; initial position is the center of the screen, taking into consideration side padding in the WDL tab
-                             :initial-slider-position (str "calc(" (/ js/window.innerWidth 2) "px - 1.5rem - 20px)")}])])]))})
+                             :initial-slider-position (str "calc(50vw - 1.5rem - 25px)")}])])]))})
