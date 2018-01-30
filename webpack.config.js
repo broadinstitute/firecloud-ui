@@ -34,7 +34,8 @@ module.exports = {
         base: "./src/base-deps.js",
         codemirror: "./src/codemirror-deps.js",
         igv: "./src/igv-deps.js",
-        markdown: "./src/markdown-deps.js"
+        markdown: "./src/markdown-deps.js",
+        pipeline: "./src/pipeline-deps.js"
     },
     output: {
         filename: '[name]-deps.bundle.js',
