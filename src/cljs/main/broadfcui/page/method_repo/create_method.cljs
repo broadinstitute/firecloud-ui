@@ -181,8 +181,10 @@
                                       :text (:ok-text info)
                                       :onClick #(this :-create-method)}])}]))
    :-set-wdl-text
-   (fn [{:keys [refs]} text]
-     ((@refs "wdl-editor") :call-method "setValue" text))
+   (fn [{:keys [refs this]} text]
+     ((@refs "wdl-editor") :call-method "setValue" text)
+     (when (string/blank? ((@refs "documentation") :get-trimmed-text))
+       (this :-populate-description-from-wdl)))
    :-populate-description-from-wdl
    (fn [{:keys [refs]}]
      (let [wdl-text-lines (string/split-lines ((@refs "wdl-editor") :call-method "getValue"))
