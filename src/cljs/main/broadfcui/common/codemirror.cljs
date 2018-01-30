@@ -160,7 +160,7 @@
                           :onClick #(swap! state assoc :mode mode-key)}
                     label]))
            pipeline-view [PipelineBuilder {:wdl wdl :read-only? read-only?}]
-           code-mirror [CodeMirror {:text wdl :read-only? read-only? :height "100%"}]]
+           code-mirror [CodeMirror {:text wdl :read-only? read-only?}]]
        [:div {}
         (cond
           error? [:h2 {} "Something went wrong..."]
