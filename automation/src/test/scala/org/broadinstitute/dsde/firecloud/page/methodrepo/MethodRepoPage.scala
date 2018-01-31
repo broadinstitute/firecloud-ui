@@ -25,11 +25,11 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
 }
 
 class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal("create-new-method-modal") {
-  private val namespaceField = TextField("namespace-field")
-  private val nameField = TextField("name-field")
-  private val wdlField = WDLField("wdl-field")
-  private val documentationField = MarkdownEditor("documentation-field")
-  private val synopsisField = TextField("synopsis-field")
+  private val namespaceField = TextField("namespace-field" inside this)
+  private val nameField = TextField("name-field" inside this)
+  private val wdlField = WDLField("wdl-field") // Unable to "inside" this one, but unlikely to collide with anything
+  private val documentationField = MarkdownEditor("documentation-field" inside this)
+  private val synopsisField = TextField("synopsis-field" inside this)
 
   def fillOut(attributes: Map[String, String]): Unit = {
     namespaceField.setText(attributes("namespace"))

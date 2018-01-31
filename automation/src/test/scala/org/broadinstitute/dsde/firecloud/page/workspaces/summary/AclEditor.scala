@@ -9,11 +9,11 @@ import org.openqa.selenium.WebDriver
   * Page class for the Acl Editor modal
   */
 class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal("acl-editor") {
-  private val addNewAclButton = Button("add-new-acl-button")
-  private val newAclEmailField = EmailField("acl-add-email")
-  private val roleDropdown = Select("role-dropdown-true")
-  val canShareBox = Checkbox("acl-share-true")
-  val canComputeBox = Checkbox("acl-compute-true")
+  private val addNewAclButton = Button("add-new-acl-button" inside this)
+  private val newAclEmailField = EmailField("acl-add-email" inside this)
+  private val roleDropdown = Select("role-dropdown-true" inside this)
+  val canShareBox = Checkbox("acl-share-true" inside this)
+  val canComputeBox = Checkbox("acl-compute-true" inside this)
 
   /**
     * Shares workspace being viewed.

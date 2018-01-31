@@ -86,10 +86,10 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("import-metadata-modal") {
   override def awaitReady(): Unit = importFromFileButton.isVisible
 
-  private val importFromFileButton = Button("import-from-file-button")
-  private val fileUploadInput = FileSelector("data-upload-input")
-  private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button")
-  private val uploadSuccessMessage = Label("upload-success-message")
+  private val importFromFileButton = Button("import-from-file-button" inside this)
+  private val fileUploadInput = FileSelector("data-upload-input" inside this)
+  private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button" inside this)
+  private val uploadSuccessMessage = Label("upload-success-message" inside this)
 
   /**
     * Imports metadata from a file.

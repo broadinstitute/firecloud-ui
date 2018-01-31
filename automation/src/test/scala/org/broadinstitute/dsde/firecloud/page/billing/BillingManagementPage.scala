@@ -97,8 +97,8 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
 class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal("create-billing-project-modal") {
   override def awaitReady(): Unit = projectNameInput.awaitVisible()
 
-  private val projectNameInput = TextField("project-name-input")
-  private def billingAccountButton(name: String) = Link(name + "-radio")
+  private val projectNameInput = TextField("project-name-input" inside this)
+  private def billingAccountButton(name: String) = Link(name + "-radio" inside this)
 
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
     projectNameInput.setText(projectName)
@@ -113,8 +113,8 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelM
   * Page class for the modal for adding users to a billing project.
   */
 class AddUserToBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelModal("add-user-to-billing-project-modal") {
-  private val addUserModalEmailInput = TextField("billing-project-add-user-modal-user-email-input")
-  private val addUserModalRoleSelect = Select("billing-project-add-user-modal-user-role-select")
+  private val addUserModalEmailInput = TextField("billing-project-add-user-modal-user-email-input" inside this)
+  private val addUserModalRoleSelect = Select("billing-project-add-user-modal-user-role-select" inside this)
 
   def addUserToBillingProject(userEmail: String, role: String): Unit = {
     addUserModalEmailInput.setText(userEmail)

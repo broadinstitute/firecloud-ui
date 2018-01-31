@@ -1,14 +1,13 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.component.Component._
 import org.openqa.selenium.WebDriver
 
 class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("clone-workspace-modal") {
-  private val authDomainSelect = Select("workspace-auth-domain-select")
-  private val billingProjectSelect = Select("billing-project-select")
+  private val authDomainSelect = Select("workspace-auth-domain-select" inside this)
+  private val billingProjectSelect = Select("billing-project-select" inside this)
   private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
-  private val workspaceNameInput = TextField("workspace-name-input")
+  private val workspaceNameInput = TextField("workspace-name-input" inside this)
 
   /**
     * Clones a new workspace.
