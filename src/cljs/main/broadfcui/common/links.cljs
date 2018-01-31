@@ -31,9 +31,6 @@
          (swap! locals assoc :objectUrl payload-object-url)
          (create-download label payload-object-url filename)))
      :component-will-unmount
-     (fn [{:keys [this]}]
-       (this :-cleanup))
-     :-cleanup
      (fn [{:keys [locals]}]
        (js/URL.revokeObjectURL (:objectUrl @locals)))}) {:label label :object object :filename filename}])
 
