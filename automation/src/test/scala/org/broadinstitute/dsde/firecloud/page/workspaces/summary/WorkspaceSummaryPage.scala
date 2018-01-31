@@ -163,7 +163,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       // TODO: no test uses this yet
       null
     } else {
-      await ready ErrorModal()
+      await ready MessageModal()
     }
   }
 
