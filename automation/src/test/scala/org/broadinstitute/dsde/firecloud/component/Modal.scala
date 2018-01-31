@@ -1,12 +1,9 @@
-package org.broadinstitute.dsde.firecloud.page
+package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component.Button
-import org.broadinstitute.dsde.firecloud.component.Component._
 import org.openqa.selenium.WebDriver
 
-abstract class Modal(implicit webDriver: WebDriver) extends FireCloudView {
-  protected val xButton = Button("x-button")
+abstract class Modal(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) {
+  protected val xButton = Button("x-button" inside this)
 
   override def awaitReady(): Unit = {
     xButton.awaitVisible()
@@ -26,9 +23,9 @@ abstract class Modal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 }
 
-abstract class OKCancelModal(implicit webDriver: WebDriver) extends Modal {
-  protected val okButton = Button("ok-button")
-  protected val cancelButton = Button("cancel-button")
+abstract class OKCancelModal(queryString: QueryString)(implicit webDriver: WebDriver) extends Modal(queryString) {
+  protected val okButton = Button("ok-button" inside this)
+  protected val cancelButton = Button("cancel-button" inside this)
 
   def clickOk(): Unit = {
     okButton.doClick()
@@ -49,7 +46,7 @@ abstract class OKCancelModal(implicit webDriver: WebDriver) extends Modal {
   }
 }
 
-case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
+case class MessageModal(queryString: QueryString)(implicit webDriver: WebDriver) extends OKCancelModal(queryString) {
   def validateLocation: Boolean = {
     testId("message-modal-content").element != null
   }
@@ -62,8 +59,8 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
 
 }
 
-case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  protected val grantButtonId = "grant-read-permission-button"
+case class SynchronizeMethodAccessModal(queryString: QueryString)(implicit webDriver: WebDriver) extends OKCancelModal(queryString) {
+  protected val grantButton = Button("grant-read-permission-button" inside this)
 
   def validateLocation: Boolean = {
     awaitReady()
@@ -71,10 +68,10 @@ case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends O
   }
 
   override def clickOk(): Unit = {
-    Button(grantButtonId).doClick()
+    grantButton.doClick()
   }
 
-  override def awaitReady(): Unit = await.visible(testId(grantButtonId), 1)
+  override def awaitReady(): Unit = grantButton.awaitReady()
 
 }
 

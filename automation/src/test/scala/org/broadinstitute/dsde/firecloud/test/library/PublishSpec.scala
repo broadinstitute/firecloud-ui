@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page._

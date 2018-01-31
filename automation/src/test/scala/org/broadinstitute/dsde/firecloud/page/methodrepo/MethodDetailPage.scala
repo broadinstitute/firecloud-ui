@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
-import org.broadinstitute.dsde.firecloud.component.Button
+import org.broadinstitute.dsde.firecloud.component.{Button, MessageModal}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
-import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, MessageModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 

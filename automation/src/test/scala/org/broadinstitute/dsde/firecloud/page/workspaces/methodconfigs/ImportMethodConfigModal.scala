@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.page.{MethodTable, Modal}
+import org.broadinstitute.dsde.firecloud.page.MethodTable
 import org.openqa.selenium.WebDriver
 
 class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {

@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component.Button
-import org.broadinstitute.dsde.firecloud.page.OKCancelModal
+import org.broadinstitute.dsde.firecloud.component.{Button, OKCancelModal}
 import org.openqa.selenium.WebDriver
 
 /**

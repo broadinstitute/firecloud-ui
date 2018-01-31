@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label,
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page

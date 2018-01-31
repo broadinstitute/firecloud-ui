@@ -43,7 +43,8 @@
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
-     (let [{:keys [header content dismiss button-bar ok-button show-cancel? cancel-text show-close? data-test-id]} props]
+     (let [{:keys [header content dismiss button-bar ok-button show-cancel? cancel-text show-close? data-test-id]} props
+           data-test-id (or data-test-id (when (string? header) (str header "")))]
        (modal/render
         {:content
          [:div {}

@@ -3,12 +3,12 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
-import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{WorkspaceFixtures, MethodFixtures, MethodData, SimpleMethodConfig}
+import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures, SimpleMethodConfig, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
