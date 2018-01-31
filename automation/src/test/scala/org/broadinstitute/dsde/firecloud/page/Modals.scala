@@ -54,10 +54,6 @@ case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal {
     testId("message-modal-content").element != null
   }
 
-  def readMessageModalText: String = {
-    readText (testId ("message-modal-content"))
-  }
-
   def getMessageText: String = {
     readText(testId("message-modal-content"))
   }
