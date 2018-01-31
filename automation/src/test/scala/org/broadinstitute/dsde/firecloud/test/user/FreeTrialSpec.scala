@@ -127,7 +127,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       }
     }
 
-   "Disabled" - {
+    "Disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
