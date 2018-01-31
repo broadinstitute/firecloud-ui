@@ -5,8 +5,9 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.GetQueryResultsResponse
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
+import org.broadinstitute.dsde.workbench.dao.Google
 import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
+import org.broadinstitute.dsde.workbench.google.{GoogleBigQueryDAO, GoogleCredentialModes, HttpGoogleBigQueryDAO}
 import org.broadinstitute.dsde.workbench.service.{Orchestration, RestException}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Seconds, Span}
@@ -20,6 +21,10 @@ import scala.util.Try
 class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with Eventually
   with BillingFixtures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
+
+  def bqDao(userToken: String): GoogleBigQueryDAO = {
+    new HttpGoogleBigQueryDAO(Google.appName, GoogleCredentialModes.Token(userToken), Google.metricBaseName)(Google.system, Google.ec)
+  }
 
   "Orchestration" - {
     "should grant and remove google role access" in {
@@ -43,7 +48,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       }
 
       withBillingProject("auto-goog-role") { projectName =>
-        val preRoleFailure = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), "meh").failed.futureValue
+        val preRoleFailure = bqDao(userToken.value).startQuery(GoogleProject(projectName), "meh").failed.futureValue
         preRoleFailure shouldBe a[GoogleJsonResponseException]
         preRoleFailure.getMessage should include(user.email)
         preRoleFailure.getMessage should include(projectName)
@@ -51,21 +56,21 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
 
-        val queryReference = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), shakespeareQuery).futureValue
+        val queryReference = bqDao(userToken.value).startQuery(GoogleProject(projectName), shakespeareQuery).futureValue
         val queryJob = eventually {
-          val job = googleBigQueryDAO.getQueryStatus(userToken.value, queryReference).futureValue
+          val job = bqDao(userToken.value).getQueryStatus(queryReference).futureValue
           job.getStatus.getState shouldBe "DONE"
           job
         }
 
-        val queryResult = googleBigQueryDAO.getQueryResult(userToken.value, queryJob).futureValue
+        val queryResult = bqDao(userToken.value).getQueryResult(queryJob).futureValue
         assertExpectedShakespeareResult(queryResult)
 
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
 
         val postRoleFailure = Retry.retry(1.second, 10.seconds) {
           // retry this because removing google roles is not always immediate
-          Try { googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), shakespeareQuery).failed.futureValue }.toOption
+          Try { bqDao(userToken.value).startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue }.toOption
         }.get
 
         postRoleFailure shouldBe a[GoogleJsonResponseException]
