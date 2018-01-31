@@ -21,7 +21,8 @@
   {:render
    (fn [{:keys [props state this refs]}]
      [modals/OKCancelForm
-      {:header (str "Add user to " (:group-name props))
+      {:data-test-id "add-user-to-billing-project-modal"
+       :header (str "Add user to " (:group-name props))
        :ok-button {:text "Add User" :onClick #(this :-add-user)}
        :dismiss (:dismiss props)
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))

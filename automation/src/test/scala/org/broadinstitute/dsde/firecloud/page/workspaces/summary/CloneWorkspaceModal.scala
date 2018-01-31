@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.component.{OKCancelModal, _}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.openqa.selenium.WebDriver
 
-class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("clone-workspace-modal") {
   private val authDomainSelect = Select("workspace-auth-domain-select")
   private val billingProjectSelect = Select("billing-project-select")
   private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")

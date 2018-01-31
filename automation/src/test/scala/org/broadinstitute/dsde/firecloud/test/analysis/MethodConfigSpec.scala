@@ -312,7 +312,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled"
             methodConfigDetailsPage.saveEdits(expectSuccess = false)
             val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.changeSnapshotId(2)
@@ -354,7 +354,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
 
             val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-            modal.validateLocation shouldBe true
+            modal.isVisible shouldBe true
             modal.clickOk()
           }
 
@@ -375,7 +375,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
             methodConfigDetailsPage.openEditMode(expectSuccess = false)
             val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.deleteMethodConfig()

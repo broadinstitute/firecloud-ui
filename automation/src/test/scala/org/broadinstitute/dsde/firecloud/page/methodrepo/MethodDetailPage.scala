@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
-import org.broadinstitute.dsde.firecloud.component.{Button, MessageModal}
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
@@ -20,7 +20,7 @@ class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebD
 
   def redact(): Unit = {
     redactButton.doClick()
-    MessageModal().clickOk()
+    new OKCancelModal("confirm-redaction-modal").clickOk()
     // redact takes us back to the table:
     redactButton.awaitNotVisible()
   }

@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.MethodTable
 import org.openqa.selenium.WebDriver
 
-class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {
+class ImportMethodConfigModal(implicit webDriver: WebDriver) extends OKCancelModal("import-method-configuration-modal") {
   private val chooseConfigFromRepoButton = Button("import-from-repo-button")
   private val copyConfigFromWorkspaceButton = Button("copy-from-workspace-button")
 

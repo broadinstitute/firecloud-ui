@@ -7,7 +7,7 @@ import org.openqa.selenium.WebDriver
 /**
   * Page class for the workspace delete confirmation modal.
   */
-class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("confirm-delete-modal") {
   /**
     * Confirms the request to delete a workspace. Returns after the FireCloud
     * busy spinner disappears.

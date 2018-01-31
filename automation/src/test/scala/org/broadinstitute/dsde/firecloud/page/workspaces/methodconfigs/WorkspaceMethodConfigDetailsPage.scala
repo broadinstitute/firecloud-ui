@@ -44,7 +44,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysisButtonError(): MessageModal = {
     clickLaunchAnalysis()
-    await ready new MessageModal
+    await ready MessageModal()
   }
 
   def openEditMode(expectSuccess: Boolean = true): Unit = {
@@ -112,7 +112,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 /**
   * Page class for the launch analysis modal.
   */
-class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("launch-analysis-modal") {
   override def awaitReady(): Unit = entityTable.awaitReady()
 
   private val entityTable = Table("entity-table")

@@ -24,7 +24,7 @@ class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage wi
   }
 }
 
-class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal("create-new-method-modal") {
   private val namespaceField = TextField("namespace-field")
   private val nameField = TextField("name-field")
   private val wdlField = WDLField("wdl-field")

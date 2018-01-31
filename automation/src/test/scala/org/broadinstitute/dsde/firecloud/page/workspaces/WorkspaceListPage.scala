@@ -93,7 +93,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 /**
   * Page class for the create workspace modal.
   */
-class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("create-new-workspace-modal") {
   private val authDomainSelect = Select("workspace-auth-domain-select")
   private val billingProjectSelect = Select("billing-project-select")
   private val workspaceNameInput = TextField("workspace-name-input")
@@ -114,4 +114,4 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
   }
 }
 
-class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal
+class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal("request-access-modal")

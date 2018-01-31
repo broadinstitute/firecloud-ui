@@ -8,7 +8,7 @@ import org.openqa.selenium.WebDriver
 /**
   * Page class for the Acl Editor modal
   */
-class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal {
+class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal("acl-editor") {
   private val addNewAclButton = Button("add-new-acl-button")
   private val newAclEmailField = EmailField("acl-add-email")
   private val roleDropdown = Select("role-dropdown-true")

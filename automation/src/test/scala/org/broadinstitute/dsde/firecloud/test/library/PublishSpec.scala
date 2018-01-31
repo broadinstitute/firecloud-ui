@@ -33,9 +33,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
             withSignIn(curatorUser) { _ =>
               val page = new WorkspaceSummaryPage(namespace, wsName).open
-              page.clickPublishButton()
-              val messageModal = MessageModal()
-              messageModal.validateLocation shouldBe true
+              val messageModal = page.clickPublishButton(expectSuccess = false)
+              messageModal.isVisible shouldBe true
               messageModal.clickOk()
             }
           }

@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.openqa.selenium.WebDriver
 
-abstract class Modal(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) {
+abstract class Modal(id: String)(implicit webDriver: WebDriver) extends Component(TestId(id)) {
   protected val xButton = Button("x-button" inside this)
 
   override def awaitReady(): Unit = {
@@ -23,9 +23,14 @@ abstract class Modal(queryString: QueryString)(implicit webDriver: WebDriver) ex
   }
 }
 
-abstract class OKCancelModal(queryString: QueryString)(implicit webDriver: WebDriver) extends Modal(queryString) {
-  protected val okButton = Button("ok-button" inside this)
-  protected val cancelButton = Button("cancel-button" inside this)
+class OKCancelModal(id: String)(implicit webDriver: WebDriver) extends Modal(id) {
+  protected def innerElement(innerId: String): QueryString = s"$id-$innerId" inside this
+
+  protected val header = Label(innerElement("header"))
+  protected val content = Label(innerElement("content"))
+
+  protected val okButton = Button(innerElement("submit-button"))
+  protected val cancelButton = Button(innerElement("cancel-button"))
 
   def clickOk(): Unit = {
     okButton.doClick()
@@ -46,20 +51,13 @@ abstract class OKCancelModal(queryString: QueryString)(implicit webDriver: WebDr
   }
 }
 
-case class MessageModal(queryString: QueryString)(implicit webDriver: WebDriver) extends OKCancelModal(queryString) {
-  def validateLocation: Boolean = {
-    testId("message-modal-content").element != null
-  }
-
-  def getMessageText: String = {
-    readText(testId("message-modal-content"))
-  }
-
-  override def awaitReady(): Unit = okButton.awaitVisible()
-
+case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message-modal") {
+  def getMessageText: String = content.getText
 }
 
-case class SynchronizeMethodAccessModal(queryString: QueryString)(implicit webDriver: WebDriver) extends OKCancelModal(queryString) {
+case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
+
+case class SynchronizeMethodAccessModal(id: String)(implicit webDriver: WebDriver) extends OKCancelModal(id) {
   protected val grantButton = Button("grant-read-permission-button" inside this)
 
   def validateLocation: Boolean = {
