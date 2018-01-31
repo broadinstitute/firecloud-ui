@@ -22,19 +22,17 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
       withSignIn(user) { _ =>
         val page = new DataLibraryPage().open
 
-        page.isShowingResearchPurposeModal shouldBe false
+        val modal = page.openResearchPurposeModal()
+        modal.isVisible shouldBe true
+
+        modal.cancel()
+        modal.isVisible shouldBe false
 
         page.openResearchPurposeModal()
-        page.isShowingResearchPurposeModal shouldBe true
+        modal.isVisible shouldBe true
 
-        page.dismissResearchPurposeModal()
-        page.isShowingResearchPurposeModal shouldBe false
-
-        page.openResearchPurposeModal()
-        page.isShowingResearchPurposeModal shouldBe true
-
-        page.dismissResearchPurposeModal()
-        page.isShowingResearchPurposeModal shouldBe false
+        modal.cancel()
+        modal.isVisible shouldBe false
       }
     }
 
@@ -44,18 +42,17 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
       withSignIn(user) { _ =>
         val page = new DataLibraryPage().open
 
-        page.openResearchPurposeModal()
+        val modal = page.openResearchPurposeModal()
 
-        page.selectRPCheckbox("control")
-        page.selectRPCheckbox("poa")
+        modal.selectCheckbox("control")
+        modal.selectCheckbox("poa")
+        modal.submit()
 
-        page.executeRPSearch()
+        modal.isVisible shouldBe false
 
-        page.isShowingResearchPurposeModal shouldBe false
-
-        Label("control-tag").isVisible shouldBe true
-        Label("poa-tag").isVisible shouldBe true
-        Label("commercial-tag").isVisible shouldBe false // We didn't select this one
+        page.showsResearchPurposeCode("control") shouldBe true
+        page.showsResearchPurposeCode("poa") shouldBe true
+        page.showsResearchPurposeCode("commercial") shouldBe false // We didn't select this one
       }
     }
 
