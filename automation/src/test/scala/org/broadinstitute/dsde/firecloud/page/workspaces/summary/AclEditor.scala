@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
-import org.broadinstitute.dsde.firecloud.component.{OKCancelModal, _}
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.openqa.selenium.WebDriver
