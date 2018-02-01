@@ -21,7 +21,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
         // create it
         val name = "TEST-CREATE-" + randomUuid
-        val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name)
+        val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name) + ("documentation" -> "documentation")
         val namespace = attributes("namespace")
         methodRepoPage.createNewMethod(attributes)
         register cleanUp api.methods.redact(namespace, name, 1)

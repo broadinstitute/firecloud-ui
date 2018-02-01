@@ -3,9 +3,13 @@ package org.broadinstitute.dsde.firecloud.page.library
 
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
+
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -49,6 +53,10 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     })
   }
 
+  def openDataset(name: String): Unit = {
+    Link(s"dataset-$name").doClick()
+  }
+
   def doSearch(searchParameter: String): Unit = {
     searchField.setText(searchParameter)
     pressKeys("\n")
@@ -85,4 +93,37 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.getTags
   }
 
+  case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal {
+    val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
+    val nonTcgaAccessText ="Please contact dbGAP and request access for workspace"
+    def validateLocation: Boolean = {
+      testId("message-modal-content").element != null
+    }
+    def readMessageModalText: String = {
+      readText(testId("message-modal-content"))
+    }
+  }
+    
+  def enterRPOntologySearchText(text: String): Unit = {
+    SearchField("ontology-autosuggest").setText(text)
+  }
+
+  def isSuggestionVisible(suggestionTestId: String): Boolean = {
+    await enabled testId(suggestionTestId) // has a timeout so test will not hang if suggestion never shows
+    val ffiSuggestion = Button(suggestionTestId)
+    ffiSuggestion.isVisible
+  }
+
+  def selectSuggestion(suggestionTestId: String, tagTestId: String): Unit = {
+    val ffiSuggestion = Button(suggestionTestId)
+    ffiSuggestion.doClick()
+  }
+
+  def isTagSelected(tagTestId: String): Boolean = {
+    await enabled testId(tagTestId)
+    Label(tagTestId).isVisible
+  }
+
 }
+
+

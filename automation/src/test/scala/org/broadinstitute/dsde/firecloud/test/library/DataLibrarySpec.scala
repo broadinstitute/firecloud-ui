@@ -17,7 +17,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec_consentcodes_") { wsName =>
       withCleanUp {
-        val data = LibraryData.metadata + ("library:datasetName" -> wsName) ++ LibraryData.consentCodes
+        val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName) ++ LibraryData.consentCodes
         api.library.setLibraryAttributes(namespace, wsName, data)
         register cleanUp api.library.unpublishWorkspace(namespace, wsName)
         api.library.publishWorkspace(namespace, wsName)
@@ -37,7 +37,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tags)) { wsName =>
       withCleanUp {
-        val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+        val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
         api.library.setLibraryAttributes(namespace, wsName, data)
         register cleanUp api.library.unpublishWorkspace(namespace, wsName)
         api.library.publishWorkspace(namespace, wsName)
