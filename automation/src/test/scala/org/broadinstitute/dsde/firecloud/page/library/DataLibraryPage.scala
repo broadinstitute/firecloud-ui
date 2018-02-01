@@ -94,10 +94,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def doTagsSearch(tag: String): List[Map[String, String]] = {
 
     // clear input field
-    val xSymbol = "span.selection ul.select2-selection__rendered li.select2-selection__choice span.select2-selection__choice__remove"
-    val xs: Iterator[Element] = findAll(CssSelectorQuery(xSymbol))
-    for (x <- xs) click on x
-    LibraryTable.awaitReady()
+    clearTag()
 
     // enter text in Tags inputfield
     val liOption = "span.select2-container--open ul.select2-results__options li"
@@ -117,6 +114,15 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
 
+  def clearTag(): Unit = {
+    // clear input field
+    val selection = "span.selection ul.select2-selection__rendered li.select2-selection__choice"
+    val xSymbol = selection + " span.select2-selection__choice__remove"
+    val xs: Iterator[Element] = findAll(CssSelectorQuery(xSymbol))
+    for (x <- xs) click on x
+    await condition findAll(CssSelectorQuery(xSymbol)).isEmpty //
+    LibraryTable.awaitReady()
+  }
 
 
 }
