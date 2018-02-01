@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
-import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.component.{Button, Label, SearchField}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
+import org.broadinstitute.dsde.firecloud.test.ModalUtil
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
@@ -11,36 +10,18 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
+class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers with ModalUtil {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {
-    "Repeatedly open and close the RP modal" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseAnyUser
-
-      withSignIn(user) { _ =>
-        val page = new DataLibraryPage().open
-
-        val modal = page.openResearchPurposeModal()
-        modal.isVisible shouldBe true
-
-        modal.cancel()
-        modal.isVisible shouldBe false
-
-        page.openResearchPurposeModal()
-        modal.isVisible shouldBe true
-
-        modal.cancel()
-        modal.isVisible shouldBe false
-      }
-    }
-
     "Select options in the RP modal and generate breadcrumbs" in withWebDriver { implicit driver =>
       val user = UserPool.chooseAnyUser
 
       withSignIn(user) { _ =>
         val page = new DataLibraryPage().open
+
+        testModal(page.openResearchPurposeModal())
 
         val modal = page.openResearchPurposeModal()
 
