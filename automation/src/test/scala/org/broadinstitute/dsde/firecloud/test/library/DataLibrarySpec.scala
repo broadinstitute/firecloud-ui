@@ -79,7 +79,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           withSignIn(curatorUser) { _ =>
             val page = new DataLibraryPage().open
 
-            // search by tagA alone
+            // search by tag1 alone
             val aRows: List[Map[String, String]] = page.doTagsSearch(tag1)
             // check: wsName1 and tag1 should be found in table
             aRows.exists { row => row("Cohort Name") == wsName1 && row("Tags").contains(tag1) } shouldBe true
@@ -99,7 +99,6 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             bRows.exists { row => row("Cohort Name") == wsName2 && row("Tags").contains(tag2) } shouldBe true
           }
 
-          await notVisible cssSelector("span[data-test-id='spinner']")
         }
       }
     }
