@@ -46,7 +46,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to clone a workspace" in withWebDriver { implicit driver =>
+      "should be able to clone a workspace" ignore withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
