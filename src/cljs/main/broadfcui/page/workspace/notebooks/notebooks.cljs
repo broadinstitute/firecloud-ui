@@ -105,7 +105,7 @@
               [:div {}
                (style/create-form-label "Extension URI")
                [input/TextField {:ref "extensionURI" :autoFocus true :style {:width "100%"}}]
-               (style/create-form-label "User Providered Script URI")
+               (style/create-form-label "User Provided Script URI")
                [input/TextField {:ref "userScriptURI" :autoFocus true :style {:width "100%"}}]
                [:div {:display "inline-block"}
                 [:span {:style {:paddingRight "19%"}} (create-inline-form-label "Master Machine Type")]
