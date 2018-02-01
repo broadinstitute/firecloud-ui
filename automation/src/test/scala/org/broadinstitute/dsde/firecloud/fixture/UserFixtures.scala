@@ -42,6 +42,7 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       new SignInPage(Config.FireCloud.baseUrl).open
+      logger.info(s"Forcing sign-in of ${user.email}")
       executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
     }, page, testCode)
   }
