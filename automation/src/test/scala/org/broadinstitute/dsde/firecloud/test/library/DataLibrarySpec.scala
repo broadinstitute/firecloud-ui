@@ -52,28 +52,58 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     }
   }
 
+  /**
+    * This test creates two workspace associated with different tags. Search for tag should
+    *  only find right workspace in Data Library table.
+    */
   "Use a known tag to search for dataset" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tagA)) { wsName =>
-      withCleanUp {
-        val tag: String = WorkspaceData.tagA.get("tag:tags").get(0) // pick first tag use in search
-        val data = LibraryData.metadata + ("library:datasetName" -> wsName)
-        api.library.setLibraryAttributes(namespace, wsName, data)
-        register cleanUp { api.library.unpublishWorkspace(namespace, wsName)(authToken) }
-        api.library.publishWorkspace(namespace, wsName)
-        withSignIn(curatorUser) { _ =>
-          val page = new DataLibraryPage().open
-          // search by tag
-          val rows: List[Map[String, String]] = page.doTagsSearch(tag)
-          // check: workspacename and tag should be found in table
-          rows.exists{row => row("Cohort Name") == wsName && row("Tags").contains(tag)} shouldBe true
-          // search with non-existent term 'zzzTag'
-          var result: List[Map[String, String]] = page.doTagsSearch("zzzTag")
-          result shouldBe empty     // check: table row should be empty
+    withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tagA)) { wsName1 =>
+      withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tagB)) { wsName2 =>
+        withCleanUp {
+
+          val tag1: String = WorkspaceData.tagA.get("tag:tags").get(0)
+          val tag2: String = WorkspaceData.tagB.get("tag:tags").get(0)
+          val data1 = LibraryData.metadata + ("library:datasetName" -> wsName1)
+          api.library.setLibraryAttributes(namespace, wsName1, data1)
+          val data2 = LibraryData.metadata + ("library:datasetName" -> wsName2)
+          api.library.setLibraryAttributes(namespace, wsName2, data2)
+          register cleanUp {
+            api.library.unpublishWorkspace(namespace, wsName1)(authToken)
+            api.library.unpublishWorkspace(namespace, wsName2)(authToken)
+          }
+          api.library.publishWorkspace(namespace, wsName1)
+          api.library.publishWorkspace(namespace, wsName2)
+
+          withSignIn(curatorUser) { _ =>
+            val page = new DataLibraryPage().open
+
+            // search by tagA alone
+            val aRows: List[Map[String, String]] = page.doTagsSearch(tag1)
+            // check: wsName1 and tag1 should be found in table
+            aRows.exists { row => row("Cohort Name") == wsName1 && row("Tags").contains(tag1) } shouldBe true
+            // check: wsName2 and tag2 should not be found in table
+            aRows.exists { row => row("Cohort Name") == wsName2 || row("Tags").contains(tag2) } shouldBe false
+
+            // search by tag2 alone
+            val bRows: List[Map[String, String]] = page.doTagsSearch(tag2)
+            // check: wsName2 and tag2 should be found in table
+            bRows.exists { row => row("Cohort Name") == wsName2 && row("Tags").contains(tag2) } shouldBe true
+            // check: wsName1 and tag1 should not be found in table
+            bRows.exists { row => row("Cohort Name") == wsName1 || row("Tags").contains(tag1) } shouldBe false
+
+            // clear Tags field to find all workspaces
+            page.clearTag()
+            aRows.exists { row => row("Cohort Name") == wsName1 && row("Tags").contains(tag1) } shouldBe true
+            bRows.exists { row => row("Cohort Name") == wsName2 && row("Tags").contains(tag2) } shouldBe true
+          }
+
+          await notVisible cssSelector("span[data-test-id='spinner']")
         }
       }
     }
   }
+
 
 }
