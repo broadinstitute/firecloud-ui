@@ -5,10 +5,10 @@ import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, Tes
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.{AuthToken, TrialBillingAccountAuthToken}
-import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Thurloe}
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
+import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Thurloe}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try
 
@@ -16,7 +16,7 @@ import scala.util.Try
 /**
   * Tests for new user registration scenarios.
   */
-class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
+class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
@@ -24,10 +24,30 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   implicit val authToken: AuthToken = adminUser.makeAuthToken()
   val trialKVPKeys = Seq("trialState", "trialBillingProjectName", "trialEnabledDate", "trialEnrolledDate",
     "trialTerminatedDate", "trialExpirationDate", "userAgreed")
+  val billingProject: String = Config.Projects.default
 
   var testUser: Credentials = _
   var userAuthToken: AuthToken = _
   var subjectId : String = _
+
+  /**
+    * Set up the number of projects necessary for this entire test suite to run.
+    * Currently, that number is 1
+    */
+  val freeTrialProjectsRequired = 1
+
+  override def beforeAll: Unit = {
+    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
+    api.trial.createTrialProjects(freeTrialProjectsRequired)
+  }
+
+  override def afterAll: Unit = {
+    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
+    api.trial.reportTrialProjects().foreach { p =>
+      logger.info(s"Cleaning up project: ${p.name}")
+      register cleanUp api.workspaces.delete(billingProject, p.name)
+    }
+  }
 
   override def beforeEach {
     testUser = UserPool.chooseStudent
@@ -36,9 +56,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
-  private def setUpEnabledUserAndProject(user: Credentials): Unit = {
-    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
-    api.trial.createTrialProjects(1)
+  private def enableUser(user: Credentials): Unit = {
     logger.info(s"Attempting to enable user [${user.email}] as campaign manager [${campaignManager.email}]")
     api.trial.enableUser(user.email)
   }
@@ -60,9 +78,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" ignore withWebDriver { implicit driver =>
-        setUpEnabledUserAndProject(testUser)
-
+      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+        enableUser(testUser)
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
           val bannerTitleElement = Label(TestId("trial-banner-title"))
