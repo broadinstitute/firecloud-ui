@@ -23,6 +23,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private val rpModalLink = Link("show-research-purpose-modal")
 
   private def datasetLink(name: String) = Link(s"dataset-$name")
+  private def researchPurposeCode(code: String) = Label(s"$code-tag")
 
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
@@ -50,7 +51,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def openDataset(name: String): Unit = {
-    Link(s"dataset-$name").doClick()
+    datasetLink(name).doClick()
   }
 
   def doSearch(searchParameter: String): Unit = {
@@ -61,11 +62,11 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   def openResearchPurposeModal(): ResearchPurposeModal = {
     rpModalLink.doClick()
-    await ready ResearchPurposeModal()
+    await ready new ResearchPurposeModal()
   }
 
   def showsResearchPurposeCode(code: String): Boolean = {
-    Label(s"$code-tag").isVisible
+    researchPurposeCode(code).isVisible
   }
 
   def getConsentCodes: Seq[String] = {
@@ -78,19 +79,23 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.getTags
   }
 
-  case class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal("") {
+  case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
     val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
-    val nonTcgaAccessText ="Please contact dbGAP and request access for workspace"
-    def validateLocation: Boolean = {
-      testId("message-modal-content").element != null
-    }
-    def readMessageModalText: String = {
-      readText(testId("message-modal-content"))
-    }
+    val nonTcgaAccessText = "Please contact dbGAP and request access for workspace"
+  }
+}
+
+
+class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal("research-purpose-modal") {
+  private def checkboxByCode(code: String) = Checkbox(s"$code-checkbox" inside this)
+  private val ontologySearch = SearchField("ontology-autosuggest" inside this)
+
+  def selectCheckbox(code: String): Unit = {
+    checkboxByCode(code).ensureChecked()
   }
 
-  def enterRPOntologySearchText(text: String): Unit = {
-    SearchField("ontology-autosuggest").setText(text)
+  def enterOntologySearchText(text: String): Unit = {
+    ontologySearch.setText(text)
   }
 
   def isSuggestionVisible(suggestionTestId: String): Boolean = {
@@ -107,16 +112,6 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def isTagSelected(tagTestId: String): Boolean = {
     await enabled testId(tagTestId)
     Label(tagTestId).isVisible
-  }
-
-}
-
-
-case class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal("research-purpose-modal") {
-  private def checkboxByCode(code: String) = Checkbox(s"$code-checkbox" inside this)
-
-  def selectCheckbox(code: String): Unit = {
-    checkboxByCode(code).ensureChecked()
   }
 }
 

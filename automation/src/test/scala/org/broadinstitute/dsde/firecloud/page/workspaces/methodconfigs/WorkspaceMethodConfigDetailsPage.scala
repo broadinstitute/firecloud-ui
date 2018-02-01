@@ -44,7 +44,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysisButtonError(): MessageModal = {
     clickLaunchAnalysis()
-    await ready MessageModal()
+    await ready new MessageModal()
   }
 
   def openEditMode(expectSuccess: Boolean = true): Unit = {

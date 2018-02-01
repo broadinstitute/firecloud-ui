@@ -311,7 +311,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.openEditMode()
             methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled"
             methodConfigDetailsPage.saveEdits(expectSuccess = false)
-            val modal = MessageModal()
+            val modal = await ready new MessageModal()
             modal.isVisible shouldBe true
             modal.clickOk()
 
@@ -374,7 +374,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
             methodConfigDetailsPage.openEditMode(expectSuccess = false)
-            val modal = MessageModal()
+            val modal = await ready new MessageModal()
             modal.isVisible shouldBe true
             modal.clickOk()
 

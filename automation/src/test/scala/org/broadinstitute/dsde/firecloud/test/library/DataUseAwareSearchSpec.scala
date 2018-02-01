@@ -61,35 +61,34 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
       withSignIn(user) { _ =>
         val page = new DataLibraryPage().open
+        val researchPurposeModal = page.openResearchPurposeModal()
 
-        page.openResearchPurposeModal()
-
-        page.selectRPCheckbox("disease-focused-research")
+        researchPurposeModal.selectCheckbox("disease-focused-research")
 
         // Disease 1
         val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
         val ffiTagId = "doid:0050433-tag"
 
-        page.enterRPOntologySearchText("fatal")
+        researchPurposeModal.enterOntologySearchText("fatal")
 
-        page.isSuggestionVisible(ffiSuggestionId) shouldBe true
+        researchPurposeModal.isSuggestionVisible(ffiSuggestionId) shouldBe true
 
-        page.selectSuggestion(ffiSuggestionId, ffiTagId)
+        researchPurposeModal.selectSuggestion(ffiSuggestionId, ffiTagId)
 
-        page.isTagSelected(ffiTagId) shouldBe true
+        researchPurposeModal.isTagSelected(ffiTagId) shouldBe true
 
         // Disease 2
         val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846" // bruxism
         val brxTagId = "doid:2846-tag"
 
-        page.enterRPOntologySearchText("brux")
+        researchPurposeModal.enterOntologySearchText("brux")
 
-        page.isSuggestionVisible(brxSuggestionId) shouldBe true
+        researchPurposeModal.isSuggestionVisible(brxSuggestionId) shouldBe true
 
-        page.selectSuggestion(brxSuggestionId, brxTagId)
+        researchPurposeModal.selectSuggestion(brxSuggestionId, brxTagId)
 
-        page.isTagSelected(brxTagId) shouldBe true
-        page.isTagSelected(ffiTagId) shouldBe true // previously-selected tag still there
+        researchPurposeModal.isTagSelected(brxTagId) shouldBe true
+        researchPurposeModal.isTagSelected(ffiTagId) shouldBe true // previously-selected tag still there
       }
     }
   }

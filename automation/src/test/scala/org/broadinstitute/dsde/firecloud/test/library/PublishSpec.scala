@@ -199,14 +199,11 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 page.openDataset(wsName)
                 //verify that Request Access modal is shown
                 val requestAccessModal = page.RequestAccessModal()
-                requestAccessModal.validateLocation shouldBe true
+                requestAccessModal.isVisible shouldBe true
                 //verify that 'access to TCGA' text is being displayed
-                requestAccessModal.readMessageModalText should include(requestAccessModal.tcgaAccessText)
+                requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText)
                 requestAccessModal.clickOk()
-
               }
-
-
             }
           }
         }

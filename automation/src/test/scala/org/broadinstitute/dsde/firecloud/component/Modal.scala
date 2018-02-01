@@ -51,13 +51,13 @@ class OKCancelModal(id: String)(implicit webDriver: WebDriver) extends Modal(id)
   }
 }
 
-case class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message-modal") {
+class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message-modal") {
   def getMessageText: String = content.getText
 }
 
-case class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
+class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
 
-case class SynchronizeMethodAccessModal(id: String)(implicit webDriver: WebDriver) extends OKCancelModal(id) {
+class SynchronizeMethodAccessModal(id: String)(implicit webDriver: WebDriver) extends OKCancelModal(id) {
   protected val grantButton = Button("grant-read-permission-button" inside this)
 
   def validateLocation: Boolean = {
