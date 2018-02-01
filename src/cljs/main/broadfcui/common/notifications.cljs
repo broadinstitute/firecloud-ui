@@ -7,6 +7,7 @@
    [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
@@ -152,24 +153,24 @@
                      {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
                      :external-link))]))
               [:div {:style {:alignSelf "center" :padding "1rem" :display "flex"
-                             :flexDirection "column"}}
-               [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
-                         :style {:display "block"
-                                 :alignSelf "center" :fontSize "1.5rem"
-                                 :color "white" :cursor "pointer"}
-                         :title "Hide for now"}
-                (icons/render-icon {} :close)]
+                             :flexDirection "column" :alignItems "flex-end"}}
+               [FoundationTooltip
+                {:tooltip "Hide for now"
+                 :style {:borderBottom "none"}
+                 :position "left"
+                 :data-hover-delay 0
+                 :text [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
+                                 :style {:display "block" :fontSize "1.5rem"
+                                         :color "white" :cursor "pointer"}}
+                        (icons/render-icon {} :close)]}]
                (when (= current-trial-state :Terminated)
-                 (style/add-hover-style
-                  (links/create-internal
-                    {:style {:fontSize "small" :color "white" :margin "0.5rem 0 -1rem"}
-                     :hover-style {:textDecoration "underline"}
-                     :onClick (fn []
-                                (utils/ajax-orch
-                                 "/profile/trial?operation=finalize"
-                                 {:method :post
-                                  :on-done user-info/reload-user-profile}))}
-                    "Hide forever?")))]
+                 (links/create-internal
+                  {:style {:fontSize "small" :color "white" :margin "0.5rem -0.75rem -1.5rem"}
+                   :onClick #(utils/ajax-orch
+                              "/profile/trial?operation=finalize"
+                              {:method :post
+                               :on-done user-info/reload-user-profile})}
+                  "or hide forever?"))]
               (modals/show-modals
                state
                {:displaying-eula?
