@@ -28,7 +28,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
   private val tagsSearchField = SearchField(CSSQuery("#app span.select2-container input.select2-search__field[type='search']"))
-  private val tagsSelect = new Select(CSSQuery("select:not([data-test-id='per-page'])"))
+  private val tagsSelect = CSSQuery("select:not([data-test-id='per-page'])")
 
 
   override def awaitReady(): Unit = {
@@ -91,22 +91,31 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     * type a string and select from Select
     *
     */
-  def doTagsSearch(tag: String): Boolean = {
-    LibraryTable.getRows
+  def doTagsSearch(tag: String): List[Map[String, String]] = {
+
+    // clear input field
+    val xSymbol = "span.selection ul.select2-selection__rendered li.select2-selection__choice span.select2-selection__choice__remove"
+    val xs: Iterator[Element] = findAll(CssSelectorQuery(xSymbol))
+    for (x <- xs) click on x
+    LibraryTable.awaitReady()
+
+    // enter text in Tags inputfield
+    val liOption = "span.select2-container--open ul.select2-results__options li"
     tagsSearchField.setText(tag)
+    val query: CssSelectorQuery = CssSelectorQuery(liOption)
+    await visible query
+    val allOptions: Iterator[Element] = findAll(query)
+    for (option <- allOptions if option.text == tag) click on option
+    LibraryTable.awaitReady()
 
-    val texts: List[String] = readAllText(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
+    // val texts: List[String] = readAllText(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
+    // if (texts.exists(_.equalsIgnoreCase(tag))) {
+    //  click on CssSelectorQuery("select:not([data-test-id='per-page'])")).values == Seq(tag)
+    // }
 
-    // webDriver.findElement(By.cssSelector("span.select2-dropdown ul.select2-results__options li"))
-    // val webElement = findAll(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
-
-    if (texts.iterator.exists(_.contains(tag))) {
-      tagsSelect.select(tag)
-      LibraryTable.awaitReady()
-      true
-    }
-    false
+    LibraryTable.getRows
   }
+
 
 
 

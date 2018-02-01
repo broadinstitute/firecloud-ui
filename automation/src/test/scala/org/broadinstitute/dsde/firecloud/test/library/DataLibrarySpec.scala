@@ -51,4 +51,29 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
       }
     }
   }
+
+  "Use a known tag to search for dataset" in withWebDriver { implicit driver =>
+    val curatorUser = UserPool.chooseCurator
+    implicit val authToken: AuthToken = curatorUser.makeAuthToken()
+    withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tagA)) { wsName =>
+      withCleanUp {
+        val tag: String = WorkspaceData.tagA.get("tag:tags").get(0) // pick first tag use in search
+        val data = LibraryData.metadata + ("library:datasetName" -> wsName)
+        api.library.setLibraryAttributes(namespace, wsName, data)
+        register cleanUp { api.library.unpublishWorkspace(namespace, wsName)(authToken) }
+        api.library.publishWorkspace(namespace, wsName)
+        withSignIn(curatorUser) { _ =>
+          val page = new DataLibraryPage().open
+          // search by tag
+          val rows: List[Map[String, String]] = page.doTagsSearch(tag)
+          // check: workspacename and tag should be found in table
+          rows.exists{row => row("Cohort Name") == wsName && row("Tags").contains(tag)} shouldBe true
+          // search with non-existent term 'zzzTag'
+          var result: List[Map[String, String]] = page.doTagsSearch("zzzTag")
+          result shouldBe empty     // check: table row should be empty
+        }
+      }
+    }
+  }
+
 }
