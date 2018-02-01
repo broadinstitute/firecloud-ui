@@ -160,14 +160,16 @@
                          :title "Hide for now"}
                 (icons/render-icon {} :close)]
                (when (= current-trial-state :Terminated)
-                 (links/create-internal
-                   {:style {:fontSize "small" :color "white" :marginTop "0.5rem"}
-                    :onClick (fn []
-                               (utils/ajax-orch
-                                "/profile/trial?operation=finalize"
-                                {:method :post
-                                 :on-done user-info/reload-user-profile}))}
-                   "Hide forever"))]
+                 (style/add-hover-style
+                  (links/create-internal
+                    {:style {:fontSize "small" :color "white" :margin "0.5rem 0 -1rem"}
+                     :hover-style {:textDecoration "underline"}
+                     :onClick (fn []
+                                (utils/ajax-orch
+                                 "/profile/trial?operation=finalize"
+                                 {:method :post
+                                  :on-done user-info/reload-user-profile}))}
+                    "Hide forever?")))]
               (modals/show-modals
                state
                {:displaying-eula?
@@ -194,8 +196,8 @@
                            (fn [{:keys [success?]}]
                              (if-not success?
                                (utils/multi-swap! state
-                                                  (assoc :error "An error occurred. Please try again.")
-                                                  (dissoc :loading?))
+                                 (assoc :error "An error occurred. Please try again.")
+                                 (dissoc :loading?))
                                (utils/ajax-orch
                                 "/profile/trial"
                                 {:method :post
@@ -205,11 +207,11 @@
                                      (user-info/reload-user-profile
                                       #(swap! state dissoc :loading?))
                                      (utils/multi-swap! state
-                                                        (assoc :error (:message (get-parsed-response)))
-                                                        (dissoc :loading?))))})))})
+                                       (assoc :error (:message (get-parsed-response)))
+                                       (dissoc :loading?))))})))})
                          (utils/multi-swap! state
-                                            (assoc :loading? true)
-                                            (dissoc :displaying-eula?)))]
+                           (assoc :loading? true)
+                           (dissoc :displaying-eula?)))]
        [modals/OKCancelForm
         {:header "Welcome to the FireCloud Free Credit Program!"
          :dismiss #(swap! state dissoc :displaying-eula? :page-2? :terms-agreed? :cloud-terms-agreed?)
