@@ -78,3 +78,5 @@ case class SynchronizeMethodAccessModal(implicit webDriver: WebDriver) extends O
 
 }
 
+
+

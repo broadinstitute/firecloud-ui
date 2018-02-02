@@ -72,3 +72,4 @@ To compile and build the `broadinstitute/firecloud-ui` docker image, run
 
 ## Testing
 See [TESTING.md](TESTING.md)
+

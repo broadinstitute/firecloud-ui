@@ -91,11 +91,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
   }
 
-  def openLaunchModal(): LaunchAnalysisModal = {
-    openLaunchAnalysisModalButton.doClick()
-    await ready new LaunchAnalysisModal
-  }
-
   def isLoaded: Boolean = {
     openLaunchAnalysisModalButton.isVisible
   }

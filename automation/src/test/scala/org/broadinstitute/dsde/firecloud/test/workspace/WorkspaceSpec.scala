@@ -46,7 +46,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to clone a workspace" in withWebDriver { implicit driver =>
+      "should be able to clone a workspace" ignore withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
@@ -371,6 +371,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               withSignIn(user) { listPage =>
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
