@@ -1,7 +1,7 @@
 version: '2'
 services:
   hub:
-    image: selenium/hub
+    image: selenium/hub:3.8.1-erbium
     ports:
       - "4444:4444"
     extra_hosts:
