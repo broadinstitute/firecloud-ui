@@ -46,7 +46,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "launch modal with no default entities" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities", cleanUp = false) { workspaceName =>
+    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
       val methodConfigName = workspaceName + "MethodConfig"
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod, billingProject,
