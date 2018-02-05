@@ -10,6 +10,7 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
+import scala.util.control._
 
 /**
   * Page class for the Data Library page.
@@ -27,9 +28,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
-  private val tagsSearchField = SearchField(CSSQuery("#app span.select2-container input.select2-search__field[type='search']"))
-  private val tagsSelect = CSSQuery("select:not([data-test-id='per-page'])")
-
+  private val tagsSearchField = SearchField(CSSQuery("[data-test-id='library-tags-select'] ~ * input.select2-search__field"))
+  private val tagsClear = Link("tag-clear")
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()
@@ -91,37 +91,32 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     * type a string and select from Select
     *
     */
-  def doTagsSearch(tag: String): List[Map[String, String]] = {
-
-    // clear input field
-    clearTag()
-
-    // enter text in Tags inputfield
-    val liOption = "span.select2-container--open ul.select2-results__options li"
-    tagsSearchField.setText(tag)
-    val query: CssSelectorQuery = CssSelectorQuery(liOption)
-    await visible query
-    val allOptions: Iterator[Element] = findAll(query)
-    for (option <- allOptions if option.text == tag) click on option
-    LibraryTable.awaitReady()
-
-    // val texts: List[String] = readAllText(CssSelectorQuery("span.select2-dropdown ul.select2-results__options li"))
-    // if (texts.exists(_.equalsIgnoreCase(tag))) {
-    //  click on CssSelectorQuery("select:not([data-test-id='per-page'])")).values == Seq(tag)
-    // }
-
-    LibraryTable.getRows
+  def doTagsSearch(tags: String*): List[Map[String, String]] = {
+    clearTags()
+    tags.foreach { tag =>
+      tagsSearchField.setText(tag)
+      // select it in dropdown. dont use key 'Enter'
+      val option = "span.select2-container--open ul.select2-results__options li"
+      val query: CssSelectorQuery = CssSelectorQuery(option)
+      await visible query
+      val allOptions: Iterator[Element] = findAll(query)
+      Breaks.breakable(
+        for (option <- allOptions if option.text == tag) {
+          click on option
+          Breaks.break()
+        }
+      )
+    }
+      awaitReady()
+      libraryTable.getRows
   }
 
-
-  def clearTag(): Unit = {
-    // clear input field
-    val selection = "span.selection ul.select2-selection__rendered li.select2-selection__choice"
-    val xSymbol = selection + " span.select2-selection__choice__remove"
-    val xs: Iterator[Element] = findAll(CssSelectorQuery(xSymbol))
-    for (x <- xs) click on x
-    await condition findAll(CssSelectorQuery(xSymbol)).isEmpty //
-    LibraryTable.awaitReady()
+  /**
+    * clear Tags inputfield
+    */
+  def clearTags(): Unit = {
+    tagsClear.doClick()
+    awaitReady()
   }
 
 

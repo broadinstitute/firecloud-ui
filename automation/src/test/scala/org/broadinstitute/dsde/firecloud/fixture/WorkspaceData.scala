@@ -6,12 +6,9 @@ object WorkspaceData {
     "tag:tags" -> Seq("testing","diabetes")
   )
 
-  val tagA = Map(
-    "tag:tags" -> Seq("aTag", "cTag")
+  val tagAC = Map(
+    "tag:tags" -> Seq("aaaTag", "cccTag")
   )
 
-  val tagB = Map(
-    "tag:tags" -> Seq("bTag")
-  )
 
 }
