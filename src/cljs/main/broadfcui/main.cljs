@@ -192,7 +192,7 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
-        (when config-loaded?
+        (when (contains? user-status :signed-in)
           [notifications/TrialAlertContainer])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
