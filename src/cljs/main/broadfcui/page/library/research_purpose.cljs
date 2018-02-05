@@ -3,8 +3,6 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.filter :as filter]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.ontology-autosuggest :as ontology]
@@ -34,8 +32,9 @@
    :-render-modal
    (fn [{:keys [state this]}]
      [modals/OKCancelForm
-      {:header [:div {:style {:lineHeight 1.3}}
-                [:div {:data-test-id "research-purpose-modal-title"} "Filter by Research Purpose"]
+      {:data-test-id "research-purpose-modal"
+       :header [:div {:style {:lineHeight 1.3}}
+                [:div {:data-test-id "research-purpose-modal-header"} "Filter by Research Purpose"]
                 [:div {:style {:fontSize "initial" :color (:text-light style/colors)}}
                  [:em {} "Powered by "] [:b {} "DUOS"]]]
        :dismiss #(swap! state dissoc :showing-modal?)

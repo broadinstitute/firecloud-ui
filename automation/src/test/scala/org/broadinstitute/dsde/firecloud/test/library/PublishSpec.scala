@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page._
@@ -32,9 +33,8 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           withWorkspace(namespace, "PublishSpec_curator_unpub_") { wsName =>
             withSignIn(curatorUser) { _ =>
               val page = new WorkspaceSummaryPage(namespace, wsName).open
-              page.clickPublishButton()
-              val messageModal = MessageModal()
-              messageModal.validateLocation shouldBe true
+              val messageModal = page.clickPublishButton(expectSuccess = false)
+              messageModal.isVisible shouldBe true
               messageModal.clickOk()
             }
           }
@@ -199,14 +199,11 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 page.openDataset(wsName)
                 //verify that Request Access modal is shown
                 val requestAccessModal = page.RequestAccessModal()
-                requestAccessModal.validateLocation shouldBe true
+                requestAccessModal.isVisible shouldBe true
                 //verify that 'access to TCGA' text is being displayed
-                requestAccessModal.readMessageModalText should include(requestAccessModal.tcgaAccessText)
+                requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText)
                 requestAccessModal.clickOk()
-
               }
-
-
             }
           }
         }

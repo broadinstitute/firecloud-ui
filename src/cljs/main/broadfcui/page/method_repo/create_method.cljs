@@ -67,7 +67,6 @@
         {:header (:header info)
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
-         :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
          (react/create-element
           [:div {:style {:width "80vw"}}
@@ -175,11 +174,7 @@
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
-         :ok-button (react/create-element
-                     [buttons/Button {:data-test-id "ok-button"
-                                      :ref "ok-button"
-                                      :text (:ok-text info)
-                                      :onClick #(this :-create-method)}])}]))
+         :ok-button {:text (:ok-text info) :onClick #(this :-create-method)}}]))
    :-set-wdl-text
    (fn [{:keys [refs this]} text]
      ((@refs "wdl-editor") :call-method "setValue" text)

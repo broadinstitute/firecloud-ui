@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -93,10 +93,10 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 /**
   * Page class for the create workspace modal.
   */
-class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal {
-  private val authDomainSelect = Select("workspace-auth-domain-select")
-  private val billingProjectSelect = Select("billing-project-select")
-  private val workspaceNameInput = TextField("workspace-name-input")
+class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("create-new-workspace-modal") {
+  private val authDomainSelect = Select("workspace-auth-domain-select" inside this)
+  private val billingProjectSelect = Select("billing-project-select" inside this)
+  private val workspaceNameInput = TextField("workspace-name-input" inside this)
 
   /**
     * Creates a new workspace. Returns after the FireCloud busy spinner
@@ -114,4 +114,4 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal 
   }
 }
 
-class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal
+class RequestAccessModal(implicit webDriver: WebDriver) extends OKCancelModal("request-access-modal")

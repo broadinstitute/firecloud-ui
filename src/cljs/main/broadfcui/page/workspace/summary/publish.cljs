@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.summary.publish
   (:require
    [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]

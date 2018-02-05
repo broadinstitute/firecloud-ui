@@ -3,12 +3,12 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
-import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{WorkspaceFixtures, MethodFixtures, MethodData, SimpleMethodConfig}
+import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures, SimpleMethodConfig, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
@@ -311,8 +311,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.openEditMode()
             methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled"
             methodConfigDetailsPage.saveEdits(expectSuccess = false)
-            val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            val modal = await ready new MessageModal()
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.changeSnapshotId(2)
@@ -354,7 +354,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
 
             val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-            modal.validateLocation shouldBe true
+            modal.isVisible shouldBe true
             modal.clickOk()
           }
 
@@ -374,8 +374,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
             methodConfigDetailsPage.openEditMode(expectSuccess = false)
-            val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            val modal = await ready new MessageModal()
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.deleteMethodConfig()

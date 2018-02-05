@@ -196,10 +196,10 @@
 (defn render-tag
   ([tag] (render-tag {} tag))
   ([props tag]
-   [:div (utils/deep-merge {:style {:display "inline-block" :background (:tag-background colors)
+   [:div (utils/deep-merge {:data-test-id (str (string/lower-case tag) "-tag")
+                            :style {:display "inline-block" :background (:tag-background colors)
                                     :color (:tag-foreground colors) :margin "0.1rem"
-                                    :borderRadius 3 :padding "0.2rem 0.5rem"}
-                            :data-test-id (str (string/lower-case tag) "-tag")}
+                                    :borderRadius 3 :padding "0.2rem 0.5rem"}}
                            props)
     tag]))
 
