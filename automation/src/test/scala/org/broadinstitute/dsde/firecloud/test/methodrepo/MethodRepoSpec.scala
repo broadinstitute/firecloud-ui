@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-
+@Ignore
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WebBrowserSpec with Matchers with CleanUp {
 
   val ownerUser: Credentials = UserPool.chooseProjectOwner
