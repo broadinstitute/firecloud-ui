@@ -139,7 +139,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val aclEditor = await ready new AclEditor
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
-      val syncModal = new SynchronizeMethodAccessModal()
+      val syncModal = new SynchronizeMethodAccessModal("method-access")
       if (syncModal.validateLocation) {
         grantMethodPermission match {
           case Some(true) => syncModal.clickOk()
@@ -157,8 +157,14 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     aclEditor
   }
 
-  def clickPublishButton(): Unit = {
+  def clickPublishButton(expectSuccess: Boolean): OKCancelModal = {
     sidebar.publishButton.doClick()
+    if (expectSuccess) {
+      // TODO: no test uses this yet
+      null
+    } else {
+      await ready new MessageModal()
+    }
   }
 
   def hasPublishButton: Boolean = {
