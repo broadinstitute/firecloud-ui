@@ -610,7 +610,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withBillingProject("auth-domain-spec") { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
-          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke1x", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
