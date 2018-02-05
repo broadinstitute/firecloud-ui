@@ -16,7 +16,7 @@ import org.scalatest._
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-
+@Ignore
 class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
