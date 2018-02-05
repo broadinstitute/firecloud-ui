@@ -26,7 +26,7 @@
       flex/spring
       (when on-clear
         [:div {:style {:fontSize "80%"}}
-         (links/create-internal {:onClick on-clear :data-test-id (str data-test-id "-clear")} "Clear")])))
+         (links/create-internal {:onClick on-clear :data-test-id (str (or data-test-id title) "-clear")} "Clear")])))
    content])
 
 

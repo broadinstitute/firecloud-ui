@@ -336,7 +336,7 @@
                selected-tags (:selected-items props)]
            (filter/section
             {:title title
-             :data-test-id "tags"
+             :data-test-id "tag"
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
