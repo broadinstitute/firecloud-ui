@@ -336,10 +336,12 @@
                selected-tags (:selected-items props)]
            (filter/section
             {:title title
+             :data-test-id "tags"
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
                          :tags selected-tags
+                         :data-test-id "library-tags-select"
                          :data (distinct (concat selected-tags (set tags)))
                          :show-counts? false
                          :allow-new? false
