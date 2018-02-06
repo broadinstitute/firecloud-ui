@@ -131,6 +131,7 @@
                 auth-domain (get-in workspace [:workspace :authorizationDomain])
                 derived (merge {:can-share? (:canShare workspace)
                                 :can-compute? (:canCompute workspace)
+                                :project-owner? (common/access-greater-than-equal-to? user-access-level "PROJECT_OWNER")
                                 :owner? (common/access-greater-than-equal-to? user-access-level "OWNER")
                                 :writer? (common/access-greater-than-equal-to? user-access-level "WRITER")
                                 :catalog-with-read? (and (common/access-greater-than-equal-to? user-access-level "READER") (:catalog workspace))}
@@ -299,7 +300,7 @@
                  :onClick #(swap! state assoc :deleting? true)}])])}]]))
    :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
+        {:keys [user-access-level auth-domain can-share? project-owner? owner? curator? writer? catalog-with-read?]}]
      (let [{:keys [workspace workspace-id bucket-access? request-refresh]} props
            {:keys [editing? server-response]} @state
            {:keys [library-schema]} server-response
@@ -340,22 +341,36 @@
            [:div {} createdBy]
            [:div {} (common/format-date createdDate)]])
 
-         (render-detail-box
-          "Storage & Analysis"
+         [:div {}
+          (when project-owner?
+            (render-detail-box
+             "Project Cost"
 
-          "Google Bucket"
-          [:div {}
-           (case bucket-access?
-             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
-             true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
-                                          :title "Click to open the Google Cloud Storage browser for this bucket"}
-                                         bucketName)
-             false bucketName)
-           (when writer?
-             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}])]
+             "" ; no title
 
-          "Analysis Submissions"
-          [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]
+             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}]
+
+             "Google Billing Detail"
+
+             [:div {}
+              (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
+                                      :title "Click to open the Google Cloud Storage browser for this bucket"}
+                                     (:namespace workspace-id))]))
+
+           (render-detail-box
+            "Storage & Analysis"
+
+            "Google Bucket"
+            [:div {}
+             (case bucket-access?
+               nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
+               true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+                                            :title "Click to open the Google Cloud Storage browser for this bucket"}
+                                           bucketName)
+               false bucketName)]
+
+            "Analysis Submissions"
+            [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]]
         [Collapse
          {:style {:marginBottom "2rem"}
           :title (style/create-section-header "Tags")
