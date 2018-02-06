@@ -53,7 +53,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   }
 
 
-  "Mulitple tag search for dataset" in withWebDriver { implicit driver =>
+  "Mulitple tags search for dataset" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec_tags", attributes = Some(WorkspaceData.tagAC)) { wsName =>

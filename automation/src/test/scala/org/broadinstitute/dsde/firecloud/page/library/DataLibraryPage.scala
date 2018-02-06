@@ -10,7 +10,7 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
-import scala.util.control._
+import scala.util.control.Breaks
 
 /**
   * Page class for the Data Library page.
@@ -28,6 +28,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
+
   private val tagsSearchField = SearchField(CSSQuery("[data-test-id='library-tags-select'] ~ * input.select2-search__field"))
   private val tagsClear = Link("tag-clear")
 
@@ -82,20 +83,11 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.getTags
   }
 
-  case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
-    val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
-    val nonTcgaAccessText = "Please contact dbGAP and request access for workspace"
-  }
-
-  /**
-    * type a string and select from Select
-    *
-    */
   def doTagsSearch(tags: String*): List[Map[String, String]] = {
     clearTags()
     tags.foreach { tag =>
       tagsSearchField.setText(tag)
-      // select it in dropdown. dont use key 'Enter'
+      // select tag from the dropdown. dont use key 'Enter'
       val option = "span.select2-container--open ul.select2-results__options li"
       val query: CssSelectorQuery = CssSelectorQuery(option)
       await visible query
@@ -107,8 +99,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
         }
       )
     }
-      awaitReady()
-      libraryTable.getRows
+    awaitReady()
+    libraryTable.getRows
   }
 
   /**
@@ -119,7 +111,10 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     awaitReady()
   }
 
-
+  case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
+    val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
+    val nonTcgaAccessText = "Please contact dbGAP and request access for workspace"
+  }
 }
 
 
@@ -150,5 +145,6 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     await enabled testId(tagTestId)
     Label(tagTestId).isVisible
   }
+
 }
 
