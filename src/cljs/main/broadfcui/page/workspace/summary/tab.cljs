@@ -347,11 +347,9 @@
              "Project Cost"
 
              "" ; no title
-
              [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}]
 
              "Google Billing Detail"
-
              [:div {}
               (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
                                       :title "Click to open the Google Cloud Storage browser for this bucket"}
