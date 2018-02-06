@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label,
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.page.{OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -83,13 +83,13 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 /**
   * Page class for the import data modal.
   */
-class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("import-metadata-modal") {
   override def awaitReady(): Unit = importFromFileButton.isVisible
 
-  private val importFromFileButton = Button("import-from-file-button")
-  private val fileUploadInput = FileSelector("data-upload-input")
-  private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button")
-  private val uploadSuccessMessage = Label("upload-success-message")
+  private val importFromFileButton = Button("import-from-file-button" inside this)
+  private val fileUploadInput = FileSelector("data-upload-input" inside this)
+  private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button" inside this)
+  private val uploadSuccessMessage = Label("upload-success-message" inside this)
 
   /**
     * Imports metadata from a file.

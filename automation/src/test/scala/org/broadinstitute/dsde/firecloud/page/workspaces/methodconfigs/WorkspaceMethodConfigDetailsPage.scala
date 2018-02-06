@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
-import org.broadinstitute.dsde.firecloud.page.{MessageModal, OKCancelModal, PageUtil}
+import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -44,7 +44,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysisButtonError(): MessageModal = {
     clickLaunchAnalysis()
-    await ready new MessageModal
+    await ready new MessageModal()
   }
 
   def openEditMode(expectSuccess: Boolean = true): Unit = {
@@ -112,15 +112,15 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 /**
   * Page class for the launch analysis modal.
   */
-class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal {
+class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("launch-analysis-modal") {
   override def awaitReady(): Unit = entityTable.awaitReady()
 
-  private val entityTable = Table("entity-table")
-  private val expressionInput = TextField("define-expression-input")
-  private val noRowsMessage = Label("message-well")
-  private val launchAnalysisButton = Button("launch-button")
-  private val numberOfWorkflowsWarning = Label("number-of-workflows-warning")
-  private val callCachingCheckbox = Checkbox("call-cache-checkbox")
+  private val entityTable = Table("entity-table" inside this)
+  private val expressionInput = TextField("define-expression-input" inside this)
+  private val noRowsMessage = Label("message-well" inside this)
+  private val launchAnalysisButton = Button("launch-button" inside this)
+  private val numberOfWorkflowsWarning = Label("number-of-workflows-warning" inside this)
+  private val callCachingCheckbox = Checkbox("call-cache-checkbox" inside this)
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean): Unit = { //Use Option(String) for expression?
     filterRootEntityType(rootEntityType)

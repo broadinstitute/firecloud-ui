@@ -39,4 +39,18 @@
     (testing "for a rendered text field, nil :value is replaced with empty string"
       (is (= value "")))))
 
+(deftest transform-style-map-to-css
+  (testing "a map with 1 style is correctly converted to css"
+    (is (= "background:black;"
+           (style/transform-style-map-to-css {:background "black"}))))
+  (testing "a map with multiple styles is correctly converted to css"
+    (is (= "background:black;color:white;width:1rem;"
+           (style/transform-style-map-to-css {:background "black" :color "white" :width "1rem"}))))
+  (testing "a number value has px appended to it, a non-number does not"
+    (is (= "background:black;height:20px;width:1rem;"
+           (style/transform-style-map-to-css {:background "black" :height 20 :width "1rem"}))))
+  (testing "!important is appended when appropriate"
+    (is (= "background:black !important;height:20px !important;width:1rem !important;"
+           (style/transform-style-map-to-css {:background "black" :height 20 :width "1rem"} true)))))
+
 ;(cljs.test/run-tests)
