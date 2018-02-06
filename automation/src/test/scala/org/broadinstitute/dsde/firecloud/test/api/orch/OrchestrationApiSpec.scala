@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
 import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
 import org.broadinstitute.dsde.workbench.service.{Orchestration, RestException}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.time.{Minute, Second, Seconds, Span}
+import org.scalatest.time.{Minutes, Second, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 import org.broadinstitute.dsde.workbench.model.google.GoogleProject
 
@@ -20,7 +20,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
   "Orchestration" - {
     "should grant and remove google role access" in {
       // google roles may take a little while to take effect
-      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(1, Minute)), interval = scaled(Span(1, Second)))
+      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(3, Minutes)), interval = scaled(Span(1, Second)))
 
       val ownerUser: Credentials = UserPool.chooseProjectOwner
       val ownerToken: AuthToken = ownerUser.makeAuthToken()
