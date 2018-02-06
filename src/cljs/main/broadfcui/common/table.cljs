@@ -103,7 +103,14 @@
              :initial #(this :-generate-initial-state)})
            restored-column-ids (->> (:column-display restored-state) (map :id) set)
            declared-columns (table-utils/build-column-display (get-in props [:body :columns]))
+           declared-column-ids (->> declared-columns (map :id) set)
+           extra-columns (not-empty (set/difference restored-column-ids declared-column-ids))
+           restored-state (if-not extra-columns
+                            restored-state
+                            (update restored-state :column-display #(remove (fn [col-def] (contains? extra-columns (:id col-def))) %)))
            new-columns (remove #(contains? restored-column-ids (:id %)) declared-columns)]
+       (when extra-columns
+         (persistence/save {:key (:persistence-key props) :state (atom restored-state)}))
        (assoc (update restored-state :column-display #(vec (concat %1 %2)) new-columns)
          :rows []
          :data-test-state "initializing")))
