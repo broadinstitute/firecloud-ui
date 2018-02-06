@@ -156,5 +156,18 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with BeforeAndAfter
         }
       }
     }
+   
+   "Finalized" - {
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
+
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe false
+        }
+      }
+    }
   }
 }
