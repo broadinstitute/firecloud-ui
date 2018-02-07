@@ -358,7 +358,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             workspacePage.hasGoogleBillingLink shouldBe false
             workspacePage.hasStorageCostEstimate shouldBe false
           }
-        }(authTokenOwner)
+        }
       }
     }
 
@@ -373,7 +373,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             workspacePage.hasGoogleBillingLink shouldBe false
             workspacePage.hasStorageCostEstimate shouldBe true
           }
-        }(authTokenOwner)
+        }
       }
 
       "and does not have canCompute permission" - {
