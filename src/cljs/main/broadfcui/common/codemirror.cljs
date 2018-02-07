@@ -69,10 +69,12 @@
            {:keys [read-only? text]} props]
        [:div {}
         (cond
-          error? [:textarea {:readonly read-only? :wrap "off"
-                             :style {:width "100%" :height 300 :backgroundColor "white"
-                                     :fontFamily "Menlo, monospace"}}
-                  text]
+          error? (if read-only?
+                   [:textarea {:readonly true :wrap "off"
+                               :style {:width "100%" :height 300
+                                       :backgroundColor "white" :fontFamily "Menlo, monospace"}}
+                    text]
+                   [:h2 "There was an error loading the editor."])
           (not loaded?) [ScriptLoader
                          {:on-error #(swap! state assoc :error? true)
                           :on-load (fn []
