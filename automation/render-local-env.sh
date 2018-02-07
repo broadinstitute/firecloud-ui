@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+## Run from automation/
+## Clones the firecloud-automated-testing repo, pulls templatized configs, and renders them to src/test/resources
+
 # Defaults
 WORKING_DIR=$PWD
 VAULT_TOKEN=$(cat ~/.vault-token)
@@ -31,6 +34,7 @@ confirm () {
     esac
 }
 
+# clone the firecloud-automated-testing repo
 clone_repo() {
     original_dir=$PWD
     if [[ $PWD == *"${SERVICE}"* ]]
@@ -67,6 +71,7 @@ render_configs() {
         -e OUT_PATH=/output/src/test/resources -e INPUT_PATH=/input -e LOCAL_UI=$LOCAL_UI \
         broadinstitute/dsde-toolbox:dev render-templates.sh
 
+    # pull service-specific application.conf
     docker run -it --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
         -e ENVIRONMENT=${ENV} -e ROOT_DIR=${WORKING_DIR} -v $PWD/firecloud-automated-testing/configs/$SERVICE:/input -v $PWD/$SERVICE/automation:/output \
         -e OUT_PATH=/output/src/test/resources -e INPUT_PATH=/input -e LOCAL_UI=$LOCAL_UI \
