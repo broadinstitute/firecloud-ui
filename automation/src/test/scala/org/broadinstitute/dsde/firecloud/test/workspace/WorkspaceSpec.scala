@@ -347,10 +347,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           }
         }
       }
-    }
 
-    "who has writer access" - {
-      "should not see the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+      "should not see any of the Project Cost section of the summary page" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         val testName = "WorkspaceSpec_writerAccess_projectCost"
@@ -359,6 +357,21 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
             workspacePage.hasGoogleBillingLink shouldBe false
             workspacePage.hasStorageCostEstimate shouldBe false
+          }
+        }(authTokenOwner)
+      }
+    }
+
+    "who has writer access" - {
+      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
+        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+          withSignIn(user) { listPage =>
+            val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+            workspacePage.hasGoogleBillingLink shouldBe false
+            workspacePage.hasStorageCostEstimate shouldBe true
           }
         }(authTokenOwner)
       }

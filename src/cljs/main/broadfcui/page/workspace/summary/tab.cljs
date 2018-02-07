@@ -64,7 +64,8 @@
      (let [{:keys [workspace-id]} props]
        [:div {:style {:lineHeight "initial"} :data-test-id "storage-cost-estimate"}
         [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
-        [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]]))
+        [:div {:style {:fontSize "80%"}} "Note: These estimates are at the workspace level." [:br]
+         (str "The billing account associated with " (:namespace workspace-id) " will be charged.")]]))
    :refresh
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
@@ -342,14 +343,17 @@
            [:div {} (common/format-date createdDate)]])
 
          [:div {}
-          (when project-owner?
-            (render-detail-box
-             "Project Cost"
+          (render-detail-box
+           "Project Cost"
 
-             "" ; no title
-             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}]
+           (when writer?
+             "") ; no title
+           (when writer?
+             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}])
 
-             "Google Billing Detail"
+           (when project-owner?
+             "Google Billing Detail")
+           (when project-owner?
              [:div {:data-test-id "google-billing-detail"}
               (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
                                       :title "Click to open the Google Cloud Storage browser for this bucket"}
