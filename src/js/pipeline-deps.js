@@ -1,2 +1,2 @@
-require('pipeline-builder/src/pipeline.scss');
-window.webpackDeps.PipelineBuilder = require('pipeline-builder/dist/pipeline.js');
+require('pipeline-builder/dist/pipeline.css');
+window.webpackDeps.PipelineBuilder = require('pipeline-builder');
