@@ -44,6 +44,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = testId("no-bucket-access")
+  private val googleBillingDetail = Label("google-billing-detail")
+  private val storageCostEstimate = Label("storage-cost-estimate")
 
   def shouldWaitForBucketAccess : Boolean = {
     val elem = find(noBucketAccess)
@@ -186,6 +188,14 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   private def isEditing: Boolean = {
     !sidebar.editButton.isVisible
+  }
+
+  def hasGoogleBillingLink: Boolean = {
+    googleBillingDetail.isVisible
+  }
+
+  def hasStorageCostEstimate: Boolean = {
+    storageCostEstimate.isVisible
   }
 
   def addWorkspaceAttribute(key: String, value: String): Unit = {

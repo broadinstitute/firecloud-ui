@@ -77,6 +77,21 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
+      "and who owns the project" - {
+        "should see the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+          val user = UserPool.chooseProjectOwner
+          implicit val authToken: AuthToken = authTokenOwner
+          val testName = "WorkspaceSpec_projectOwnerAccess_projectCost"
+          withWorkspace(billingProject, testName, Set.empty, List.empty) { workspaceName =>
+            withSignIn(user) { listPage =>
+              val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+              workspacePage.hasGoogleBillingLink shouldBe true
+              workspacePage.hasStorageCostEstimate shouldBe true
+            }
+          }(authTokenOwner)
+        }
+      }
+
       "should be able to share the workspace" in withWebDriver { implicit driver =>
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
@@ -335,6 +350,19 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     }
 
     "who has writer access" - {
+      "should not see the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
+        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+          withSignIn(user) { listPage =>
+            val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+            workspacePage.hasGoogleBillingLink shouldBe false
+            workspacePage.hasStorageCostEstimate shouldBe false
+          }
+        }(authTokenOwner)
+      }
+
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent

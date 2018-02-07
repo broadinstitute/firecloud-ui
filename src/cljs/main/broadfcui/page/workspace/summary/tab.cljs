@@ -62,7 +62,7 @@
   {:render
    (fn [{:keys [state props]}]
      (let [{:keys [workspace-id]} props]
-       [:div {:style {:lineHeight "initial"}}
+       [:div {:style {:lineHeight "initial"} :data-test-id "storage-cost-estimate"}
         [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
         [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]]))
    :refresh
@@ -350,7 +350,7 @@
              [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}]
 
              "Google Billing Detail"
-             [:div {}
+             [:div {:data-test-id "google-billing-detail"}
               (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
                                       :title "Click to open the Google Cloud Storage browser for this bucket"}
                                      (:namespace workspace-id))]))
