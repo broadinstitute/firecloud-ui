@@ -56,7 +56,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   /**
     * Test creates two workspaces. Only one workspace has tags
     */
-  "Input mulitple tags in filter field" in withWebDriver { implicit driver =>
+  "Input multiple tags in filter field" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "DataLibrarySpec", attributes = Some(WorkspaceData.tagAC)) { wsName =>

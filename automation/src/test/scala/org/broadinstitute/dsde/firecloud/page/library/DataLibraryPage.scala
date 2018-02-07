@@ -88,7 +88,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.foreach { tag =>
       tagsSearchField.setText(tag)
       // select tag from the dropdown. dont use key 'Enter'
-      val option = "span.select2-container--open ul.select2-results__options li" // css
+      // css selector is used b/c it's difficult to insert 'data-test-id' in Select2 (third party tool)
+      val option = "span.select2-container--open ul.select2-results__options li"
       val query: CssSelectorQuery = CssSelectorQuery(option)
       await visible query
       val allOptions: Iterator[Element] = findAll(query)
@@ -104,7 +105,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   /**
-    * clear Tags inputfield
+    * clear Tags input field
     */
   def clearTags(): Unit = {
     tagsClear.doClick()
