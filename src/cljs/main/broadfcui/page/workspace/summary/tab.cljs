@@ -343,21 +343,20 @@
            [:div {} (common/format-date createdDate)]])
 
          [:div {}
-          (render-detail-box
-           "Project Cost"
+          (when writer?
+            (render-detail-box
+             "Project Cost"
 
-           (when writer?
-             "") ; no title
-           (when writer?
-             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}])
+             "" ; no title
+             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}]
 
-           (when project-owner?
-             "Google Billing Detail")
-           (when project-owner?
-             [:div {:data-test-id "google-billing-detail"}
-              (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
-                                      :title "Click to open the Google Cloud Storage browser for this bucket"}
-                                     (:namespace workspace-id))]))
+             (when project-owner?
+               "Google Billing Detail")
+             (when project-owner?
+               [:div {:data-test-id "google-billing-detail"}
+                (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
+                                        :title "Click to open the Google Cloud Storage browser for this bucket"}
+                                       (:namespace workspace-id))])))
 
            (render-detail-box
             "Storage & Analysis"
