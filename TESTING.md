@@ -34,24 +34,7 @@ For the Scala project, choose `File -> New -> Project from Existing Sources...` 
 
 ### Running with docker ("headless")
 
-Before you run tests for the first time, make sure your docker has enough memory allocated. Go to `Docker -> Preferences -> Advanced` and set the memory to at least 4 GB. 
-
-To generate a Docker container automatically and run the tests inside of it:
-
-```bash
-./run-tests.sh FIRECLOUD-LOCATION [dev] [vault token] [working dir]
-```
-
-**Arguments:** (arguments are positional)
-
-* FireCloud location (required)
-	* One of `fiab`, `local` (local UI, FIAB backend), `alpha`, `prod`, or an IP address. `fiab` and `local` will pull the IP from your `etc/hosts`.
-* `dev`
-	* Environment of your FiaB..
-* Vault auth token
-	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
-* Working directory
-	* Defaults to `$PWD`.
+See [firecloud-automated-testing](https://github.com/broadinstitute/firecloud-automated-testing).
 
 ### Running directly (real Chrome)
 
@@ -67,10 +50,11 @@ brew install chromedriver
 
 If your version of Chrome is 61 or later, check `chromedriver --version` to make sure you're up to at least 2.32. If not, use `brew upgrade chromedriver` to update.
  
-Also run the config render script. If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
+Also run the config render script. Configs are common across all test suites and live in [firecloud-automated-testing](https://github.com/broadinstitute/firecloud-automated-testing).  `render-local-env.sh` will clone a branch of custom configs or the default master branch.  
+If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
 
 ```bash
-./render-local-env.sh [working dir] [vault token] [dev] [local_ui]
+./render-local-env.sh [working dir] [vault token] [branch of firecloud-automated-testing] [env] [local_ui]
 ```
 
 **Arguments:** (arguments are positional)
@@ -79,8 +63,10 @@ Also run the config render script. If you are planning on running the firecloud 
 	* Defaults to `$PWD`.
 * Vault auth token
 	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
-* `dev`
-	* Environment of your FiaB.
+* env
+	* Environment of your FiaB; defaults to `dev`
+* branch of firecloud-automated-testing
+    * Configs branch; defaults to `master`
 * Local UI
 	* Enter `local_ui` here to run against a local UI stack.
 
