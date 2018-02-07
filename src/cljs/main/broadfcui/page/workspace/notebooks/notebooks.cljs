@@ -16,6 +16,7 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
@@ -105,8 +106,8 @@
               [:div {}
                (style/create-form-label "Extension URI")
                [input/TextField {:ref "extensionURI" :autoFocus true :style {:width "100%"}}]
-               (style/create-form-label "User Provided Script URI")
-               [input/TextField {:ref "userScriptURI" :autoFocus true :style {:width "100%"}}]
+               [FoundationTooltip {:text (style/create-form-label "Custom Script URI") :tooltip "The GCS URI of a bash script you wish to run on your cluster before it starts up."}]
+               [input/TextField {:ref "userScriptURI" :autoFocus true :style {:width "100%" :marginTop 4}}]
                [:div {:display "inline-block"}
                 [:span {:style {:paddingRight "19%"}} (create-inline-form-label "Master Machine Type")]
                 [:span {} (create-inline-form-label "Master Disk Size")]]
