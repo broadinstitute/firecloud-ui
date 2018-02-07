@@ -352,7 +352,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         val testName = "WorkspaceSpec_writerAccess_projectCost"
-        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Reader, Some(false), Some(false)))) { workspaceName =>
           withSignIn(user) { listPage =>
             val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
             workspacePage.hasGoogleBillingLink shouldBe false
