@@ -88,7 +88,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.foreach { tag =>
       tagsSearchField.setText(tag)
       // select tag from the dropdown. dont use key 'Enter'
-      val option = "span.select2-container--open ul.select2-results__options li"
+      val option = "span.select2-container--open ul.select2-results__options li" // css
       val query: CssSelectorQuery = CssSelectorQuery(option)
       await visible query
       val allOptions: Iterator[Element] = findAll(query)
@@ -98,8 +98,8 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
           Breaks.break()
         }
       )
+      awaitReady()
     }
-    awaitReady()
     libraryTable.getRows
   }
 
