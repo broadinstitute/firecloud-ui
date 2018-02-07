@@ -5,8 +5,10 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
@@ -35,6 +37,25 @@
     (assoc (utils/restructure namespace name) :snapshot-id snapshotId)))
 
 
+(defn- strip-comment-leaders
+  "Takes the comment (or blank) lines retrieved from the top of a WDL file (as a seq of strings),
+   finds the most common number of '#' characters to start non-blank lines, and removes that many
+   '#' characters from each line"
+  [comment-or-blank-lines]
+  (let [most-common-hash-count (some->> comment-or-blank-lines
+                                        (remove string/blank?)
+                                        (map (comp count (partial re-find #"#+") string/trim))
+                                        frequencies (sort-by val) last key)
+        pattern (re-pattern (str "^\\s*#{" most-common-hash-count "}.*"))
+        trimmed-lines (map (fn [line]
+                             (string/trim
+                              (if (re-matches pattern line)
+                                (->> line string/trim (drop most-common-hash-count) (apply str))
+                                line)))
+                           comment-or-blank-lines)]
+    trimmed-lines))
+
+
 (react/defc CreateMethodDialog
   {:component-will-mount
    (fn [{:keys [props locals]}]
@@ -46,7 +67,6 @@
         {:header (:header info)
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
-         :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
          (react/create-element
           [:div {:style {:width "80vw"}}
@@ -73,18 +93,7 @@
                                :predicates [(input/nonempty-alphanumeric_-period "Method name")]}]
              (style/create-textfield-hint input/hint-alphanumeric_-period)]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
-           (style/create-form-label "Synopsis (optional, 80 characters max)")
-           (style/create-text-field {:data-test-id "synopsis-field"
-                                     :ref "synopsis"
-                                     :defaultValue (:synopsis info)
-                                     :maxLength 80
-                                     :style {:width "100%"}})
-           (style/create-form-label "Documentation (optional)")
-           (style/create-text-area {:data-test-id "documentation-field"
-                                    :ref "documentation"
-                                    :defaultValue (:documentation info)
-                                    :style {:width "100%"}
-                                    :rows 5})
+
            ;; This key is changed every time a file is selected causing React to completely replace the
            ;; element. Otherwise, if a user selects the same file (even after having modified it), the
            ;; browser will not fire the onChange event.
@@ -138,6 +147,21 @@
                                             #(swap! state assoc :undo-history
                                                     (js->clj (self :call-method "historySize")))))}]
            [:div {:style {:padding "0.25rem"}}]
+           (style/create-form-label "Documentation (optional)")
+           [markdown/MarkdownEditor {:data-test-id "documentation-field"
+                                     :ref "documentation"
+                                     :initial-text (:documentation info)
+                                     :initial-slider-position 650
+                                     :toolbar-items [(flex/strut 50)
+                                                     (links/create-internal
+                                                      {:onClick #(this :-populate-description-from-wdl)}
+                                                      "Populate from WDL comment")]}]
+           (style/create-form-label "Synopsis (optional, 80 characters max)")
+           (style/create-text-field {:data-test-id "synopsis-field"
+                                     :ref "synopsis"
+                                     :defaultValue (:synopsis info)
+                                     :maxLength 80
+                                     :style {:width "100%"}})
            (style/create-form-label "Snapshot Comment (optional)")
            (style/create-text-area {:data-test-id "snapshot-comment-field"
                                     :ref "snapshot-comment"
@@ -150,18 +174,22 @@
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))])
-         :ok-button (react/create-element
-                     [buttons/Button {:data-test-id "ok-button"
-                                      :ref "ok-button"
-                                      :text (:ok-text info)
-                                      :onClick #(this :-create-method)}])}]))
+         :ok-button {:text (:ok-text info) :onClick #(this :-create-method)}}]))
    :-set-wdl-text
-   (fn [{:keys [refs]} text]
-     ((@refs "wdl-editor") :call-method "setValue" text))
+   (fn [{:keys [refs this]} text]
+     ((@refs "wdl-editor") :call-method "setValue" text)
+     (when (string/blank? ((@refs "documentation") :get-trimmed-text))
+       (this :-populate-description-from-wdl)))
+   :-populate-description-from-wdl
+   (fn [{:keys [refs]}]
+     (let [wdl-text-lines (string/split-lines ((@refs "wdl-editor") :call-method "getValue"))
+           comment-or-blank-lines (take-while (some-fn string/blank? (partial re-find #"^\s*#")) wdl-text-lines)]
+       ((@refs "documentation") :set-text (string/join "\n" (strip-comment-leaders comment-or-blank-lines)))))
    :-create-method
    (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           [synopsis documentation snapshotComment] (common/get-trimmed-text refs "synopsis" "documentation" "snapshot-comment")
+           [synopsis snapshotComment] (common/get-trimmed-text refs "synopsis" "snapshot-comment")
+           documentation ((@refs "documentation") :get-trimmed-text)
            wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)

@@ -3,12 +3,12 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
-import org.broadinstitute.dsde.firecloud.page.MessageModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{WorkspaceFixtures, MethodFixtures, MethodData, SimpleMethodConfig}
+import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures, SimpleMethodConfig, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
@@ -31,6 +31,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
 
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
@@ -45,12 +46,13 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   "launch modal with no default entities" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities", cleanUp = false) { workspaceName =>
+    withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
       val methodConfigName = workspaceName + "MethodConfig"
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod, billingProject,
         methodConfigName, SimpleMethodConfig.snapshotId, Map.empty, Map.empty, "participant_set")
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, billingProject, methodConfigName).open
         val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.verifyNoRowsMessage() shouldBe true
@@ -72,10 +74,11 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
-        val launchModal = methodConfigDetailsPage.openLaunchModal()
+        val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.filterRootEntityType("sample_set")
         launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
         launchModal.verifyWorkflowsWarning() shouldBe true
@@ -94,10 +97,11 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
-        val launchModal = methodConfigDetailsPage.openLaunchModal()
+        val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.filterRootEntityType("participant")
         launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
         launchModal.clickLaunchButton()
@@ -120,10 +124,11 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
-        val launchModal = methodConfigDetailsPage.openLaunchModal()
+        val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.filterRootEntityType("sample_set")
         launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
         launchModal.clickLaunchButton()
@@ -144,9 +149,10 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         Map.empty, Map.empty, method.rootEntityType)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
 
-        val launchModal = methodConfigDetailsPage.openLaunchModal()
+        val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.filterRootEntityType(method.rootEntityType)
         launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
         launchModal.clickLaunchButton()
@@ -221,6 +227,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -240,6 +247,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -260,6 +268,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
         //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
@@ -302,8 +311,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             methodConfigDetailsPage.openEditMode()
             methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled"
             methodConfigDetailsPage.saveEdits(expectSuccess = false)
-            val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            val modal = await ready new MessageModal()
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.changeSnapshotId(2)
@@ -345,7 +354,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
 
             val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-            modal.validateLocation shouldBe true
+            modal.isVisible shouldBe true
             modal.clickOk()
           }
 
@@ -365,8 +374,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
             methodConfigDetailsPage.openEditMode(expectSuccess = false)
-            val modal = MessageModal()
-            modal.validateLocation shouldBe true
+            val modal = await ready new MessageModal()
+            modal.isVisible shouldBe true
             modal.clickOk()
 
             methodConfigDetailsPage.deleteMethodConfig()

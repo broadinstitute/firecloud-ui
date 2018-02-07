@@ -26,7 +26,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   val billingProject: String = Config.Projects.default
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
-  val noAccessText = "You do not have access to run analysis.\nOK"
+  val noAccessText = "You do not have access to run analysis."
 
   "A user" - {
     "with a billing project" - {
@@ -46,7 +46,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to clone a workspace" in withWebDriver { implicit driver =>
+      "should be able to clone a workspace" ignore withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
@@ -371,6 +371,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
               withSignIn(user) { listPage =>
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                 val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                 val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()

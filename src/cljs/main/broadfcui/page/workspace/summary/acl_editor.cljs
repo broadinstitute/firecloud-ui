@@ -29,7 +29,8 @@
                         (:load-error @state) :load-error
                         :else :loading)]
        [modals/OKCancelForm
-        {:dismiss (:dismiss props)
+        {:data-test-id "acl-editor"
+         :dismiss (:dismiss props)
          :show-cancel? (not= status :loading)
          :header (case status
                    :main (str "Permissions for " workspace-display)
@@ -44,8 +45,7 @@
          :ok-button (case status
                       :main {:text "Save" :onClick #(this :-persist-acl false)}
                       :offering-invites {:text "Invite" :onClick #(this :-persist-acl true)}
-                      nil)
-         :data-test-id "acl-editor"}]))
+                      nil)}]))
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (endpoints/call-ajax-orch

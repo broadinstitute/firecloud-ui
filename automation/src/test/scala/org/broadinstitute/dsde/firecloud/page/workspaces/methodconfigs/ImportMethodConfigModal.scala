@@ -3,12 +3,12 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.page.{MethodTable, Modal}
+import org.broadinstitute.dsde.firecloud.page.MethodTable
 import org.openqa.selenium.WebDriver
 
-class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal {
-  private val chooseConfigFromRepoButton = Button("import-from-repo-button")
-  private val copyConfigFromWorkspaceButton = Button("copy-from-workspace-button")
+class ImportMethodConfigModal(implicit webDriver: WebDriver) extends OKCancelModal("import-method-configuration-modal") {
+  private val chooseConfigFromRepoButton = Button("import-from-repo-button" inside this)
+  private val copyConfigFromWorkspaceButton = Button("copy-from-workspace-button" inside this)
 
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     chooseConfigFromRepoButton.doClick()

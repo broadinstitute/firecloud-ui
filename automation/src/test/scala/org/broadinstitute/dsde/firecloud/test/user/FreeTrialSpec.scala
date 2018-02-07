@@ -60,7 +60,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" ignore withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
 
         withSignIn(testUser) { _ =>
@@ -131,6 +131,19 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+
+        withSignIn(testUser) { _ =>
+          await ready new WorkspaceListPage()
+          val bannerTitleElement = Label(TestId("trial-banner-title"))
+          bannerTitleElement.isVisible shouldBe false
+        }
+      }
+    }
+   
+   "Finalized" - {
+      "should not see the free trial banner" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()

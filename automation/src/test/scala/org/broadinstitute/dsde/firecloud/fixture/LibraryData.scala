@@ -1,27 +1,6 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 object LibraryData {
-  val metadata = Map(
-    "library:datasetName" -> "name",
-    "library:datasetVersion" -> "v1.0",
-    "library:datasetDescription" -> "desc",
-    "library:datasetCustodian" -> "cust",
-    "library:datasetDepositor" -> "depo",
-    "library:contactEmail" -> "name@example.com",
-    "library:datasetOwner" -> "owner",
-    "library:institute" -> Seq("inst", "it", "ute"),
-    "library:indication" -> "indic",
-    "library:numSubjects" -> 123,
-    "library:projectName" -> "proj",
-    "library:datatype" -> Seq("data", "type"),
-    "library:dataCategory" -> Seq("data", "category"),
-    "library:dataUseRestriction" -> "dur",
-    "library:useLimitationOption" -> "skip",
-    "library:studyDesign" -> "study",
-    "library:cellType" -> "cell",
-    "library:requiresExternalApproval" -> false,
-    "library:technology" -> Seq("is an optional", "array attribute"),
-    "_discoverableByGroups" -> Seq("all_broad_users"))
 
   val consentCodes = Map(
     "library:useLimitationOption" -> "questionnaire",
@@ -36,4 +15,31 @@ object LibraryData {
     "library:RS-G" -> "N/A",
     "library:NAGR" -> "No")
 
+  val metadataBasic = Map(
+     "library:datasetName"->"name",
+     "library:datasetVersion"->"v1.0",
+     "library:datasetDescription"->"desc",
+     "library:datasetCustodian"->"cust",
+     "library:datasetDepositor"->"depo",
+     "library:contactEmail"->"name@example.com",
+     "library:datasetOwner"->"owner",
+     "library:institute"->Seq("inst","it","ute"),
+     "library:indication"->"indic",
+     "library:numSubjects"->123,
+     "library:projectName"->"proj",
+     "library:datatype"->Seq("data","type"),
+     "library:dataCategory"->Seq("data","category"),
+     "library:dataUseRestriction"->"dur",
+     "library:studyDesign"->"study",
+     "library:cellType"->"cell",
+     "library:requiresExternalApproval"->false,
+     "library:useLimitationOption"-> "skip",
+     "library:technology"->Seq("is an optional","array attribute"),
+     "_discoverableByGroups"->Seq("all_broad_users"))
+
+   val metadataORSP = metadataBasic ++ Map(
+      "library:useLimitationOption"->"orsp",
+      "library:orsp"->"some orsp")
+
 }
+
