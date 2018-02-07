@@ -88,7 +88,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               workspacePage.hasGoogleBillingLink shouldBe true
               workspacePage.hasStorageCostEstimate shouldBe true
             }
-          }(authTokenOwner)
+          }
         }
       }
 
