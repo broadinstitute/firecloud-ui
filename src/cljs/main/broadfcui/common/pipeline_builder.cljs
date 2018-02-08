@@ -28,7 +28,7 @@
                           :path "pipeline-deps.bundle.js"}])
         [:div {:data-test-id (:data-test-id props)
                :ref #(swap! locals assoc :container %)
-               :style (when loaded? {:border style/standard-line :min-height 500})}]]))
+               :style (when loaded? {:border style/standard-line :height "100%"})}]]))
    :-render-pipeline
    (fn [{:keys [locals props]} wdl]
      (let [{:keys [read-only?]} props

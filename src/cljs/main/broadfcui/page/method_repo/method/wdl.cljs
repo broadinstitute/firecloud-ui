@@ -34,8 +34,7 @@
           :preview pipeline-view
           :side-by-side [SplitPane
                          {:left code-mirror :right pipeline-view
-                          ;; initial position is the center of the screen, taking into consideration side padding in the WDL tab
-                          :initial-slider-position (str "calc(50vw - 1.5rem - 25px)")}])]))
+                          :initial-slider-position 550}])]))
    :refresh
    (fn [{:keys [state]}]
      (swap! state dissoc :mode))})
