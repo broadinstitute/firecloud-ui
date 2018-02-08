@@ -66,6 +66,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             api.library.publishWorkspace(namespace, wsName)
             withSignIn(curatorUser) { _ =>
               val page = new DataLibraryPage().open
+              page.doSearch(wsName)
               page.hasDataset(wsName) shouldBe true
             }
           }
@@ -89,6 +90,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
               retry[Boolean](100.milliseconds, 1.minute)({
                 val libraryPage = wspage.goToDataLibrary()
+                libraryPage.doSearch(wsName)
                 if (libraryPage.hasDataset(wsName))
                   None
                 else Some(false)
@@ -119,6 +121,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 wspage.cloneWorkspace(namespace, clonedWsName)
                 wspage.hasPublishButton shouldBe true // this will fail if the Unpublish button is displayed.
                 val page = new DataLibraryPage().open
+                page.doSearch(wsName)
                 page.hasDataset(clonedWsName) shouldBe false
               }
             }
@@ -195,6 +198,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               val studentUser = UserPool.chooseStudent
               withSignIn(studentUser) { _ =>
                 val page = new DataLibraryPage().open
+                page.doSearch(wsName)
                 page.hasDataset(wsName) shouldBe true
                 page.openDataset(wsName)
                 //verify that Request Access modal is shown

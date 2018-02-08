@@ -40,13 +40,13 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def hasDataset(name: String): Boolean = {
-    doSearch(name)
     Link(s"dataset-$name").isVisible
   }
 
   def waitForDataset(name:String) = {
     retry[DataLibraryPage](10.seconds, 5.minutes)({
       val libraryPage = open
+      doSearch(name)
       if (libraryPage.hasDataset(name))
         Some(libraryPage)
       else None
