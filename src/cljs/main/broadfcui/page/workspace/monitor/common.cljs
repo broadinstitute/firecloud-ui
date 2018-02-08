@@ -29,7 +29,7 @@
 
 (defn google-account-chooser-prefix [destination] (str "https://accounts.google.com/AccountChooser?continue=" destination))
 (def google-cloud-context (google-account-chooser-prefix "https://console.cloud.google.com/storage/browser/"))
-(defn google-billing-context [project-name] (google-account-chooser-prefix (str "https://console.cloud.google.com/billing/unbilledinvoice?project=" project-name)))
+(defn google-billing-context [project-name] (google-account-chooser-prefix (str "https://console.cloud.google.com/home/dashboard?project=" project-name)))
 
 (defn all-success? [submission]
   (and (every? #(contains? wf-success-statuses (:status %)) (:workflows submission))
