@@ -118,7 +118,7 @@
    (fn [{:keys [props state locals]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [data-test-state rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
-           {:keys [data-test-id toolbar sidebar tabs body paginator style]} props
+           {:keys [data-test-id persistence-key toolbar sidebar tabs body paginator style]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -128,6 +128,7 @@
                                    (swap! state assoc :column-display columns))]
        [:div {:data-test-id data-test-id
               :data-test-state data-test-state
+              :data-test-persistence-key (persistence/generate-persistence-key persistence-key)
               :style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."
                                :delay-time-ms (:blocker-delay-time-ms props)}]

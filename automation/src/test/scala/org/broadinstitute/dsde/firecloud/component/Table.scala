@@ -1,11 +1,11 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.Stateful
+import org.broadinstitute.dsde.firecloud.{Persists, Stateful}
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.{By, Keys, WebDriver, WebElement}
+import org.openqa.selenium.{By, Keys, WebDriver}
 
 case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
-  extends Component(queryString) with Stateful {
+  extends Component(queryString) with Stateful with Persists {
 
   private val tableBody = findInner("table-body")
   private val columnHeaders = findInner("column-header")

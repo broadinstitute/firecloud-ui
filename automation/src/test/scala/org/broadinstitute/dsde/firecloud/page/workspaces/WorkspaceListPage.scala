@@ -19,7 +19,8 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     workspacesTable.awaitReady()
   }
 
-  private val workspacesTable = Table("workspace-list")
+  val workspacesTable = Table("workspace-list")
+
   private val createWorkspaceButton = Button("open-create-workspace-modal-button")
   private val requestAccessModal = testId("request-access-modal")
   private val noBillingProjectsModal = testId("no-billing-projects-message")
@@ -46,12 +47,8 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
-  private def filter(text: String): Unit = {
-    workspacesTable.filter(text)
-  }
-
   def hasWorkspace(namespace: String, name: String): Boolean = {
-    filter(name)
+    workspacesTable.filter(name)
     workspaceLink(namespace, name).isVisible
   }
 
@@ -64,12 +61,12 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def looksRestricted(namespace: String, name: String): Boolean = {
-    filter(name)
+    workspacesTable.filter(name)
     restrictedWorkspaceLabel(namespace, name).isVisible
   }
 
   def clickWorkspaceLink(namespace: String, name: String): Unit = {
-    filter(name)
+    workspacesTable.filter(name)
     workspaceLink(namespace, name).doClick()
   }
 
