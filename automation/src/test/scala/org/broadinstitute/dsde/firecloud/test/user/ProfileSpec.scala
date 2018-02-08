@@ -4,9 +4,8 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
-import org.scalatest.{FreeSpec, Matchers, Ignore}
+import org.scalatest.{FreeSpec, Matchers}
 
-@Ignore
 class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers {
 
   "Profile page" - {

@@ -7,9 +7,8 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{FreeSpec, Matchers, Ignore}
+import org.scalatest.{FreeSpec, Matchers}
 
-@Ignore
 class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers {
 
   val namespace: String = Config.Projects.default

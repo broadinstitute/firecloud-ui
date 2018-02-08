@@ -23,7 +23,6 @@ import org.scalatest._
  *
  * TODO: Fix Rawls group creation/deletion and run these tests in parallel
  */
-@Ignore
 class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures
   with BillingFixtures with GroupFixtures

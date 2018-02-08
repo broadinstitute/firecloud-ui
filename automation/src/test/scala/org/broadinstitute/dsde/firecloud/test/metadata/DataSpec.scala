@@ -16,12 +16,11 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, Matchers, Ignore}
+import org.scalatest.{FreeSpec, Matchers}
 
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-@Ignore
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with Matchers with WebBrowser with WebBrowserUtil with CleanUp {
