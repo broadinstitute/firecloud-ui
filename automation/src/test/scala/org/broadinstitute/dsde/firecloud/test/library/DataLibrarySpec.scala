@@ -59,7 +59,8 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "Input multiple tags in filter field" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withWorkspace(namespace, "DataLibrarySpec", attributes = Some(WorkspaceData.tagAC)) { wsName =>
+    val tagAC = Map("tag:tags" -> Seq("aaaTag", "cccTag"))
+    withWorkspace(namespace, "DataLibrarySpec", attributes = Some(tagAC)) { wsName =>
       withWorkspace(namespace, "DataLibrarySpec_notags") { wsNameNoTag =>
         withCleanUp {
 
@@ -77,7 +78,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             val page = new DataLibraryPage().open
 
             // entering multiple tags in search field
-            val tags = WorkspaceData.tagAC.get("tag:tags").get
+            val tags = tagAC.get("tag:tags").get
             val rows: List[Map[String, String]] = page.doTagsSearch(tags: _*)
             val codes: Seq[String] = page.getTags
 

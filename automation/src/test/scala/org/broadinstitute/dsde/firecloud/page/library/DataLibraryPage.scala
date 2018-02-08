@@ -10,7 +10,6 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
-import scala.util.control.Breaks
 
 /**
   * Page class for the Data Library page.
@@ -93,12 +92,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
       val query: CssSelectorQuery = CssSelectorQuery(option)
       await visible query
       val allOptions: Iterator[Element] = findAll(query)
-      Breaks.breakable(
-        for (option <- allOptions if option.text == tag) {
-          click on option
-          Breaks.break()
-        }
-      )
+      allOptions.find(_.text == tag).foreach(click on _)
       awaitReady()
     }
     libraryTable.getRows
