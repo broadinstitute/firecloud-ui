@@ -2,7 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.codemirror :refer [CodeMirror]]
-   [broadfcui.common.pipeline-builder :refer [PipelineBuilder]]
+   [broadfcui.components.pipeline-builder :refer [PipelineBuilder]]
    [broadfcui.common.style :as style]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
@@ -31,7 +31,7 @@
          (tab :side-by-side "Side-by-side")]
         (case mode
           :code code-mirror
-          :preview pipeline-view
+          :preview [:div {:style {:height 500}} pipeline-view]
           :side-by-side [SplitPane
                          {:left code-mirror :right pipeline-view
                           :initial-slider-position 550}])]))

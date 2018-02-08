@@ -1,4 +1,4 @@
-(ns broadfcui.common.pipeline-builder
+(ns broadfcui.components.pipeline-builder
   (:require
    [dmohs.react :as react]
    [broadfcui.common.style :as style]
@@ -15,7 +15,8 @@
    :render
    (fn [{:keys [props state locals this]}]
      (let [{:keys [loaded? error?]} @state]
-       [:div {:ref #(swap! locals assoc :wrapper %)}
+       [:div {:style {:height "100%"}
+              :ref #(swap! locals assoc :wrapper %)}
         (cond
           error? [:h2 {} "Couldn't load visualizer."]
           (not loaded?) [ScriptLoader
@@ -28,7 +29,7 @@
                           :path "pipeline-deps.bundle.js"}])
         [:div {:data-test-id (:data-test-id props)
                :ref #(swap! locals assoc :container %)
-               :style (when loaded? {:border style/standard-line :height "100%"})}]]))
+               :style (when loaded? {:border style/standard-line :minHeight 300})}]]))
    :-render-pipeline
    (fn [{:keys [locals props]} wdl]
      (let [{:keys [read-only?]} props
