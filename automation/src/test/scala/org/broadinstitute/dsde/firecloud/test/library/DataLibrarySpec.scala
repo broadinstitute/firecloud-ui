@@ -59,14 +59,16 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "Input multiple tags in filter field" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    val tagAC = Map("tag:tags" -> Seq("aaaTag", "cccTag"))
-    withWorkspace(namespace, "DataLibrarySpec", attributes = Some(tagAC)) { wsName =>
+
+    withWorkspace(namespace, "DataLibrarySpec") { wsName =>
       withWorkspace(namespace, "DataLibrarySpec_notags") { wsNameNoTag =>
         withCleanUp {
 
           val dataset = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
+          val attrTag = Map("tag:tags" -> Seq(s"aaaTag$wsName", s"cccTag$wsName"))
           api.library.setLibraryAttributes(namespace, wsName, dataset)
           api.library.setLibraryAttributes(namespace, wsNameNoTag, dataset)
+          api.workspaces.setAttributes(namespace, wsName, attrTag)
           register cleanUp {
             api.library.unpublishWorkspace(namespace, wsName)(authToken)
             api.library.unpublishWorkspace(namespace, wsNameNoTag)(authToken)
@@ -78,12 +80,14 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             val page = new DataLibraryPage().open
 
             // entering multiple tags in search field
-            val tags = tagAC.get("tag:tags").get
-            val rows: List[Map[String, String]] = page.doTagsSearch(tags: _*)
+            val expectedTags = attrTag.get("tag:tags").get
+            page.doTagsSearch(expectedTags: _*)
+            val rows: List[Map[String, String]] = page.getRows
             val codes: Seq[String] = page.getTags
 
-            tags should contain allElementsOf codes // tags all matching
-            rows.foreach { row => row("Cohort Name") shouldEqual (wsName) } // verify wsNameNoTag not in table
+            page.hasDataset(wsName) shouldBe true
+            page.hasDataset(wsNameNoTag) shouldBe false
+            codes should contain allElementsOf expectedTags
           }
         }
       }

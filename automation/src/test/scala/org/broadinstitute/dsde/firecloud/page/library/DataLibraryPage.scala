@@ -40,14 +40,14 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def hasDataset(name: String): Boolean = {
-    Link(s"dataset-$name").isVisible
+    Link(CSSQuery(libraryTable.query.queryString + " " + testId(s"dataset-$name").queryString)).isVisible
   }
 
   def waitForDataset(name: String): Option[DataLibraryPage] = {
+    val libraryPage = open
     retry[DataLibraryPage](10.seconds, 5.minutes)({
-      val libraryPage = open
       doSearch(name)
-      if (libraryPage.hasDataset(name))
+      if (hasDataset(name))
         Some(libraryPage)
       else None
     })
@@ -82,20 +82,19 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     tags.getTags
   }
 
-  def doTagsSearch(tags: String*): List[Map[String, String]] = {
+  def getRows: List[Map[String, String]] = {
+    libraryTable.getRows
+  }
+
+  def doTagsSearch(tags: String*): Unit = {
     clearTags()
     tags.foreach { tag =>
       tagsSearchField.setText(tag)
-      // select tag from the dropdown. dont use key 'Enter'
-      // css selector is used b/c it's difficult to insert 'data-test-id' in Select2 (third party tool)
-      val option = "span.select2-container--open ul.select2-results__options li"
-      val query: CssSelectorQuery = CssSelectorQuery(option)
-      await visible query
-      val allOptions: Iterator[Element] = findAll(query)
+      // select tag from Select2 dropdown. don't use key 'Enter'
+      val allOptions = findSelectResult()
       allOptions.find(_.text == tag).foreach(click on _)
       awaitReady()
     }
-    libraryTable.getRows
   }
 
   /**
@@ -104,6 +103,18 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def clearTags(): Unit = {
     tagsClear.doClick()
     awaitReady()
+  }
+
+  def findSelectResult(): Iterator[Element] = {
+    // css selector is used b/c it's difficult to insert 'data-test-id' in Select2 (3rd party-tool)
+    val option = ".select2-container--open ul.select2-results__options li"
+    val query: CssSelectorQuery = CssSelectorQuery(option)
+    await visible query
+    findAll(query)
+  }
+
+  def readSelectResultText(): List[String] = {
+    findSelectResult.map {_.text}.toList
   }
 
   case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
