@@ -2,8 +2,8 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.codemirror :refer [CodeMirror]]
-   [broadfcui.components.pipeline-builder :refer [PipelineBuilder]]
    [broadfcui.common.style :as style]
+   [broadfcui.components.pipeline-builder :refer [PipelineBuilder]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
    ))
