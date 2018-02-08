@@ -44,4 +44,5 @@
        (.addEventListener wrapper "onresize" recalculate-size)
        (recalculate-size)
        (when read-only?
+         (.togglePanningMode diagram)
          (.disableSelection diagram))))})
