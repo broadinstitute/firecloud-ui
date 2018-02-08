@@ -93,7 +93,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   }
 
   "Writer and reader should see new columns" - {
-    "with no defaults or local preferences when analysis run that creates new columns" ignore withWebDriver { implicit driver =>
+    "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()
@@ -125,7 +125,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
     }
 
-    "with local preferences but no defaults when analysis run" ignore withWebDriver { implicit driver =>
+    "with local preferences but no defaults when analysis run" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()
@@ -158,7 +158,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
     }
 
-    "with defaults but no local preferences when analysis run" ignore withWebDriver { implicit driver =>
+    "with defaults but no local preferences when analysis run" in withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()
