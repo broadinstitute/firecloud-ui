@@ -16,12 +16,11 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, Matchers, Ignore}
+import org.scalatest.{FreeSpec, Matchers}
 
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-@Ignore
 class DataSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures
   with Matchers with WebBrowser with WebBrowserUtil with CleanUp {
@@ -94,7 +93,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   }
 
   "Writer and reader should see new columns" - {
-    "with no defaults or local preferences when analysis run that creates new columns" in withWebDriver { implicit driver =>
+    "with no defaults or local preferences when analysis run that creates new columns" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()
@@ -126,7 +125,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
     }
 
-    "with local preferences but no defaults when analysis run" in withWebDriver { implicit driver =>
+    "with local preferences but no defaults when analysis run" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()
@@ -159,7 +158,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
     }
 
-    "with defaults but no local preferences when analysis run" in withWebDriver { implicit driver =>
+    "with defaults but no local preferences when analysis run" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val reader = UserPool.chooseStudent
       implicit val authToken: AuthToken = owner.makeAuthToken()

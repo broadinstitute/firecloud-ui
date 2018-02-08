@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-@Ignore
+
 class SignInSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp with Matchers {
 
   "A user" - {

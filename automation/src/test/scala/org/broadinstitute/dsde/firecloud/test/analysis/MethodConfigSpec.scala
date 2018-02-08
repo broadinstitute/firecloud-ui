@@ -12,7 +12,7 @@ import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures, Si
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
-@Ignore
+
 class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with UserFixtures with MethodFixtures with Matchers with LazyLogging {
 
   val billingProject: String = Config.Projects.default

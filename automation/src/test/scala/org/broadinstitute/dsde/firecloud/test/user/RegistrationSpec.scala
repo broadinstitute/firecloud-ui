@@ -9,13 +9,12 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.service.{Sam, Thurloe}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers, Ignore}
+import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
 
 
 /**
   * Tests for new user registration scenarios.
   */
-@Ignore
 class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
 
