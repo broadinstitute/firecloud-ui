@@ -366,6 +366,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   }
 
   "Download should reflect visible columns" - {
+    // IGNORE / FIX all of these testcases tracked in ticket GAWB-3167
+      // in https://broadinstitute.atlassian.net/browse/GAWB-3167
     "no workspace defaults or user preferences" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
