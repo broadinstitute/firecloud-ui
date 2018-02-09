@@ -42,7 +42,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       }
 
       withBillingProject("auto-goog-role") { projectName =>
-        val preRoleFailure = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName)).failed.futureValue
+        val preRoleFailure = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), "meh").failed.futureValue
 
         preRoleFailure shouldBe a[GoogleJsonResponseException]
         preRoleFailure.getMessage should include(user.email)
