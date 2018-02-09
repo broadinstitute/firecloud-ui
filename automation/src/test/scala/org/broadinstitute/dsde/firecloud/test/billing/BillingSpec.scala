@@ -93,7 +93,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           }
         }
 
-        "should be able to run a method in a new workspace in the billing project" in {
+        "should be able to run a method in a new workspace in the billing project" ignore {
           // Create new billing project
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()
