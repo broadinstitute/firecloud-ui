@@ -23,7 +23,9 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("
     authDomain foreach { authDomainSelect.select }
 
     submit()
-    await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
+    // FIXME: Clone occasionally takes a long time, fix the root cause and revert this
+    await.ready(new WorkspaceSummaryPage(billingProjectName, workspaceName), 60)
+    //await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
   def readAuthDomainGroups(): List[(String, Boolean)] = {
