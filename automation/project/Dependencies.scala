@@ -21,7 +21,11 @@ object Dependencies {
   val workbenchGoogleV = "0.11-7ad0aa8"
 
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
-  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions:_*)
+
+  val googleExclusion = Seq(
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-google_2.11")
+  )
+  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions ++ googleExclusion:_*)
 
   val rootDependencies = Seq(
     // proactively pull in latest versions of Jackson libs, instead of relying on the versions
