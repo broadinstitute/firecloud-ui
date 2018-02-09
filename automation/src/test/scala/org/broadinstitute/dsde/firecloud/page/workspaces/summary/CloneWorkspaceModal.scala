@@ -9,6 +9,10 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("
   private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
   private val workspaceNameInput = TextField("workspace-name-input" inside this)
 
+  override def awaitReady(): Unit = {
+    billingProjectSelect.awaitReady()
+  }
+
   /**
     * Clones a new workspace.
     *

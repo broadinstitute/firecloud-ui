@@ -98,6 +98,10 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal(
   private val billingProjectSelect = Select("billing-project-select" inside this)
   private val workspaceNameInput = TextField("workspace-name-input" inside this)
 
+  override def awaitReady(): Unit = {
+    billingProjectSelect.awaitReady()
+  }
+
   /**
     * Creates a new workspace. Returns after the FireCloud busy spinner
     * disappears.
