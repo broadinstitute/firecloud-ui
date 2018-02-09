@@ -1,6 +1,5 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
-
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
@@ -16,6 +15,7 @@ import scala.concurrent.duration.DurationLong
   */
 class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   with Page with PageUtil[DataLibraryPage] {
+
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
   private val libraryTable = Table("library-table")
@@ -25,11 +25,9 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private def datasetLink(name: String) = Link(s"dataset-$name")
   private def researchPurposeCode(code: String) = Label(s"$code-tag")
 
-  private val tags = Tags("tags")
-  private val consentCodes = Tags("consent-codes")
+  private val tags = TagSelect("tags")
+  private val consentCodes = TagSelect("consent-codes")
 
-  private val tagsSearchField = SearchField(CSSQuery("[data-test-id='library-tags-select'] ~ * input.select2-search__field"))
-  private val tagsClear = Link("tag-clear")
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()
@@ -63,6 +61,11 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     libraryTable.awaitReady()
   }
 
+  def doTagSearch(tagWords: Seq[String]): Unit = {
+    tags.doSearch(tagWords: _*)
+    awaitReady()
+  }
+
   def openResearchPurposeModal(): ResearchPurposeModal = {
     rpModalLink.doClick()
     await ready new ResearchPurposeModal()
@@ -84,37 +87,6 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   def getRows: List[Map[String, String]] = {
     libraryTable.getRows
-  }
-
-  def doTagsSearch(tags: String*): Unit = {
-    clearTags()
-    tags.foreach { tag =>
-      tagsSearchField.setText(tag)
-      // select tag from Select2 dropdown. don't use key 'Enter'
-      val allOptions = findSelectResult()
-      allOptions.find(_.text == tag).foreach(click on _)
-      awaitReady()
-    }
-  }
-
-  /**
-    * clear Tags input field
-    */
-  def clearTags(): Unit = {
-    tagsClear.doClick()
-    awaitReady()
-  }
-
-  def findSelectResult(): Iterator[Element] = {
-    // css selector is used b/c it's difficult to insert 'data-test-id' in Select2 (3rd party-tool)
-    val option = ".select2-container--open ul.select2-results__options li"
-    val query: CssSelectorQuery = CssSelectorQuery(option)
-    await visible query
-    findAll(query)
-  }
-
-  def readSelectResultText(): List[String] = {
-    findSelectResult.map {_.text}.toList
   }
 
   case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
