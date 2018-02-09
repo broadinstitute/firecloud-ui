@@ -14,4 +14,6 @@ class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal(
   def confirmDelete(): Unit = {
     submit()
   }
+
+
 }

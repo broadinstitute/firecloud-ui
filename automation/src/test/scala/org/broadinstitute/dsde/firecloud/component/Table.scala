@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.{By, Keys, WebDriver, WebElement}
+import org.openqa.selenium.{By, Keys, WebDriver}
 
 case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful {
@@ -94,5 +94,15 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
       val action = new Actions(webDriver)
       action.clickAndHold(colToBeMoved).moveToElement(placeToMoveCol).release().build().perform()
     }
+  }
+
+  def getRows: List[Map[String,String]] = {
+    val rows: List[List[String]] = getData
+    val cols = readColumnHeaders
+
+    val map = for (row <- rows) yield {
+      cols zip row toMap
+    }
+    map
   }
 }

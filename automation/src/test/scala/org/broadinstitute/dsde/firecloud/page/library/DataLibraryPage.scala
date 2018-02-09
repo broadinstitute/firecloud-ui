@@ -28,6 +28,9 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
 
+  private val tagsSearchField = SearchField(CSSQuery("[data-test-id='library-tags-select'] ~ * input.select2-search__field"))
+  private val tagsClear = Link("tag-clear")
+
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()
   }
@@ -37,14 +40,14 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def hasDataset(name: String): Boolean = {
-    doSearch(name)
-    datasetLink(name).isVisible
+    Link(CSSQuery(libraryTable.query.queryString + " " + testId(s"dataset-$name").queryString)).isVisible
   }
 
   def waitForDataset(name: String): Option[DataLibraryPage] = {
+    val libraryPage = open
     retry[DataLibraryPage](10.seconds, 5.minutes)({
-      val libraryPage = open
-      if (libraryPage.hasDataset(name))
+      doSearch(name)
+      if (hasDataset(name))
         Some(libraryPage)
       else None
     })
@@ -77,6 +80,41 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def getTags: Seq[String] = {
     tags.awaitVisible()
     tags.getTags
+  }
+
+  def getRows: List[Map[String, String]] = {
+    libraryTable.getRows
+  }
+
+  def doTagsSearch(tags: String*): Unit = {
+    clearTags()
+    tags.foreach { tag =>
+      tagsSearchField.setText(tag)
+      // select tag from Select2 dropdown. don't use key 'Enter'
+      val allOptions = findSelectResult()
+      allOptions.find(_.text == tag).foreach(click on _)
+      awaitReady()
+    }
+  }
+
+  /**
+    * clear Tags input field
+    */
+  def clearTags(): Unit = {
+    tagsClear.doClick()
+    awaitReady()
+  }
+
+  def findSelectResult(): Iterator[Element] = {
+    // css selector is used b/c it's difficult to insert 'data-test-id' in Select2 (3rd party-tool)
+    val option = ".select2-container--open ul.select2-results__options li"
+    val query: CssSelectorQuery = CssSelectorQuery(option)
+    await visible query
+    findAll(query)
+  }
+
+  def readSelectResultText(): List[String] = {
+    findSelectResult.map {_.text}.toList
   }
 
   case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
@@ -113,5 +151,6 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     await enabled testId(tagTestId)
     Label(tagTestId).isVisible
   }
+
 }
 
