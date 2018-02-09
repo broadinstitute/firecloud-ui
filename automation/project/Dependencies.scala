@@ -15,7 +15,8 @@ object Dependencies {
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_2.11"),
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-util_2.11"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11")
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11"),
+    ExclusionRule(organization = "com.google.apis", name = "google-api-services-oauth2")
   )
 
   val workbenchGoogleV = "0.11-7ad0aa8"
