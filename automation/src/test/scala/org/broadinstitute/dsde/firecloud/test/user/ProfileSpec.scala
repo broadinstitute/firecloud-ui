@@ -15,10 +15,7 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
         val profilePage = new ProfilePage().open
 
         val username = user.email.split("@").head
-        // This is the check we will need in the very near future when we change the formula for making proxy group emails
-        //profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
-        // For now, this is the correct check
-        profilePage.readProxyGroupEmail should (startWith ("PROXY_") and endWith ("firecloud.org"))
+        profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
       }
     }
   }
