@@ -12,14 +12,8 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceNotebooksPage] {
 
   override def awaitReady(): Unit = {
-
-    clustersTable.awaitReady()
+    await condition { clustersTable.getState == "ready" || find(clusterErrorMessage).isDefined }
   }
-
-  def awaitReadyUnauthorized(): Unit = {
-    find(clusterErrorMessage).isDefined
-  }
-
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
 
@@ -32,7 +26,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   def createClusterButtonEnabled(): Boolean = openCreateClusterModalButton.isStateEnabled
 
   def checkUnauthorized: Unit = {
-    awaitReadyUnauthorized()
+    awaitReady()
     await text unWhitelistedMessage
   }
 }
