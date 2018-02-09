@@ -366,20 +366,22 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   }
 
   "Download should reflect visible columns" - {
-    "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
+    // IGNORE / FIX all of these testcases tracked in ticket GAWB-3167
+      // in https://broadinstitute.atlassian.net/browse/GAWB-3167
+    "no workspace defaults or user preferences" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         expectedColumns = List("participant_id", "foo"))
     }
 
-    "no workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
+    "no workspace defaults, with user preferences" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         userHidden = Some("foo"),
         expectedColumns = List("participant_id"))
     }
 
-    "no workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+    "no workspace defaults, with user preferences, new columns" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo"),
         userHidden = Some("foo"),
@@ -387,7 +389,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id", "bar"))
     }
 
-    "with workspace defaults, no user preferences" in withWebDriver(downloadPath) { implicit driver =>
+    "with workspace defaults, no user preferences" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
@@ -395,7 +397,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id", "foo"))
     }
 
-    "with workspace defaults, no user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+    "with workspace defaults, no user preferences, new columns" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
@@ -404,7 +406,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id", "foo", "baz"))
     }
 
-    "with workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
+    "with workspace defaults, with user preferences" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
@@ -413,7 +415,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id"))
     }
 
-    "with workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
+    "with workspace defaults, with user preferences, new columns" ignore withWebDriver(downloadPath) { implicit driver =>
       testMetadataDownload(
         initialColumns = List("participant_id", "foo", "bar"),
         defaultShown = Some(List("participant_id", "foo")),
@@ -423,7 +425,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
         expectedColumns = List("participant_id", "baz"))
     }
 
-    "keep ID column in download even if hidden in UI" in withWebDriver(downloadPath) { implicit driver =>
+    "keep ID column in download even if hidden in UI" ignore withWebDriver(downloadPath) { implicit driver =>
       val user = UserPool.chooseAnyUser
       implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "DataSpec_download") { workspaceName =>
