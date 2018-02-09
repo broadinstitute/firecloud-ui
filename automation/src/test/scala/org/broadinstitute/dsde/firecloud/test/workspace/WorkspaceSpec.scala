@@ -471,8 +471,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           //go directly to notebooks page
-          val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName)
-          go to notebooksTab
+          val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
           notebooksTab.checkUnauthorized
         }
       }
