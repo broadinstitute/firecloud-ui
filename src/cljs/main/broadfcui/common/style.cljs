@@ -183,8 +183,10 @@
    [:span {:style {:fontWeight 200 :paddingLeft "1em"}} "Snapshot ID: "]
    [:span {:style {:fontWeight 500}} snapshot-id]])
 
-(defn render-entity [namespace name snapshot-id]
-  (render-name-id (str namespace "/" name) snapshot-id))
+(defn render-entity [namespace name snapshot-id method-uri]
+  (if namespace
+    (render-name-id (str namespace "/" name) snapshot-id)
+    [:div {} method-uri]))
 
 (defn render-count [count]
   [:span {:style {:minWidth "10px" :padding "3px 7px" :borderRadius "3px"
