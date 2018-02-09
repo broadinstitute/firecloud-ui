@@ -110,14 +110,15 @@
        (let [[source timestamp status-code code causes stack-trace message]
              (map error ["source" "timestamp" "statusCode" "code" "causes" "stackTrace" "message"])
              ;; method redact is responding with "code" for 401.  TODO: standardize and remove this extra logic
-             status-code (or status-code code)]
+             status-code (or status-code code)
+             data-test-id (:data-test-id props)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
                                   (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                      :warning)]
                                  (str "Error: " expected-msg))
-           [:div {:style {:textAlign "initial"}}
+           [:div {:style {:textAlign "initial"} :data-test-id data-test-id}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
                                    (icons/render-icon {:style {:color (:state-exception style/colors)}}
