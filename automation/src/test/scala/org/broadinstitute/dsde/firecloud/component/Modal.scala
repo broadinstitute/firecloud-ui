@@ -32,6 +32,10 @@ class OKCancelModal(id: String)(implicit webDriver: WebDriver) extends Modal(id)
   protected val okButton = Button(innerElement("submit-button"))
   protected val cancelButton = Button(innerElement("cancel-button"))
 
+  override def awaitReady(): Unit = {
+    okButton.awaitVisible()
+  }
+
   def clickOk(): Unit = {
     okButton.doClick()
   }
