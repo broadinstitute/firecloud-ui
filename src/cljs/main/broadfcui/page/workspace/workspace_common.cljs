@@ -70,7 +70,7 @@
                      {:header "Root Entity Type" :initial-width 140
                       :column-data :rootEntityType}
                      {:header "Method" :initial-width 800
-                      :column-data (comp (juxt :methodNamespace :methodName :methodVersion :methodUri) :methodRepoMethod)
+                      :column-data (comp (juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
                       :render (partial apply style/render-entity)}]}
     :toolbar {:get-items (constantly toolbar-items)}}])
