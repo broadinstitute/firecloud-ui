@@ -34,7 +34,7 @@
           :preview [:div {:style {:height 500}} pipeline-view]
           :side-by-side [SplitPane
                          {:left code-mirror :right pipeline-view
-                          :initial-slider-position 550}])]))
+                          :height 500 :initial-slider-position 550}])]))
    :refresh
    (fn [{:keys [state]}]
      (swap! state dissoc :mode))})
