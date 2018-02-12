@@ -1,5 +1,7 @@
-(ns broadfcui.test-utils
-  (:require [clojure.string :as string]))
+(ns broadfcui.utils.test
+  (:require
+   [clojure.string :as string]
+   ))
 
 
 (defn text->test-id [text suffix]
