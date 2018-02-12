@@ -13,6 +13,7 @@
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -129,7 +130,7 @@
                   :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                              (:namespace (:workspace-id props)) "/"
                              (:name (:workspace-id props)) "/exportAttributesTSV")
-                  :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                  :onClick #(user/set-access-token-cookie (user/get-access-token))
                   :target "_blank"}
               (str "Download Attributes")]
              (when writer?

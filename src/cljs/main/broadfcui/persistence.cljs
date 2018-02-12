@@ -2,11 +2,11 @@
   (:require
    [cljs.reader :as reader]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (defn generate-persistence-key [key]
-  (let [id (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getId))]
-    (keyword (str "state:" id ":" key))))
+  (keyword (str "state:" (user/get-user-id) ":" key)))
 
 (defn save [{:keys [key state except only]}]
   (assert (not (and except only)) "Specify EITHER except OR only")

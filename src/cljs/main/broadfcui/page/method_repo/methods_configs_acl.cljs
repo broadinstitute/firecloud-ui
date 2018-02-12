@@ -13,6 +13,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -83,7 +84,7 @@
               :spellCheck false
               :defaultValue (:user acl-entry)
               :predicates [(input/valid-email-or-empty "User ID")]}]
-            (let [disabled? (= (utils/get-user-email) (:user acl-entry))]
+            (let [disabled? (= (user/get-user-email) (:user acl-entry))]
               (style/create-identity-select
                {:ref (str "acl-value" i)
                 :style {:float "right" :width column-width :height 33}

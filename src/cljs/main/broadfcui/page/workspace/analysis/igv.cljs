@@ -5,6 +5,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (defonce ^:private igv-styles-loaded? (atom false))
@@ -25,7 +26,7 @@
                              {:name (str "Track " (inc index))
                               :url (common/gcs-uri->google-url track-url)
                               :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
-                              :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                              :headers (user/get-bearer-token-header)
                               :displayMode "EXPANDED"
                               :height (when bam? 200)
                               :autoHeight (when bam? false)}))

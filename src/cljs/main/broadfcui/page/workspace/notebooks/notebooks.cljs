@@ -22,6 +22,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -345,8 +346,8 @@
      (when (and (= (config/leonardo-url-root) (.-origin e))
                 (= "bootstrap-auth.request" (.. e -data -type)))
        (.postMessage (.-source e)
-         (clj->js {:type "bootstrap-auth.response" :body {:googleClientId (config/google-client-id)}})
-         (config/leonardo-url-root))))
+                     (clj->js {:type "bootstrap-auth.response" :body {:googleClientId (config/google-client-id)}})
+                     (config/leonardo-url-root))))
 
    ; Checks if the user is on the Leo whitelist
    :-is-leo-whitelisted
@@ -370,18 +371,18 @@
          (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))
 
    :-process-running-clusters
-   (fn [{:keys [props state locals this]}]
+   (fn [{:keys [state]}]
      (let [{{:keys [clusters]} :server-response} @state
            running-clusters (filter (comp (partial = "Running") :status) clusters)]
        (doseq [cluster running-clusters]
          (utils/ajax
-           {:url (str (leo-notebook-url cluster) "/setCookie")
-            :headers {"Authorization" (str "Bearer " (utils/get-access-token))}
-            :with-credentials? true
-            :cross-domain true
-            :on-done (fn [{:keys [success? raw-response]}]
-                       (when-not success?
-                         (swap! state assoc :server-error raw-response)))}))))
+          {:url (str (leo-notebook-url cluster) "/setCookie")
+           :headers (user/get-bearer-token-header)
+           :with-credentials? true
+           :cross-domain true
+           :on-done (fn [{:keys [success? raw-response]}]
+                      (when-not success?
+                        (swap! state assoc :server-error raw-response)))}))))
 
    :-get-clusters-list-if-whitelisted
    (fn [{:keys [props state locals this]}]

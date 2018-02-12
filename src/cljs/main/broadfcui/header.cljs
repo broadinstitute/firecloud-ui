@@ -1,13 +1,11 @@
 (ns broadfcui.header
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (react/defc- TopNavBarLink
@@ -36,14 +34,14 @@
             (:items props))]])})
 
 (defn create-account-dropdown []
-  (let [auth2 @utils/auth2-atom]
+  (let [auth2 @user/auth2-atom]
     (dropdown/render-dropdown-menu
      {:label [:div {:style {:borderRadius 2 :display "inline-block"
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
                             :padding "0.5rem" :border style/standard-line}
                     :data-test-id "account-dropdown"}
-              [:span {:data-test-id "account-dropdown-email"} (utils/get-user-email)]
+              [:span {:data-test-id "account-dropdown-email"} (user/get-user-email)]
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
       :button-style {:height 32}

@@ -3,13 +3,13 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (def ^:private preview-byte-count 20000)
@@ -61,9 +61,9 @@
                           (react/create-element
                            [:span {:style {:marginLeft "1em"}}
                             (links/create-external {:href (common/gcs-object->download-url bucket-name object)
-                                                    :onClick utils/refresh-access-token
-                                                    :onContextMenu utils/refresh-access-token}
-                                                   "Open")
+                                                    :onClick user/refresh-access-token
+                                                    :onContextMenu user/refresh-access-token}
+                              "Open")
                             [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                              " (right-click to download)"]]))
                         (when (> data-size 100000000)
@@ -117,8 +117,8 @@
                                         :status status-code})))})
        (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
                               (js/encodeURIComponent object) "?alt=media")
-                    :headers {"Authorization" (str "Bearer " (utils/get-access-token))
-                              "Range" (str "bytes=-" preview-byte-count)}
+                    :headers (merge (user/get-bearer-token-header)
+                                    {"Range" (str "bytes=-" preview-byte-count)})
                     :on-done (fn [{:keys [raw-response]}]
                                (swap! state assoc :preview raw-response
                                       :preview-line-count (count (clojure.string/split raw-response #"\n+")))

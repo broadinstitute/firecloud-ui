@@ -16,11 +16,12 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.method.details :refer [MethodDetails]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
 (defn- process-methods [methods]
-  (let [user-email (utils/get-user-email)]
+  (let [user-email (user/get-user-email)]
     (map (fn [{:keys [public managers namespace name] :as method}]
            (assoc method
              :mine? (or (not public)

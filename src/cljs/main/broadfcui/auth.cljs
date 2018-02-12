@@ -9,6 +9,7 @@
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (react/defc GoogleAuthLibLoader
@@ -29,7 +30,7 @@
                     "https://www.googleapis.com/auth/compute"])
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js-invoke (aget js/gapi "auth2") "init" init-options)]
-       (utils/set-google-auth2-instance! auth2)
+       (user/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
 (react/defc- Policy
@@ -166,12 +167,12 @@
    (fn [{:keys [props locals]}]
      (swap! locals assoc :refresh-token-saved? true)
      (let [{:keys [on-change]} props]
-       (utils/add-user-listener
+       (user/add-user-listener
         ::logged-out
         #(on-change (js-invoke % "isSignedIn") (:refresh-token-saved? @locals)))))
    :component-will-unmount
    (fn []
-     (utils/remove-user-listener ::logged-out))
+     (user/remove-user-listener ::logged-out))
    :-handle-sign-in-click
    (fn [{:keys [props locals]}]
      (swap! locals dissoc :refresh-token-saved?)
@@ -271,7 +272,7 @@
                                        :hasGrantedScopes (constantly true)}))
                                     :listen (constantly nil)}
                                    :signOut on-sign-out})]
-                       (utils/set-google-auth2-instance! auth2)
+                       (user/set-google-auth2-instance! auth2)
                        (on-sign-in))
                      (on-error {:status status-code :response raw-response})))})))
 
