@@ -1,7 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.component._
-import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.openqa.selenium.WebDriver
 
@@ -15,6 +14,7 @@ class AclEditor(implicit webDriver: WebDriver) extends OKCancelModal("acl-editor
   val canShareBox = Checkbox("acl-share-true" inside this)
   val canComputeBox = Checkbox("acl-compute-true" inside this)
 
+  override def awaitReady(): Unit = addNewAclButton.awaitVisible()
   /**
     * Shares workspace being viewed.
     * @param email email of user to be shared with
