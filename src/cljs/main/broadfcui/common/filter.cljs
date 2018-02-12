@@ -17,12 +17,12 @@
 
 
 (defn section [{:keys [title on-clear content]}]
-  [:div {}
+  [:div {:data-test-id (str title "-facet_section")}
    (when (or title on-clear)
      (flex/box
       {:style {:marginBottom "0.5rem" :alignItems "baseline"}}
       (when title
-        [:div {:style {:fontWeight "bold"}} title])
+        [:div {:data-test-id (str title "-title") :style {:fontWeight "bold"}} title])
       flex/spring
       (when on-clear
         [:div {:style {:fontSize "80%"}}
@@ -36,7 +36,8 @@
            [:div {:style {:display "flex" :paddingTop 5}}
             [:label {:style {:flex "1 1 auto"
                              :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-                     :title rendered}
+                     :title rendered
+                     :data-test-id (str rendered "-item")}
              [:input {:type "checkbox"
                       :checked (contains? checked-items item)
                       :onChange #(on-change item (.. % -target -checked))}]
