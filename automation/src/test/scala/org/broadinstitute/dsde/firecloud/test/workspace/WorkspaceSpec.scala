@@ -28,6 +28,28 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
   val noAccessText = "You do not have access to run analysis."
 
+  "Persisted workspace table handles extra columns in storage gracefully" in withWebDriver { implicit driver =>
+    val user = UserPool.chooseAnyUser
+    implicit val authToken = user.makeAuthToken()
+    withWorkspace(billingProject, "Dummy_workspace") { _ =>
+      withSignIn(user) { listPage =>
+        val workspacesTable = listPage.workspacesTable
+        // put an invalid column into the list:
+        workspacesTable.putStoredValue(
+          """{:query-params {:sort-order :asc, :page-number 1, :sort-column "Workspace", :rows-per-page 20, :filter-text ""}, """ +
+           """:column-display [{:id "FAKE", :width 100, :visible? true} {:id "Status", :width 56, :visible? true} """ +
+                            """{:id "Workspace", :width 315, :visible? true} {:id "Description", :width 350, :visible? true} """ +
+                            """{:id "Last Modified", :width 200, :visible? true} {:id "Access Level", :width 132, :visible? true}], """ +
+           """:selected-tab-index 0, :v 3}""")
+
+        // on refresh, page doesn't bomb:
+        listPage.open
+        workspacesTable.isVisible shouldBe true
+        workspacesTable.readColumnHeaders shouldBe List("Status", "Workspace", "Description", "Last Modified", "Access Level")
+      }
+    }
+  }
+
   "A user" - {
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
@@ -46,7 +68,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
       }
 
-      "should be able to clone a workspace" ignore withWebDriver { implicit driver =>
+      "should be able to clone a workspace" in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
@@ -75,6 +97,21 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           }
         }
 
+      }
+
+      "and who owns the project" - {
+        "should see the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+          val user = UserPool.chooseProjectOwner
+          implicit val authToken: AuthToken = authTokenOwner
+          val testName = "WorkspaceSpec_projectOwnerAccess_projectCost"
+          withWorkspace(billingProject, testName, Set.empty, List.empty) { workspaceName =>
+            withSignIn(user) { listPage =>
+              val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+              workspacePage.hasGoogleBillingLink shouldBe true
+              workspacePage.hasStorageCostEstimate shouldBe true
+            }
+          }
+        }
       }
 
       "should be able to share the workspace" in withWebDriver { implicit driver =>
@@ -332,9 +369,35 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
           }
         }
       }
+
+      "should not see any of the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
+        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Reader, Some(false), Some(false)))) { workspaceName =>
+          withSignIn(user) { listPage =>
+            val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+            workspacePage.hasGoogleBillingLink shouldBe false
+            workspacePage.hasStorageCostEstimate shouldBe false
+          }
+        }
+      }
     }
 
     "who has writer access" - {
+      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in withWebDriver { implicit driver =>
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
+        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+          withSignIn(user) { listPage =>
+            val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+            workspacePage.hasGoogleBillingLink shouldBe false
+            workspacePage.hasStorageCostEstimate shouldBe true
+          }
+        }
+      }
+
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in withWebDriver { implicit driver =>
           val user = UserPool.chooseStudent
