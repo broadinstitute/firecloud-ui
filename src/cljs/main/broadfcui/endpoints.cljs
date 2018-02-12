@@ -8,6 +8,9 @@
 (defn- rand-recent-time []
   (common/format-date (- (.getTime (js/Date.)) (rand-int 100000000))))
 
+(defn rand-subset [items]
+  (take (rand-int (inc (count items))) (shuffle items)))
+
 (defn ajax-payload [endpoint arg-map]
   (dissoc
    (assoc arg-map
@@ -57,9 +60,9 @@
          :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                     :lastSuccessDate (rand-nth [nil (rand-recent-time)])
                                     :lastFailureDate (rand-nth [nil (rand-recent-time)])}
-         :owners (utils/rand-subset ["test@broadinstitute.org"
-                                     "test2@broadinstitute.org"
-                                     "you@broadinstitute.org"])}))
+         :owners (rand-subset ["test@broadinstitute.org"
+                               "test2@broadinstitute.org"
+                               "you@broadinstitute.org"])}))
     (range (rand-int 100)))})
 
 (defn create-workspace [namespace name]
@@ -91,9 +94,9 @@
     :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                :lastSuccessDate (rand-nth [nil (rand-recent-time)])
                                :lastFailureDate (rand-nth [nil (rand-recent-time)])}
-    :owners (utils/rand-subset ["test@broadinstitute.org"
-                                "test2@broadinstitute.org"
-                                "you@broadinstitute.org"])}})
+    :owners (rand-subset ["test@broadinstitute.org"
+                          "test2@broadinstitute.org"
+                          "you@broadinstitute.org"])}})
 
 (defn delete-workspace [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id))
@@ -408,8 +411,8 @@
                                             "inputName" (rand-nth ["input1" "input2"])}
                                            {"value" "mutations.vcf",
                                             "inputName" (rand-nth ["input1" "input2"])}]
-                        :errors (utils/rand-subset ["Prerequisites not met" "Server error"
-                                                    "I didn't feel like it" "Syntax error"])})
+                        :errors (rand-subset ["Prerequisites not met" "Server error"
+                                              "I didn't feel like it" "Syntax error"])})
                      (range (rand-int 5)))
     :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])}})
 
@@ -776,7 +779,7 @@
    (call-ajax-orch
     {:endpoint {:path "/profile/billing"
                 :method :get
-                :mock-data (utils/rand-subset
+                :mock-data (rand-subset
                             [{"projectName" "broad-dsde-dev" "role" "User"
                               "creationStatus" "Ready"}
                              {"projectName" "broad-institute" "role" "User"

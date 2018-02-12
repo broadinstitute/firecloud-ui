@@ -298,9 +298,6 @@
 (defn replace-top [coll x]
   (conj (pop coll) x))
 
-(defn rand-subset [items]
-  (take (rand-int (inc (count items))) (shuffle items)))
-
 (defn _24-hours-from-now-ms []
   (+ (.now js/Date) (* 1000 60 60 24)))
 
@@ -331,11 +328,6 @@
 (defn map-kv [f m]
   (into (empty m)
         (map (fn [[k v]] (f k v)) m)))
-
-(defn maybe-pluralize [number unit]
-  (if (> number 1)
-    (str number " " unit "s")
-    (str number " " unit)))
 
 (defn get-app-root-element []
   (.getElementById js/document "app"))
