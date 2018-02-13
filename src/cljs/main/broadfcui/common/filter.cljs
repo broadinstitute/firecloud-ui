@@ -15,7 +15,7 @@
         (remove nil?)
         (interpose [:hr {:style {:marginTop "0.9rem"}}]))])
 
-(defn section [{:keys [title on-clear content]}]
+(defn section [{:keys [title on-clear content data-test-id]}]
   [:div {:data-test-id (str title "-facet-section")}
    (when (or title on-clear)
      (flex/box
