@@ -3,8 +3,10 @@
    [clojure.string :as string]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
-   [broadfcui.utils.user :as user]
    ))
+
+
+(defonce get-bearer-token-header (atom nil))
 
 
 ;; TODO - make this unnecessary
@@ -101,7 +103,7 @@
   (let [on-done (:on-done arg-map)]
     (call (assoc arg-map
             :url (str (config/api-url-root) service-prefix path)
-            :headers (merge (user/get-bearer-token-header)
+            :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (when (and (not @server-down?) (not @maintenance-mode?))
@@ -115,7 +117,7 @@
   (let [on-done (:on-done arg-map)]
     (call (assoc arg-map
             :url (str (config/leonardo-url-root) service-prefix path)
-            :headers (merge (user/get-bearer-token-header)
+            :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (when (and (not @server-down?) (not @maintenance-mode?))

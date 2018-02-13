@@ -15,9 +15,9 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -30,7 +30,7 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [creating-ws selected-project billing-loaded? server-error validation-errors]} @state
            {:keys [workspace-id]} props
-           billing-projects @user-info/saved-ready-billing-project-names]
+           billing-projects @user/saved-ready-billing-project-names]
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
@@ -80,9 +80,9 @@
            (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount
    (fn [{:keys [state]}]
-     (user-info/reload-billing-projects
+     (user/reload-billing-projects
       (fn []
-        (swap! state assoc :selected-project (first @user-info/saved-ready-billing-project-names)
+        (swap! state assoc :selected-project (first @user/saved-ready-billing-project-names)
                :billing-loaded? true)))
      (endpoints/get-groups
       (fn [_ parsed-response]
@@ -181,8 +181,8 @@
 (react/defc Button
   {:component-will-mount
    (fn [{:keys [state]}]
-     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
-     (user-info/reload-billing-projects
+     (add-watch user/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
+     (user/reload-billing-projects
       (fn [err-text]
         (when err-text
           (swap! state assoc :error-message err-text)))))
@@ -200,9 +200,9 @@
           :icon :add-new
           :disabled? (cond
                        (not loaded?) "Project billing data has not yet been loaded."
-                       (empty? @user-info/saved-ready-billing-project-names) (comps/no-billing-projects-message)
+                       (empty? @user/saved-ready-billing-project-names) (comps/no-billing-projects-message)
                        error-message "Project billing data failed to load.")
           :onClick #(swap! state assoc :modal? true)}]]))
    :component-will-unmount
    (fn []
-     (remove-watch user-info/saved-ready-billing-project-names :ws-create-button))})
+     (remove-watch user/saved-ready-billing-project-names :ws-create-button))})

@@ -26,9 +26,9 @@
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -110,7 +110,7 @@
   {:component-will-mount
    (fn [{:keys [this locals]}]
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary"))
-     (add-watch user-info/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
+     (add-watch user/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response popup-error]} @state
@@ -161,7 +161,7 @@
        (this :refresh)))
    :component-will-unmount
    (fn []
-     (remove-watch user-info/saved-ready-billing-project-names :ws-summary))
+     (remove-watch user/saved-ready-billing-project-names :ws-summary))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
@@ -171,7 +171,7 @@
             {:keys [library-schema curator? billing-error?]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
-           billing-projects @user-info/saved-ready-billing-project-names
+           billing-projects @user/saved-ready-billing-project-names
            status (common/compute-status workspace)
            published? (:library:published library-attributes)
            publisher? (and curator? (or catalog-with-read? owner?))
@@ -431,7 +431,7 @@
      (swap! state dissoc :server-response)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (user-info/reload-billing-projects
+     (user/reload-billing-projects
       (fn [err-text]
         (if err-text
           (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)

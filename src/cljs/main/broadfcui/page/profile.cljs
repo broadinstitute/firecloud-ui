@@ -15,7 +15,6 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.user :as user]
    ))
@@ -115,14 +114,14 @@
            :programLocationState :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state]}]
-     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (merge @user-info/saved-user-profile (:values @state))))
+     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (merge @user/profile (:values @state))))
    :validation-errors
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (this :get-field-keys))))
    :render
    (fn [{:keys [this props state]}]
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
-           @user-info/saved-user-profile
+           @user/profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
             (flex/box {}
@@ -162,7 +161,7 @@
    (fn [{:keys [state]} key value]
      [:label {:style {:margin "0 1em 0.5em 0" :padding "0.5em 0"}}
       [:input {:type "radio" :value value :name key
-               :checked (= value (get-in @state [:values key] (@user-info/saved-user-profile key)))
+               :checked (= value (get-in @state [:values key] (@user/profile key)))
                :onChange #(swap! state assoc-in [:values key] value)}]
       value])
    :render-field
@@ -175,7 +174,7 @@
          (style/create-form-label label)
          [input/TextField {:style {:width 200}
                            :data-test-id key
-                           :defaultValue (@user-info/saved-user-profile key)
+                           :defaultValue (@user/profile key)
                            :ref (name key)
                            :placeholder (when email? (user/get-user-email))
                            :predicates [(when required? (input/nonempty label))
@@ -183,8 +182,8 @@
                            :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
    :component-will-mount
    (fn [{:keys [state]}]
-     (when-not @user-info/saved-user-profile
-       (user-info/reload-user-profile
+     (when-not @user/profile
+       (user/reload-profile
         (fn [{:keys [success? status-text]}]
           (if success?
             (swap! state assoc :loaded-profile? true)
@@ -246,7 +245,7 @@
                                (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
-                                 (user-info/reload-user-profile)
+                                 (user/reload-profile)
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)

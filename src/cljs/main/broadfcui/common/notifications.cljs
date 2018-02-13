@@ -12,9 +12,9 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 (defn render-alert [{:keys [cleared? link message title]} dismiss]
@@ -114,43 +114,45 @@
   {:render
    (fn [{:keys [state this]}]
      (let [{:keys [dismissed? loading? messages error]} @state]
-       (when-let [current-trial-state (keyword (:trialState @user-info/saved-user-profile))]
+       (when-let [current-trial-state (keyword (:trialState @user/profile))]
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
            (let [{:keys [title message warning? link button eulas]} (messages current-trial-state)]
              (apply ;; needed until dmohs/react deals with nested seq's
-              flex/box {:style {:color "white"
-                                :background-color ((if warning? :state-warning :button-primary) style/colors)}}
-              (flex/box {:style {:padding "1rem" :flexGrow 1
-                                 :justifyContent "center" :alignItems "center"}}
-                [:div {:data-test-id "trial-banner-title"
-                       :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
-                               :borderRight "1px solid white"
-                               :paddingRight "1rem" :marginRight "1rem"
-                               :maxWidth 200 :flexShrink 0}}
-                 title]
-                [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
-                 message
-                 (when-let [{:keys [label url]} link]
-                   (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
-                (when-let [{:keys [label url external?]} button]
-                  [:a {:data-test-id "trial-banner-button"
-                       :data-test-state (if loading? "loading" "ready")
-                       :style {:display "block"
-                               :color "white" :textDecoration "none" :fontSize "1.125rem"
-                               :fontWeight 500
-                               :border "2px solid white" :borderRadius "0.25rem"
-                               :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
-                       :href (if external? url (when-not loading? "javascript:;"))
-                       :onClick (when-not (or external? loading?)
-                                  #(swap! state assoc :displaying-eula? true))
-                       :target (when external? "_blank")}
-                   (if loading?
-                     (spinner {:style {:fontSize "1rem" :margin 0}})
-                     label)
-                   (when external?
-                     (icons/render-icon
-                      {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
-                      :external-link))]))
+              flex/box
+              {:style {:color "white"
+                       :background-color ((if warning? :state-warning :button-primary) style/colors)}}
+              (flex/box
+               {:style {:padding "1rem" :flexGrow 1
+                        :justifyContent "center" :alignItems "center"}}
+               [:div {:data-test-id "trial-banner-title"
+                      :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
+                              :borderRight "1px solid white"
+                              :paddingRight "1rem" :marginRight "1rem"
+                              :maxWidth 200 :flexShrink 0}}
+                title]
+               [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
+                message
+                (when-let [{:keys [label url]} link]
+                  (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
+               (when-let [{:keys [label url external?]} button]
+                 [:a {:data-test-id "trial-banner-button"
+                      :data-test-state (if loading? "loading" "ready")
+                      :style {:display "block"
+                              :color "white" :textDecoration "none" :fontSize "1.125rem"
+                              :fontWeight 500
+                              :border "2px solid white" :borderRadius "0.25rem"
+                              :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
+                      :href (if external? url (when-not loading? "javascript:;"))
+                      :onClick (when-not (or external? loading?)
+                                 #(swap! state assoc :displaying-eula? true))
+                      :target (when external? "_blank")}
+                  (if loading?
+                    (spinner {:style {:fontSize "1rem" :margin 0}})
+                    label)
+                  (when external?
+                    (icons/render-icon
+                     {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
+                     :external-link))]))
               [:div {:style {:alignSelf "center" :padding "1rem" :display "flex"
                              :flexDirection "column" :alignItems "flex-end"}}
                [FoundationTooltip
@@ -168,7 +170,7 @@
                    :onClick #(ajax/call-orch
                               "/profile/trial?operation=finalize"
                               {:method :post
-                               :on-done user-info/reload-user-profile})}
+                               :on-done user/reload-profile})}
                    "or hide forever?"))]
               (modals/show-modals
                state
@@ -178,7 +180,7 @@
                 (modals/render-error {:text error :on-dismiss #(swap! state dissoc :error)})})))))))
    :component-will-mount
    (fn [{:keys [this state]}]
-     (add-watch user-info/saved-user-profile :trial-alerts
+     (add-watch user/profile :trial-alerts
                 (fn [_ _ _ {:keys [trialState]}]
                   (when trialState
                     (if-not (:messages @state)
@@ -204,7 +206,7 @@
                                  :on-done
                                  (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
-                                     (user-info/reload-user-profile
+                                     (user/reload-profile
                                       #(swap! state dissoc :loading?))
                                      (utils/multi-swap! state
                                        (assoc :error (:message (get-parsed-response)))
@@ -248,19 +250,20 @@
                  (links/create-external {:href "https://cloud.google.com/terms/"}
                    "https://cloud.google.com/terms/")]]])])
          :data-test-id "eula-modal"
-         :button-bar (flex/box {:style {:justifyContent "center" :width "100%"}}
-                       (when page-2?
-                         [buttons/Button
-                          {:text "Back"
-                           :style {:marginRight "2rem"}
-                           :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
-                       [buttons/Button
-                        (if-not page-2?
-                          {:text "Review Terms of Service"
-                           :data-test-id "review-terms-of-service"
-                           :onClick #(swap! state assoc :page-2? true)}
-                          {:text "Accept"
-                           :data-test-id "accept-terms-of-service"
-                           :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
-                                        "You must check the boxes to accept the agreement.")
-                           :onClick accept-eula})])}]))})
+         :button-bar (flex/box
+                      {:style {:justifyContent "center" :width "100%"}}
+                      (when page-2?
+                        [buttons/Button
+                         {:text "Back"
+                          :style {:marginRight "2rem"}
+                          :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
+                      [buttons/Button
+                       (if-not page-2?
+                         {:text "Review Terms of Service"
+                          :data-test-id "review-terms-of-service"
+                          :onClick #(swap! state assoc :page-2? true)}
+                         {:text "Accept"
+                          :data-test-id "accept-terms-of-service"
+                          :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
+                                       "You must check the boxes to accept the agreement.")
+                          :onClick accept-eula})])}]))})

@@ -5,7 +5,6 @@
    [clojure.string :as string]
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
@@ -33,9 +32,9 @@
    [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -118,7 +117,7 @@
        (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
-     (user-info/reload-user-profile
+     (user/reload-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
           (cond
