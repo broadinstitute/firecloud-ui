@@ -7,8 +7,6 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
-
-
 import scala.concurrent.duration.DurationLong
 
 /**
@@ -28,7 +26,6 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val tags = TagSelect("tags")
   private val consentCodes = TagSelect("consent-codes")
-
 
   //Hard Coded titles for facet sections in our UI code
   val cohortPhenotypeIndicationSection = "Cohort Phenotype/Indication"

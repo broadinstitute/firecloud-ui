@@ -87,6 +87,11 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             val childElement = cssSelector(s"[data-test-id='$title-facet-section'] [data-test-id='$item-item']").findElement
             childElement should not be None
             childElement.get.underlying.getText shouldBe item
+          }
+        }
+      }
+    }
+  }
 
   /**
     * Test creates two workspaces. Only one workspace has tags
@@ -123,10 +128,10 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             page.hasDataset(wsName) shouldBe true
             page.hasDataset(wsNameNoTag) shouldBe false
             codes should contain allElementsOf expectedTags
-
           }
         }
       }
     }
   }
 }
+
