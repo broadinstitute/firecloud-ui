@@ -22,7 +22,7 @@
                   (swap! state dissoc :loading?)
                   (let [method (get-parsed-response)
                         managers (set (:managers method))]
-                    (if (contains? managers (user/get-user-email))
+                    (if (contains? managers (user/get-email))
                       (this :-check-users-and-show-sync new-users method)
                       (swap! state assoc :show-alert-modal? true :method method))))}))
    :render

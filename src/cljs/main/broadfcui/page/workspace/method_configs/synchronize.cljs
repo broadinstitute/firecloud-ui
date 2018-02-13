@@ -54,7 +54,7 @@
      (let [method-report (first (:referencedMethods parsed-perms-report))]
        (when-not (get-in method-report [:method :public])
          (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
-               me (user/get-user-email)
+               me (user/get-email)
                method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
                can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
                method-users (when method-owner? (->> method-report :acls (map :user) set))

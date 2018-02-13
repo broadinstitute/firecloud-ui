@@ -85,7 +85,7 @@
               :spellCheck false
               :defaultValue (:user acl-entry)
               :predicates [(input/valid-email-or-empty "User ID")]}]
-            (let [disabled? (= (user/get-user-email) (:user acl-entry))]
+            (let [disabled? (= (user/get-email) (:user acl-entry))]
               (style/create-identity-select
                {:ref (str "acl-value" i)
                 :style {:float "right" :width column-width :height 33}

@@ -176,7 +176,7 @@
                            :data-test-id key
                            :defaultValue (@user/profile key)
                            :ref (name key)
-                           :placeholder (when email? (user/get-user-email))
+                           :placeholder (when email? (user/get-email))
                            :predicates [(when required? (input/nonempty label))
                                         (when email? (input/valid-email-or-empty label))]
                            :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
@@ -189,7 +189,7 @@
             (swap! state assoc :loaded-profile? true)
             (swap! state assoc :error-message status-text)))))
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/proxy-group (user/get-user-email))
+      {:endpoint (endpoints/proxy-group (user/get-email))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :userProxyGroupEmail (get-parsed-response))))}))})

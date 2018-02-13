@@ -32,10 +32,10 @@
 (defn get-bearer-token-header []
   {"Authorization" (str "Bearer " (get-access-token))})
 
-(defn get-user-email []
+(defn get-email []
   (-> (get-user) (js-invoke "getBasicProfile") (js-invoke "getEmail")))
 
-(defn get-user-id []
+(defn get-id []
   (-> (get-user) (js-invoke "getBasicProfile") (js-invoke "getId")))
 
 

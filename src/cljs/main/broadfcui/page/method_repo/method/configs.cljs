@@ -29,7 +29,7 @@
    :render
    (fn [{:keys [state this props]}]
      (let [{:keys [config config-error refreshing?]} @state
-           owner? (contains? (set (:managers config)) (user/get-user-email))]
+           owner? (contains? (set (:managers config)) (user/get-email))]
        [:div {:style {:margin "2.5rem 1.5rem"}}
         (when refreshing?
           (blocker "Refreshing..."))

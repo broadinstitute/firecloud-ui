@@ -22,7 +22,7 @@
 
 
 (defn- process-methods [methods]
-  (let [user-email (user/get-user-email)]
+  (let [user-email (user/get-email)]
     (map (fn [{:keys [public managers namespace name] :as method}]
            (assoc method
              :mine? (or (not public)

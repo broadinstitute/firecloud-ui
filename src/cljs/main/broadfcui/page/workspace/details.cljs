@@ -91,7 +91,7 @@
            tabs [[SUMMARY :workspace-summary]
                  [DATA :workspace-data]
                  [ANALYSIS :workspace-analysis]
-                 (when (get @whitelisted-users (user/get-user-email)) [NOTEBOOKS :workspace-notebooks])
+                 (when (get @whitelisted-users (user/get-email)) [NOTEBOOKS :workspace-notebooks])
                  [CONFIGS :workspace-method-configs]
                  [MONITOR :workspace-monitor]]]
        [:div {}
@@ -164,12 +164,12 @@
        (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
-     (when-not (contains? @whitelisted-users (user/get-user-email))
+     (when-not (contains? @whitelisted-users (user/get-email))
        (endpoints/call-ajax-leo
         {:endpoint endpoints/is-leo-whitelisted
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success?]}]
-                    (swap! whitelisted-users assoc (user/get-user-email) success?))}))
+                    (swap! whitelisted-users assoc (user/get-email) success?))}))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [status-code success?]}]
