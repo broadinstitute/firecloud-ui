@@ -19,10 +19,6 @@
   (<= 0 (str-index-of s what)))
 
 
-(defn contains-ignore-case [s what]
-  (contains (string/lower-case s) (string/lower-case what)))
-
-
 (defn ->json-string [x]
   (js/JSON.stringify (clj->js x)))
 
@@ -205,16 +201,6 @@
     (doseq [[k v] params]
       (.append form-data (name k) v))
     form-data))
-
-
-(defn map-to-string [m]
-  (string/join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
-
-
-(defn distance [x1 y1 x2 y2]
-  (let [dx (- x1 x2)
-        dy (- y1 y2)]
-    (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
 
 
 (defn insert [vec i elem]
