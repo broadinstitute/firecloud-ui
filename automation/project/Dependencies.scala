@@ -7,7 +7,7 @@ object Dependencies {
 
   val serviceTestV = "0.1-e6d94b3"
 
-  val workbenchModelV  = "0.8-d97f551"
+  val workbenchModelV  = "0.10-6800f3a"
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetricsV  = "0.3-7ad0aa8"
 
@@ -15,18 +15,14 @@ object Dependencies {
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_2.11"),
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-util_2.11"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11"),
-    ExclusionRule(organization = "com.google.apis", name = "google-api-services-oauth2")
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11")
   )
 
-  val workbenchGoogleV = "0.11-7ad0aa8"
+  val workbenchGoogleV = "0.15-2fc79a3"
 
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
 
-  val googleExclusion = Seq(
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-google_2.11")
-  )
-  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions ++ googleExclusion:_*)
+  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions:_*)
 
   val rootDependencies = Seq(
     // proactively pull in latest versions of Jackson libs, instead of relying on the versions
