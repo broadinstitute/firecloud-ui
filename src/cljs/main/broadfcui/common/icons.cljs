@@ -53,6 +53,9 @@
    :unknown "fa-question"
    :unlock "fa-unlock"
    :warning "fa-exclamation-triangle"
+   :zoom-fit "fa-crosshairs"
+   :zoom-in "fa-search-plus"
+   :zoom-out "fa-search-minus"
    })
 
 (defn render-icon [attributes key]
