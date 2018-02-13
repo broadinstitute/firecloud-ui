@@ -20,6 +20,7 @@
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -111,15 +112,15 @@
    (fn [{:keys [props state]}]
      (let [{:keys [preview-config]} @state]
        (flex/box
-        {:style {:margin "-1rem" :padding "1rem" :paddingBottom (if (:workspace-id props) 0 "1rem")
-                 :backgroundColor (:background-light style/colors)}}
-        flex/spring
-        [buttons/Button {:type :secondary :text "Use Blank Configuration"
-                         :onClick #(swap! state assoc :selected-config :blank)}]
-        (flex/strut "1rem")
-        [buttons/Button {:text "Use Selected Configuration"
-                         :disabled? (when-not preview-config "Select a configuration first")
-                         :onClick #(swap! state assoc :selected-config preview-config)}])))
+         {:style {:margin "-1rem" :padding "1rem" :paddingBottom (if (:workspace-id props) 0 "1rem")
+                  :backgroundColor (:background-light style/colors)}}
+         flex/spring
+         [buttons/Button {:type :secondary :text "Use Blank Configuration"
+                          :onClick #(swap! state assoc :selected-config :blank)}]
+         (flex/strut "1rem")
+         [buttons/Button {:text "Use Selected Configuration"
+                          :disabled? (when-not preview-config "Select a configuration first")
+                          :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-export-page
    (fn [{:keys [props state locals]}]
      (let [{:keys [method-name workspace-id]} props
@@ -149,16 +150,16 @@
    :-render-export-page-buttons
    (fn [{:keys [props state this]}]
      (flex/box
-      {:style {:alignItems "center"}}
-      (links/create-internal
-       {:onClick #(swap! state dissoc :selected-config)}
-       (flex/box
-        {:style {:alignItems "center"}}
-        (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-        "Choose Another Configuration"))
-      flex/spring
-      [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
-                       :onClick #(this :-export)}]))
+       {:style {:alignItems "center"}}
+       (links/create-internal
+        {:onClick #(swap! state dissoc :selected-config)}
+        (flex/box
+          {:style {:alignItems "center"}}
+          (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+          "Choose Another Configuration"))
+       flex/spring
+       [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
+                        :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs this]}]
      (let [[name & errors] (input/get-and-validate refs "name-field")
@@ -181,7 +182,7 @@
          :payload {:methodNamespace (:namespace method-id)
                    :methodName (:name method-id)
                    :methodVersion (int selected-snapshot-id)}
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       (this :-export-loaded-config
@@ -195,7 +196,7 @@
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config workspace-id)
          :payload config
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       ((:on-export props) workspace-id (ws-common/config->id config))

@@ -35,6 +35,7 @@
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -258,12 +259,12 @@
    (fn [{:keys [state this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-      utils/server-down? :server-watcher
+      ajax/server-down? :server-watcher
       (fn [_ _ _ down-now?]
         (when down-now?
           (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
      (add-watch
-      utils/maintenance-mode? :server-watcher
+      ajax/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
           (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
@@ -277,8 +278,8 @@
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (remove-watch utils/server-down? :server-watcher)
-     (remove-watch utils/maintenance-mode? :server-watcher))})
+     (remove-watch ajax/server-down? :server-watcher)
+     (remove-watch ajax/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []

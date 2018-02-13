@@ -16,6 +16,7 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.method.details :refer [MethodDetails]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -151,12 +152,12 @@
                   (if success?
                     (swap! state assoc :methods (process-methods (get-parsed-response)))
                     (swap! state assoc :error (get-parsed-response false))))})
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "featured-methods"
       (fn [parsed]
         (let [{:keys [with-name ns-only]} (split-by-name parsed)]
           (swap! state assoc :featured-methods with-name :featured-namespaces ns-only))))
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "certified-methods"
       (fn [parsed]
         (let [{:keys [with-name ns-only]} (split-by-name parsed)]

@@ -15,6 +15,7 @@
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -97,7 +98,7 @@
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/post-workspace-method-config workspace-id)
              :payload updated-config
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (if success?
                           (do

@@ -17,6 +17,7 @@
    [broadfcui.page.workspace.notebooks.tab :as notebooks-tab]
    [broadfcui.page.workspace.summary.tab :as summary-tab]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -166,7 +167,7 @@
      (when-not (contains? @whitelisted-users (user/get-user-email))
        (endpoints/call-ajax-leo
         {:endpoint endpoints/is-leo-whitelisted
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success?]}]
                     (swap! whitelisted-users assoc (user/get-user-email) success?))}))
      (endpoints/call-ajax-orch

@@ -22,6 +22,7 @@
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -434,7 +435,7 @@
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
                  #(swap! state update :server-response assoc :workspaces-response %))})
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "featured-workspaces"
       #(swap! state update :server-response assoc :featured-workspaces (set %))))})
 

@@ -12,6 +12,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -200,7 +201,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/update-workspace-acl (:workspace-id props) invite-new?)
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :payload grant-filtered-acl
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)

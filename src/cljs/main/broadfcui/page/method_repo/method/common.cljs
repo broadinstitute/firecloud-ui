@@ -13,6 +13,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -31,7 +32,7 @@
      (endpoints/call-ajax-orch
       {:endpoint endpoints/get-inputs-outputs
        :payload (:method-ref props)
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :inputs-outputs (get-parsed-response))

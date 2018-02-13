@@ -11,6 +11,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -72,7 +73,7 @@
                            :acls (mapv (fn [user] {:user user :role "READER"})
                                        new-users)})
                         owned-methods)
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :granting?)
                     (if success?
@@ -86,7 +87,7 @@
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-permission-report (:workspace-id props))
        :payload {:users new-users}
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (this :-perform-sync-logic (get-parsed-response))

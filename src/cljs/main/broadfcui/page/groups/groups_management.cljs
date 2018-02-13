@@ -15,6 +15,7 @@
    [broadfcui.net :as net]
    [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (react/defc- GroupTable
@@ -35,7 +36,7 @@
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (ajax/call-orch
       "/groups"
       {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
    :-render-groups-table
@@ -74,9 +75,9 @@
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
                     (links/create-internal
-                      {:style {:color (:state-exception style/colors)}
-                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
-                      (icons/render-icon {} :delete))))}]}
+                     {:style {:color (:state-exception style/colors)}
+                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
+                     (icons/render-icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly

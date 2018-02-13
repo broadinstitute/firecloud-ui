@@ -21,6 +21,7 @@
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (def ^:private tcga-access-instructions
@@ -224,7 +225,7 @@
                          :fieldAggregations (if update-aggregates?
                                               (this :-build-aggregate-fields)
                                               {})}
-               :headers utils/content-type=json
+               :headers ajax/content-type=json
                :on-done
                (fn [{:keys [success? get-parsed-response status-text]}]
                  (if success?
@@ -252,7 +253,7 @@
     {:value search-text
      :inputProps {:placeholder "Search" :data-test-id "library-search-input"}
      :get-suggestions (fn [query callback]
-                        (utils/ajax-orch
+                        (ajax/call-orch
                          "/library/suggest/"
                          {:data (utils/->json-string
                                  {:searchString query
@@ -260,7 +261,7 @@
                                   :from 0
                                   :size 10})
                           :method "POST"
-                          :headers utils/content-type=json
+                          :headers ajax/content-type=json
                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                      (callback (if success?
                                                  ; don't bother keywordizing, it's just going to be converted to js

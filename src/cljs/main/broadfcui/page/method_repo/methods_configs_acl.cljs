@@ -13,6 +13,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -119,7 +120,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
             {:endpoint (:save-endpoint props)
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :payload non-empty-acls-w-public
              :on-done (net/handle-ajax-response
                        (fn [{:keys [success? parsed-response]}]

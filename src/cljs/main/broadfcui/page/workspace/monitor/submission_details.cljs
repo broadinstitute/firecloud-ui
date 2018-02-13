@@ -19,6 +19,7 @@
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -141,7 +142,7 @@
      (swap! state assoc :aborting-submission? true :confirming? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? status-text]}]
                   (swap! state dissoc :aborting-submission?)
                   (if success?

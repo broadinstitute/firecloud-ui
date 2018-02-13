@@ -17,6 +17,7 @@
    [broadfcui.nav :as nav]
    [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -69,7 +70,7 @@
                      [:span {:style {:white-space "pre"}}
                       (links/create-external
                        {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
-                       "Read more about Authorization Domains")]]})]
+                        "Read more about Authorization Domains")]]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
@@ -104,7 +105,7 @@
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-workspace project name)
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?
@@ -129,7 +130,7 @@
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?

@@ -7,6 +7,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -42,7 +43,7 @@
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-permission-report (:workspace-id props))
          :payload {:configs [(:config-id props)]}
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (swap! state dissoc :banner)
                     (if success?

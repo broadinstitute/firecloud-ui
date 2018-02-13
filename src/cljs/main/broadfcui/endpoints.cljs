@@ -2,6 +2,7 @@
   (:require
    [broadfcui.common :as common]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -25,12 +26,12 @@
    :endpoint :raw-data :payload))
 
 (defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
-  (utils/ajax-orch
+  (ajax/call-orch
    (:path endpoint)
    (ajax-payload endpoint arg-map)))
 
 (defn call-ajax-leo [{:keys [endpoint] :as arg-map}]
-  (utils/ajax-leo
+  (ajax/call-leo
    (:path endpoint)
    (ajax-payload endpoint arg-map)))
 
@@ -687,7 +688,7 @@
 
 (defn profile-get
   ([on-done]
-   (utils/ajax-orch
+   (ajax/call-orch
     "/profile"
     {:on-done on-done
      :canned-response
@@ -704,29 +705,29 @@
 
 
 (defn profile-set [payload on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/profile"
    {:method :post
     :data (utils/->json-string payload)
     :on-done on-done
-    :headers utils/content-type=json
+    :headers ajax/content-type=json
     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
    :service-prefix "/register"))
 
 
 (defn profile-get-nih-status [on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/nih/status"
    {:on-done on-done}))
 
 
 (defn profile-link-nih-account [token on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/nih/callback"
    {:method :post
     :data (utils/->json-string {:jwt token})
     :on-done on-done
-    :headers utils/content-type=json
+    :headers ajax/content-type=json
     :canned-response {:status 200 :delay-ms (rand-int 2000)}}))
 
 
@@ -827,20 +828,20 @@
    :method :delete})
 
 (defn get-library-groups [on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/library/groups"
    {:method :get
     :on-done on-done}))
 
 (defn get-library-attributes [on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/library-attributedefinitions-v1"
    {:method :get
     :on-done on-done}
    :service-prefix "/schemas"))
 
 (defn get-consent [orsp-id on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    (str "/duos/consent/orsp/" (js/encodeURIComponent orsp-id))
    {:method :get
     :on-done on-done}))
@@ -886,7 +887,7 @@
                 "Unknown" (rand-int 1000)}}})
 
 (defn get-cromwell-version [on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/executionEngine"
    {:method :get
     :on-done on-done}

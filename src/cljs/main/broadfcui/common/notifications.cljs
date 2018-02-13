@@ -14,6 +14,7 @@
    [broadfcui.config :as config]
    [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (defn render-alert [{:keys [cleared? link message title]} dismiss]
@@ -44,7 +45,7 @@
   (cond
     (zero? attempt) (config/status-alerts-refresh)
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
-    :else (utils/get-exponential-backoff-interval attempt)))
+    :else (ajax/get-exponential-backoff-interval attempt)))
 
 (react/defc ServiceAlertContainer
   {:get-initial-state
@@ -79,11 +80,11 @@
      (js/clearInterval (:interval-id @locals)))
    :-load-service-alerts
    (fn [{:keys [this]} & [first-time?]]
-     (utils/ajax {:url (config/google-bucket-url "alerts")
-                  :on-done (partial this :-handle-response first-time?)}))
+     (ajax/call {:url (config/google-bucket-url "alerts")
+                 :on-done (partial this :-handle-response first-time?)}))
    :-handle-response
    (fn [{:keys [state]} first-time? {:keys [status-code raw-response]}]
-     (let [alerts (if (and (utils/check-server-down status-code)
+     (let [alerts (if (and (ajax/check-server-down status-code)
                            (>= (:failed-retries @state) (config/max-retry-attempts)))
                     [{:title "Google Service Alert"
                       :message "There may be problems accessing data in Google Cloud Storage."
@@ -100,7 +101,7 @@
                         updated)]
        (swap! state assoc
               :service-alerts updated
-              :failed-retries (if (utils/check-server-down status-code)
+              :failed-retries (if (ajax/check-server-down status-code)
                                 (inc (:failed-retries @state))
                                 0))
        (when (and (seq new) (not first-time?))
@@ -121,37 +122,37 @@
               {:style {:color "white"
                        :background-color ((if warning? :state-warning :button-primary) style/colors)}}
               (flex/box
-               {:style {:padding "1rem" :flexGrow 1
-                        :justifyContent "center" :alignItems "center"}}
-               [:div {:data-test-id "trial-banner-title"
-                      :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
-                              :borderRight "1px solid white"
-                              :paddingRight "1rem" :marginRight "1rem"
-                              :maxWidth 200 :flexShrink 0}}
-                title]
-               [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
-                message
-                (when-let [{:keys [label url]} link]
-                  (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
-               (when-let [{:keys [label url external?]} button]
-                 [:a {:data-test-id "trial-banner-button"
-                      :data-test-state (if loading? "loading" "ready")
-                      :style {:display "block"
-                              :color "white" :textDecoration "none" :fontSize "1.125rem"
-                              :fontWeight 500
-                              :border "2px solid white" :borderRadius "0.25rem"
-                              :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
-                      :href (if external? url (when-not loading? "javascript:;"))
-                      :onClick (when-not (or external? loading?)
-                                 #(swap! state assoc :displaying-eula? true))
-                      :target (when external? "_blank")}
-                  (if loading?
-                    (spinner {:style {:fontSize "1rem" :margin 0}})
-                    label)
-                  (when external?
-                    (icons/render-icon
-                     {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
-                     :external-link))]))
+                {:style {:padding "1rem" :flexGrow 1
+                         :justifyContent "center" :alignItems "center"}}
+                [:div {:data-test-id "trial-banner-title"
+                       :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
+                               :borderRight "1px solid white"
+                               :paddingRight "1rem" :marginRight "1rem"
+                               :maxWidth 200 :flexShrink 0}}
+                 title]
+                [:span {:style {:maxWidth 600 :lineHeight "1.5rem"}}
+                 message
+                 (when-let [{:keys [label url]} link]
+                   (links/create-external {:href url :style {:color "white" :marginLeft "0.5rem"}} label))]
+                (when-let [{:keys [label url external?]} button]
+                  [:a {:data-test-id "trial-banner-button"
+                       :data-test-state (if loading? "loading" "ready")
+                       :style {:display "block"
+                               :color "white" :textDecoration "none" :fontSize "1.125rem"
+                               :fontWeight 500
+                               :border "2px solid white" :borderRadius "0.25rem"
+                               :padding "0.5rem 1rem" :marginLeft "0.5rem" :flexShrink 0}
+                       :href (if external? url (when-not loading? "javascript:;"))
+                       :onClick (when-not (or external? loading?)
+                                  #(swap! state assoc :displaying-eula? true))
+                       :target (when external? "_blank")}
+                   (if loading?
+                     (spinner {:style {:fontSize "1rem" :margin 0}})
+                     label)
+                   (when external?
+                     (icons/render-icon
+                      {:style {:margin "-0.5em -0.3em -0.5em 0.5em" :fontSize "1rem"}}
+                      :external-link))]))
               [:div {:style {:alignSelf "center" :padding "1rem" :display "flex"
                              :flexDirection "column" :alignItems "flex-end"}}
                [FoundationTooltip
@@ -166,7 +167,7 @@
                (when (= current-trial-state :Terminated)
                  (links/create-internal
                   {:style {:fontSize "small" :color "white" :margin "0.5rem -0.75rem -1.5rem"}
-                   :onClick #(utils/ajax-orch
+                   :onClick #(ajax/call-orch
                               "/profile/trial?operation=finalize"
                               {:method :post
                                :on-done user-info/reload-user-profile})}
@@ -183,14 +184,14 @@
                 (fn [_ _ _ {:keys [trialState]}]
                   (when trialState
                     (if-not (:messages @state)
-                      (utils/get-google-bucket-file "trial" #(swap! state assoc :messages %))
+                      (ajax/get-google-bucket-file "trial" #(swap! state assoc :messages %))
                       (.forceUpdate this))))))
    :-show-eula-modal
    (fn [{:keys [state]} eulas]
      (let [{:keys [page-2? terms-agreed? cloud-terms-agreed?]} @state
            {:keys [broad onix]} eulas
            accept-eula (fn []
-                         (utils/ajax-orch
+                         (ajax/call-orch
                           "/profile/trial/userAgreement"
                           {:method :put
                            :on-done
@@ -199,7 +200,7 @@
                                (utils/multi-swap! state
                                  (assoc :error "An error occurred. Please try again.")
                                  (dissoc :loading?))
-                               (utils/ajax-orch
+                               (ajax/call-orch
                                 "/profile/trial"
                                 {:method :post
                                  :on-done
@@ -247,22 +248,22 @@
                  "I agree to the Google Cloud Terms of Service."]
                 [:div {:style {:paddingLeft "1rem"}} "Google Cloud Terms of Service: "
                  (links/create-external {:href "https://cloud.google.com/terms/"}
-                                        "https://cloud.google.com/terms/")]]])])
+                   "https://cloud.google.com/terms/")]]])])
          :data-test-id "eula-modal"
          :button-bar (flex/box
-                      {:style {:justifyContent "center" :width "100%"}}
-                      (when page-2?
-                        [buttons/Button
-                         {:text "Back"
-                          :style {:marginRight "2rem"}
-                          :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
-                      [buttons/Button
-                       (if-not page-2?
-                         {:text "Review Terms of Service"
-                          :data-test-id "review-terms-of-service"
-                          :onClick #(swap! state assoc :page-2? true)}
-                         {:text "Accept"
-                          :data-test-id "accept-terms-of-service"
-                          :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
-                                       "You must check the boxes to accept the agreement.")
-                          :onClick accept-eula})])}]))})
+                       {:style {:justifyContent "center" :width "100%"}}
+                       (when page-2?
+                         [buttons/Button
+                          {:text "Back"
+                           :style {:marginRight "2rem"}
+                           :onClick #(swap! state dissoc :page-2? :terms-agreed? :cloud-terms-agreed?)}])
+                       [buttons/Button
+                        (if-not page-2?
+                          {:text "Review Terms of Service"
+                           :data-test-id "review-terms-of-service"
+                           :onClick #(swap! state assoc :page-2? true)}
+                          {:text "Accept"
+                           :data-test-id "accept-terms-of-service"
+                           :disabled? (when-not (and terms-agreed? cloud-terms-agreed?)
+                                        "You must check the boxes to accept the agreement.")
+                           :onClick accept-eula})])}]))})
