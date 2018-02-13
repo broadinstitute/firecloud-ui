@@ -48,7 +48,7 @@
           "The following Privacy Policy discloses our information gathering and dissemination
            practices for the Broad Institute FireCloud application accessed via the website "
           (links/create-external {:href "https://portal.firecloud.org/"}
-                                 "https://portal.firecloud.org/")
+            "https://portal.firecloud.org/")
           ". By using the FireCloud, you agree to the collection and use of information in
            accordance with this policy. This Privacy Policy is effective as of 1-19-2017."]
          [:h4 {} "Information Gathering"]
@@ -138,7 +138,7 @@
        "You are reminded that when accessing controlled access information you are bound by the
         dbGaP TCGA "
        (links/create-external {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014"}
-                              "DATA USE CERTIFICATION AGREEMENT (DUCA)")
+         "DATA USE CERTIFICATION AGREEMENT (DUCA)")
        "."]])})
 
 (react/defc- PolicyPage

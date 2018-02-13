@@ -55,7 +55,7 @@
                              :href (nav/get-link :workspace-method-config
                                                  (:workspace-id props)
                                                  (ws-common/config->id config))}
-                            (:name config)))
+                             (:name config)))
             :toolbar-items
             [flex/spring
              [buttons/Button

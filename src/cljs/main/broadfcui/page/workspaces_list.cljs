@@ -278,7 +278,7 @@
                        [:div {:style {:paddingLeft 14}}
                         (if (= access-level "NO ACCESS")
                           (links/create-internal
-                            {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                           {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
                             (style/prettify-access-level access-level))
                           (style/prettify-access-level access-level))])}]
            :behavior {:reorderable-columns? false}
@@ -297,7 +297,7 @@
                     :get-items
                     (constantly
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
-                                             (if filters-expanded? "Collapse filters" "Expand filters"))
+                        (if filters-expanded? "Collapse filters" "Expand filters"))
                       flex/spring
                       [create/Button (select-keys props [:nav-context])]])}
           :sidebar (when filters-expanded?

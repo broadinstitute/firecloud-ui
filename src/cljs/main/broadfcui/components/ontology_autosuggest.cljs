@@ -25,9 +25,9 @@
            flex/spring
            (links/create-internal
             {:onClick #(on-delete (utils/restructure id label))}
-            (icons/render-icon {:className "fa-lg"
-                                :style {:color (:text-light style/colors)}}
-                               :remove))))
+             (icons/render-icon {:className "fa-lg"
+                                 :style {:color (:text-light style/colors)}}
+                                :remove))))
        selection-map))
 
 

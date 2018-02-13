@@ -128,8 +128,8 @@
             (if (:expanded? @state)
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
-                                      (icons/render-icon {:className "fa-fw"} :disclosure-opened)
-                                      "Hide Details")
+                 (icons/render-icon {:className "fa-fw"} :disclosure-opened)
+                 "Hide Details")
                [:div {:style {:overflowX "auto" :paddingLeft icons/fw-icon-width}}
                 [:div {} (str "Code: " status-code)]
                 (when timestamp [:div {} "Occurred: "
@@ -149,8 +149,8 @@
                   [StackTraceViewer {:lines stack-trace}])]]
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? true)}
-                                      (icons/render-icon {:className "fa-fw"} :disclosure-closed)
-                                      "Show Details")])]))))})
+                 (icons/render-icon {:className "fa-fw"} :disclosure-closed)
+                 "Show Details")])]))))})
 
 
 (react/defc Breadcrumbs
@@ -227,7 +227,7 @@
    "You must have a billing project associated with your account to create a new workspace."
    (links/create-external {:href (config/billing-project-guide-url)
                            :style {:display "block"}}
-                          "Learn how to create a billing project.")])
+     "Learn how to create a billing project.")])
 
 
 ;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
@@ -384,6 +384,6 @@
          [:span {}
           (:label props) " "
           (links/create-internal {:onClick #(swap! state update :collapsed? not)}
-                                 (icons/render-icon {} (if (:collapsed? @state) :expand :collapse)))
+            (icons/render-icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})

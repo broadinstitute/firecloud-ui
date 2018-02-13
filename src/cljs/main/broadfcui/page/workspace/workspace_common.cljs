@@ -32,7 +32,7 @@
              :render (fn [{:keys [workspace] :as ws}]
                        (links/create-internal {:data-test-id (str (:namespace workspace) "-" (:name workspace) "-link")
                                                :onClick #(on-workspace-selected ws)}
-                                              (:name workspace)))}
+                         (:name workspace)))}
             {:header "Created By" :initial-width 200
              :column-data (comp :createdBy :workspace)}
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})

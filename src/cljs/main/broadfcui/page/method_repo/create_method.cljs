@@ -124,7 +124,7 @@
                                                            :backgroundColor "white"
                                                            :padding "0 6px"
                                                            :border style/standard-line}}
-                                                  (string/capitalize label))
+                             (string/capitalize label))
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
@@ -154,8 +154,8 @@
                                      :initial-slider-position 650
                                      :toolbar-items [(flex/strut 50)
                                                      (links/create-internal
-                                                      {:onClick #(this :-populate-description-from-wdl)}
-                                                      "Populate from WDL comment")]}]
+                                                       {:onClick #(this :-populate-description-from-wdl)}
+                                                       "Populate from WDL comment")]}]
            (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:data-test-id "synopsis-field"
                                      :ref "synopsis"

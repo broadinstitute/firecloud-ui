@@ -168,7 +168,7 @@
            [:div {}
             (when-not disabled
               (links/create-internal {:onClick clear}
-                                     "Clear Selection"))]])])]))
+                "Clear Selection"))]])])]))
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}

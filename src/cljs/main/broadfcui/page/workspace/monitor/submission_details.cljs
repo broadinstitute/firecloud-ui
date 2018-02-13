@@ -60,10 +60,10 @@
                    :render (fn [id]
                              (when id
                                (links/create-internal
-                                 {:href (nav/get-link :workspace-workflow
-                                                      (:workspace-id props)
-                                                      (:submission-id props)
-                                                      id)}
+                                {:href (nav/get-link :workspace-workflow
+                                                     (:workspace-id props)
+                                                     (:submission-id props)
+                                                     id)}
                                  "View")))}
                   {:header "Data Entity" :initial-width 200
                    :column-data :workflowEntity
@@ -97,7 +97,7 @@
                          (links/create-external
                           {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
                                       workflow-name "/" workflowId "/")}
-                          workflowId))))}]}}])
+                           workflowId))))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
@@ -199,7 +199,7 @@
            (links/create-external {:data-test-id "submission-id"
                                    :href (str moncommon/google-cloud-context
                                               (:bucketName props) "/" (:submissionId submission) "/")}
-                                  (style/create-paragraph (:submissionId submission)))]
+             (style/create-paragraph (:submissionId submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)

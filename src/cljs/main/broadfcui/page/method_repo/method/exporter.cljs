@@ -149,11 +149,10 @@
    :-render-export-page-buttons
    (fn [{:keys [props state this]}]
      (flex/box {:style {:alignItems "center"}}
-       (links/create-internal
-        {:onClick #(swap! state dissoc :selected-config)}
-        (flex/box {:style {:alignItems "center"}}
-          (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
-          "Choose Another Configuration"))
+       (links/create-internal {:onClick #(swap! state dissoc :selected-config)}
+         (flex/box {:style {:alignItems "center"}}
+           (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+           "Choose Another Configuration"))
        flex/spring
        [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
                         :onClick #(this :-export)}]))

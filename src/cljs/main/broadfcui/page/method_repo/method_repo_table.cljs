@@ -109,15 +109,15 @@
                                                   :component MethodDetails
                                                   :props (utils/restructure method-id nav-method workspace-id)})}
                                      {:href (nav/get-link :method-loader method-id)}))
-                                  [:span
-                                   {:className (when-not workspace-id "underline-on-hover")
-                                    :style {:fontSize "80%" :color "black"}
-                                    :onClick (when-not workspace-id
-                                               (fn [e]
-                                                 (.preventDefault e)
-                                                 (swap! state assoc :editing-namespace namespace)))}
-                                   namespace]
-                                  [:div {:style {:fontWeight 600}} name]))}
+                                   [:span
+                                    {:className (when-not workspace-id "underline-on-hover")
+                                     :style {:fontSize "80%" :color "black"}
+                                     :onClick (when-not workspace-id
+                                                (fn [e]
+                                                  (.preventDefault e)
+                                                  (swap! state assoc :editing-namespace namespace)))}
+                                    namespace]
+                                   [:div {:style {:fontWeight 600}} name]))}
                               {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}

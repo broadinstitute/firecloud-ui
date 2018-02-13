@@ -169,7 +169,7 @@
                               "/profile/trial?operation=finalize"
                               {:method :post
                                :on-done user-info/reload-user-profile})}
-                  "or hide forever?"))]
+                   "or hide forever?"))]
               (modals/show-modals
                state
                {:displaying-eula?

@@ -49,7 +49,7 @@
                                            :last-entity conj {:type (:entity-type props)
                                                               :name (:entity-name props)})
                                     (this :-update-and-load item-type item-name))}
-                        item-name))]
+                         item-name))]
        [:div {:style {:position "relative" :width "30%" :padding "0.5rem" :marginLeft ".38em"
                       :border (str "1px solid " (:line-default style/colors))}}
         [:a {:onClick #(update-parent-state :selected-entity nil)

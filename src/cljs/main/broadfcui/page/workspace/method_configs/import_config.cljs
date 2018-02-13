@@ -126,7 +126,7 @@
                     :onClick #(push-page {:breadcrumb-text (id->str config)
                                           :component [ConfirmWorkspaceConfig
                                                       (assoc props :config config)]})}
-                   (:name config)))})
+                    (:name config)))})
               :else (spinner "Loading configurations...")))))
    :component-did-mount
    (fn [{:keys [props state]}]

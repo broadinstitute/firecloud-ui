@@ -56,7 +56,7 @@
                                   (links/create-internal
                                    {:data-test-id (str entity-name "-link")
                                     :onClick #(set-entity entity)}
-                                   entity-name)))
+                                    entity-name)))
         :style {:body-row (fn [{:keys [index row]}]
                             {:backgroundColor
                              (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
@@ -99,7 +99,7 @@
    [:div {:style {:textAlign "right" :fontSize "80%"}}
     (links/create-external {:href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
                                        (:cromwell-version @state))}
-                           (str "Cromwell Version: " (:cromwell-version @state)))]
+      (str "Cromwell Version: " (:cromwell-version @state)))]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 

@@ -62,7 +62,7 @@
        (if (empty? (:data props))
          "None"
          (links/create-internal {:onClick #(swap! state update :expanded not)}
-                                (if (:expanded @state) "Hide" "Show"))))
+           (if (:expanded @state) "Hide" "Show"))))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (let [columns [{:header "Label"
@@ -91,7 +91,7 @@
          (if (empty? data)
            "Not Available"
            (links/create-internal {:onClick #(swap! state update :expanded? not)}
-                                  (if expanded? "Hide" "Show"))))
+             (if expanded? "Hide" "Show"))))
         (when expanded?
           [:div {}
            (if error?
@@ -132,7 +132,7 @@
       (create-field
        "Failures"
        (links/create-internal {:onClick #(swap! state update :expanded not)}
-                              (if (:expanded @state) "Hide" "Show")))
+         (if (:expanded @state) "Hide" "Show")))
       (when (:expanded @state)
         [comps/Tree {:start-collapsed? false
                      :highlight-ends false
@@ -191,9 +191,9 @@
              call-name (call-name (:label props))]
          (links/create-external {:href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
                                             "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}
-                                (:label props)))]
+           (:label props)))]
       (links/create-internal {:onClick #(swap! state update :expanded not)}
-                             (if (:expanded @state) "Hide" "Show"))
+        (if (:expanded @state) "Hide" "Show"))
       (when (:expanded @state)
         (map-indexed
          (fn [index data]
@@ -238,7 +238,7 @@
                     (links/create-external {:href (str moncommon/google-cloud-context
                                                        bucketName "/" submission-id "/"
                                                        workflow-name "/" (workflow "id") "/")}
-                                           (workflow "id"))))
+                      (workflow "id"))))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status)))
     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]

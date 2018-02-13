@@ -77,7 +77,7 @@
                     (links/create-internal
                      {:style {:color (:state-exception style/colors)}
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
-                     (icons/render-icon {} :delete))))}]}
+                      (icons/render-icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly

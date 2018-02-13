@@ -101,7 +101,7 @@
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
                          (links/create-internal {:data-test-id (str projectName "-link")
                                                  :href (nav/get-link :billing-project projectName)}
-                                                projectName)
+                           projectName)
                          :else projectName)
                        (when message
                          [:div {:style {:float "right" :position "relative"
