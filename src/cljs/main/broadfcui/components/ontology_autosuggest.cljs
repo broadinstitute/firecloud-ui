@@ -19,16 +19,15 @@
 
 (defn render-multiple-ontology-selections [{:keys [on-delete selection-map]}]
   (map (fn [[id label]]
-         (flex/box
-          {:style {:margin "0.3rem 0" :alignItems "center"}}
-          [:span {:style {:fontSize "66%"}} (style/render-tag (render-doid id))]
-          [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
-          flex/spring
-          (links/create-internal
-           {:onClick #(on-delete (utils/restructure id label))}
-           (icons/render-icon {:className "fa-lg"
-                               :style {:color (:text-light style/colors)}}
-                              :remove))))
+         (flex/box {:style {:margin "0.3rem 0" :alignItems "center"}}
+           [:span {:style {:fontSize "66%"}} (style/render-tag (render-doid id))]
+           [:span {:style {:margin "0 0.5rem" :color (:text-light style/colors)}} label]
+           flex/spring
+           (links/create-internal
+            {:onClick #(on-delete (utils/restructure id label))}
+            (icons/render-icon {:className "fa-lg"
+                                :style {:color (:text-light style/colors)}}
+                               :remove))))
        selection-map))
 
 

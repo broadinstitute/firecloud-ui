@@ -39,7 +39,7 @@
         (when link
           (links/create-external {:href link
                                   :style {:color text-color :margin-left "1rem"}}
-                                 "Read more..."))]]])))
+            "Read more..."))]]])))
 
 (defn- status-alert-interval [attempt]
   (cond
@@ -118,12 +118,10 @@
          (when (and (not dismissed?) (current-trial-state messages)) ; Disabled or mis-keyed users do not see a banner
            (let [{:keys [title message warning? link button eulas]} (messages current-trial-state)]
              (apply ;; needed until dmohs/react deals with nested seq's
-              flex/box
-              {:style {:color "white"
-                       :background-color ((if warning? :state-warning :button-primary) style/colors)}}
-              (flex/box
-                {:style {:padding "1rem" :flexGrow 1
-                         :justifyContent "center" :alignItems "center"}}
+              flex/box {:style {:color "white"
+                                :background-color ((if warning? :state-warning :button-primary) style/colors)}}
+              (flex/box {:style {:padding "1rem" :flexGrow 1
+                                 :justifyContent "center" :alignItems "center"}}
                 [:div {:data-test-id "trial-banner-title"
                        :style {:fontSize "1.5rem" :fontWeight 500 :textAlign "right"
                                :borderRight "1px solid white"
@@ -250,8 +248,7 @@
                  (links/create-external {:href "https://cloud.google.com/terms/"}
                    "https://cloud.google.com/terms/")]]])])
          :data-test-id "eula-modal"
-         :button-bar (flex/box
-                       {:style {:justifyContent "center" :width "100%"}}
+         :button-bar (flex/box {:style {:justifyContent "center" :width "100%"}}
                        (when page-2?
                          [buttons/Button
                           {:text "Back"

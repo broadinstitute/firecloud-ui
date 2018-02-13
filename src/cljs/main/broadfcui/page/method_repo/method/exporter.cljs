@@ -111,9 +111,8 @@
    :-render-config-selector-buttons
    (fn [{:keys [props state]}]
      (let [{:keys [preview-config]} @state]
-       (flex/box
-         {:style {:margin "-1rem" :padding "1rem" :paddingBottom (if (:workspace-id props) 0 "1rem")
-                  :backgroundColor (:background-light style/colors)}}
+       (flex/box {:style {:margin "-1rem" :padding "1rem" :paddingBottom (if (:workspace-id props) 0 "1rem")
+                          :backgroundColor (:background-light style/colors)}}
          flex/spring
          [buttons/Button {:type :secondary :text "Use Blank Configuration"
                           :onClick #(swap! state assoc :selected-config :blank)}]
@@ -149,12 +148,10 @@
         [comps/ErrorViewer {:error (:server-error @state)}]]))
    :-render-export-page-buttons
    (fn [{:keys [props state this]}]
-     (flex/box
-       {:style {:alignItems "center"}}
+     (flex/box {:style {:alignItems "center"}}
        (links/create-internal
         {:onClick #(swap! state dissoc :selected-config)}
-        (flex/box
-          {:style {:alignItems "center"}}
+        (flex/box {:style {:alignItems "center"}}
           (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
           "Choose Another Configuration"))
        flex/spring

@@ -126,13 +126,13 @@
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
             (flex/box {}
-                      (this :render-field :firstName "First Name")
-                      (this :render-field :lastName "Last Name"))
+              (this :render-field :firstName "First Name")
+              (this :render-field :lastName "Last Name"))
             (this :render-field :title "Title")
             (this :render-field :contactEmail "Contact Email for Notifications (if different)" :optional :email)
             (flex/box {}
-                      (this :render-field :institute "Institute")
-                      (this :render-field :institutionalProgram "Institutional Program"))
+              (this :render-field :institute "Institute")
+              (this :render-field :institutionalProgram "Institutional Program"))
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
                [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
@@ -147,13 +147,13 @@
             [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
             (style/create-form-label "Non-Profit Status")
             (flex/box {:style {:fontSize "88%"}}
-                      (this :render-radio-field :nonProfitStatus "Profit")
-                      (this :render-radio-field :nonProfitStatus "Non-Profit"))
+              (this :render-radio-field :nonProfitStatus "Profit")
+              (this :render-radio-field :nonProfitStatus "Non-Profit"))
             (this :render-field :pi "Principal Investigator/Program Lead")
             (flex/box {}
-                      (this :render-field :programLocationCity "City")
-                      (this :render-field :programLocationState "State/Province")
-                      (this :render-field :programLocationCountry "Country"))
+              (this :render-field :programLocationCity "City")
+              (this :render-field :programLocationState "State/Province")
+              (this :render-field :programLocationCountry "Country"))
             (common/clear-both)
             (when-not (:new-registration? props)
               [NihLink (select-keys props [:nih-token])])]

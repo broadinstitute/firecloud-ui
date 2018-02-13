@@ -164,8 +164,7 @@
               validation-error])
            [comps/ErrorViewer {:error submit-error}]])
          :button-bar
-         (flex/box
-           {:style {:marginTop 40}}
+         (flex/box {:style {:marginTop 40}}
            (flex/strut 80)
            flex/spring
            [buttons/Button {:text "Previous"

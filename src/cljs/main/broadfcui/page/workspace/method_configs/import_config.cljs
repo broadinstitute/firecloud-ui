@@ -175,17 +175,16 @@
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
-  (flex/box
-   {:style {:justifyContent "center"}}
-   [buttons/Button {:data-test-id "import-from-repo-button"
-                    :text "Import from Method Repository"
-                    :onClick #(push-page {:breadcrumb-text "Method Repository"
-                                          :component (wrap (method-chooser props))})
-                    :style {:marginRight "1rem"}}]
-   [buttons/Button {:data-test-id "copy-from-workspace-button"
-                    :text "Copy from another Workspace"
-                    :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                          :component [WorkspaceChooser props]})}]))
+  (flex/box {:style {:justifyContent "center"}}
+    [buttons/Button {:data-test-id "import-from-repo-button"
+                     :text "Import from Method Repository"
+                     :onClick #(push-page {:breadcrumb-text "Method Repository"
+                                           :component (wrap (method-chooser props))})
+                     :style {:marginRight "1rem"}}]
+    [buttons/Button {:data-test-id "copy-from-workspace-button"
+                     :text "Copy from another Workspace"
+                     :onClick #(push-page {:breadcrumb-text "Choose Workspace"
+                                           :component [WorkspaceChooser props]})}]))
 
 
 (defn- filter-workspaces [workspaces]
