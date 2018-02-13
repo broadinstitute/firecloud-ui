@@ -1,13 +1,21 @@
-<code_scheme name="correct">
-  <option name="RIGHT_MARGIN" value="100" />
-  <ClojureCodeStyleSettings>{
+<code_scheme name="correct2" version="173">
+<option name="RIGHT_MARGIN" value="100" />
+<ClojureCodeStyleSettings>{
+  :broadfcui.common.flex-utils/box :only-indent
+  :broadfcui.common.links/create-external 1
+  :broadfcui.common.links/create-internal 1
+  :broadfcui.utils/multi-swap! 1
   :cursive.formatting/align-maps false
   :cursive.formatting/comment-align-column 0
   :cursive.formatting/one-space-lists true
-}</ClojureCodeStyleSettings>
-  <codeStyleSettings language="Clojure">
-    <indentOptions>
-      <option name="SMART_TABS" value="true" />
-    </indentOptions>
-  </codeStyleSettings>
+  }</ClojureCodeStyleSettings>
+<ScalaCodeStyleSettings>
+  <option name="TYPE_ANNOTATION_IMPLICIT_MODIFIER" value="false" />
+  <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />
+</ScalaCodeStyleSettings>
+<codeStyleSettings language="Clojure">
+  <indentOptions>
+    <option name="SMART_TABS" value="true" />
+  </indentOptions>
+</codeStyleSettings>
 </code_scheme>

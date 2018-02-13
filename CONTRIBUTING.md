@@ -20,7 +20,7 @@ The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after 
 
     <img width="831" src="https://user-images.githubusercontent.com/22642695/32802415-f3cd6452-c94d-11e7-85f4-4698da453d78.png">
 
-2. You need to tell Cursive how to resolve some custom macros and correctly indent some functions:
+2. You need to tell Cursive how to resolve some custom macros:
 
     1. Find an instance of `react/defc` and place your cursor on it or highlight it.
     2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
@@ -31,8 +31,6 @@ The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after 
 
     5. Repeat this process for `defc-`.
     6. Find an instance of `utils/multi-swap!` and resolve it as `->`.
-    7. Set the indent level of `multi-swap!` to `1`.
-    8. Find an instance of `flex/box` and set indent to `indent`.
 
 ### Source code layout & organization
 
