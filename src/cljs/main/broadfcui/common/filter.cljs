@@ -17,7 +17,7 @@
 
 
 (defn section [{:keys [title on-clear content]}]
-  [:div {:data-test-id (str title "-facet_section")}
+  [:div {:data-test-id (str title "-facet-section")}
    (when (or title on-clear)
      (flex/box
       {:style {:marginBottom "0.5rem" :alignItems "baseline"}}

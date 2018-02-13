@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.library
 
 
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.component.{QueryString, _}
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
@@ -28,6 +28,13 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val tags = Tags("tags")
   private val consentCodes = Tags("consent-codes")
+
+  //Hard Coded titles for facet sections in our UI code
+  val cohortPhenotypeIndicationSection = "Cohort Phenotype/Indication"
+  val experimentalStrategySection = "Experimental Strategy"
+  val projectNameSection = "Project Name"
+  val primaryDiseaseSiteSection = "Primary Disease Site"
+  val dataUseLimitationSection = "Data Use Limitation"
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()

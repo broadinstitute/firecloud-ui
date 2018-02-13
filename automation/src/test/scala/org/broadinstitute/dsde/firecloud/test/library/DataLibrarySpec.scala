@@ -53,17 +53,11 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     }
   }
 
-  "For a dataset with facets" in withWebDriver { implicit driver =>
+  "Dataset to test facets values" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "Facets", attributes = Some(WorkspaceData.tags)) { wsName =>
       withCleanUp {
-        //Hard Coded titles in our UI code
-        val cohortPhenotypeIndicationSection = "Cohort Phenotype/Indication"
-        val experimentalStrategySection = "Experimental Strategy"
-        val projectNameSection = "Project Name"
-        val primaryDiseaseSiteSection = "Primary Disease Site"
-        val dataUseLimitationSection = "Data Use Limitation"
 
         //replacing values in the basic library dataset
         val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName,
@@ -82,16 +76,16 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           page.hasDataset(wsName) shouldBe true
 
           //Verifying results
-          val expected = Map(cohortPhenotypeIndicationSection -> s"$wsName+1",
-            experimentalStrategySection -> s"$wsName+2",
-            projectNameSection -> s"$wsName+3",
-            primaryDiseaseSiteSection -> s"$wsName+4",
-            dataUseLimitationSection -> s"$wsName+5")
+          val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",
+            page.experimentalStrategySection -> s"$wsName+2",
+            page.projectNameSection -> s"$wsName+3",
+            page.primaryDiseaseSiteSection -> s"$wsName+4",
+            page.dataUseLimitationSection -> s"$wsName+5")
 
           expected.foreach { case (title, item) =>
-            val childElement = cssSelector(s"[data-test-id='$title-facet_section'] [data-test-id='$item-item']").findElement
-            println(childElement.getOrElse(throw new Exception(s"child element for $title $item not found")).underlying.getText)
-            childElement.getOrElse(throw new Exception("child element not found")).underlying.getText shouldEqual item
+            val childElement = cssSelector(s"[data-test-id='$title-facet-section'] [data-test-id='$item-item']").findElement
+            childElement should not be None
+            childElement.get.underlying.getText shouldBe item
           }
         }
       }
