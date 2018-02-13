@@ -9,6 +9,8 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("
   private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
   private val workspaceNameInput = TextField("workspace-name-input" inside this)
 
+  override def awaitReady(): Unit = billingProjectSelect.awaitVisible()
+
   /**
     * Clones a new workspace.
     *
@@ -21,7 +23,9 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("
     authDomain foreach { authDomainSelect.select }
 
     submit()
-    await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
+    // FIXME: Clone occasionally takes a long time, fix the root cause and revert this
+    await.ready(new WorkspaceSummaryPage(billingProjectName, workspaceName), 60)
+    //await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
   def readAuthDomainGroups(): List[(String, Boolean)] = {

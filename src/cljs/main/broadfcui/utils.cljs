@@ -1,6 +1,6 @@
 (ns broadfcui.utils
   (:require-macros
-   [broadfcui.utils :refer [log jslog cljslog pause restructure multi-swap!]])
+   [broadfcui.utils :refer [log jslog cljslog pause restructure multi-swap! generate-build-timestamp]])
   (:require
    [clojure.string :as string]
    cljs.pprint
@@ -384,3 +384,5 @@
     (assoc defined-methods
       :component-will-mount will-mount
       :component-did-mount did-mount)))
+
+(def build-timestamp (generate-build-timestamp))

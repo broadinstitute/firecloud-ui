@@ -16,7 +16,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "For a dataset with consent codes" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withWorkspace(namespace, "DataLibrarySpec_consentcodes_") { wsName =>
+    withWorkspace(namespace, "DataLibrarySpec_consentcodes") { wsName =>
       withCleanUp {
         val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName) ++ LibraryData.consentCodes
         api.library.setLibraryAttributes(namespace, wsName, data)
@@ -36,7 +36,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "For a dataset with tags" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withWorkspace(namespace, "DataLibrarySpec_tags_", attributes = Some(WorkspaceData.tags)) { wsName =>
+    withWorkspace(namespace, "DataLibrarySpec_tags", attributes = Some(WorkspaceData.tags)) { wsName =>
       withCleanUp {
         val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
         api.library.setLibraryAttributes(namespace, wsName, data)
@@ -52,6 +52,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
       }
     }
   }
+
 
   "Dataset to test facets values" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
@@ -86,10 +87,46 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             val childElement = cssSelector(s"[data-test-id='$title-facet-section'] [data-test-id='$item-item']").findElement
             childElement should not be None
             childElement.get.underlying.getText shouldBe item
+
+  /**
+    * Test creates two workspaces. Only one workspace has tags
+    */
+  "Input multiple tags in filter field" in withWebDriver { implicit driver =>
+    val curatorUser = UserPool.chooseCurator
+    implicit val authToken: AuthToken = curatorUser.makeAuthToken()
+
+    withWorkspace(namespace, "DataLibrarySpec") { wsName =>
+      withWorkspace(namespace, "DataLibrarySpec_notags") { wsNameNoTag =>
+        withCleanUp {
+
+          val dataset = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
+          val attrTag = Map("tag:tags" -> Seq(s"aaaTag$wsName", s"cccTag$wsName"))
+          api.library.setLibraryAttributes(namespace, wsName, dataset)
+          api.library.setLibraryAttributes(namespace, wsNameNoTag, dataset)
+          api.workspaces.setAttributes(namespace, wsName, attrTag)
+          register cleanUp {
+            api.library.unpublishWorkspace(namespace, wsName)(authToken)
+            api.library.unpublishWorkspace(namespace, wsNameNoTag)(authToken)
+          }
+          api.library.publishWorkspace(namespace, wsNameNoTag)
+          api.library.publishWorkspace(namespace, wsName)
+
+          withSignIn(curatorUser) { _ =>
+            val page = new DataLibraryPage().open
+
+            // entering multiple tags in Tags input-field
+            val expectedTags = attrTag.get("tag:tags").get
+            page.doTagSearch(expectedTags)
+            val rows: List[Map[String, String]] = page.getRows
+            val codes: Seq[String] = page.getTags
+
+            page.hasDataset(wsName) shouldBe true
+            page.hasDataset(wsNameNoTag) shouldBe false
+            codes should contain allElementsOf expectedTags
+
           }
         }
       }
     }
   }
-
 }

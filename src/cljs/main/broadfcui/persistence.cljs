@@ -4,7 +4,7 @@
    [broadfcui.utils :as utils]
    ))
 
-(defn- generate-persistence-key [key]
+(defn generate-persistence-key [key]
   (let [id (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getId))]
     (keyword (str "state:" id ":" key))))
 
