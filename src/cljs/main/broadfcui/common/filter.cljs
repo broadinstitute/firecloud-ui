@@ -16,10 +16,7 @@
         (interpose [:hr {:style {:marginTop "0.9rem"}}]))])
 
 (defn section [{:keys [title on-clear content]}]
-  [:div {:data-test-id (str title "-facet-section")}])
-
-(defn section [{:keys [title on-clear content data-test-id]}]
-  [:div {}
+  [:div {:data-test-id (str title "-facet-section")}
    (when (or title on-clear)
      (flex/box
       {:style {:marginBottom "0.5rem" :alignItems "baseline"}}
