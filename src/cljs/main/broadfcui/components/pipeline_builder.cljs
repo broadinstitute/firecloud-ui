@@ -33,24 +33,31 @@
          [:div {:data-test-id (:data-test-id props)
                 :ref #(swap! locals assoc :container %)
                 :style (when loaded? {:border style/standard-line :minHeight 300})}]
-         (let [make-zoom-button (fn [on-click icon]
-                                  [:button {:className "button-reset"
-                                            :style {:backgroundColor (:tag-background style/colors)
-                                                    :padding "0.25rem" :margin "0.25rem 0"
-                                                    :width "2.5rem" :height "2.5rem"
-                                                    :borderRadius "50%"
-                                                    :textAlign "center"
-                                                    :cursor "pointer"}
-                                            :onClick on-click}
-                                   (icons/render-icon {:className "fa-lg"
-                                                       :style {:color (:text-light style/colors)}}
-                                                      icon)])]
+         (let [make-pipeline-button
+               (fn [on-click icon title]
+                 (style/add-hover-style
+                  [:button {:title title
+                            :className "button-reset"
+                            :hover-style {:filter "brightness(0.9)"}
+                            :style {:backgroundColor (:tag-background style/colors)
+                                    :color (:text-light style/colors)
+                                    ;; shadow from material design raised buttons
+                                    :boxShadow "0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.2)"
+                                    :padding "0.25rem" :margin "0.25rem 0"
+                                    :width "2.5rem" :height "2.5rem"
+                                    :borderRadius "50%"
+                                    :textAlign "center"
+                                    :cursor "pointer"}
+                            :onClick on-click}
+                   (icons/render-icon {:className "fa-lg"} icon)]))]
            [:div {:style {:position "absolute"
                           :top "1rem" :left "1rem"
                           :display "flex" :flexDirection "column"}}
-            (make-zoom-button #(.zoom.zoomIn diagram) :zoom-in)
-            (make-zoom-button #(.zoom.zoomOut diagram) :zoom-out)
-            (make-zoom-button #(.zoom.fitToPage diagram) :zoom-fit)])]]))
+            (make-pipeline-button #(.zoom.zoomIn diagram) :zoom-in "Zoom In")
+            (make-pipeline-button #(.zoom.zoomOut diagram) :zoom-out "Zoom Out")
+            (make-pipeline-button #(do (.zoom.fitToPage diagram) (.zoom.zoomOut diagram)) :zoom-fit "Zoom to Fit")
+            [:div {:style {:height "2rem"}}]
+            (make-pipeline-button #(.togglePorts diagram true) :connection "Show/Hide All Connections")])]]))
    :-render-pipeline
    (fn [{:keys [locals props]} wdl]
      (let [{:keys [read-only?]} props
