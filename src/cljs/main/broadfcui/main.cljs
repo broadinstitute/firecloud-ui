@@ -215,15 +215,16 @@
           (when-not (contains? user-status :signed-in)
             (style/render-text-logo))
           [:div {}
-           (when auth2
-             [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
-                              :on-change (fn [signed-in? token-saved?]
-                                           (swap! state update :user-status
-                                                  #(-> %
-                                                       ((if signed-in? conj disj)
-                                                        :signed-in)
-                                                       ((if token-saved? conj disj)
-                                                        :refresh-token-saved))))}])
+           [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
+                            :on-change (fn [signed-in? token-saved?]
+                                         (swap! state update :user-status
+                                                #(-> %
+                                                     ((if signed-in? conj disj)
+                                                      :signed-in)
+                                                     ((if token-saved? conj disj)
+                                                      :refresh-token-saved))))}]
+           (when (nil? auth2)
+             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
            (cond
              (not config-loaded?)
@@ -239,8 +240,6 @@
              [:h2 {} "Page not found."]
              public?
              [component (make-props)]
-             (nil? auth2)
-             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
              (contains? user-status :signed-in)
              (cond
                (not (contains? user-status :go))

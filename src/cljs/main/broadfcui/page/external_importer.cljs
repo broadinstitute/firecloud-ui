@@ -27,15 +27,17 @@
      [:div {:style {:display "inline-block" :verticalAlign "top" :marginLeft "0.5rem"}}
       [:h2 {:style {:margin 0}} "Google Billing Project"]
       "To pay any storage or compute costs."]]]
-   [:div {:style {:marginTop "2rem" :borderTop style/standard-line :display "flex"}}
-    [:div {:style {:borderRight style/standard-line :paddingRight "1rem" :flexBasis "50%"}}
+   [:div {:style {:marginTop "2rem" :borderTop style/dark-line :display "flex"}}
+    [:div {:style {:borderRight style/dark-line :paddingRight "1rem" :flexBasis "50%"}}
      [:h4 {} "Need to create a FireCloud Account?"]
      [:p {}
       "New user? FireCloud requires a Google account. Please use the \"Sign In\" button below to
       sign-in with your Google Account. Once you have successfully signed-in with Google, you will
       be taken to the FireCloud registration page."]
+     [:div {:className "g-signin2" :data-theme "dark" :data-longtitle true :onClick sign-in-handler}]]
     [:div {:style {:paddingLeft "1rem"}}
-     [:h4 {} "Already have a FireCloud account?"]]]])
+     [:h4 {} "Already have a FireCloud account?"]
+     [:div {:className "g-signin2" :data-theme "light" :onClick sign-in-handler}]]]])
 
 (react/defc Importer
   {:render
