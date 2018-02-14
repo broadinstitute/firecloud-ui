@@ -278,7 +278,7 @@
                        [:div {:style {:paddingLeft 14}}
                         (if (= access-level "NO ACCESS")
                           (links/create-internal
-                           {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                            {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
                             (style/prettify-access-level access-level))
                           (style/prettify-access-level access-level))])}]
            :behavior {:reorderable-columns? false}

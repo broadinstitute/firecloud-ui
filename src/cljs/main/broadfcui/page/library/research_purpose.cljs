@@ -17,8 +17,8 @@
    (fn [{:keys [props state this]}]
      (filter/section
       {:title (links/create-internal
-               {:data-test-id "show-research-purpose-modal"
-                :onClick #(this :-show-modal)}
+                {:data-test-id "show-research-purpose-modal"
+                 :onClick #(this :-show-modal)}
                 "Filter by Research Purpose")
        :on-clear #(this :-search true)
        :content (let [{:keys [research-purpose-values]} props

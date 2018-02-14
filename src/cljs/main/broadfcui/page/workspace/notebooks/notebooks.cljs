@@ -142,11 +142,11 @@
                   (map-indexed (fn [i label]
                                  [:div {:display "inline-block" :style {:marginBottom 10}}
                                   (links/create-internal
-                                   {:style {:color (:text-light style/colors)
-                                            :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
-                                    :href "javascript:;"
-                                    :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                      (update :labels utils/delete i))))}
+                                    {:style {:color (:text-light style/colors)
+                                             :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
+                                     :href "javascript:;"
+                                     :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                       (update :labels utils/delete i))))}
                                     (icons/render-icon {} :remove))
                                   [input/TextField {:style {:ref (str "key" i)
                                                             :marginBottom 0 :width "47.5%" :marginRight "4%"}
@@ -256,11 +256,11 @@
                    (fn [cluster]
                      (if (or (= (:status cluster) "Running") (= (:status cluster) "Error"))
                        (links/create-internal
-                        {:data-test-id "x-button"
-                         :id (:id props)
-                         :style {:color (:text-light style/colors)
-                                 :minHeight 30 :minWidth 30}
-                         :onClick #(swap! state assoc :show-delete-dialog? true :cluster-to-delete (:clusterName cluster))}
+                         {:data-test-id "x-button"
+                          :id (:id props)
+                          :style {:color (:text-light style/colors)
+                                  :minHeight 30 :minWidth 30}
+                          :onClick #(swap! state assoc :show-delete-dialog? true :cluster-to-delete (:clusterName cluster))}
                          (icons/render-icon {} :delete))))}
 
                   {:header "Name" :initial-width 150

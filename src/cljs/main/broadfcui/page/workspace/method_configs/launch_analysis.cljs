@@ -54,8 +54,8 @@
         :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
                                 (let [entity-name (or name entityName)]
                                   (links/create-internal
-                                   {:data-test-id (str entity-name "-link")
-                                    :onClick #(set-entity entity)}
+                                    {:data-test-id (str entity-name "-link")
+                                     :onClick #(set-entity entity)}
                                     entity-name)))
         :style {:body-row (fn [{:keys [index row]}]
                             {:backgroundColor

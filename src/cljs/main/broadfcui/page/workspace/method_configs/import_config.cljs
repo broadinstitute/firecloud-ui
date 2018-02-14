@@ -122,10 +122,10 @@
                 :render-name
                 (fn [config]
                   (links/create-internal
-                   {:data-test-id (str (:name config) "-link")
-                    :onClick #(push-page {:breadcrumb-text (id->str config)
-                                          :component [ConfirmWorkspaceConfig
-                                                      (assoc props :config config)]})}
+                    {:data-test-id (str (:name config) "-link")
+                     :onClick #(push-page {:breadcrumb-text (id->str config)
+                                           :component [ConfirmWorkspaceConfig
+                                                       (assoc props :config config)]})}
                     (:name config)))})
               :else (spinner "Loading configurations...")))))
    :component-did-mount

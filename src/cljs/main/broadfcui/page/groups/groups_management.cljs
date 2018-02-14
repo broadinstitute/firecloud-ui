@@ -75,8 +75,8 @@
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
                     (links/create-internal
-                     {:style {:color (:state-exception style/colors)}
-                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
+                      {:style {:color (:state-exception style/colors)}
+                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
                       (icons/render-icon {} :delete))))}]}
        :toolbar
        {:get-items

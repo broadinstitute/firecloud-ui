@@ -51,10 +51,10 @@
             :configs (map #(add-redacted-attribute % methods) configs)
             :render-name (fn [config]
                            (links/create-internal
-                            {:data-test-id (str "method-config-" (:name config) "-link")
-                             :href (nav/get-link :workspace-method-config
-                                                 (:workspace-id props)
-                                                 (ws-common/config->id config))}
+                             {:data-test-id (str "method-config-" (:name config) "-link")
+                              :href (nav/get-link :workspace-method-config
+                                                  (:workspace-id props)
+                                                  (ws-common/config->id config))}
                              (:name config)))
             :toolbar-items
             [flex/spring

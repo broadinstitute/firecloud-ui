@@ -105,8 +105,8 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (links/create-internal
-                                 (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
-                                        (this :-get-link-props data))
+                                  (merge {:data-test-id (str "dataset-" (:library:datasetName data))}
+                                         (this :-get-link-props data))
                                   (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}

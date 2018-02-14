@@ -69,7 +69,7 @@
                        Once set, it cannot be changed."]
                      [:span {:style {:white-space "pre"}}
                       (links/create-external
-                       {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                        {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
                         "Read more about Authorization Domains")]]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}

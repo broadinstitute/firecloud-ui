@@ -140,7 +140,7 @@
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
        (links/create-internal
-        {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
+         {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
          entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
