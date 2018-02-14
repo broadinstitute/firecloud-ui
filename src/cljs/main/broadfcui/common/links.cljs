@@ -21,18 +21,17 @@
     label
     icons/download-icon]))
 
-(defn create-download-from-object [label object filename]
-  [(react/create-class
-    {:render
-     (fn [{:keys [props locals]}]
-       (let [{:keys [label object filename]} props
-             payload-blob (js/Blob. (js/Array. object) {:type "text/plain"})
-             payload-object-url (js/URL.createObjectURL payload-blob)]
-         (swap! locals assoc :objectUrl payload-object-url)
-         (create-download label payload-object-url filename)))
-     :component-will-unmount
-     (fn [{:keys [locals]}]
-       (js/URL.revokeObjectURL (:objectUrl @locals)))}) {:label label :object object :filename filename}])
+(react/defc DownloadFromObject
+  {:render
+   (fn [{:keys [props locals]}]
+     (let [{:keys [label object filename]} props
+           payload-blob (js/Blob. (js/Array. object) {:type "text/plain"})
+           payload-object-url (js/URL.createObjectURL payload-blob)]
+       (swap! locals assoc :objectUrl payload-object-url)
+       (create-download label payload-object-url filename)))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js/URL.revokeObjectURL (:objectUrl @locals)))})
 
 (defn create-external [attributes & contents]
   [:a (merge {:target "_blank"} attributes)
