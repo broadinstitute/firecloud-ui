@@ -1,4 +1,4 @@
-<code_scheme name="correct2" version="173">
+<code_scheme name="FireCloud UI Style" version="173">
   <option name="RIGHT_MARGIN" value="100" />
   <ClojureCodeStyleSettings>{
   :broadfcui.common.flex-utils/box :only-indent
