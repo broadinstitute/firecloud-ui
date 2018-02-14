@@ -37,7 +37,7 @@
 (react/defc- Policy
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:maxWidth 616 :backgroundColor "white"
+     [:div {:style {:maxWidth 716 :backgroundColor "white"
                     :margin "2.5rem auto 0"
                     :fontSize (when (= (:context props) :logged-out) "88%")}}
       (when (= (:context props) :policy-page)
@@ -154,7 +154,7 @@
        ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
        ;; than removing it from the page.
        [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
-        [:div {:style {:margin "0 auto" :maxWidth 616}}
+        [:div {:style {:margin "0 auto" :maxWidth 716}}
          [:div {:style (when-not import-page? {:display "none"})}
           (external-importer/render-logged-out-import-tutorial #(this :-handle-sign-in-click))]
          [:div {:style (when import-page? {:display "none"})}
