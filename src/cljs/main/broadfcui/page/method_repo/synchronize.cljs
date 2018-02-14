@@ -7,6 +7,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -21,7 +22,7 @@
                   (swap! state dissoc :loading?)
                   (let [method (get-parsed-response)
                         managers (set (:managers method))]
-                    (if (contains? managers (utils/get-user-email))
+                    (if (contains? managers (user/get-user-email))
                       (this :-check-users-and-show-sync new-users method)
                       (swap! state assoc :show-alert-modal? true :method method))))}))
    :render

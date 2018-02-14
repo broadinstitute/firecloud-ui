@@ -4,7 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
-   [broadfcui.test-utils :as test-utils]
+   [broadfcui.utils.test :as test-utils]
    ))
 
 

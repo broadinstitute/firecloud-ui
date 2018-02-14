@@ -1,5 +1,6 @@
 (ns broadfcuitest.duration
   (:require
+   [inflections.core :as inflections]
    [cljs.test :refer [deftest is testing]]
    [broadfcui.common.duration :as duration]
    [broadfcui.utils :as utils]
@@ -21,19 +22,19 @@
         random-31 (rand-int 30)
         random-1000 (inc (rand-int 1000))]
     (testing "over a minute"
-      (is (= (utils/maybe-pluralize (inc random-60) "minute")
+      (is (= (inflections/pluralize (inc random-60) "minute")
              (duration/fuzzy-time 0 0 0 0 (inc random-60) random-60))))
     (testing "over an hour"
-      (is (= (utils/maybe-pluralize (inc random-12) "hour")
+      (is (= (inflections/pluralize (inc random-12) "hour")
              (duration/fuzzy-time 0 0 0 (inc random-12) random-60 random-60))))
     (testing "over a day"
-      (is (= (utils/maybe-pluralize (inc random-31) "day")
+      (is (= (inflections/pluralize (inc random-31) "day")
              (duration/fuzzy-time 0 0 (inc random-31) random-12 random-60 random-60))))
     (testing "over a month"
-      (is (= (utils/maybe-pluralize (inc random-12) "month")
+      (is (= (inflections/pluralize (inc random-12) "month")
              (duration/fuzzy-time 0 (inc random-12) random-31 random-12 random-60 random-60))))
     (testing "over a year"
-      (is (= (utils/maybe-pluralize random-1000 "year")
+      (is (= (inflections/pluralize random-1000 "year")
              (duration/fuzzy-time random-1000 random-12 random-31 random-12 random-60 random-60))))))
 
 (deftest fuzzy-duration-ms

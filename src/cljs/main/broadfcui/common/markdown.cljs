@@ -4,8 +4,8 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.split-pane :refer [SplitPane]]
-   [broadfcui.test-utils :as test-utils]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.test :as test-utils]
    ))
 
 (defonce ^:private markdown-instance (atom false))

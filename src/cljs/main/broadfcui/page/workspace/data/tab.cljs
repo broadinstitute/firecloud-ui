@@ -16,6 +16,7 @@
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (react/defc- MetadataImporter
@@ -122,7 +123,7 @@
                             (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
         [:input {:type "hidden"
                  :name "FCtoken"
-                 :value (utils/get-access-token)}]
+                 :value (user/get-access-token)}]
         [:input {:type "hidden"
                  :name "attributeNames"
                  :value (->> (:columns table-props)
@@ -139,8 +140,8 @@
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
        (links/create-internal
-         {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
-         entity-name)))
+        {:onClick (fn [_] (swap! state assoc :selected-entity entity-name))}
+        entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
      ((@refs "entity-table") :refresh

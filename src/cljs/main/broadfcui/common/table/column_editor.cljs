@@ -7,6 +7,7 @@
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.react :as react-utils]
    ))
 
 
@@ -117,7 +118,7 @@
                                              (+ drop-index fixed-column-count)))
           (common/restore-text-selection (:saved-user-select-state @state))
           (swap! state dissoc :drag-index :drop-index :drop-text :saved-user-select-state))))}
-   (utils/with-window-listeners
+   (react-utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]
        (this :-on-mouse-move e))

@@ -10,6 +10,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -260,7 +261,7 @@
                          {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
                                  :dataType "json"
                                  :type "GET"
-                                 :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                 :headers (user/get-bearer-token-header)
                                  :data (fn [params]
                                          (clj->js {:q (aget params "term")}))
                                  :processResults (this :-process-results)}})]

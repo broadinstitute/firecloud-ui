@@ -17,6 +17,7 @@
    [broadfcui.nav :as nav]
    [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (defn get-nih-link-href []
@@ -176,7 +177,7 @@
                            :data-test-id key
                            :defaultValue (@user-info/saved-user-profile key)
                            :ref (name key)
-                           :placeholder (when email? (utils/get-user-email))
+                           :placeholder (when email? (user/get-user-email))
                            :predicates [(when required? (input/nonempty label))
                                         (when email? (input/valid-email-or-empty label))]
                            :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
@@ -189,8 +190,7 @@
             (swap! state assoc :loaded-profile? true)
             (swap! state assoc :error-message status-text)))))
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/proxy-group (-> @utils/auth2-atom
-                                            (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
+      {:endpoint (endpoints/proxy-group (user/get-user-email))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :userProxyGroupEmail (get-parsed-response))))}))})

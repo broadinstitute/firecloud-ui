@@ -6,6 +6,7 @@
    cljs.pprint
    goog.net.cookies
    [broadfcui.config :as config]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -16,10 +17,6 @@
 
 (defn contains [s what]
   (<= 0 (str-index-of s what)))
-
-
-(defn contains-ignore-case [s what]
-  (contains (string/lower-case s) (string/lower-case what)))
 
 
 (defn ->json-string [x]
@@ -71,47 +68,6 @@
  (fn [_ _ _ ns]
    (local-storage-write ::use-live-data? ns true)))
 
-
-(defonce ^:private user-listeners (atom {}))
-(defn add-user-listener [k on-change]
-  (swap! user-listeners assoc k on-change))
-(defn remove-user-listener [k]
-  (swap! user-listeners dissoc k))
-
-
-(defonce auth2-atom (atom nil))
-(defn set-google-auth2-instance! [instance]
-  (reset! auth2-atom instance)
-  (-> instance
-      (aget "currentUser")
-      (js-invoke
-       "listen" (fn [u]
-                  (doseq [[_ on-change] @user-listeners]
-                    (on-change u))))))
-
-(defn get-access-token []
-  (-> @auth2-atom
-      (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
-
-(defn get-user-email []
-  (-> @auth2-atom
-      (aget "currentUser") (js-invoke "get") (js-invoke "getBasicProfile") (js-invoke "getEmail")))
-
-
-(defn get-cookie-domain []
-  (if (= "local.broadinstitute.org" js/window.location.hostname)
-    "local.broadinstitute.org"
-    (string/join "." (rest (string/split js/window.location.hostname ".")))))
-
-(defn delete-access-token-cookie []
-  (.remove goog.net.cookies "FCtoken" "/" (get-cookie-domain)))
-
-(defn set-access-token-cookie [token]
-  (if token
-    (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain) true) ; secure cookie
-    (delete-access-token-cookie)))
-
-(defn refresh-access-token [] (set-access-token-cookie (get-access-token)))
 
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
@@ -206,7 +162,7 @@
   (let [on-done (:on-done arg-map)]
     (ajax (assoc arg-map
             :url (str (config/api-url-root) service-prefix path)
-            :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
+            :headers (merge (user/get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (when (and (not @server-down?) (not @maintenance-mode?))
@@ -220,7 +176,7 @@
   (let [on-done (:on-done arg-map)]
     (ajax (assoc arg-map
             :url (str (config/leonardo-url-root) service-prefix path)
-            :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
+            :headers (merge (user/get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (when (and (not @server-down?) (not @maintenance-mode?))
@@ -245,16 +201,6 @@
     (doseq [[k v] params]
       (.append form-data (name k) v))
     form-data))
-
-
-(defn map-to-string [m]
-  (string/join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
-
-
-(defn distance [x1 y1 x2 y2]
-  (let [dx (- x1 x2)
-        dy (- y1 y2)]
-    (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
 
 
 (defn insert [vec i elem]
@@ -298,9 +244,6 @@
 (defn replace-top [coll x]
   (conj (pop coll) x))
 
-(defn rand-subset [items]
-  (take (rand-int (inc (count items))) (shuffle items)))
-
 (defn _24-hours-from-now-ms []
   (+ (.now js/Date) (* 1000 60 60 24)))
 
@@ -332,57 +275,7 @@
   (into (empty m)
         (map (fn [[k v]] (f k v)) m)))
 
-(defn maybe-pluralize [number unit]
-  (if (> number 1)
-    (str number " " unit "s")
-    (str number " " unit)))
-
 (defn get-app-root-element []
   (.getElementById js/document "app"))
-
-
-(defn log-methods [prefix defined-methods]
-  (map-kv (fn [method-name method]
-            [method-name
-             (fn [& args]
-               (log (str prefix " - " (name method-name)))
-               (apply method args))])
-          defined-methods))
-
-
-(defn with-window-listeners [listeners-map defined-methods]
-  (let [did-mount
-        (fn [{:keys [locals] :as data}]
-          (doseq [[event function] listeners-map]
-            (let [func (partial function data)]
-              (swap! locals assoc (str "WINDOWLISTENER " event) func)
-              (.addEventListener js/window event func)))
-          (when-let [defined-did-mount (:component-did-mount defined-methods)]
-            (defined-did-mount data)))
-        will-unmount
-        (fn [{:keys [locals] :as data}]
-          (doseq [[event _] listeners-map]
-            (.removeEventListener js/window event (@locals (str "WINDOWLISTENER " event))))
-          (when-let [defined-will-unmount (:component-will-unmount defined-methods)]
-            (defined-will-unmount data)))]
-    (assoc defined-methods
-      :component-did-mount did-mount
-      :component-will-unmount will-unmount)))
-
-
-(defn track-initial-render [defined-methods]
-  (let [will-mount
-        (fn [{:keys [locals] :as data}]
-          (swap! locals assoc :initial-render? true)
-          (when-let [defined-will-mount (:component-will-mount defined-methods)]
-            (defined-will-mount data)))
-        did-mount
-        (fn [{:keys [locals] :as data}]
-          (swap! locals dissoc :initial-render?)
-          (when-let [defined-did-mount (:component-did-mount defined-methods)]
-            (defined-did-mount data)))]
-    (assoc defined-methods
-      :component-will-mount will-mount
-      :component-did-mount did-mount)))
 
 (def build-timestamp (generate-build-timestamp))

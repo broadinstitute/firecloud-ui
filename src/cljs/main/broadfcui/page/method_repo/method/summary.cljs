@@ -16,6 +16,7 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 (react/defc Summary
@@ -32,7 +33,7 @@
    (fn [{:keys [props state locals]}]
      (let [{:keys [selected-snapshot refresh-snapshot]} props
            {:keys [managers]} selected-snapshot
-           owner? (contains? (set managers) (utils/get-user-email))
+           owner? (contains? (set managers) (user/get-user-email))
            {:keys [body-id]} @locals
            on-method-created (fn [_ method-id]
                                (nav/go-to-path :method-summary method-id)

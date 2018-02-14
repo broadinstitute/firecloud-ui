@@ -8,8 +8,8 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
-   [broadfcui.test-utils :refer [text->test-id]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.test :refer [text->test-id]]
    ))
 
 
