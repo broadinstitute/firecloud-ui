@@ -4,6 +4,9 @@
   :broadfcui.common.flex-utils/box :only-indent
   :broadfcui.common.links/create-external :only-indent
   :broadfcui.common.links/create-internal :only-indent
+  :broadfcui.common.style/center :only-indent
+  :broadfcui.common.style/left-ellipses :only-indent
+  :broadfcui.common.style/right-ellipses :only-indent
   :broadfcui.utils/multi-swap! 1
   :cursive.formatting/align-maps false
   :cursive.formatting/comment-align-column 0

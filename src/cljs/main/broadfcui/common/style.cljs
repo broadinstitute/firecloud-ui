@@ -149,6 +149,7 @@
                                          :transform "translate(-50%, -50%)"}})
    children])
 
+;; TODO: replace with flex/box
 (defn create-flexbox [attributes & children]
   [:div (utils/deep-merge attributes {:style {:display "flex" :alignItems "center"}})
    children])

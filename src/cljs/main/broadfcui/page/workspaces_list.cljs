@@ -222,8 +222,8 @@
        [:div {}
         (when request-access-modal-props
           [:div {:data-test-id "request-access-modal"}
-            [RequestAuthDomainAccessDialog
-             (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
+           [RequestAuthDomainAccessDialog
+            (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
          {:data-test-id "workspace-list"
           :persistence-key "workspace-table" :v 3
@@ -323,10 +323,10 @@
       [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                       :backgroundColor "rgba(0,0,0,0.2)"}}]
       (style/center {}
-                    (case status
-                      "Complete" [icons/CompleteIcon]
-                      "Running" [icons/RunningIcon]
-                      "Exception" [icons/ExceptionIcon]))])
+        (case status
+          "Complete" [icons/CompleteIcon]
+          "Running" [icons/RunningIcon]
+          "Exception" [icons/ExceptionIcon]))])
    :-render-workspace-cell
    (fn [{:keys [this]} {:keys [status restricted? no-access? hover-text workspace-id auth-domain-groups]}]
      (let [{:keys [namespace name]} workspace-id
