@@ -18,15 +18,16 @@
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
    [broadfcui.footer :as footer]
-   [broadfcui.injections :as injections]
    [broadfcui.header :as header]
+   [broadfcui.injections :as injections]
    [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
    [broadfcui.page.billing.billing-management :as billing-management]
+   [broadfcui.page.external-importer :as dockstore]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
-   [broadfcui.page.method-repo.method.details :as method-details]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.method-repo.method.details :as method-details]
    [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
@@ -45,16 +46,18 @@
   (nav/clear-paths)
   (auth/add-nav-paths)
   (billing-management/add-nav-paths)
+  (billing-notifications/add-nav-paths)
+  (dockstore/add-nav-paths)
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-details/add-nav-paths)
   (method-repo/add-nav-paths)
-  (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (style-guide/add-nav-paths)
   (workspace-details/add-nav-paths)
-  (workspaces/add-nav-paths))
+  (workspaces/add-nav-paths)
+  )
 
 (react/defc- LoggedIn
   {:render

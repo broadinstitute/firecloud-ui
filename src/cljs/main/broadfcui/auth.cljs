@@ -8,6 +8,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
+   [broadfcui.page.external-importer :as external-importer]
    [broadfcui.utils :as utils]
    [broadfcui.utils.user :as user]
    ))
@@ -154,14 +155,17 @@
      ;; than removing it from the page.
      [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
       [:div {:style {:margin "0 auto" :maxWidth 616}}
-       [:div {:style {:textAlign "center"}}
-        [buttons/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click)}]]
-       [:div {:style {:margin "2rem 0"}}
-        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
-        [:p {}
-         "Please use the \"Sign In\" button above to sign-in with your Google Account.
-          Once you have successfully signed-in with Google, you will be taken to the FireCloud
-          registration page."]]]
+       (if (string/starts-with? js/document.location.hash "#import")
+         (external-importer/render-logged-out-import-tutorial #(this :-handle-sign-in-click))
+         (list
+          [:div {:style {:textAlign "center"}}
+           [buttons/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click)}]]
+          [:div {:style {:margin "2rem 0"}}
+           [:div {} [:b {} "New user? FireCloud requires a Google account."]]
+           [:p {}
+            "Please use the \"Sign In\" button above to sign-in with your Google Account.
+             Once you have successfully signed-in with Google, you will be taken to the FireCloud
+             registration page."]]))]
       [Policy {:context :logged-out}]])
    :component-did-mount
    (fn [{:keys [props locals]}]
