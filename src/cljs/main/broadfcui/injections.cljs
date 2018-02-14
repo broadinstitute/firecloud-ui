@@ -3,7 +3,8 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.modals :as modals]
    [broadfcui.utils.ajax :as ajax]
-   [broadfcui.utils.user :as user]))
+   [broadfcui.utils.user :as user]
+   ))
 
 
 (defn- setup-button-modals []
