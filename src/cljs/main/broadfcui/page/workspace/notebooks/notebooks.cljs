@@ -321,7 +321,7 @@
                                        :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
         [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
         (if server-error
-          [comps/ErrorViewer {:error server-error}]
+          [comps/ErrorViewer {:error server-error :data-test-id "notebooks-error"}]
           (if clusters
             [NotebooksTable
              (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
