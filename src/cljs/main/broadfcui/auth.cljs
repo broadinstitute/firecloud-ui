@@ -38,7 +38,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:maxWidth 616 :backgroundColor "white"
-                    :margin "2rem auto 0"
+                    :margin "2.5rem auto 0"
                     :fontSize (when (= (:context props) :logged-out) "88%")}}
       (when (= (:context props) :policy-page)
         (list
@@ -159,7 +159,8 @@
           (external-importer/render-logged-out-import-tutorial #(this :-handle-sign-in-click))]
          [:div {:style (when import-page? {:display "none"})}
           [:div {:style {:margin "0 auto" :width 120}
-                 :className "g-signin2" :data-theme "dark" :onClick #(this :-handle-sign-in-click)}]
+                 :className "g-signin2" :data-theme "dark" :data-width 120 :data-height 40
+                 :onClick #(this :-handle-sign-in-click)}]
           [:div {:style {:margin "2rem 0"}}
            [:div {} [:b {} "New user? FireCloud requires a Google account."]]
            [:p {}

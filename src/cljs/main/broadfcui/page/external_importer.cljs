@@ -34,10 +34,12 @@
       "New user? FireCloud requires a Google account. Please use the \"Sign In\" button below to
       sign-in with your Google Account. Once you have successfully signed-in with Google, you will
       be taken to the FireCloud registration page."]
-     [:div {:className "g-signin2" :data-theme "dark" :data-longtitle true :onClick sign-in-handler}]]
+     [:div {:className "g-signin2" :data-theme "dark" :data-longtitle true :data-height 40
+            :onClick sign-in-handler}]]
     [:div {:style {:paddingLeft "1rem"}}
      [:h4 {} "Already have a FireCloud account?"]
-     [:div {:className "g-signin2" :data-theme "light" :onClick sign-in-handler}]]]])
+     [:div {:className "g-signin2" :data-theme "light" :data-height 40
+            :onClick sign-in-handler}]]]])
 
 (react/defc Importer
   {:render
