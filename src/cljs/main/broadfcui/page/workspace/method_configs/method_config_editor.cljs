@@ -246,7 +246,7 @@
                                                                {:workspace-attributes workspace-attributes
                                                                 :entity-types entity-types
                                                                 :selected-entity-type (.. % -target -value)}))}
-                                           (mapv #(name (first %)) entity-types))
+               (mapv #(name (first %)) entity-types))
              [:select {:style (assoc style/select-style :width 500) :disabled true}
               [:option {} "No entities in workspace. Import some in the Data tab."]])
            [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))

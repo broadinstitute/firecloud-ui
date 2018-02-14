@@ -5,6 +5,9 @@
   :broadfcui.common.links/create-external :only-indent
   :broadfcui.common.links/create-internal :only-indent
   :broadfcui.common.style/center :only-indent
+  :broadfcui.common.style/create-identity-select :only-indent
+  :broadfcui.common.style/create-identity-select-name :only-indent
+  :broadfcui.common.style/create-select :only-indent
   :broadfcui.common.style/left-ellipses :only-indent
   :broadfcui.common.style/right-ellipses :only-indent
   :broadfcui.utils/multi-swap! 1

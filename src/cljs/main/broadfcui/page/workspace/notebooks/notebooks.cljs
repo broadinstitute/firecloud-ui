@@ -110,7 +110,8 @@
                 [:span {} (create-inline-form-label "Master Disk Size")]]
                [:div {:display "inline-block"}
                 (style/create-identity-select {:ref "masterMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"} machineTypes)
+                                               :defaultValue "n1-standard-4"}
+                  machineTypes)
                 [input/TextField {:ref "masterDiskSize" :autoFocus true :style {:width "41%"}
                                   :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
@@ -122,7 +123,8 @@
                 [:span {} (create-inline-form-label "Worker Disk Size")]]
                [:div {:display "inline-block"}
                 (style/create-identity-select {:ref "workerMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"} machineTypes)
+                                               :defaultValue "n1-standard-4"}
+                  machineTypes)
                 [input/TextField {:ref "workerDiskSize" :autoFocus true :style {:width "41%"}
                                   :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]

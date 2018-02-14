@@ -51,10 +51,10 @@
            (style/create-form-label "Billing Project")
            (if billing-loaded?
              (style/create-identity-select-name
-              {:ref "project" :value selected-project
-               :data-test-id "billing-project-select"
-               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-              billing-projects)
+               {:ref "project" :value selected-project
+                :data-test-id "billing-project-select"
+                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+               billing-projects)
              (spinner {:style {:margin 0}} "Loading Billing..."))
            (style/create-form-label "Description (optional)")
            (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
@@ -150,11 +150,11 @@
                [:div {}
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
-                  {:value opt
-                   :data-test-id "selected-auth-domain-group"
-                   :disabled (utils/seq-contains? locked-groups opt)
-                   :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
-                  (set/difference all-groups (set (utils/delete selected-groups i))))]
+                   {:value opt
+                    :data-test-id "selected-auth-domain-group"
+                    :disabled (utils/seq-contains? locked-groups opt)
+                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                   (set/difference all-groups (set (utils/delete selected-groups i))))]
                 [:div {:style {:float "right"}}
                  (if (utils/seq-contains? locked-groups opt)
                    (icons/render-icon {:style {:color (:text-lightest style/colors)
@@ -170,11 +170,11 @@
           (when (not-empty (set/difference all-groups selected-groups))
             [:div {:style {:float "left" :width "90%"}}
              (style/create-identity-select-name
-              {:defaultValue -1
-               :data-test-id "workspace-auth-domain-select"
-               :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-              (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+               {:defaultValue -1
+                :data-test-id "workspace-auth-domain-select"
+                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+               (set/difference all-groups (set selected-groups))
+               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
           (common/clear-both)])))})
 
 

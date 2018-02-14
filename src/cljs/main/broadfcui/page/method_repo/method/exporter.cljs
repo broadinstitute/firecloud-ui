@@ -136,7 +136,7 @@
           (list
            (style/create-form-label "Root Entity Type")
            (style/create-identity-select {:ref "root-entity-type"}
-                                         common/root-entity-types)))
+             common/root-entity-types)))
         (when-not workspace-id
           (list
            (style/create-form-label "Destination Workspace")

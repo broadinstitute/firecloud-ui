@@ -57,8 +57,8 @@
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
                                                                  #(f (int (common/get-trimmed-text refs "snapshotId"))))}
-                                                    (:snapshots props)
-                                                    redacted-snapshot)
+                   (:snapshots props)
+                   redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
                    [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
        [:div {}

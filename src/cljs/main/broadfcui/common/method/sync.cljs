@@ -56,9 +56,9 @@
                 [:td {:style {:verticalAlign "baseline"}}
                  [:div {:style {:marginLeft "1rem"}}
                   (style/create-identity-select
-                   {:style {:width 120}
-                    :onChange #(swap! locals assoc user (.. % -target -value))}
-                   ["Reader" "Owner" "No access"])]]])
+                    {:style {:width 120}
+                     :onChange #(swap! locals assoc user (.. % -target -value))}
+                    ["Reader" "Owner" "No access"])]]])
              (:users props))]]])
    :-setup-permission-detail
    (fn [{:keys [props state locals]}]

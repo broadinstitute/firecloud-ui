@@ -119,16 +119,16 @@
                    disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
                                  (= (:email acl-entry) (user/get-email)))]
                (style/create-identity-select
-                {:ref (str "acl-value" i)
-                 :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
-                 :disabled disabled?
-                 :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
-                 :value (:accessLevel acl-entry)
-                 :onChange (fn [event]
-                             (let [new-access-level (aget event "target" "value")]
-                               (swap! state update-in [:non-project-owner-acl-vec i] assoc
-                                      :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
-                (if disabled? access-levels available-access-levels)))
+                 {:ref (str "acl-value" i)
+                  :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
+                  :disabled disabled?
+                  :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
+                  :value (:accessLevel acl-entry)
+                  :onChange (fn [event]
+                              (let [new-access-level (aget event "target" "value")]
+                                (swap! state update-in [:non-project-owner-acl-vec i] assoc
+                                       :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
+                 (if disabled? access-levels available-access-levels)))
              (if (common/access-greater-than-equal-to? user-access-level "OWNER")
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
                 [:input {:type "checkbox"

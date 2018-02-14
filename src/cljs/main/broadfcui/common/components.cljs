@@ -252,7 +252,7 @@
                                     :defaultValue (:tags props)
                                     :multiple true
                                     :data-test-id (:data-test-id props)}
-                                   (or (:data props) (:tags props))))
+       (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
      (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear? maximum-selection-length language]} props

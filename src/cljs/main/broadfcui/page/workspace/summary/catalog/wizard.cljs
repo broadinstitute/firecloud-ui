@@ -67,7 +67,7 @@
                                        :disabled (not editable?)
                                        :style {:marginTop "0.5rem"}
                                        :onChange #(this :set-groups (.. % -target -value))}
-                                      (cons ALL_USERS (:library-groups props)))
+          (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
          "N.B. The Dataset will be visible to these users in the library, but users will still
          need to acquire Read permission for the Workspace in order to view its contents."]]))})
