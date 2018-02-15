@@ -9,17 +9,14 @@ WORKING_DIR=$PWD
 VAULT_TOKEN=$(cat ~/.vault-token)
 FIRECLOUD_AUTOMATED_TESTING_BRANCH=master
 ENV=dev
-LOCAL_UI=false
 SERVICE=firecloud-ui
+LOCAL_UI=${LOCAL_UI:-false}  # local ui defaults to false unless set in the env
 
 # Parameters
-WORKING_DIR=${1:-$WORKING_DIR}
-VAULT_TOKEN=${2:-$VAULT_TOKEN}
-FIRECLOUD_AUTOMATED_TESTING_BRANCH=${3:-$FIRECLOUD_AUTOMATED_TESTING_BRANCH}
-ENV=${3:-$ENV}
-if [ "$4" = "local_ui" ]; then
-  LOCAL_UI=true 
-fi
+FIRECLOUD_AUTOMATED_TESTING_BRANCH=${1:-$FIRECLOUD_AUTOMATED_TESTING_BRANCH}
+WORKING_DIR=${2:-$WORKING_DIR}
+VAULT_TOKEN=${3:-$VAULT_TOKEN}
+ENV=${4:-$ENV}
 
 confirm () {
     # call with a prompt string or use a default
@@ -56,6 +53,7 @@ pull_configs() {
     cd firecloud-automated-testing
     echo $PWD
     git pull
+    git stash
     git checkout ${FIRECLOUD_AUTOMATED_TESTING_BRANCH}
     cd $original_dir
 }
@@ -79,6 +77,6 @@ render_configs() {
     cd $original_dir
 }
 
-confirm "Clone firecloud-automated-testing repo?" clone_repo
-pull_configs
+confirm "Clone firecloud-automated-testing repo?  Skip if you have already run this step before." clone_repo
+confirm "Checkout ${FIRECLOUD_AUTOMATED_TESTING_BRANCH}? This will stash local changes.  If N, configs will be built from local changes." pull_configs
 render_configs

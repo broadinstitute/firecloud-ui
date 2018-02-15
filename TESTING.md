@@ -54,25 +54,23 @@ Also run the config render script. Configs are common across all test suites and
 If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
 
 ```bash
-./render-local-env.sh [working dir] [vault token] [branch of firecloud-automated-testing] [env] [local_ui]
+./render-local-env.sh [branch of firecloud-automated-testing] [working dir] [vault token] [env]
 ```
 
 **Arguments:** (arguments are positional)
 
+* branch of firecloud-automated-testing
+    * Configs branch; defaults to `master`
 * Working directory
 	* Defaults to `$PWD`.
 * Vault auth token
 	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
 * env
 	* Environment of your FiaB; defaults to `dev`
-* branch of firecloud-automated-testing
-    * Configs branch; defaults to `master`
-* Local UI
-	* Enter `local_ui` here to run against a local UI stack.
 
 #### Using a local UI
 
-Be sure you used the `local_ui` param when you rendered your configs (see above). When starting your UI, run:
+Set `LOCAL_UI=true` before calling `render-local-env.sh`.   When starting your UI, run:
 
 ```bash
 FIAB=true ./config/docker-rsync-local-ui.sh
