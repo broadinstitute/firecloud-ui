@@ -75,7 +75,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         // The google role might not have been removed the first time we call startQuery() - poll until it has
 //        val postRoleFailure = eventually {
-//          val failure = googleBigQueryDAO.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
+//          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
 //          failure shouldBe a[GoogleJsonResponseException]
 //          failure
 //        }
