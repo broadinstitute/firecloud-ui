@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
@@ -29,8 +30,7 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [creating-ws selected-project billing-loaded? server-error validation-errors]} @state
-           {:keys [workspace-id]} props
-           billing-projects @user/saved-ready-billing-project-names]
+           {:keys [workspace-id]} props]
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
@@ -42,23 +42,23 @@
            (when creating-ws
              (blocker (if workspace-id "Cloning Workspace..." "Creating Workspace...")))
            (style/create-form-label "Name")
-           [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
+           [input/TextField {:data-test-id "workspace-name-input"
+                             :ref "wsName" :autoFocus true :style {:width "100%"}
                              :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
-                             :data-test-id "workspace-name-input"
                              :predicates [(input/nonempty "Workspace name")
                                           (input/alphanumeric_- "Workspace name")]}]
            (style/create-textfield-hint input/hint-alphanumeric_-)
            (style/create-form-label "Billing Project")
            (if billing-loaded?
              (style/create-identity-select-name
-               {:ref "project" :value selected-project
-                :data-test-id "billing-project-select"
+              {:data-test-id "billing-project-select"
+               :value selected-project
                 :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-               billing-projects)
+              @user-info/saved-ready-billing-project-names)
              (spinner {:style {:margin 0}} "Loading Billing..."))
            (style/create-form-label "Description (optional)")
-           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                    :data-test-id "workspace-description-text-field"
+           (style/create-text-area {:data-test-id "workspace-description-text-field"
+                                    :style {:width "100%"} :rows 5 :ref "wsDescription"
                                     :defaultValue (:description props)})
            [:div {:style {:display "flex"}}
             (style/create-form-label "Authorization Domain (optional)")
@@ -96,11 +96,8 @@
        (let [project (:selected-project @state)
              name (input/get-text refs "wsName")
              desc (common/get-trimmed-text refs "wsDescription")
-             attributes (if (clojure.string/blank? desc) {} {:description desc})
-             auth-domain {:authorizationDomain (map
-                                                (fn [group-name]
-                                                  {:membersGroupName group-name})
-                                                (:selected-groups @state))}]
+             attributes (if (string/blank? desc) {} {:description desc})
+             auth-domain {:authorizationDomain (map :membersGroupName (:selected-groups @state))}]
          (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
           {:endpoint endpoints/create-workspace
@@ -116,16 +113,13 @@
      (swap! state dissoc :server-error :validation-errors)
      (if-let [fails (input/validate refs "wsName")]
        (swap! state assoc :validation-errors fails)
-       (let [name (input/get-text refs "wsName")
-             project (:selected-project @state)
+       (let [project (:selected-project @state)
+             name (input/get-text refs "wsName")
              desc (common/get-trimmed-text refs "wsDescription")
-             attributes (if (or (:description props) (not (clojure.string/blank? desc)))
+             attributes (if (or (:description props) (not (string/blank? desc)))
                           {:description desc}
                           {})
-             auth-domain {:authorizationDomain (map
-                                                (fn [group-name]
-                                                  {:membersGroupName group-name})
-                                                (:selected-groups @state))}]
+             auth-domain {:authorizationDomain (map :membersGroupName (:selected-groups @state))}]
          (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
@@ -150,11 +144,10 @@
                [:div {}
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
-                   {:value opt
-                    :data-test-id "selected-auth-domain-group"
-                    :disabled (utils/seq-contains? locked-groups opt)
-                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
-                   (set/difference all-groups (set (utils/delete selected-groups i))))]
+                  {:data-test-id "selected-auth-domain-group":value opt
+                   :disabled (utils/seq-contains? locked-groups opt)
+                   :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                  (set/difference all-groups (set (utils/delete selected-groups i))))]
                 [:div {:style {:float "right"}}
                  (if (utils/seq-contains? locked-groups opt)
                    (icons/render-icon {:style {:color (:text-lightest style/colors)
@@ -170,11 +163,10 @@
           (when (not-empty (set/difference all-groups selected-groups))
             [:div {:style {:float "left" :width "90%"}}
              (style/create-identity-select-name
-               {:defaultValue -1
-                :data-test-id "workspace-auth-domain-select"
-                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-               (set/difference all-groups (set selected-groups))
-               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+              {:data-test-id "workspace-auth-domain-select":defaultValue -1
+               :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+              (set/difference all-groups (set selected-groups))
+              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
           (common/clear-both)])))})
 
 
