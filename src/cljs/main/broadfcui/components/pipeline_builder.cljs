@@ -20,7 +20,7 @@
        [:div {:style {:height "100%"}
               :ref #(swap! locals assoc :wrapper %)}
         (cond
-          error? [:h2 {} "Couldn't load visualizer."]
+          error? [:h2 {} "Couldn't load WDL Pipeline Visualizer."]
           (not loaded?) [ScriptLoader
                          {:on-error #(swap! state assoc :error? true)
                           :on-load (fn []

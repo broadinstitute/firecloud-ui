@@ -21,7 +21,7 @@
       (let [{:keys [left right top bottom height slider-padding]} props]
         (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
         [:div {:style {:display "flex" :flexDirection (if left "row" "column")
-                       :height (when height height)
+                       :height height
                        :maxHeight (when-not height "-webkit-fill-available")}}
          [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state) :overflow (:overflow-left props)}}
           (or left top)]
