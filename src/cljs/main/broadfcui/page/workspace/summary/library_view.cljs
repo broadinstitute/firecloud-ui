@@ -28,7 +28,7 @@
          (style/create-section-header
           (links/create-internal {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
                                   :onClick #(swap! state assoc :showing-catalog-wizard? true)}
-                                 "Edit..."))
+            "Edit..."))
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
           (when (:showing-catalog-wizard? @state)
@@ -45,7 +45,7 @@
                (library-utils/render-consent-codes library-schema library-attributes))])
           [:div {:style {:marginTop "0.5em"}}
            (links/create-internal {:onClick #(swap! state update :expanded? not)}
-                                  (if (:expanded? @state) "Collapse" "See more attributes"))]]}]))
+             (if (:expanded? @state) "Collapse" "See more attributes"))]]}]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-let [orsp-id (:library:orsp (:library-attributes props))]

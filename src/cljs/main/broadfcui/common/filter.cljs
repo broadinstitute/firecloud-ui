@@ -18,14 +18,13 @@
 (defn section [{:keys [title on-clear content data-test-id]}]
   [:div {:data-test-id (str title "-facet-section")}
    (when (or title on-clear)
-     (flex/box
-      {:style {:marginBottom "0.5rem" :alignItems "baseline"}}
-      (when title
-        [:div {:data-test-id (str title "-title") :style {:fontWeight "bold"}} title])
-      flex/spring
-      (when on-clear
-        [:div {:style {:fontSize "80%"}}
-         (links/create-internal {:onClick on-clear :data-test-id (str (or data-test-id title) "-clear")} "Clear")])))
+     (flex/box {:style {:marginBottom "0.5rem" :alignItems "baseline"}}
+       (when title
+         [:div {:data-test-id (str title "-title") :style {:fontWeight "bold"}} title])
+       flex/spring
+       (when on-clear
+         [:div {:style {:fontSize "80%"}}
+          (links/create-internal {:onClick on-clear :data-test-id (str (or data-test-id title) "-clear")} "Clear")])))
    content])
 
 

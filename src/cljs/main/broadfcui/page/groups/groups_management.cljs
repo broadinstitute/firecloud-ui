@@ -15,6 +15,7 @@
    [broadfcui.net :as net]
    [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (react/defc- GroupTable
@@ -35,7 +36,7 @@
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (ajax/call-orch
       "/groups"
       {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
    :-render-groups-table

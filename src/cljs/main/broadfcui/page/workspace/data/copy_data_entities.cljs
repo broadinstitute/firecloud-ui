@@ -12,6 +12,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -49,7 +50,7 @@
        :payload {:sourceWorkspace (:selected-workspace-id props)
                  :entityType (:type props)
                  :entityNames (map :name selected)}
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state assoc :copying? nil :show-import-result? true
                          :import-result (get-parsed-response false) :selected selected)

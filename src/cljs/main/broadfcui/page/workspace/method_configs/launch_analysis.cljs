@@ -18,6 +18,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -53,9 +54,9 @@
         :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
                                 (let [entity-name (or name entityName)]
                                   (links/create-internal
-                                   {:data-test-id (str entity-name "-link")
-                                    :onClick #(set-entity entity)}
-                                   entity-name)))
+                                    {:data-test-id (str entity-name "-link")
+                                     :onClick #(set-entity entity)}
+                                    entity-name)))
         :style {:body-row (fn [{:keys [index row]}]
                             {:backgroundColor
                              (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
@@ -98,7 +99,7 @@
    [:div {:style {:textAlign "right" :fontSize "80%"}}
     (links/create-external {:href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
                                        (:cromwell-version @state))}
-                           (str "Cromwell Version: " (:cromwell-version @state)))]
+      (str "Cromwell Version: " (:cromwell-version @state)))]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
@@ -135,7 +136,7 @@
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-submission (:workspace-id props))
            :payload payload
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :launching?)
                       (if success?

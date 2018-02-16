@@ -12,6 +12,7 @@
    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -66,7 +67,7 @@
                                        :disabled (not editable?)
                                        :style {:marginTop "0.5rem"}
                                        :onChange #(this :set-groups (.. % -target -value))}
-                                      (cons ALL_USERS (:library-groups props)))
+          (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
          "N.B. The Dataset will be visible to these users in the library, but users will still
          need to acquire Read permission for the Workspace in order to view its contents."]]))})
@@ -163,32 +164,31 @@
               validation-error])
            [comps/ErrorViewer {:error submit-error}]])
          :button-bar
-         (flex/box
-          {:style {:marginTop 40}}
-          (flex/strut 80)
-          flex/spring
-          [buttons/Button {:text "Previous"
-                           :onClick (fn [_]
-                                      (when-let [prev-page (peek (:pages-stack @state))]
-                                        (utils/multi-swap! state
-                                          (assoc :page-num prev-page)
-                                          (update :pages-stack pop)
-                                          (dissoc :validation-error))))
-                           :style {:width 80}
-                           :disabled? (zero? page-num)}]
-          (flex/strut 27)
-          [buttons/Button {:text "Next"
-                           :onClick #(this :next-page)
-                           :disabled? (> page-num (-> library-schema :wizard count))
-                           :style {:width 80}}]
-          flex/spring
-          (let [save-permissions (or editable? set-discoverable?)
-                last-page (> page-num (-> library-schema :wizard count))]
-            [buttons/Button {:text (if published? "Republish" "Submit")
-                             :onClick #(this :submit editable? set-discoverable?)
-                             :disabled? (or (and published? (not-empty invalid-properties))
-                                            (not (and save-permissions last-page)))
-                             :style {:width 80}}]))}]))
+         (flex/box {:style {:marginTop 40}}
+           (flex/strut 80)
+           flex/spring
+           [buttons/Button {:text "Previous"
+                            :onClick (fn [_]
+                                       (when-let [prev-page (peek (:pages-stack @state))]
+                                         (utils/multi-swap! state
+                                           (assoc :page-num prev-page)
+                                           (update :pages-stack pop)
+                                           (dissoc :validation-error))))
+                            :style {:width 80}
+                            :disabled? (zero? page-num)}]
+           (flex/strut 27)
+           [buttons/Button {:text "Next"
+                            :onClick #(this :next-page)
+                            :disabled? (> page-num (-> library-schema :wizard count))
+                            :style {:width 80}}]
+           flex/spring
+           (let [save-permissions (or editable? set-discoverable?)
+                 last-page (> page-num (-> library-schema :wizard count))]
+             [buttons/Button {:text (if published? "Republish" "Submit")
+                              :onClick #(this :submit editable? set-discoverable?)
+                              :disabled? (or (and published? (not-empty invalid-properties))
+                                             (not (and save-permissions last-page)))
+                              :style {:width 80}}]))}]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
@@ -250,7 +250,7 @@
          (endpoints/call-ajax-orch
           {:endpoint ((:name invoke-args) (:workspace-id props))
            :payload (:data invoke-args)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
                       (if success?

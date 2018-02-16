@@ -100,14 +100,13 @@
            spacer [:div {:style {:height spacer-height}}]]
        [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                        :height (:size props) :width (:size props)}}
-        (style/center
-         {}
-         [:div {}
-          (hamburger "white")
-          spacer
-          (hamburger (:color props))
-          spacer
-          (hamburger (:color props))])]))})
+        (style/center {}
+          [:div {}
+           (hamburger "white")
+           spacer
+           (hamburger (:color props))
+           spacer
+           (hamburger (:color props))])]))})
 
 (react/defc ExceptionIcon
   {:get-default-props

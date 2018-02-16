@@ -15,7 +15,6 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
    [broadfcui.utils.user :as user]
    ))
@@ -115,24 +114,24 @@
            :programLocationState :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state]}]
-     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (merge @user-info/saved-user-profile (:values @state))))
+     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (merge @user/profile (:values @state))))
    :validation-errors
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (this :get-field-keys))))
    :render
    (fn [{:keys [this props state]}]
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
-           @user-info/saved-user-profile
+           @user/profile
            [:div {}
             [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
             (flex/box {}
-                      (this :render-field :firstName "First Name")
-                      (this :render-field :lastName "Last Name"))
+              (this :render-field :firstName "First Name")
+              (this :render-field :lastName "Last Name"))
             (this :render-field :title "Title")
             (this :render-field :contactEmail "Contact Email for Notifications (if different)" :optional :email)
             (flex/box {}
-                      (this :render-field :institute "Institute")
-                      (this :render-field :institutionalProgram "Institutional Program"))
+              (this :render-field :institute "Institute")
+              (this :render-field :institutionalProgram "Institutional Program"))
             (when-not (:new-registration? props)
               [:div {:style {:clear "both" :margin "0.5em 0"}}
                [:div {:style {:marginTop "0.5em" :fontSize "88%"}}
@@ -147,13 +146,13 @@
             [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
             (style/create-form-label "Non-Profit Status")
             (flex/box {:style {:fontSize "88%"}}
-                      (this :render-radio-field :nonProfitStatus "Profit")
-                      (this :render-radio-field :nonProfitStatus "Non-Profit"))
+              (this :render-radio-field :nonProfitStatus "Profit")
+              (this :render-radio-field :nonProfitStatus "Non-Profit"))
             (this :render-field :pi "Principal Investigator/Program Lead")
             (flex/box {}
-                      (this :render-field :programLocationCity "City")
-                      (this :render-field :programLocationState "State/Province")
-                      (this :render-field :programLocationCountry "Country"))
+              (this :render-field :programLocationCity "City")
+              (this :render-field :programLocationState "State/Province")
+              (this :render-field :programLocationCountry "Country"))
             (common/clear-both)
             (when-not (:new-registration? props)
               [NihLink (select-keys props [:nih-token])])]
@@ -162,7 +161,7 @@
    (fn [{:keys [state]} key value]
      [:label {:style {:margin "0 1em 0.5em 0" :padding "0.5em 0"}}
       [:input {:type "radio" :value value :name key
-               :checked (= value (get-in @state [:values key] (@user-info/saved-user-profile key)))
+               :checked (= value (get-in @state [:values key] (@user/profile key)))
                :onChange #(swap! state assoc-in [:values key] value)}]
       value])
    :render-field
@@ -175,22 +174,22 @@
          (style/create-form-label label)
          [input/TextField {:style {:width 200}
                            :data-test-id key
-                           :defaultValue (@user-info/saved-user-profile key)
+                           :defaultValue (@user/profile key)
                            :ref (name key)
-                           :placeholder (when email? (user/get-user-email))
+                           :placeholder (when email? (user/get-email))
                            :predicates [(when required? (input/nonempty label))
                                         (when email? (input/valid-email-or-empty label))]
                            :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]]))
    :component-will-mount
    (fn [{:keys [state]}]
-     (when-not @user-info/saved-user-profile
-       (user-info/reload-user-profile
+     (when-not @user/profile
+       (user/reload-profile
         (fn [{:keys [success? status-text]}]
           (if success?
             (swap! state assoc :loaded-profile? true)
             (swap! state assoc :error-message status-text)))))
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/proxy-group (user/get-user-email))
+      {:endpoint (endpoints/proxy-group (user/get-email))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :userProxyGroupEmail (get-parsed-response))))}))})
@@ -246,7 +245,7 @@
                                (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
-                                 (user-info/reload-user-profile)
+                                 (user/reload-profile)
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)

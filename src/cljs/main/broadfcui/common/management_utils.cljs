@@ -42,7 +42,8 @@
           [:div {:style {:flex "0 0 10px"}}]
           [:div {:style {:flex "0 0 100px"}}
            (style/create-form-label "Role")
-           (style/create-identity-select {:ref "role" :data-test-id "billing-project-add-user-modal-user-role-select"} [(:user props) (:admin props)])]]
+           (style/create-identity-select {:ref "role" :data-test-id "billing-project-add-user-modal-user-role-select"}
+             [(:user props) (:admin props)])]]
          (:footer props)
          (style/create-validation-error-message (:fails @state))
          [comps/ErrorViewer {:error (:server-error @state)

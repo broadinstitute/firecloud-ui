@@ -19,6 +19,7 @@
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (defn- filter-empty [coll]
@@ -65,7 +66,7 @@
            method (:method props)]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
@@ -245,7 +246,7 @@
                                                                {:workspace-attributes workspace-attributes
                                                                 :entity-types entity-types
                                                                 :selected-entity-type (.. % -target -value)}))}
-                                           (mapv #(name (first %)) entity-types))
+               (mapv #(name (first %)) entity-types))
              [:select {:style (assoc style/select-style :width 500) :disabled true}
               [:option {} "No entities in workspace. Import some in the Data tab."]])
            [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
@@ -308,7 +309,7 @@
                           :methodRepoMethod (merge (:methodRepoMethod config)
                                                    ((@refs "methodDetailsViewer") :get-fields))
                           :workspaceName workspace-id})
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
@@ -331,7 +332,7 @@
                       (endpoints/call-ajax-orch
                        {:endpoint endpoints/get-inputs-outputs
                         :payload (get-in response [:methodConfiguration :methodRepoMethod])
-                        :headers utils/content-type=json
+                        :headers ajax/content-type=json
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
                                      (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
@@ -355,7 +356,7 @@
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
          :payload method-ref
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]
                       (if-not success?
@@ -366,7 +367,7 @@
                         (endpoints/call-ajax-orch
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (:methodRepoMethod response)
-                          :headers utils/content-type=json
+                          :headers ajax/content-type=json
                           :on-done (fn [{:keys [success? get-parsed-response]}]
                                      (swap! state dissoc :blocker :wdl-parse-error)
                                      (let [template {:methodConfiguration (merge response config-namespace+name)}]

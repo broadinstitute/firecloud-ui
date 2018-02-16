@@ -8,6 +8,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (react/defc CreateGroupDialog
@@ -44,7 +45,7 @@
          (swap! state assoc :creating? true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-group name)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating?)
                       (if success?

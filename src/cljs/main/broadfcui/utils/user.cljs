@@ -1,6 +1,8 @@
 (ns broadfcui.utils.user
   (:require
    [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.endpoints :as endpoints]
    ))
 
 
@@ -30,10 +32,10 @@
 (defn get-bearer-token-header []
   {"Authorization" (str "Bearer " (get-access-token))})
 
-(defn get-user-email []
+(defn get-email []
   (-> (get-user) (js-invoke "getBasicProfile") (js-invoke "getEmail")))
 
-(defn get-user-id []
+(defn get-id []
   (-> (get-user) (js-invoke "getBasicProfile") (js-invoke "getId")))
 
 
@@ -51,3 +53,22 @@
     (delete-access-token-cookie)))
 
 (defn refresh-access-token [] (set-access-token-cookie (get-access-token)))
+
+
+(defonce profile (atom false))
+
+(defn reload-profile [& [on-done]]
+  (endpoints/profile-get
+   (fn [{:keys [success? get-parsed-response] :as response}]
+     (when success?
+       (reset! profile (common/parse-profile (get-parsed-response))))
+     (when on-done (on-done response)))))
+
+(defonce saved-ready-billing-project-names (atom []))
+
+(defn reload-billing-projects [& [on-done]]
+  (endpoints/get-billing-projects
+   (fn [err-text projects]
+     (when-not err-text
+       (reset! saved-ready-billing-project-names (map :projectName projects)))
+     (when on-done (on-done err-text)))))

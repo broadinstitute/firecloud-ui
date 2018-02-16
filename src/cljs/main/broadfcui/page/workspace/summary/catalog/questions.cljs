@@ -92,7 +92,7 @@
                                      :style (colorize {})
                                      :disabled disabled
                                      :onChange update-property}
-                                    (cons ENUM_EMPTY_CHOICE enum)))))
+        (cons ENUM_EMPTY_CHOICE enum)))))
 
 (defn- render-boolean [{:keys [radio required? emptyChoice wording property]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
@@ -168,7 +168,7 @@
            [:div {}
             (when-not disabled
               (links/create-internal {:onClick clear}
-                                     "Clear Selection"))]])])]))
+                "Clear Selection"))]])])]))
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
