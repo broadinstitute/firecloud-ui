@@ -121,7 +121,7 @@
                           :disabled? (when-not preview-config "Select a configuration first")
                           :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-export-page
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [method-name workspace-id]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
@@ -140,9 +140,9 @@
         (when-not workspace-id
           (list
            (style/create-form-label "Destination Workspace")
-           [WorkspaceSelector {:style {:width "100%"}
-                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
-                               :on-select #(swap! locals assoc :selected-workspace-id (ws-common/workspace->id %))}]))
+           [WorkspaceSelector {:ref "workspace-selector"
+                               :style {:width "100%"}
+                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}]))
         [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
         (style/create-validation-error-message (:validation-errors @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
@@ -185,10 +185,13 @@
                             (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
                       (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
    :-export-loaded-config
-   (fn [{:keys [props state locals]} config]
+   (fn [{:keys [props state refs]} config]
      (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
-     (let [workspace-id (or (:workspace-id props) (:selected-workspace-id @locals))]
+     (let [{:keys [new-workspace existing-workspace]} ((@refs "workspace-selector") :get-selected-workspace)
+           workspace-id (or (:workspace-id props)
+                            (ws-common/workspace->id existing-workspace)
+                            (assert false "new workspace not yet supported"))]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config workspace-id)
          :payload config
