@@ -141,7 +141,8 @@
           [:div {:style {:marginBottom -20}}
            (when creating-ws
              (blocker (if workspace-id "Cloning Workspace..." "Creating Workspace...")))
-           [WorkspaceCreationForm {:ref "form"}]
+           [WorkspaceCreationForm (merge (select-keys props [:workspace-id :description :auth-domain])
+                                         {:ref "form"})]
            [comps/ErrorViewer {:error server-error}]])}]))
    :-create-workspace
    (fn [{:keys [state refs]}]
