@@ -126,7 +126,7 @@
           (common/clear-both)])))})
 
 
-(react/defc- CreateDialog
+(react/defc CreateDialog
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [creating-ws server-error]} @state

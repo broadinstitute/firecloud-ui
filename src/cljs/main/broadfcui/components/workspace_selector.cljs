@@ -2,41 +2,57 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.create :as ws-create]
    [broadfcui.utils :as utils]
    ))
 
 
 (react/defc WorkspaceSelector
-  {:get-default-props
+  {:get-selected-workspace
+   (fn [{:keys [state]}]
+     (let [{:keys [workspaces selected-index]} @state]
+       (if (zero? selected-index)
+         {:new-workspace {:todo "info"}}
+         {:existing-workspace (nth workspaces (dec selected-index))})))
+   :get-default-props
    (fn []
      {:filter identity
       :sort-by (comp (partial mapv string/lower-case)
                      (juxt :namespace :name)
                      :workspace)})
+   :get-initial-state
+   (fn []
+     {:selected-index 0})
    :render
    (fn [{:keys [props state locals]}]
-     (let [{:keys [workspaces]} @state
-           {:keys [on-select style]} props]
-       (assert on-select ":on-select is required for WorkspaceSelector")
+     (let [{:keys [workspaces selected-index]} @state
+           {:keys [style]} props]
        (if-not workspaces
          (spinner "Loading workspaces...")
-         (style/create-select
-           {:defaultValue ""
-            :ref (fn [elem]
-                   ;; doing this manually because the ref handler thingy calls :did-mount overzealously
-                   (when (and elem (not (:select @locals)))
-                     (swap! locals assoc :select elem)
-                     (.on (.select2 (js/$ elem)) "select2:select"
-                          (fn [event]
-                            (let [selected (nth workspaces (js/parseInt (.-value (.-target event))))]
-                              (on-select selected))))
-                     (on-select (first workspaces))))
-            :style (merge {:width 500} style)}
-           (map (fn [ws] (string/join "/" (replace (:workspace ws) [:namespace :name])))
-                workspaces)))))
+         [:div {}
+          (style/create-select
+            {:defaultValue ""
+             :ref (fn [elem]
+                    ;; doing this manually because the ref handler thingy calls :did-mount overzealously
+                    (when (and elem (not (:select @locals)))
+                      (swap! locals assoc :select elem)
+                      (.on (.select2 (js/$ elem)) "select2:select"
+                           (fn [event]
+                             (swap! state assoc :selected-index (-> event .-target .-value int))))))
+             :style (merge {:width 500} style)}
+            (->> workspaces
+                 (map (comp common/workspace-id->string :workspace))
+                 (cons "Create new workspace...")))
+          ;; Doing this via display: none to maintain state when the component is hidden
+          [:div {:style {:display (when-not (zero? selected-index) "none")
+                         :border style/standard-line
+                         :padding "0.5rem" :paddingBottom 0
+                         :margin "-0.5rem" :marginTop "0.5rem"}}
+           [ws-create/WorkspaceCreationForm {:ref "new-workspace-form"}]]])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
