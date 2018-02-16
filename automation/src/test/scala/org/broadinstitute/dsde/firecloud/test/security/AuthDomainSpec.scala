@@ -529,7 +529,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    // Ignored as of 2/16/2018 - ticket GAWB-TBD
+    // Ignored as of 2/16/2018 - ticket GAWB-3215
     "+ project owner, + group member, create workspace, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
