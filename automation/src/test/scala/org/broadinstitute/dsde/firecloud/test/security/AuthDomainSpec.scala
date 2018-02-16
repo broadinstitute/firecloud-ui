@@ -529,7 +529,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ project owner, + group member, create workspace, - project owner" in withWebDriver { implicit driver =>
+    // Ignored as of 2/16/2018 - ticket GAWB-TBD
+    "+ project owner, + group member, create workspace, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -573,7 +574,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ project owner, create workspace, + group member, - project owner" in withWebDriver { implicit driver =>
+    "+ project owner, create workspace, + group member, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -601,7 +602,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ group member, create workspace, + project owner, - group member" in withWebDriver { implicit driver =>
+    "+ group member, create workspace, + project owner, - group member" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -624,7 +625,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ group member, create workspace, + project owner, - project owner" in withWebDriver { implicit driver =>
+    "+ group member, create workspace, + project owner, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -647,7 +648,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + project owner, + group member, - group member" in withWebDriver { implicit driver =>
+    "create workspace, + project owner, + group member, - group member" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -672,7 +673,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + project owner, + group member, - project owner" in withWebDriver { implicit driver =>
+    "create workspace, + project owner, + group member, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -699,7 +700,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + group member, + project owner, - group member" in withWebDriver { implicit driver =>
+    "create workspace, + group member, + project owner, - group member" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -724,7 +725,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + group member, + project owner, - project owner" in withWebDriver { implicit driver =>
+    "create workspace, + group member, + project owner, - project owner" ignore withWebDriver { implicit driver =>
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
