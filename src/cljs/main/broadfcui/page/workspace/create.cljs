@@ -22,25 +22,24 @@
    ))
 
 
-(react/defc- CreateDialog
-  {:get-initial-state
+(react/defc WorkspaceCreationForm
+  {:get-field-values
+   (fn [{:keys [state refs]}]
+     (swap! state dissoc :validation-errors)
+     (if-let [fails (input/validate refs "wsName")]
+       (do (swap! state assoc :validation-errors fails) nil)
+       {:project (:selected-project @state)
+        :name (input/get-text refs "wsName")
+        :description (not-empty (common/get-trimmed-text refs "wsDescription"))
+        :auth-domain (map :membersGroupName (:selected-groups @state))}))
+   :get-initial-state
    (fn [{:keys [props]}]
-     {:selected-groups (or (vec (:auth-domain props)) [])
-      :protected-option :not-loaded})
+     {:selected-groups (or (vec (:auth-domain props)) [])})
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [creating-ws selected-project billing-loaded? server-error validation-errors]} @state
-           {:keys [workspace-id]} props]
-       [modals/OKCancelForm
-        {:header (if workspace-id "Clone Workspace" "Create New Workspace")
-         :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
-                     :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
-         :dismiss (:dismiss props)
-         :content
-         (react/create-element
-          [:div {:style {:marginBottom -20}}
-           (when creating-ws
-             (blocker (if workspace-id "Cloning Workspace..." "Creating Workspace...")))
+     (let [{:keys [workspace-id description auth-domain]} props
+           {:keys [billing-loaded? selected-project validation-errors]} @state]
+          [:div {}
            (style/create-form-label "Name")
            [input/TextField {:data-test-id "workspace-name-input"
                              :ref "wsName" :autoFocus true :style {:width "100%"}
@@ -51,15 +50,15 @@
            (style/create-form-label "Billing Project")
            (if billing-loaded?
              (style/create-identity-select-name
-              {:data-test-id "billing-project-select"
-               :value selected-project
+               {:data-test-id "billing-project-select"
+                :value selected-project
                 :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-              @user-info/saved-ready-billing-project-names)
+               @user/saved-ready-billing-project-names)
              (spinner {:style {:margin 0}} "Loading Billing..."))
            (style/create-form-label "Description (optional)")
            (style/create-text-area {:data-test-id "workspace-description-text-field"
                                     :style {:width "100%"} :rows 5 :ref "wsDescription"
-                                    :defaultValue (:description props)})
+                                    :defaultValue description })
            [:div {:style {:display "flex"}}
             (style/create-form-label "Authorization Domain (optional)")
             (dropdown/render-info-box
@@ -71,65 +70,22 @@
                       (links/create-external
                         {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
                         "Read more about Authorization Domains")]]})]
-           (when (:auth-domain props)
+           (when auth-domain
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
-           [comps/ErrorViewer {:error server-error}]
-           (style/create-validation-error-message validation-errors)])}]))
+           (style/create-validation-error-message validation-errors)]))
    :component-did-mount
    (fn [{:keys [state]}]
      (user/reload-billing-projects
       (fn []
-        (swap! state assoc :selected-project (first @user/saved-ready-billing-project-names)
+        (swap! state assoc
+               :selected-project (first @user/saved-ready-billing-project-names)
                :billing-loaded? true)))
      (endpoints/get-groups
       (fn [_ parsed-response]
-        (swap! state assoc :all-groups
-               (apply sorted-set (map :groupName parsed-response))))))
-   :-create-workspace
-   (fn [{:keys [state refs]}]
-     (swap! state dissoc :server-error :validation-errors)
-     (if-let [fails (input/validate refs "wsName")]
-       (swap! state assoc :validation-errors fails)
-       (let [project (:selected-project @state)
-             name (input/get-text refs "wsName")
-             desc (common/get-trimmed-text refs "wsDescription")
-             attributes (if (string/blank? desc) {} {:description desc})
-             auth-domain {:authorizationDomain (map :membersGroupName (:selected-groups @state))}]
-         (swap! state assoc :creating-ws true)
-         (endpoints/call-ajax-orch
-          {:endpoint endpoints/create-workspace
-           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers ajax/content-type=json
-           :on-done (fn [{:keys [success? get-parsed-response]}]
-                      (swap! state dissoc :creating-ws)
-                      (if success?
-                        (nav/go-to-path :workspace-summary {:namespace project :name name})
-                        (swap! state assoc :server-error (get-parsed-response false))))}))))
-   :-do-clone
-   (fn [{:keys [props refs state]}]
-     (swap! state dissoc :server-error :validation-errors)
-     (if-let [fails (input/validate refs "wsName")]
-       (swap! state assoc :validation-errors fails)
-       (let [project (:selected-project @state)
-             name (input/get-text refs "wsName")
-             desc (common/get-trimmed-text refs "wsDescription")
-             attributes (if (or (:description props) (not (string/blank? desc)))
-                          {:description desc}
-                          {})
-             auth-domain {:authorizationDomain (map :membersGroupName (:selected-groups @state))}]
-         (swap! state assoc :creating-ws true)
-         (endpoints/call-ajax-orch
-          {:endpoint (endpoints/clone-workspace (:workspace-id props))
-           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers ajax/content-type=json
-           :on-done (fn [{:keys [success? get-parsed-response]}]
-                      (swap! state dissoc :creating-ws)
-                      (if success?
-                        (nav/go-to-path :workspace-summary {:namespace project :name name})
-                        (swap! state assoc :server-error (get-parsed-response false))))}))))
+        (swap! state assoc :all-groups (apply sorted-set (map :groupName parsed-response))))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]
      (let [{:keys [all-groups selected-groups]} @state
@@ -168,6 +124,61 @@
               (set/difference all-groups (set selected-groups))
               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
           (common/clear-both)])))})
+
+
+(react/defc- CreateDialog
+  {:render
+   (fn [{:keys [props state this]}]
+     (let [{:keys [creating-ws server-error]} @state
+           {:keys [workspace-id]} props]
+       [modals/OKCancelForm
+        {:header (if workspace-id "Clone Workspace" "Create New Workspace")
+         :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
+                     :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
+         :dismiss (:dismiss props)
+         :content
+         (react/create-element
+          [:div {:style {:marginBottom -20}}
+           (when creating-ws
+             (blocker (if workspace-id "Cloning Workspace..." "Creating Workspace...")))
+           [WorkspaceCreationForm {:ref "form"}]
+           [comps/ErrorViewer {:error server-error}]])}]))
+   :-create-workspace
+   (fn [{:keys [state refs]}]
+     (swap! state dissoc :server-error)
+     (when-let [{:keys [project name description auth-domain]} ((@refs "form") :get-field-values)]
+       (swap! state assoc :creating-ws true)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/create-workspace project name)
+         :payload {:namespace project
+                   :name name
+                   :attributes (if (string/blank? description) {} {:description description})
+                   :authorizationDomain auth-domain}
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state dissoc :creating-ws)
+                    (if success?
+                      (nav/go-to-path :workspace-summary {:namespace project :name name})
+                      (swap! state assoc :server-error (get-parsed-response false))))})))
+   :-do-clone
+   (fn [{:keys [props refs state]}]
+     (swap! state dissoc :server-error)
+     (when-let [{:keys [project name description auth-domain]} ((@refs "form") :get-field-values)]
+       (swap! state assoc :creating-ws true)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/clone-workspace (:workspace-id props))
+         :payload {:namespace project
+                   :name name
+                   :attributes (if (or (:description props) (not (string/blank? description)))
+                                 {:description description}
+                                 {})
+                   :authorizationDomain auth-domain}
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state dissoc :creating-ws)
+                    (if success?
+                      (nav/go-to-path :workspace-summary {:namespace project :name name})
+                      (swap! state assoc :server-error (get-parsed-response false))))})))})
 
 
 (react/defc Button
