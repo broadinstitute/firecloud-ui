@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.user
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
+import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
@@ -58,6 +59,10 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
           country = "USA")
 
         new DataLibraryPage().validateLocation()
+
+        val profilePage = new ProfilePage().open
+        val username = testUser.email.split("@").head
+        profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
       }
     }
   }
