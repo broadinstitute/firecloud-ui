@@ -24,34 +24,45 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   override def awaitReady(): Unit = {
     await condition {
       enabled(testId("workspace-details-error")) ||
-      (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
+      (submissionStatusEnabled && sidebarReady && pageReady && bucketAccessStatusReady)
     }
-    waitForGoogleBucket()
+    // Reconsider this as part of validateLocation instead? Or some other function that validates the view is correct?
+    if (bucketAccessStatusReady && !hasBucketAccess) {
+      throw new Exception("Workspace access with no bucket access!!!")
+    }
   }
 
   def validateLocation(): Unit = {
-    assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
-  }
-
-  def waitForGoogleBucket(): Unit = {
-    while (shouldWaitForBucketAccess) {
-      Thread sleep 1000
-      // Can't goToSummaryTab() here because that could leave the browser in a different location than desired.
-      // Also creates an infinite loop if access never happens.
-//      goToSummaryTab()
-    }
+    assert(submissionStatusEnabled && sidebarReady && pageReady)
   }
 
   private val authDomainGroups = Label("auth-domain-groups")
   private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = testId("no-bucket-access")
+  private val bucketAccessLink = testId("workspace-bucket-access-link")
+  private val bucketNoAccessDisplay = testId("workspace-bucket-noaccess-display")
   private val googleBillingDetail = Label("google-billing-detail")
   private val storageCostEstimate = Label("storage-cost-estimate")
 
-  def shouldWaitForBucketAccess : Boolean = {
-    val elem = find(noBucketAccess)
-    elem.isDefined && elem.get.text.contains("unavailable")
+  private def submissionStatusEnabled = {
+    enabled(testId("submission-status"))
+  }
+
+  private def sidebarReady = {
+    sidebar.getState == "ready"
+  }
+
+  private def pageReady = {
+    getState == "ready"
+  }
+
+  private def bucketAccessStatusReady : Boolean = {
+    find(bucketAccessLink).isDefined || find(bucketNoAccessDisplay).isDefined
+  }
+
+  def hasBucketAccess: Boolean = {
+    find(bucketAccessLink).isDefined
   }
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
