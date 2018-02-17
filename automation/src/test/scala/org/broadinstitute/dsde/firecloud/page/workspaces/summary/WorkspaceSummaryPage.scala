@@ -36,7 +36,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   def waitForGoogleBucket(): Unit = {
     while (shouldWaitForBucketAccess) {
       Thread sleep 1000
-      goToSummaryTab()
+      // Can't goToSummaryTab() here because that could leave the browser in a different location than desired.
+      // Also creates an infinite loop if access never happens.
+//      goToSummaryTab()
     }
   }
 
