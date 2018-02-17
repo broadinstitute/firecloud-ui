@@ -357,7 +357,7 @@
                [:div {:data-test-id "google-billing-detail"}
                 (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
                                         :title "Click to open the Google Cloud Storage browser for this bucket"}
-                  (:namespace workspace-id))])))
+                                       (:namespace workspace-id))])))
 
           (render-detail-box
            "Storage & Analysis"
@@ -366,10 +366,11 @@
            [:div {}
             (case bucket-access?
               nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
-              true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+              true (links/create-external {:data-test-id "workspace-bucket-access-link"
+                                           :href (str moncommon/google-cloud-context bucketName "/")
                                            :title "Click to open the Google Cloud Storage browser for this bucket"}
-                     bucketName)
-              false bucketName)]
+                                          bucketName)
+              false [:span {:data-test-id "workspace-bucket-noaccess-display"} bucketName])]
 
            "Analysis Submissions"
            [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]]
