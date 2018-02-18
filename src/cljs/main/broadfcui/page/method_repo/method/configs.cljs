@@ -17,6 +17,7 @@
    [broadfcui.page.method-repo.redactor :refer [Redactor]]
    [broadfcui.page.method-repo.synchronize :as mr-sync]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -28,7 +29,7 @@
    :render
    (fn [{:keys [state this props]}]
      (let [{:keys [config config-error refreshing?]} @state
-           owner? (contains? (set (:managers config)) (utils/get-user-email))]
+           owner? (contains? (set (:managers config)) (user/get-email))]
        [:div {:style {:margin "2.5rem 1.5rem"}}
         (when refreshing?
           (blocker "Refreshing..."))

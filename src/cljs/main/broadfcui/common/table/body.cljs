@@ -6,6 +6,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.react :as react-utils]
    ))
 
 
@@ -146,7 +147,7 @@
                                          (assoc-in [drag-column :width] new-this-width)
                                          (assoc-in [next-column-index :width] new-next-width)))
               (update-column-display (assoc-in column-display [drag-column :width] new-this-width)))))))}
-   (utils/with-window-listeners
+   (react-utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]
        (this :-on-mouse-move e))

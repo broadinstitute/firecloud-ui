@@ -44,12 +44,12 @@
            item-column-name (get-column-name selected-entity-type)
            item-link (fn [item-type item-name]
                        (links/create-internal
-                        {:onClick (fn []
-                                    (swap! state update
-                                           :last-entity conj {:type (:entity-type props)
-                                                              :name (:entity-name props)})
-                                    (this :-update-and-load item-type item-name))}
-                        item-name))]
+                         {:onClick (fn []
+                                     (swap! state update
+                                            :last-entity conj {:type (:entity-type props)
+                                                               :name (:entity-name props)})
+                                     (this :-update-and-load item-type item-name))}
+                         item-name))]
        [:div {:style {:position "relative" :width "30%" :padding "0.5rem" :marginLeft ".38em"
                       :border (str "1px solid " (:line-default style/colors))}}
         [:a {:onClick #(update-parent-state :selected-entity nil)

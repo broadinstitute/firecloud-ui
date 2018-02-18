@@ -6,6 +6,7 @@
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -45,14 +46,14 @@
               (:systems parsed-response))]]))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax {:url (str (config/api-url-root) "/status")
-                  :method "GET"
-                  :on-done (fn [{:keys [status-code status-text raw-response get-parsed-response]}]
-                             (swap! state assoc
-                                    :status-code status-code
-                                    :status-text status-text
-                                    :response-text raw-response
-                                    :parsed-response (get-parsed-response)))}))})
+     (ajax/call {:url (str (config/api-url-root) "/status")
+                 :method "GET"
+                 :on-done (fn [{:keys [status-code status-text raw-response get-parsed-response]}]
+                            (swap! state assoc
+                                   :status-code status-code
+                                   :status-text status-text
+                                   :response-text raw-response
+                                   :parsed-response (get-parsed-response)))}))})
 
 (defn add-nav-paths []
   (nav/defpath

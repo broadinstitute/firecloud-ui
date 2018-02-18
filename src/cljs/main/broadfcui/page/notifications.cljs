@@ -9,6 +9,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (def notification-details
@@ -35,10 +36,10 @@
                (str "/notifications/workspace/"
                     (js/encodeURIComponent namespace) "/" (js/encodeURIComponent name))
                "/notifications/general")]
-    (utils/ajax-orch
+    (ajax/call-orch
      path
      {:on-done (partial handle-ajax-response component-attributes :general-response)})
-    (utils/ajax-orch
+    (ajax/call-orch
      "/profile"
      {:on-done (fn [m]
                  (handle-ajax-response component-attributes :profile-response m)
@@ -77,10 +78,10 @@
                   general))))
 
 (defn- save [data on-done]
-  (utils/ajax-orch
+  (ajax/call-orch
    "/profile/preferences"
    {:method :post
-    :headers utils/content-type=json
+    :headers ajax/content-type=json
     :data (js-invoke js/JSON "stringify" (clj->js data))
     :on-done on-done}))
 

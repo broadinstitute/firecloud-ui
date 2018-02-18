@@ -7,7 +7,6 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
-
 import scala.concurrent.duration.DurationLong
 
 /**
@@ -28,6 +27,12 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private val tags = TagSelect("tags")
   private val consentCodes = TagSelect("consent-codes")
 
+  //Hard Coded titles for facet sections in our UI code
+  val cohortPhenotypeIndicationSection = "Cohort Phenotype/Indication"
+  val experimentalStrategySection = "Experimental Strategy"
+  val projectNameSection = "Project Name"
+  val primaryDiseaseSiteSection = "Primary Disease Site"
+  val dataUseLimitationSection = "Data Use Limitation"
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()

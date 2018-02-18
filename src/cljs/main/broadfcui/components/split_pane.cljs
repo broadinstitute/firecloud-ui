@@ -5,6 +5,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.react :as react-utils]
    ))
 
 
@@ -41,7 +42,7 @@
                                        :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
-   (utils/with-window-listeners
+   (react-utils/with-window-listeners
     {"mouseup"
      (fn [{:keys [state]}]
        (when (:dragging? @state)
