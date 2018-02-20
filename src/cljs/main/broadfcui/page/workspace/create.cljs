@@ -103,7 +103,7 @@
                                                 (:selected-groups @state))}]
          (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
-          {:endpoint (endpoints/create-workspace project name)
+          {:endpoint endpoints/create-workspace
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
            :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
