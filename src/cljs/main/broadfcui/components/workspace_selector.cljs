@@ -12,11 +12,16 @@
 
 
 (react/defc WorkspaceSelector
-  {:get-selected-workspace
-   (fn [{:keys [state]}]
+  {:validate
+   (fn [{:keys [state refs]}]
+     (let [{:keys [selected-index]} @state]
+       (when (zero? selected-index)
+         ((@refs "new-workspace-form") :validate))))
+   :get-selected-workspace
+   (fn [{:keys [state refs]}]
      (let [{:keys [workspaces selected-index]} @state]
        (if (zero? selected-index)
-         {:new-workspace {:todo "info"}}
+         {:new-workspace ((@refs "new-workspace-form") :get-field-values)}
          {:existing-workspace (nth workspaces (dec selected-index))})))
    :get-default-props
    (fn []

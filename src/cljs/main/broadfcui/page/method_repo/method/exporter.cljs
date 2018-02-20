@@ -158,7 +158,9 @@
                         :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs this]}]
-     (let [[name & errors] (input/get-and-validate refs "name-field")
+     (let [[name & name-errors] (input/get-and-validate refs "name-field")
+           new-workspace-errors ((@refs "workspace-selector") :validate)
+           errors (not-empty (concat name-errors new-workspace-errors))
            new-id (assoc (select-keys (:method-id props) [:namespace])
                     :name name)
            {:keys [selected-config]} @state]
@@ -167,7 +169,6 @@
              :else (do
                      (this :-export-loaded-config (merge (:payloadObject selected-config) new-id))
                      (swap! state assoc :banner "Resolving...")))))
-
    :-create-template
    (fn [{:keys [props state refs this]} new-id]
      (swap! state assoc :banner "Creating template...")
@@ -190,7 +191,7 @@
      (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
      (let [{:keys [new-workspace existing-workspace]} ((@refs "workspace-selector") :get-selected-workspace)
            workspace-id (or (:workspace-id props)
-                            (ws-common/workspace->id existing-workspace)
+                            (some-> existing-workspace ws-common/workspace->id)
                             (assert false "new workspace not yet supported"))]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config workspace-id)

@@ -23,7 +23,10 @@
 
 
 (react/defc WorkspaceCreationForm
-  {:get-field-values
+  {:validate
+   (fn [{:keys [refs]}]
+     (input/validate refs "wsName"))
+   :get-field-values
    (fn [{:keys [state refs]}]
      (swap! state dissoc :validation-errors)
      (if-let [fails (input/validate refs "wsName")]
@@ -39,43 +42,43 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [workspace-id description auth-domain]} props
            {:keys [billing-loaded? selected-project validation-errors]} @state]
-          [:div {}
-           (style/create-form-label "Name")
-           [input/TextField {:data-test-id "workspace-name-input"
-                             :ref "wsName" :autoFocus true :style {:width "100%"}
-                             :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
-                             :predicates [(input/nonempty "Workspace name")
-                                          (input/alphanumeric_- "Workspace name")]}]
-           (style/create-textfield-hint input/hint-alphanumeric_-)
-           (style/create-form-label "Billing Project")
-           (if billing-loaded?
-             (style/create-identity-select-name
-               {:data-test-id "billing-project-select"
-                :value selected-project
-                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-               @user/saved-ready-billing-project-names)
-             (spinner {:style {:margin 0}} "Loading Billing..."))
-           (style/create-form-label "Description (optional)")
-           (style/create-text-area {:data-test-id "workspace-description-text-field"
-                                    :style {:width "100%"} :rows 5 :ref "wsDescription"
-                                    :defaultValue description })
-           [:div {:style {:display "flex"}}
-            (style/create-form-label "Authorization Domain (optional)")
-            (dropdown/render-info-box
-             {:text [:div {} [:strong {} "Note:"]
-                     [:div {}
-                      "An Authorization Domain can only be set when creating a Workspace.
-                       Once set, it cannot be changed."]
-                     [:span {:style {:white-space "pre"}}
-                      (links/create-external
-                        {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
-                        "Read more about Authorization Domains")]]})]
-           (when auth-domain
-             [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
-              "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
-              [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
-           (this :-auth-domain-builder)
-           (style/create-validation-error-message validation-errors)]))
+       [:div {}
+        (style/create-form-label "Name")
+        [input/TextField {:data-test-id "workspace-name-input"
+                          :ref "wsName" :autoFocus true :style {:width "100%"}
+                          :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
+                          :predicates [(input/nonempty "Workspace name")
+                                       (input/alphanumeric_- "Workspace name")]}]
+        (style/create-textfield-hint input/hint-alphanumeric_-)
+        (style/create-form-label "Billing Project")
+        (if billing-loaded?
+          (style/create-identity-select-name
+            {:data-test-id "billing-project-select"
+             :value selected-project
+             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+            @user/saved-ready-billing-project-names)
+          (spinner {:style {:margin 0}} "Loading Billing..."))
+        (style/create-form-label "Description (optional)")
+        (style/create-text-area {:data-test-id "workspace-description-text-field"
+                                 :style {:width "100%"} :rows 5 :ref "wsDescription"
+                                 :defaultValue description})
+        [:div {:style {:display "flex"}}
+         (style/create-form-label "Authorization Domain (optional)")
+         (dropdown/render-info-box
+          {:text [:div {} [:strong {} "Note:"]
+                  [:div {}
+                   "An Authorization Domain can only be set when creating a Workspace.
+                    Once set, it cannot be changed."]
+                  [:span {:style {:white-space "pre"}}
+                   (links/create-external
+                     {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                     "Read more about Authorization Domains")]]})]
+        (when auth-domain
+          [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
+           "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
+           [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
+        (this :-auth-domain-builder)
+        (style/create-validation-error-message validation-errors)]))
    :component-did-mount
    (fn [{:keys [state]}]
      (user/reload-billing-projects
@@ -100,10 +103,10 @@
                [:div {}
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
-                  {:data-test-id "selected-auth-domain-group":value opt
-                   :disabled (utils/seq-contains? locked-groups opt)
-                   :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
-                  (set/difference all-groups (set (utils/delete selected-groups i))))]
+                   {:data-test-id "selected-auth-domain-group" :value opt
+                    :disabled (utils/seq-contains? locked-groups opt)
+                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                   (set/difference all-groups (set (utils/delete selected-groups i))))]
                 [:div {:style {:float "right"}}
                  (if (utils/seq-contains? locked-groups opt)
                    (icons/render-icon {:style {:color (:text-lightest style/colors)
@@ -119,10 +122,10 @@
           (when (not-empty (set/difference all-groups selected-groups))
             [:div {:style {:float "left" :width "90%"}}
              (style/create-identity-select-name
-              {:data-test-id "workspace-auth-domain-select":defaultValue -1
-               :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-              (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+               {:data-test-id "workspace-auth-domain-select" :defaultValue -1
+                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+               (set/difference all-groups (set selected-groups))
+               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
           (common/clear-both)])))})
 
 
