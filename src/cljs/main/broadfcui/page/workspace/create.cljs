@@ -34,7 +34,7 @@
        {:project (:selected-project @state)
         :name (input/get-text refs "wsName")
         :description (not-empty (common/get-trimmed-text refs "wsDescription"))
-        :auth-domain (map :membersGroupName (:selected-groups @state))}))
+        :auth-domain (map (fn [group] {:membersGroupName group}) (:selected-groups @state))}))
    :get-initial-state
    (fn [{:keys [props]}]
      {:selected-groups (or (vec (:auth-domain props)) [])})

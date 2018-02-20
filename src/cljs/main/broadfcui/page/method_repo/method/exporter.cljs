@@ -1,6 +1,7 @@
 (ns broadfcui.page.method-repo.method.exporter
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
@@ -166,9 +167,7 @@
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
              (= :blank selected-config) (this :-create-template new-id)
-             :else (do
-                     (this :-export-loaded-config (merge (:payloadObject selected-config) new-id))
-                     (swap! state assoc :banner "Resolving...")))))
+             :else (this :-resolve-workspace (merge (:payloadObject selected-config) new-id)))))
    :-create-template
    (fn [{:keys [props state refs this]} new-id]
      (swap! state assoc :banner "Creating template...")
@@ -182,22 +181,38 @@
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      (this :-export-loaded-config
-                            (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
+                      (this :-resolve-workspace (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
                       (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
+   :-resolve-workspace
+   (fn [{:keys [props state refs this]} config]
+     (if-let [workspace-id (:workspace-id props)]
+       (this :-export-loaded-config workspace-id config)
+       (let [{:keys [existing-workspace]
+              {:keys [project name description auth-domain]} :new-workspace}
+             ((@refs "workspace-selector") :get-selected-workspace)]
+         (if existing-workspace
+           (this :-export-loaded-config (ws-common/workspace->id existing-workspace) config)
+           (do (swap! state assoc :banner "Creating workspace...")
+               (endpoints/call-ajax-orch
+                {:endpoint (endpoints/create-workspace project name)
+                 :payload {:namespace project
+                           :name name
+                           :attributes (if (string/blank? description) {} {:description description})
+                           :authorizationDomain auth-domain}
+                 :headers ajax/content-type=json
+                 :on-done (fn [{:keys [success? get-parsed-response]}]
+                            (if success?
+                              (this :-export-loaded-config {:namespace project :name name} config)
+                              (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))))))
    :-export-loaded-config
-   (fn [{:keys [props state refs]} config]
+   (fn [{:keys [props state]} workspace-id config]
      (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
-     (let [{:keys [new-workspace existing-workspace]} ((@refs "workspace-selector") :get-selected-workspace)
-           workspace-id (or (:workspace-id props)
-                            (some-> existing-workspace ws-common/workspace->id)
-                            (assert false "new workspace not yet supported"))]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/post-workspace-method-config workspace-id)
-         :payload config
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      ((:on-export props) workspace-id (ws-common/config->id config))
-                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))})
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/post-workspace-method-config workspace-id)
+       :payload config
+       :headers ajax/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    ((:on-export props) workspace-id (ws-common/config->id config))
+                    (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))})
