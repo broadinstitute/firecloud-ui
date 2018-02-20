@@ -28,6 +28,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
       val user: Credentials = UserPool.chooseStudent
       val userToken: AuthToken = user.makeAuthToken()
+      val bigQuery = googleBigQueryDAO(userToken)
 
       // Willy Shakes uses this insult twice
 
@@ -42,7 +43,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       }
 
       withBillingProject("auto-goog-role") { projectName =>
-        val preRoleFailure = googleBigQueryDAO(userToken).startQuery(GoogleProject(projectName), "meh").failed.futureValue
+        val preRoleFailure = bigQuery.startQuery(GoogleProject(projectName), "meh").failed.futureValue
 
         preRoleFailure shouldBe a[GoogleJsonResponseException]
         preRoleFailure.getMessage should include(user.email)
@@ -53,19 +54,19 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         // The google role might not have been applied the first time we call startQuery() - poll until it has
         val queryReference = eventually {
-          val start = googleBigQueryDAO(userToken).startQuery(GoogleProject(projectName), shakespeareQuery).futureValue
+          val start = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).futureValue
           start shouldBe a[JobReference]
           start
         }
 
         // poll for query status until it completes
         val queryJob = eventually {
-          val job = googleBigQueryDAO(userToken).getQueryStatus( queryReference).futureValue
+          val job = bigQuery.getQueryStatus(queryReference).futureValue
           job.getStatus.getState shouldBe "DONE"
           job
         }
 
-        val queryResult = googleBigQueryDAO(userToken).getQueryResult(queryJob).futureValue
+        val queryResult = bigQuery.getQueryResult(queryJob).futureValue
         assertExpectedShakespeareResult(queryResult)
 
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
@@ -74,7 +75,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         // The google role might not have been removed the first time we call startQuery() - poll until it has
 //        val postRoleFailure = eventually {
-//          val failure = googleBigQueryDAO.startQuery(userToken.value, GoogleProject(projectName), shakespeareQuery).failed.futureValue
+//          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
 //          failure shouldBe a[GoogleJsonResponseException]
 //          failure
 //        }
@@ -82,7 +83,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 //        postRoleFailure.getMessage should include(user.email)
 //        postRoleFailure.getMessage should include(projectName)
 //        postRoleFailure.getMessage should include("bigquery.jobs.create")
-        
+
         // end GAWB-3138 why does this fail so often
 
       }(ownerToken)

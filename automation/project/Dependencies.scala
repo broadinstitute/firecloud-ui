@@ -7,7 +7,7 @@ object Dependencies {
 
   val serviceTestV = "0.3-7ad8895"
 
-  val workbenchModelV  = "0.8-d97f551"
+  val workbenchModelV  = "0.10-6800f3a"
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetricsV  = "0.3-7ad0aa8"
 
