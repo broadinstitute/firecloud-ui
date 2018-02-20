@@ -159,10 +159,11 @@
                         :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs this]}]
-     (let [[name & name-errors] (input/get-and-validate refs "name-field")
-           new-workspace-errors ((@refs "workspace-selector") :validate)
+     (let [{:keys [workspace-id method-id]} props
+           [name & name-errors] (input/get-and-validate refs "name-field")
+           new-workspace-errors (when-not workspace-id ((@refs "workspace-selector") :validate))
            errors (not-empty (concat name-errors new-workspace-errors))
-           new-id (assoc (select-keys (:method-id props) [:namespace])
+           new-id (assoc (select-keys method-id [:namespace])
                     :name name)
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
