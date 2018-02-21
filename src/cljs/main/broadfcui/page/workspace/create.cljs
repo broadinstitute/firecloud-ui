@@ -43,7 +43,7 @@
      (let [{:keys [workspace-id description auth-domain]} props
            {:keys [billing-loaded? selected-project validation-errors]} @state]
        [:div {}
-        (style/create-form-label "Name")
+        (style/create-form-label "Workspace Name")
         [input/TextField {:data-test-id "workspace-name-input"
                           :ref "wsName" :autoFocus true :style {:width "100%"}
                           :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))

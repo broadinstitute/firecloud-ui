@@ -75,7 +75,8 @@
                              (this :-render-export-page-buttons)
                              (this :-render-config-selector-buttons))]
          [modals/OKCancelForm
-          {:header (str "Export " method-name " to Workspace")
+          {:data-test-id "export-config-to-workspace-modal"
+           :header (str "Export " method-name " to Workspace")
            :content (react/create-element exporter)
            :button-bar (if selected-config
                          (this :-render-export-page-buttons)
@@ -155,7 +156,8 @@
            (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
            "Choose Another Configuration"))
        flex/spring
-       [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
+       [buttons/Button {:data-test-id "import-export-confirm-button"
+                        :text (if (:workspace-id props) "Import Method" "Export to Workspace")
                         :onClick #(this :-export)}]))
    :-export
    (fn [{:keys [props state refs locals this]}]

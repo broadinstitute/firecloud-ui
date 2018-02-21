@@ -15,13 +15,16 @@
   {:validate
    (fn [{:keys [state locals]}]
      (let [{:keys [selected-index]} @state]
-       (when (zero? selected-index)
-         ((:new-workspace-form @locals) :validate))))
+       (case selected-index
+         0 ["No workspace selected"]
+         1 ((:new-workspace-form @locals) :validate)
+         nil)))
    :get-selected-workspace
    (fn [{:keys [state locals]}]
      (let [{:keys [workspaces selected-index]} @state]
-       (if (zero? selected-index)
-         {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
+       (case selected-index
+         0 {:error "No workspace selected"}
+         1 {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
          {:existing-workspace (nth workspaces (dec selected-index))})))
    :get-default-props
    (fn []
@@ -38,9 +41,10 @@
            {:keys [style]} props]
        (if-not workspaces
          (spinner "Loading workspaces...")
-         [:div {}
+         [:div {:data-test-id "workspace-selector"}
           (style/create-select
-            {:defaultValue ""
+            {:data-test-id "destination-workspace"
+             :defaultValue ""
              :ref (fn [elem]
                     ;; doing this manually because the ref handler thingy calls :did-mount overzealously
                     (when (and elem (not (:select @locals)))
@@ -51,9 +55,9 @@
              :style (merge {:width 500} style)}
             (->> workspaces
                  (map (comp common/workspace-id->string :workspace))
-                 (cons "Create new workspace...")))
+                 (concat ["Select a workspace" "Create new workspace..."])))
           ;; Doing this via display: none to maintain state when the component is hidden
-          [:div {:style {:display (when-not (zero? selected-index) "none")
+          [:div {:style {:display (when-not (= 1 selected-index) "none")
                          :border style/standard-line
                          :padding "0.5rem" :paddingBottom 0
                          :margin "-0.5rem" :marginTop "0.5rem"}}
