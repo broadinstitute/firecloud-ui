@@ -13,15 +13,15 @@
 
 (react/defc WorkspaceSelector
   {:validate
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state locals]}]
      (let [{:keys [selected-index]} @state]
        (when (zero? selected-index)
-         ((@refs "new-workspace-form") :validate))))
+         ((:new-workspace-form @locals) :validate))))
    :get-selected-workspace
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state locals]}]
      (let [{:keys [workspaces selected-index]} @state]
        (if (zero? selected-index)
-         {:new-workspace ((@refs "new-workspace-form") :get-field-values)}
+         {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
          {:existing-workspace (nth workspaces (dec selected-index))})))
    :get-default-props
    (fn []
@@ -57,7 +57,7 @@
                          :border style/standard-line
                          :padding "0.5rem" :paddingBottom 0
                          :margin "-0.5rem" :marginTop "0.5rem"}}
-           [ws-create/WorkspaceCreationForm {:ref "new-workspace-form"}]]])))
+           [ws-create/WorkspaceCreationForm {:ref #(swap! locals assoc :new-workspace-form %)}]]])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

@@ -122,7 +122,7 @@
                           :disabled? (when-not preview-config "Select a configuration first")
                           :onClick #(swap! state assoc :selected-config preview-config)}])))
    :-render-export-page
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (let [{:keys [method-name workspace-id]} props
            {:keys [selected-config]} @state]
        [:div {:style {:width 550}}
@@ -141,7 +141,7 @@
         (when-not workspace-id
           (list
            (style/create-form-label "Destination Workspace")
-           [WorkspaceSelector {:ref "workspace-selector"
+           [WorkspaceSelector {:ref #(swap! locals assoc :workspace-selector %)
                                :style {:width "100%"}
                                :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}]))
         [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
@@ -158,10 +158,10 @@
        [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
                         :onClick #(this :-export)}]))
    :-export
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state refs locals this]}]
      (let [{:keys [workspace-id method-id]} props
            [name & name-errors] (input/get-and-validate refs "name-field")
-           new-workspace-errors (when-not workspace-id ((@refs "workspace-selector") :validate))
+           new-workspace-errors (when-not workspace-id ((:workspace-selector @locals) :validate))
            errors (not-empty (concat name-errors new-workspace-errors))
            new-id (assoc (select-keys method-id [:namespace])
                     :name name)
@@ -185,12 +185,11 @@
                       (this :-resolve-workspace (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
                       (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
    :-resolve-workspace
-   (fn [{:keys [props state refs this]} config]
+   (fn [{:keys [props state locals this]} config]
      (if-let [workspace-id (:workspace-id props)]
        (this :-export-loaded-config workspace-id config)
-       (let [{:keys [existing-workspace]
-              {:keys [project name description auth-domain]} :new-workspace}
-             ((@refs "workspace-selector") :get-selected-workspace)]
+       (let [{:keys [existing-workspace new-workspace]} ((:workspace-selector @locals) :get-selected-workspace)
+             {:keys [project name description auth-domain]} new-workspace]
          (if existing-workspace
            (this :-export-loaded-config (ws-common/workspace->id existing-workspace) config)
            (do (swap! state assoc :banner "Creating workspace...")
