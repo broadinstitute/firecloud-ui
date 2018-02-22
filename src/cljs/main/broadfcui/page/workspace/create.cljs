@@ -153,7 +153,7 @@
      (when-let [{:keys [project name description auth-domain]} ((@refs "form") :get-field-values)]
        (swap! state assoc :creating-ws true)
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/create-workspace project name)
+        {:endpoint endpoints/create-workspace
          :payload {:namespace project
                    :name name
                    :attributes (if (string/blank? description) {} {:description description})

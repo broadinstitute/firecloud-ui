@@ -196,7 +196,7 @@
            (this :-export-loaded-config (ws-common/workspace->id existing-workspace) config)
            (do (swap! state assoc :banner "Creating workspace...")
                (endpoints/call-ajax-orch
-                {:endpoint (endpoints/create-workspace project name)
+                {:endpoint endpoints/create-workspace
                  :payload {:namespace project
                            :name name
                            :attributes (if (string/blank? description) {} {:description description})
