@@ -93,8 +93,9 @@ class MethodRepoSpec extends FreeSpec
             val exportModal = methodRepoPage.methodRepoTable.enterMethod(methodNamespace, methodName).startExport()
             val finalPage = exportModal.firstPage.useBlankConfiguration()
 
-            val workspaceName = "test_create_on_export"
+            val workspaceName = "test_create_on_export_" + randomUuid
             finalPage.workspaceSelector.selectNew(billingProject, workspaceName)
+            register cleanUp api.workspaces.delete(billingProject, workspaceName)
             finalPage.confirm()
 
             val detailsPage = exportModal.getPostExportModal.goToWorkspace(billingProject, workspaceName)
