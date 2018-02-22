@@ -13,14 +13,8 @@
      [:div {:style {:minWidth 50 :minHeight 20}
             :onMouseOver #(swap! state assoc :visible? true)
             :onMouseOut #(swap! state dissoc :visible?)}
-      [:div {:style {:display (when-not (or (:visible? @state) (not @utils/use-live-data?)) "none")
+      [:div {:style {:display (when-not (:visible? @state) "none")
                      :padding 20 :paddingBottom 10 :margin -20 :marginBottom -10}}
-       [:div {}
-        "Fake data: "
-        [:a {:href "javascript:;"
-             :style {:textDecoration "none" :color (if @utils/use-live-data? "green" "red")}
-             :onClick #(do (swap! utils/use-live-data? not) (swap! state assoc :foo 1))}
-         (if @utils/use-live-data? "off" "on")]]
        [:div {}
         [:a {:href "#styles" :style {:textDecoration "none" :display "block"}} "Style Guide"]
         [:a {:href "#status" :style {:textDecoration "none"}} "Status Page"]]]])})

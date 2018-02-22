@@ -59,14 +59,6 @@
   (.removeItem window.localStorage (subs (str k) 1)))
 
 
-(defonce use-live-data? (atom (let [value (local-storage-read ::use-live-data? true)]
-                                (if (nil? value) true value))))
-(add-watch
- use-live-data? :save-to-local-storage
- (fn [_ _ _ ns]
-   (local-storage-write ::use-live-data? ns true)))
-
-
 (defn deep-merge [& maps]
   (doseq [x maps] (assert (or (nil? x) (map? x)) (str "not a map: " x)))
   (apply
