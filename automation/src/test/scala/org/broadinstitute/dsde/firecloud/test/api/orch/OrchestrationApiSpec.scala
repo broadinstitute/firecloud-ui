@@ -74,62 +74,19 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         // begin GAWB-3138 why does this fail so often
 
         // The google role might not have been removed the first time we call startQuery() - poll until it has
-//        val postRoleFailure = eventually {
-//          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
-//          failure shouldBe a[GoogleJsonResponseException]
-//          failure
-//        }
-//
-//        postRoleFailure.getMessage should include(user.email)
-//        postRoleFailure.getMessage should include(projectName)
-//        postRoleFailure.getMessage should include("bigquery.jobs.create")
+        val postRoleFailure = eventually {
+          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
+          failure shouldBe a[GoogleJsonResponseException]
+          failure
+        }
+
+        postRoleFailure.getMessage should include(user.email)
+        postRoleFailure.getMessage should include(projectName)
+        postRoleFailure.getMessage should include("bigquery.jobs.create")
 
         // end GAWB-3138 why does this fail so often
 
       }(ownerToken)
-    }
-
-    "should not allow access alteration for arbitrary google roles" in {
-      val ownerUser: Credentials = UserPool.chooseProjectOwner
-      val ownerToken: AuthToken = ownerUser.makeAuthToken()
-      val roles = Seq("bigquery.admin", "bigquery.dataEditor", "bigquery.user")
-
-      val user: Credentials = UserPool.chooseStudent
-
-      withBillingProject("auto-goog-role") { projectName =>
-        roles foreach { role =>
-          val addEx = intercept[RestException] {
-            Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
-          }
-          addEx.getMessage should include(role)
-
-          val removeEx = intercept[RestException] {
-            Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
-          }
-          removeEx.getMessage should include(role)
-        }
-      }(ownerToken)
-    }
-
-    "should not allow access alteration by non-owners" in {
-      val Seq(userA: Credentials, userB: Credentials) = UserPool.chooseStudents(2)
-      val userAToken: AuthToken = userA.makeAuthToken()
-
-      val role = "bigquery.jobUser"
-      val errorMsg = "You must be a project owner"
-      val unownedProject = "broad-dsde-dev"
-
-      val addEx = intercept[RestException] {
-        Orchestration.billing.addGoogleRoleToBillingProjectUser(unownedProject, userB.email, role)(userAToken)
-      }
-      addEx.getMessage should include(errorMsg)
-      addEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
-
-      val removeEx = intercept[RestException] {
-        Orchestration.billing.removeGoogleRoleFromBillingProjectUser(unownedProject, userB.email, role)(userAToken)
-      }
-      removeEx.getMessage should include(errorMsg)
-      removeEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
     }
   }
 }
