@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.methodrepo
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{MethodData, MethodFixtures}
@@ -15,7 +16,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   implicit val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
-    "should be able to create a method and see it in the table" in withWebDriver { implicit driver =>
+    "should be able to create a method and see it in the table" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
       withSignIn(ownerUser) { _ =>
         val methodRepoPage = new MethodRepoPage().open
 
