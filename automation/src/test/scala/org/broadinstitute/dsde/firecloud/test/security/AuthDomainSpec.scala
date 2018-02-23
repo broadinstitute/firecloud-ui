@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.security
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
@@ -70,7 +71,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
 
-      "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
+      "can be cloned and retain the auth domain" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>
@@ -83,10 +84,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 val cloneModal = summaryPage.clickCloneButton()
                 cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
 
-                register cleanUp {
-                  api.workspaces.delete(projectName, cloneWorkspaceName)(authToken)
-                }
-
+                register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authToken)
 
                 val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
                 cloneSummaryPage.validateWorkspace shouldEqual true
@@ -221,10 +219,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   cloneModal.readLockedAuthDomainGroups() should contain(groupOneName)
                   cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)
 
-                  register cleanUp {
-                    api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
-                  }
-
+                  register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
 
                   val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
                   cloneSummaryPage.validateWorkspace shouldEqual true
@@ -250,9 +245,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
                     summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
 
-                    register cleanUp {
-                      api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
-                    }
+                    register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
 
                     summaryPage.readAuthDomainGroups should include(groupOneName)
                     summaryPage.readAuthDomainGroups should include(groupTwoName)
@@ -519,7 +512,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
   }
 
   "removing permissions from billing project owners for workspaces with auth domains" - {
-    "+ project owner, + group member, create workspace, - group member" in withWebDriver { implicit driver =>
+    "+ project owner, + group member, create workspace, - group member" in {
       val owner = UserPool.chooseProjectOwner
       val creator = UserPool.chooseStudent
       val user = owner
@@ -537,7 +530,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ project owner, + group member, create workspace, - project owner" in withWebDriver { implicit driver =>
+    "+ project owner, + group member, create workspace, - project owner" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -546,6 +539,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withBillingProject("auth-domain-spec") { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             checkVisibleAndAccessible(user, projectName, workspaceName)
@@ -557,7 +552,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ project owner, create workspace, + group member, - group member" in withWebDriver { implicit driver =>
+    "+ project owner, create workspace, + group member, - group member" in {
       val owner = UserPool.chooseProjectOwner
       val creator = UserPool.chooseStudent
       val user = owner
@@ -570,6 +565,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           checkVisibleNotAccessible(user, projectName, workspaceName)
 
           api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+          register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
           checkVisibleAndAccessible(user, projectName, workspaceName)
 
           api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -578,7 +574,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ project owner, create workspace, + group member, - project owner" in withWebDriver { implicit driver =>
+    "+ project owner, create workspace, + group member, - project owner" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -587,6 +583,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withBillingProject("auth-domain-spec") { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
@@ -594,19 +592,17 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
               register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
-
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
               checkNoAccess(user, projectName, workspaceName)
-
             }
           }
         }
       }
     }
 
-    "+ group member, create workspace, + project owner, - group member" in withWebDriver { implicit driver =>
+    "+ group member, create workspace, + project owner, - group member" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -615,10 +611,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withBillingProject("auth-domain-spec") { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
-          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke1x", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -628,7 +625,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "+ group member, create workspace, + project owner, - project owner" in withWebDriver { implicit driver =>
+    "+ group member, create workspace, + project owner, - project owner" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -641,6 +638,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -650,7 +648,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + project owner, + group member, - group member" in withWebDriver { implicit driver =>
+    "create workspace, + project owner, + group member, - group member" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -661,9 +659,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkVisibleNotAccessible(user, projectName, workspaceName)
 
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -673,7 +673,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + project owner, + group member, - project owner" in withWebDriver { implicit driver =>
+    "create workspace, + project owner, + group member, - project owner" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -685,11 +685,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
               api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+              register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
               checkVisibleNotAccessible(user, projectName, workspaceName)
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
               register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
-
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -700,7 +700,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + group member, + project owner, - group member" in withWebDriver { implicit driver =>
+    "create workspace, + group member, + project owner, - group member" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -711,9 +711,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+            register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -723,7 +725,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "create workspace, + group member, + project owner, - project owner" in withWebDriver { implicit driver =>
+    "create workspace, + group member, + project owner, - project owner" in {
       val owner = UserPool.chooseProjectOwner
       val creator = owner
       val user = UserPool.chooseStudent
@@ -736,15 +738,13 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
               register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
-
               checkNoAccess(user, projectName, workspaceName)
 
               api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
               register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
-
               checkVisibleAndAccessible(user, projectName, workspaceName)
-              api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
+              api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
               checkNoAccess(user, projectName, workspaceName)
             }
           }
@@ -753,50 +753,53 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     }
   }
 
-  def checkNoAccess(user: Credentials, projectName: String, workspaceName: String)
-                   (implicit webDriver: WebDriver): Unit = {
-    withSignIn(user) { workspaceListPage =>
-      // Not in workspace list
-      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
+  def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
+    withWebDriver { implicit driver =>
+      withSignIn(user) { workspaceListPage =>
+        // Not in workspace list
+        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
 
-      // No direct access
-      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+        // No direct access
+        val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+        checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+      }
     }
   }
 
-  def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String)
-                               (implicit webDriver: WebDriver): Unit = {
-    withSignIn(user) { workspaceListPage =>
-      // Looks restricted; implies in workspace list
-      workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+  def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
+    withWebDriver { implicit driver =>
+      withSignIn(user) { workspaceListPage =>
+        // Looks restricted; implies in workspace list
+        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
 
-      // Clicking opens request access modal
-      workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-      workspaceListPage.showsRequestAccessModal() shouldEqual true
-      // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
-      Thread sleep 500
-      new RequestAccessModal().cancel()
+        // Clicking opens request access modal
+        workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+        workspaceListPage.showsRequestAccessModal() shouldEqual true
+        // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
+        Thread sleep 500
+        new RequestAccessModal().cancel()
 
-      // No direct access
-      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+        // No direct access
+        val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+        checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+      }
     }
   }
 
-  def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String)
-                               (implicit webDriver: WebDriver): Unit = {
-    withSignIn(user) { workspaceListPage =>
-      // Looks restricted; implies in workspace list
-      workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+  def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
+    withWebDriver { implicit driver =>
+      withSignIn(user) { workspaceListPage =>
+        // Looks restricted; implies in workspace list
+        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
 
-      // Clicking opens workspace
-      workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
+        // Clicking opens workspace
+        workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
 
-      // Direct access also works
-      // Navigate somewhere else first otherwise background login status gets lost
-      workspaceListPage.open
-      new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
+        // Direct access also works
+        // Navigate somewhere else first otherwise background login status gets lost
+        workspaceListPage.open
+        new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
+      }
     }
   }
 }

@@ -117,10 +117,10 @@
                      [WDLViewer
                       {:ref WDL :wdl (:payload selected-snapshot)}]
                      [:div {:style {:margin "1.5rem 0 0.5rem 1.5rem"}}
-                      (links/create-download-from-object
-                       "Download WDL"
-                       (:payload selected-snapshot)
-                       (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl"))
+                      [links/DownloadFromObject
+                       {:label "Download WDL"
+                        :object (:payload selected-snapshot)
+                        :filename (str (:name selected-snapshot) "." (:snapshotId selected-snapshot) ".wdl")}]
                       (when (:public selected-snapshot)
                         [:div {:style {:marginTop "1.5rem"}}
                          [:span {:style {:fontWeight 500}} "Import URL for this WDL"]
@@ -146,24 +146,23 @@
                  (merge {:ref SUMMARY}
                         (utils/restructure selected-snapshot workspace-id refresh-snapshot))]))))]
         (when workspace-id
-          (flex/box
-           {:style {:marginTop "-1.5rem"}}
-           flex/spring
-           [buttons/Button {:style {:marginLeft "auto"}
-                            :text "Select Configuration"
-                            :onClick #(nav-method {:label "Select Configuration"
-                                                   :component MethodExporter
-                                                   :props {:workspace-id workspace-id
-                                                           :method-name (:name (last method))
-                                                           :method-id method-id
-                                                           :selected-snapshot-id selected-snapshot-id
-                                                           :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
-                                                           :on-export
-                                                           (fn [workspace-id config-id]
-                                                             (mc-sync/flag-synchronization)
-                                                             (nav/go-to-path :workspace-method-config
-                                                                             workspace-id
-                                                                             (ws-common/config->id config-id)))}})}]))]))
+          (flex/box {:style {:marginTop "-1.5rem"}}
+            flex/spring
+            [buttons/Button {:style {:marginLeft "auto"}
+                             :text "Select Configuration"
+                             :onClick #(nav-method {:label "Select Configuration"
+                                                    :component MethodExporter
+                                                    :props {:workspace-id workspace-id
+                                                            :method-name (:name (last method))
+                                                            :method-id method-id
+                                                            :selected-snapshot-id selected-snapshot-id
+                                                            :initial-config (some-> config-id (assoc :snapshotId config-snapshot-id))
+                                                            :on-export
+                                                            (fn [workspace-id config-id]
+                                                              (mc-sync/flag-synchronization)
+                                                              (nav/go-to-path :workspace-method-config
+                                                                              workspace-id
+                                                                              (ws-common/config->id config-id)))}})}]))]))
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-method))

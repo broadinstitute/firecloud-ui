@@ -13,6 +13,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -84,14 +85,14 @@
               :spellCheck false
               :defaultValue (:user acl-entry)
               :predicates [(input/valid-email-or-empty "User ID")]}]
-            (let [disabled? (= (user/get-user-email) (:user acl-entry))]
+            (let [disabled? (= (user/get-email) (:user acl-entry))]
               (style/create-identity-select
-               {:ref (str "acl-value" i)
-                :style {:float "right" :width column-width :height 33}
-                :disabled disabled?
-                :title (when disabled? "You cannot edit your own permissions.")
-                :defaultValue (:role acl-entry)}
-               access-levels))
+                {:ref (str "acl-value" i)
+                 :style {:float "right" :width column-width :height 33}
+                 :disabled disabled?
+                 :title (when disabled? "You cannot edit your own permissions.")
+                 :defaultValue (:role acl-entry)}
+                access-levels))
             (common/clear-both)])
          acl-vec)
         [buttons/Button {:text "Add new" :icon :add-new
@@ -119,7 +120,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
             {:endpoint (:save-endpoint props)
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :payload non-empty-acls-w-public
              :on-done (net/handle-ajax-response
                        (fn [{:keys [success? parsed-response]}]

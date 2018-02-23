@@ -13,6 +13,7 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (react/defc CreateBillingProjectDialog
@@ -35,7 +36,7 @@
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. "
                (links/create-external {:href (config/billing-account-guide-url)}
-                                      "Learn how to create a billing account.")]
+                 "Learn how to create a billing account.")]
               [:div {:style {:width 750}
                      :data-test-id "create-billing-project-form"}
                (when (:creating? @state)
@@ -125,7 +126,7 @@
            (endpoints/call-ajax-orch
             {:endpoint endpoints/create-billing-project
              :payload {:projectName name :billingAccount account}
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :creating?)
                         (if success?

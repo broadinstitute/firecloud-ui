@@ -16,12 +16,13 @@
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
    [broadfcui.page.method-repo.method.details :refer [MethodDetails]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
 
 (defn- process-methods [methods]
-  (let [user-email (user/get-user-email)]
+  (let [user-email (user/get-email)]
     (map (fn [{:keys [public managers namespace name] :as method}]
            (assoc method
              :mine? (or (not public)
@@ -99,24 +100,24 @@
                                :render
                                (fn [{:keys [namespace name] :as method-id}]
                                  (links/create-internal
-                                  (utils/deep-merge
-                                   {:data-test-id (str "method-link-" namespace "-" name)
-                                    :style {:display "block" :marginTop -4}}
-                                   (if workspace-id
-                                     {:onClick #(nav-method
-                                                 {:label (str namespace "/" name)
-                                                  :component MethodDetails
-                                                  :props (utils/restructure method-id nav-method workspace-id)})}
-                                     {:href (nav/get-link :method-loader method-id)}))
-                                  [:span
-                                   {:className (when-not workspace-id "underline-on-hover")
-                                    :style {:fontSize "80%" :color "black"}
-                                    :onClick (when-not workspace-id
-                                               (fn [e]
-                                                 (.preventDefault e)
-                                                 (swap! state assoc :editing-namespace namespace)))}
-                                   namespace]
-                                  [:div {:style {:fontWeight 600}} name]))}
+                                   (utils/deep-merge
+                                    {:data-test-id (str "method-link-" namespace "-" name)
+                                     :style {:display "block" :marginTop -4}}
+                                    (if workspace-id
+                                      {:onClick #(nav-method
+                                                  {:label (str namespace "/" name)
+                                                   :component MethodDetails
+                                                   :props (utils/restructure method-id nav-method workspace-id)})}
+                                      {:href (nav/get-link :method-loader method-id)}))
+                                   [:span
+                                    {:className (when-not workspace-id "underline-on-hover")
+                                     :style {:fontSize "80%" :color "black"}
+                                     :onClick (when-not workspace-id
+                                                (fn [e]
+                                                  (.preventDefault e)
+                                                  (swap! state assoc :editing-namespace namespace)))}
+                                    namespace]
+                                   [:div {:style {:fontWeight 600}} name]))}
                               {:header "Synopsis" :initial-width 475
                                :column-data :synopsis
                                :sort-by string/lower-case}
@@ -151,12 +152,12 @@
                   (if success?
                     (swap! state assoc :methods (process-methods (get-parsed-response)))
                     (swap! state assoc :error (get-parsed-response false))))})
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "featured-methods"
       (fn [parsed]
         (let [{:keys [with-name ns-only]} (split-by-name parsed)]
           (swap! state assoc :featured-methods with-name :featured-namespaces ns-only))))
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "certified-methods"
       (fn [parsed]
         (let [{:keys [with-name ns-only]} (split-by-name parsed)]

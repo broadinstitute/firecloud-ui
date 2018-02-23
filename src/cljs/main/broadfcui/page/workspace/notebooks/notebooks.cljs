@@ -22,6 +22,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -109,7 +110,8 @@
                 [:span {} (create-inline-form-label "Master Disk Size")]]
                [:div {:display "inline-block"}
                 (style/create-identity-select {:ref "masterMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"} machineTypes)
+                                               :defaultValue "n1-standard-4"}
+                  machineTypes)
                 [input/TextField {:ref "masterDiskSize" :autoFocus true :style {:width "41%"}
                                   :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
@@ -121,7 +123,8 @@
                 [:span {} (create-inline-form-label "Worker Disk Size")]]
                [:div {:display "inline-block"}
                 (style/create-identity-select {:ref "workerMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"} machineTypes)
+                                               :defaultValue "n1-standard-4"}
+                  machineTypes)
                 [input/TextField {:ref "workerDiskSize" :autoFocus true :style {:width "41%"}
                                   :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
@@ -141,12 +144,12 @@
                   (map-indexed (fn [i label]
                                  [:div {:display "inline-block" :style {:marginBottom 10}}
                                   (links/create-internal
-                                   {:style {:color (:text-light style/colors)
-                                            :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
-                                    :href "javascript:;"
-                                    :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                      (update :labels utils/delete i))))}
-                                   (icons/render-icon {} :remove))
+                                    {:style {:color (:text-light style/colors)
+                                             :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
+                                     :href "javascript:;"
+                                     :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                       (update :labels utils/delete i))))}
+                                    (icons/render-icon {} :remove))
                                   [input/TextField {:style {:ref (str "key" i)
                                                             :marginBottom 0 :width "47.5%" :marginRight "4%"}
                                                     :defaultValue (first label)
@@ -180,7 +183,7 @@
               {:endpoint (endpoints/create-cluster (get-in props [:workspace-id :namespace]) clusterNameCreate)
                :payload (assoc (if (= "" (:jupyterExtensionUri extensionURI)) payload (merge payload extensionURI))
                           :machineConfig machineConfig)
-               :headers utils/content-type=json
+               :headers ajax/content-type=json
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :creating?)
                           (if success?
@@ -227,7 +230,7 @@
        (swap! state dissoc :server-error)
        (endpoints/call-ajax-leo
         {:endpoint (endpoints/delete-cluster (get-in props [:workspace-id :namespace]) cluster-to-delete)
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :deleting?)
                     (if success?
@@ -321,7 +324,7 @@
                                        :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
         [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
         (if server-error
-          [comps/ErrorViewer {:error server-error}]
+          [comps/ErrorViewer {:error server-error :data-test-id "notebooks-error"}]
           (if clusters
             [NotebooksTable
              (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
@@ -330,7 +333,7 @@
                           :clusters clusters
                           :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
    :component-did-mount
-   (fn [{:keys [this locals]}]
+   (fn [{:keys [this]}]
      (this :-is-leo-whitelisted)
      (.addEventListener js/window "message" (react/method this :-notebook-extension-listener)))
 
@@ -354,7 +357,7 @@
    (fn [{:keys [state this]}]
      (endpoints/call-ajax-leo
       {:endpoint endpoints/is-leo-whitelisted
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (do (swap! state assoc :is-leo-whitelisted? true)
@@ -363,7 +366,7 @@
                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
    :-schedule-cookie-refresh-if-whitelisted
-   (fn [{:keys [props state locals this]}]
+   (fn [{:keys [state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
        (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
          (when (contains-statuses clusters ["Running"])
@@ -375,7 +378,7 @@
      (let [{{:keys [clusters]} :server-response} @state
            running-clusters (filter (comp (partial = "Running") :status) clusters)]
        (doseq [cluster running-clusters]
-         (utils/ajax
+         (ajax/call
           {:url (str (leo-notebook-url cluster) "/setCookie")
            :headers (user/get-bearer-token-header)
            :with-credentials? true
@@ -389,7 +392,7 @@
      (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
        (endpoints/call-ajax-leo
         {:endpoint endpoints/get-clusters-list
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
                       (let [filtered-clusters (filter #(= (get-in props [:workspace-id :namespace]) (:googleProject %)) (get-parsed-response))]

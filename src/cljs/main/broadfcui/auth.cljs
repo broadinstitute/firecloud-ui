@@ -10,6 +10,7 @@
    [broadfcui.nav :as nav]
    [broadfcui.page.external-importer :as external-importer]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -47,7 +48,7 @@
           "The following Privacy Policy discloses our information gathering and dissemination
            practices for the Broad Institute FireCloud application accessed via the website "
           (links/create-external {:href "https://portal.firecloud.org/"}
-                                 "https://portal.firecloud.org/")
+            "https://portal.firecloud.org/")
           ". By using the FireCloud, you agree to the collection and use of information in
            accordance with this policy. This Privacy Policy is effective as of 1-19-2017."]
          [:h4 {} "Information Gathering"]
@@ -137,7 +138,7 @@
        "You are reminded that when accessing controlled access information you are bound by the
         dbGaP TCGA "
        (links/create-external {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014"}
-                              "DATA USE CERTIFICATION AGREEMENT (DUCA)")
+         "DATA USE CERTIFICATION AGREEMENT (DUCA)")
        "."]])})
 
 (react/defc- PolicyPage
@@ -186,19 +187,19 @@
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                           :prompt "select_account"}))
            (.then (fn [response]
-                    (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
-                                 :method "POST"
-                                 :data (utils/->json-string
-                                        {:code (.-code response)
-                                         :redirectUri (.. js/window -location -origin)})
-                                 :on-done (fn [{:keys [success?]}]
-                                            (when success?
-                                              (swap! locals assoc :refresh-token-saved? true)
-                                              (let [signed-in? (-> auth2
-                                                                   (aget "currentUser")
-                                                                   (js-invoke "get")
-                                                                   (js-invoke "isSignedIn"))]
-                                                (on-change signed-in? true))))}))))))})
+                    (ajax/call {:url (str (config/api-url-root) "/handle-oauth-code")
+                                :method "POST"
+                                :data (utils/->json-string
+                                       {:code (.-code response)
+                                        :redirectUri (.. js/window -location -origin)})
+                                :on-done (fn [{:keys [success?]}]
+                                           (when success?
+                                             (swap! locals assoc :refresh-token-saved? true)
+                                             (let [signed-in? (-> auth2
+                                                                  (aget "currentUser")
+                                                                  (js-invoke "get")
+                                                                  (js-invoke "isSignedIn"))]
+                                               (on-change signed-in? true))))}))))))})
 
 (react/defc UserStatus
   {:render
@@ -213,16 +214,16 @@
          "Error loading user information. Please try again later."])])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (utils/ajax-orch "/me"
-                      {:on-done (fn [{:keys [success? status-code]}]
-                                  (if success?
-                                    ((:on-success props))
-                                    (case status-code
-                                      403 (swap! state assoc :error :not-active)
-                                      ;; 404 means "not yet registered"
-                                      404 ((:on-success props))
-                                      (swap! state assoc :error true))))}
-                      :service-prefix ""))})
+     (ajax/call-orch "/me"
+                     {:on-done (fn [{:keys [success? status-code]}]
+                                 (if success?
+                                   ((:on-success props))
+                                   (case status-code
+                                     403 (swap! state assoc :error :not-active)
+                                     ;; 404 means "not yet registered"
+                                     404 ((:on-success props))
+                                     (swap! state assoc :error true))))}
+                     :service-prefix ""))})
 
 (react/defc RefreshCredentials
   {:get-initial-state
@@ -237,49 +238,49 @@
       " " [:a {:href "javascript:;" :onClick #(this :-re-auth)} "Refresh now..."]])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch "/refresh-token-status"
-                      {:on-done (fn [{:keys [raw-response]}]
-                                  (let [[parsed _]
-                                        (utils/parse-json-string raw-response true false)]
-                                    (when (and parsed (:requiresRefresh parsed))
-                                      (swap! state dissoc :hidden?))))}))
+     (ajax/call-orch "/refresh-token-status"
+                     {:on-done (fn [{:keys [raw-response]}]
+                                 (let [[parsed _]
+                                       (utils/parse-json-string raw-response true false)]
+                                   (when (and parsed (:requiresRefresh parsed))
+                                     (swap! state dissoc :hidden?))))}))
    :-re-auth
    (fn [{:keys [props state]}]
      (-> (:auth2 props)
          (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                         :prompt "consent"}))
          (.then (fn [response]
-                  (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
-                               :method "POST"
-                               :data (utils/->json-string
-                                      {:code (.-code response)
-                                       :redirectUri (.. js/window -location -origin)})
-                               :on-done #(swap! state assoc :hidden? true)})))))})
+                  (ajax/call {:url (str (config/api-url-root) "/handle-oauth-code")
+                              :method "POST"
+                              :data (utils/->json-string
+                                     {:code (.-code response)
+                                      :redirectUri (.. js/window -location -origin)})
+                              :on-done #(swap! state assoc :hidden? true)})))))})
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token]
-    (utils/ajax {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
-                           (js/encodeURIComponent auth-token))
-                 :on-done
-                 (fn [{:keys [status-code success? get-parsed-response raw-response]}]
-                   (if success?
-                     (let [{:keys [email sub]} (get-parsed-response)
-                           auth2 (clj->js
-                                  {:currentUser
-                                   {:get
-                                    (constantly
-                                     (clj->js
-                                      {:getAuthResponse
-                                       (constantly (clj->js {:access_token auth-token}))
-                                       :getBasicProfile
-                                       (constantly (clj->js {:getEmail (constantly email)
-                                                             :getId (constantly sub)}))
-                                       :hasGrantedScopes (constantly true)}))
-                                    :listen (constantly nil)}
-                                   :signOut on-sign-out})]
-                       (user/set-google-auth2-instance! auth2)
-                       (on-sign-in))
-                     (on-error {:status status-code :response raw-response})))})))
+    (ajax/call {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
+                          (js/encodeURIComponent auth-token))
+                :on-done
+                (fn [{:keys [status-code success? get-parsed-response raw-response]}]
+                  (if success?
+                    (let [{:keys [email sub]} (get-parsed-response)
+                          auth2 (clj->js
+                                 {:currentUser
+                                  {:get
+                                   (constantly
+                                    (clj->js
+                                     {:getAuthResponse
+                                      (constantly (clj->js {:access_token auth-token}))
+                                      :getBasicProfile
+                                      (constantly (clj->js {:getEmail (constantly email)
+                                                            :getId (constantly sub)}))
+                                      :hasGrantedScopes (constantly true)}))
+                                   :listen (constantly nil)}
+                                  :signOut on-sign-out})]
+                      (user/set-google-auth2-instance! auth2)
+                      (on-sign-in))
+                    (on-error {:status status-code :response raw-response})))})))
 
 (defn render-forced-sign-in-error [error]
   [:div {}

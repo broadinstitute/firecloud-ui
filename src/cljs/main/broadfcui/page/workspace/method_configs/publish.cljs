@@ -8,6 +8,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -44,7 +45,7 @@
                (swap! state assoc :publishing? true)
                (endpoints/call-ajax-orch
                 {:endpoint (endpoints/copy-method-config-to-repo workspace-id)
-                 :headers utils/content-type=json
+                 :headers ajax/content-type=json
                  :payload {:configurationNamespace ns
                            :configurationName n
                            :sourceNamespace namespace

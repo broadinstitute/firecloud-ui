@@ -8,6 +8,7 @@ import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceNotebooksPage.WorkspaceNotebooksPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.MethodData.SimpleMethod
@@ -52,7 +53,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
 
   "A user" - {
     "with a billing project" - {
-      "should be able to create a workspace" in withWebDriver { implicit driver =>
+      "should be able to create a workspace" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withSignIn(user) { listPage =>
@@ -85,7 +86,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
     }
 
     "who owns a workspace" - {
-      "should be able to delete the workspace" in withWebDriver { implicit driver =>
+      "should be able to delete the workspace" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>

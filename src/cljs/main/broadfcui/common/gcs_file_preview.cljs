@@ -9,6 +9,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
    ))
 
@@ -115,17 +116,17 @@
                                        {:data (get-parsed-response)}
                                        {:error (.-responseText xhr)
                                         :status status-code})))})
-       (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
-                              (js/encodeURIComponent object) "?alt=media")
-                    :headers (merge (user/get-bearer-token-header)
-                                    {"Range" (str "bytes=-" preview-byte-count)})
-                    :on-done (fn [{:keys [raw-response]}]
-                               (swap! state assoc :preview raw-response
-                                      :preview-line-count (count (clojure.string/split raw-response #"\n+")))
-                               (after-update
-                                (fn []
-                                  (when-not (string/blank? (@refs "preview"))
-                                    (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))})
+       (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
+                             (js/encodeURIComponent object) "?alt=media")
+                   :headers (merge (user/get-bearer-token-header)
+                                   {"Range" (str "bytes=-" preview-byte-count)})
+                   :on-done (fn [{:keys [raw-response]}]
+                              (swap! state assoc :preview raw-response
+                                     :preview-line-count (count (clojure.string/split raw-response #"\n+")))
+                              (after-update
+                               (fn []
+                                 (when-not (string/blank? (@refs "preview"))
+                                   (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))})
 
 
 

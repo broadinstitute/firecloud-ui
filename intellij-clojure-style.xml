@@ -1,10 +1,24 @@
-<code_scheme name="correct">
+<code_scheme name="FireCloud UI Style" version="173">
   <option name="RIGHT_MARGIN" value="100" />
   <ClojureCodeStyleSettings>{
+  :broadfcui.common.flex-utils/box :only-indent
+  :broadfcui.common.links/create-external :only-indent
+  :broadfcui.common.links/create-internal :only-indent
+  :broadfcui.common.style/center :only-indent
+  :broadfcui.common.style/create-identity-select :only-indent
+  :broadfcui.common.style/create-identity-select-name :only-indent
+  :broadfcui.common.style/create-select :only-indent
+  :broadfcui.common.style/left-ellipses :only-indent
+  :broadfcui.common.style/right-ellipses :only-indent
+  :broadfcui.utils/multi-swap! 1
   :cursive.formatting/align-maps false
   :cursive.formatting/comment-align-column 0
   :cursive.formatting/one-space-lists true
 }</ClojureCodeStyleSettings>
+  <ScalaCodeStyleSettings>
+    <option name="TYPE_ANNOTATION_IMPLICIT_MODIFIER" value="false" />
+    <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />
+  </ScalaCodeStyleSettings>
   <codeStyleSettings language="Clojure">
     <indentOptions>
       <option name="SMART_TABS" value="true" />

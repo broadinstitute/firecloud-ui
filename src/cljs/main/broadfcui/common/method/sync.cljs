@@ -11,6 +11,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -55,9 +56,9 @@
                 [:td {:style {:verticalAlign "baseline"}}
                  [:div {:style {:marginLeft "1rem"}}
                   (style/create-identity-select
-                   {:style {:width 120}
-                    :onChange #(swap! locals assoc user (.. % -target -value))}
-                   ["Reader" "Owner" "No access"])]]])
+                    {:style {:width 120}
+                     :onChange #(swap! locals assoc user (.. % -target -value))}
+                    ["Reader" "Owner" "No access"])]]])
              (:users props))]]])
    :-setup-permission-detail
    (fn [{:keys [props state locals]}]
@@ -75,7 +76,7 @@
                        (remove (fn [[_ role]] (= role "No access")))
                        (mapv (fn [[user role]] {:user user :role (string/upper-case role)})))
                   (mapv (fn [user] {:user user :role "READER"}) (:users props)))
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:dismiss props))

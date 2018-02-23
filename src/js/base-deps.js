@@ -10,7 +10,7 @@ window.webpackDeps.ReactLoadScript = require('react-load-script');
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
 
-require('./js/timingDiagram'); // loaded here because it's small and is the only non-google-loader timeline dep
+require('./timingDiagram'); // loaded here because it's small and is the only non-google-loader timeline dep
 
 require('any-resize-event');
 
@@ -24,15 +24,15 @@ require('foundation-sites/js/foundation.dropdown');
 require('foundation-sites/js/foundation.magellan');
 require('foundation-sites/js/foundation.sticky');
 require('foundation-sites/js/foundation.tooltip');
-require('./styles/foundation.scss');
+require('../styles/foundation.scss');
 
 require('select2');
-require('./js/select2MonkeyPatch');
-require('./styles/select2.scss');
+require('./select2MonkeyPatch');
+require('../styles/select2.scss');
 
 require('font-awesome/css/font-awesome.css');
 
-require('./styles/react-shims.scss');
+require('../styles/react-shims.scss');
 
 // lastly, the actual application
-require('../target/main');
+require('../../target/main');

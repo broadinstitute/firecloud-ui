@@ -5,7 +5,6 @@
    [clojure.string :as string]
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
@@ -34,8 +33,9 @@
    [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -120,7 +120,7 @@
        (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
-     (user-info/reload-user-profile
+     (user/reload-profile
       (fn [{:keys [success? status-text get-parsed-response]}]
         (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
           (cond
@@ -260,12 +260,12 @@
    (fn [{:keys [state this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-      utils/server-down? :server-watcher
+      ajax/server-down? :server-watcher
       (fn [_ _ _ down-now?]
         (when down-now?
           (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
      (add-watch
-      utils/maintenance-mode? :server-watcher
+      ajax/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
           (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
@@ -279,8 +279,8 @@
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (remove-watch utils/server-down? :server-watcher)
-     (remove-watch utils/maintenance-mode? :server-watcher))})
+     (remove-watch ajax/server-down? :server-watcher)
+     (remove-watch ajax/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []
