@@ -29,7 +29,7 @@
                                      (this :-render-pipeline (:wdl props))
                                      (swap! state assoc :loaded? true))
                           :path "pipeline-deps.bundle.js"}])
-        [:div {}
+        [:div {:className (when (:read-only? props) "read-only")}
          [:div {:data-test-id (:data-test-id props)
                 :ref #(swap! locals assoc :container %)
                 :style (when loaded? {:border style/standard-line :minHeight 300})}]
