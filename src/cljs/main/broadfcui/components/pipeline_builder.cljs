@@ -15,7 +15,7 @@
      (this :-render-pipeline (:wdl next-props)))
    :render
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [loaded? error?]} @state
+     (let [{:keys [loaded? error? connections-shown?]} @state
            {:keys [diagram]} @locals]
        [:div {:style {:height "100%"}
               :ref #(swap! locals assoc :wrapper %)}
@@ -34,7 +34,7 @@
                 :ref #(swap! locals assoc :container %)
                 :style (when loaded? {:border style/standard-line :minHeight 300})}]
          (let [make-pipeline-button
-               (fn [on-click icon title]
+               (fn [on-click icon title & [active?]]
                  (style/add-hover-style
                   [:button {:title title
                             :className "button-reset"
@@ -45,6 +45,7 @@
                                     :boxShadow "0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.2)"
                                     :padding "0.25rem" :margin "0.25rem 0"
                                     :width "2.5rem" :height "2.5rem"
+                                    :border (when active? (str "2px solid" (:text-light style/colors)))
                                     :borderRadius "50%"
                                     :textAlign "center"
                                     :cursor "pointer"}
@@ -57,7 +58,10 @@
             (make-pipeline-button #(.zoom.zoomOut diagram) :zoom-out "Zoom Out")
             (make-pipeline-button #(do (.zoom.fitToPage diagram) (.zoom.zoomOut diagram)) :zoom-fit "Zoom to Fit")
             [:div {:style {:height "2rem"}}]
-            (make-pipeline-button #(.togglePorts diagram true) :connection "Show/Hide All Connections")])]]))
+            (make-pipeline-button #(do (.togglePorts diagram true)
+                                       (swap! state update :connections-shown? not))
+                                  :show (str (if connections-shown? "Hide" "Show") " All Connections")
+                                  connections-shown?)])]]))
    :-render-pipeline
    (fn [{:keys [locals props]} wdl]
      (let [{:keys [read-only?]} props
