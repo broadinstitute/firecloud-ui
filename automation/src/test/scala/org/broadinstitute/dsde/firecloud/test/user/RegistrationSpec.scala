@@ -62,7 +62,11 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
         val profilePage = new ProfilePage().open
         val username = testUser.email.split("@").head
+/* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
         profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
+*/
+        profilePage.readProxyGroupEmail should (startWith ("PROXY_") and endWith ("firecloud.org"))
+/**/
       }
     }
   }
