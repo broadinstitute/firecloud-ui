@@ -25,7 +25,7 @@
        (case selected-index
          0 {:error "No workspace selected"}
          1 {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
-         {:existing-workspace (nth workspaces (dec selected-index))})))
+         {:existing-workspace (nth workspaces (- selected-index 2))})))
    :get-default-props
    (fn []
      {:filter identity
