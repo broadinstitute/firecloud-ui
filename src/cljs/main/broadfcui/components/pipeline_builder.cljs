@@ -17,7 +17,7 @@
    (fn [{:keys [props state locals this]}]
      (let [{:keys [loaded? error? connections-shown?]} @state
            {:keys [diagram]} @locals]
-       [:div {:style {:height "100%"}
+       [:div {:style {:height "100%" :position "relative"}
               :ref #(swap! locals assoc :wrapper %)}
         (cond
           error? [:h2 {} "Couldn't load WDL Pipeline Visualizer."]
