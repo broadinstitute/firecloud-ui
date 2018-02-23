@@ -6,6 +6,7 @@ import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
@@ -55,7 +56,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
     }
     "a published workspace" - {
-      "should be visible in the library table" in withWebDriver { implicit driver =>
+      "should be visible in the library table" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val curatorUser = UserPool.chooseCurator
         implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
         withWorkspace(namespace, "PublishSpec_curator_publish_") { wsName =>

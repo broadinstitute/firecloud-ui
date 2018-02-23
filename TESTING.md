@@ -110,7 +110,13 @@ To run a single test within a suite:
 # matches test via substring
 sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z \"have a search field\""
 ```
+To run Tagged Tests Only:
 
+As an example to run tests tagged with SmokeTest tag
+
+```bash
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly -- -n SmokeTest"
+```
 For more information see [SBT's documentation](http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments).
 
 

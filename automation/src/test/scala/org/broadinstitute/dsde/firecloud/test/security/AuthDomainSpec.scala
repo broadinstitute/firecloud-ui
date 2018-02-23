@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.security
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
@@ -70,7 +71,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
 
-      "can be cloned and retain the auth domain" in withWebDriver { implicit driver =>
+      "can be cloned and retain the auth domain" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>

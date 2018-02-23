@@ -4,4 +4,5 @@ import org.scalatest.Tag
 
 object Tags {
   object ProdTest extends Tag("ProdTest")
+  object SmokeTest extends Tag("SmokeTest")
 }

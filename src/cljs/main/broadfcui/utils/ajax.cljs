@@ -15,9 +15,8 @@
 (defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 2000)
 
-(defn call [{:keys [url on-done method headers data with-credentials? canned-response] :as arg-map}]
-  (let [method (if method (string/upper-case (name method)) "GET")
-        canned-response-params (when-not @utils/use-live-data? canned-response)]
+(defn call [{:keys [url on-done method headers data with-credentials?] :as arg-map}]
+  (let [method (if method (string/upper-case (name method)) "GET")]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
 
@@ -29,12 +28,7 @@
         (swap! recent-ajax-calls conj request)
         (js/setTimeout #(swap! recent-ajax-calls disj request) double-call-threshold)))
 
-    (let [xhr (if-not canned-response-params
-                (js/XMLHttpRequest.)
-                (let [xhr (js-obj)]
-                  (doseq [[k v] (dissoc canned-response-params :delay-ms)]
-                    (aset xhr (name k) v))
-                  xhr))
+    (let [xhr (js/XMLHttpRequest.)
           call-on-done (fn []
                          (on-done (let [status-code (.-status xhr)]
                                     {:xhr xhr
@@ -49,24 +43,13 @@
                                         (if (some? keywordize-keys?) keywordize-keys? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
-      (if canned-response-params
-        (do
-          (utils/jslog "Mocking AJAX Request:"
-                 (merge
-                  {:method method :url url}
-                  (when headers {:headers headers})
-                  (when data {:data data})))
-          (if-let [delay-ms (:delay-ms canned-response-params)]
-            (js/setTimeout call-on-done delay-ms)
-            (call-on-done)))
-        (do
-          (.addEventListener xhr "loadend" call-on-done)
-          (.open xhr method url)
-          (doseq [[k v] headers]
-            (.setRequestHeader xhr k v))
-          (if data
-            (.send xhr data)
-            (.send xhr)))))))
+      (.addEventListener xhr "loadend" call-on-done)
+      (.open xhr method url)
+      (doseq [[k v] headers]
+        (.setRequestHeader xhr k v))
+      (if data
+        (.send xhr data)
+        (.send xhr)))))
 
 
 (defn get-google-bucket-file [filename on-done]
