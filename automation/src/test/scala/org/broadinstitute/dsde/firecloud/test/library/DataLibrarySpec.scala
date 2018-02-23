@@ -73,8 +73,11 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
         api.library.publishWorkspace(namespace, wsName)
 
         withSignIn(curatorUser) { _ =>
-          val page = new DataLibraryPage().open
-          page.hasDataset(wsName) shouldBe true
+          val pageOption = new DataLibraryPage().waitForDataset(wsName)
+
+          pageOption should not be None
+
+          val page = pageOption.get
 
           //Verifying results
           val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",
