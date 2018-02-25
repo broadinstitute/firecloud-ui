@@ -158,6 +158,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.canComputeBox.isChecked shouldBe true
             aclEditor.canComputeBox.ensureUnchecked()
             aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.cancel()
           }
         }
 
@@ -174,6 +175,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.updateAccess("READER")
             aclEditor.canComputeBox.isChecked shouldBe false
             aclEditor.canComputeBox.isEnabled shouldBe false
+            aclEditor.cancel()
           }
         }
       }
@@ -191,6 +193,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canShareBox.isChecked shouldBe false
             aclEditor.canShareBox.isEnabled shouldBe false
+            aclEditor.cancel()
           }
         }
       }
@@ -207,6 +210,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val aclEditor = detailPage.openShareDialog(user2.email, "OWNER")
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canComputeBox.isChecked shouldBe true
+            aclEditor.cancel()
           }
         }
 
@@ -224,6 +228,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val aclEditor = detailPage.openShareDialog(user2.email, "READER")
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.cancel()
           }
         }
 

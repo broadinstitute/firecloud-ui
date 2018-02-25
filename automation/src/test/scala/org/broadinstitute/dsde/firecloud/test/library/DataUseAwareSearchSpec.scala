@@ -70,6 +70,8 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.isTagSelected(brxTagId) shouldBe true
         researchPurposeModal.isTagSelected(ffiTagId) shouldBe true // previously-selected tag still there
+
+        researchPurposeModal.xOut()
       }
     }
   }
