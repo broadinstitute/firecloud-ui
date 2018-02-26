@@ -10,8 +10,9 @@
 
 (react/defc WDLViewer
   {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [mode]} @state
+   (fn [{:keys [props #_state]}]
+     [CodeMirror {:text (:wdl props) :read-only? true}]
+     #_(let [{:keys [mode]} @state
            {:keys [wdl]} props
            mode (or mode :code)
            tab (fn [mode-key label]
