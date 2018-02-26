@@ -6,6 +6,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (def ^:private ReactAutosuggest (aget js/window "webpackDeps" "ReactAutosuggest"))
@@ -59,7 +60,7 @@
                              get-suggestions (fn [value]
                                                (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
                              url (fn [value]
-                                   (utils/ajax-orch
+                                   (ajax/call-orch
                                     (str url (.-value value))
                                     {:on-done (fn [{:keys [success? get-parsed-response]}]
                                                 (swap! state assoc :suggestions

@@ -7,6 +7,8 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -41,7 +43,7 @@
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/get-permission-report (:workspace-id props))
          :payload {:configs [(:config-id props)]}
-         :headers utils/content-type=json
+         :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (swap! state dissoc :banner)
                     (if success?
@@ -52,7 +54,7 @@
      (let [method-report (first (:referencedMethods parsed-perms-report))]
        (when-not (get-in method-report [:method :public])
          (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
-               me (utils/get-user-email)
+               me (user/get-email)
                method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
                can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
                method-users (when method-owner? (->> method-report :acls (map :user) set))

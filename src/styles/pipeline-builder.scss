@@ -1,0 +1,35 @@
+@import '~pipeline-builder/dist/pipeline.css';
+
+.read-only {
+
+  .joint-link.joint-theme-default .connection-wrap:hover {
+    opacity: 0;
+    stroke-opacity: unset;
+  }
+
+  .joint-type-visualstep, .joint-type-visualgroup, .joint-type-visualworkflow {
+
+    .port-body {
+
+      &:hover {
+        opacity: unset;
+        fill: #464547;
+      }
+
+      &.empty:hover {
+        fill: #fff;
+      }
+
+      &.disabled:hover {
+        opacity: 0.5;
+      }
+
+    }
+
+  }
+
+  .joint-element, .joint-link.joint-theme-default .connection-wrap, [magnet=true]:not(.joint-element) {
+    cursor: unset;
+  }
+
+}

@@ -15,6 +15,7 @@
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -97,7 +98,7 @@
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/post-workspace-method-config workspace-id)
              :payload updated-config
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (if success?
                           (do
@@ -121,11 +122,11 @@
                 :render-name
                 (fn [config]
                   (links/create-internal
-                   {:data-test-id (str (:name config) "-link")
-                    :onClick #(push-page {:breadcrumb-text (id->str config)
-                                          :component [ConfirmWorkspaceConfig
-                                                      (assoc props :config config)]})}
-                   (:name config)))})
+                    {:data-test-id (str (:name config) "-link")
+                     :onClick #(push-page {:breadcrumb-text (id->str config)
+                                           :component [ConfirmWorkspaceConfig
+                                                       (assoc props :config config)]})}
+                    (:name config)))})
               :else (spinner "Loading configurations...")))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -174,17 +175,16 @@
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
-  (flex/box
-   {:style {:justifyContent "center"}}
-   [buttons/Button {:data-test-id "import-from-repo-button"
-                    :text "Import from Method Repository"
-                    :onClick #(push-page {:breadcrumb-text "Method Repository"
-                                          :component (wrap (method-chooser props))})
-                    :style {:marginRight "1rem"}}]
-   [buttons/Button {:data-test-id "copy-from-workspace-button"
-                    :text "Copy from another Workspace"
-                    :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                          :component [WorkspaceChooser props]})}]))
+  (flex/box {:style {:justifyContent "center"}}
+    [buttons/Button {:data-test-id "import-from-repo-button"
+                     :text "Import from Method Repository"
+                     :onClick #(push-page {:breadcrumb-text "Method Repository"
+                                           :component (wrap (method-chooser props))})
+                     :style {:marginRight "1rem"}}]
+    [buttons/Button {:data-test-id "copy-from-workspace-button"
+                     :text "Copy from another Workspace"
+                     :onClick #(push-page {:breadcrumb-text "Choose Workspace"
+                                           :component [WorkspaceChooser props]})}]))
 
 
 (defn- filter-workspaces [workspaces]

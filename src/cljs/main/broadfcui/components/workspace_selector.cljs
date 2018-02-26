@@ -24,19 +24,19 @@
        (if-not workspaces
          (spinner "Loading workspaces...")
          (style/create-select
-          {:defaultValue ""
-           :ref (fn [elem]
-                  ;; doing this manually because the ref handler thingy calls :did-mount overzealously
-                  (when (and elem (not (:select @locals)))
-                    (swap! locals assoc :select elem)
-                    (.on (.select2 (js/$ elem)) "select2:select"
-                         (fn [event]
-                           (let [selected (nth workspaces (js/parseInt (.-value (.-target event))))]
-                             (on-select selected))))
-                    (on-select (first workspaces))))
-           :style (merge {:width 500} style)}
-          (map (fn [ws] (string/join "/" (replace (:workspace ws) [:namespace :name])))
-               workspaces)))))
+           {:defaultValue ""
+            :ref (fn [elem]
+                   ;; doing this manually because the ref handler thingy calls :did-mount overzealously
+                   (when (and elem (not (:select @locals)))
+                     (swap! locals assoc :select elem)
+                     (.on (.select2 (js/$ elem)) "select2:select"
+                          (fn [event]
+                            (let [selected (nth workspaces (js/parseInt (.-value (.-target event))))]
+                              (on-select selected))))
+                     (on-select (first workspaces))))
+            :style (merge {:width 500} style)}
+           (map (fn [ws] (string/join "/" (replace (:workspace ws) [:namespace :name])))
+                workspaces)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

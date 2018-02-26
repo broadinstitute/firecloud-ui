@@ -19,6 +19,7 @@
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -94,9 +95,9 @@
                              input-names (string/split inputs ".")
                              workflow-name (first input-names)]
                          (links/create-external
-                          {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                      workflow-name "/" workflowId "/")}
-                          workflowId))))}]}}])
+                           {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                       workflow-name "/" workflowId "/")}
+                           workflowId))))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
@@ -141,7 +142,7 @@
      (swap! state assoc :aborting-submission? true :confirming? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? status-text]}]
                   (swap! state dissoc :aborting-submission?)
                   (if success?
@@ -198,7 +199,7 @@
            (links/create-external {:data-test-id "submission-id"
                                    :href (str moncommon/google-cloud-context
                                               (:bucketName props) "/" (:submissionId submission) "/")}
-                                  (style/create-paragraph (:submissionId submission)))]
+             (style/create-paragraph (:submissionId submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)

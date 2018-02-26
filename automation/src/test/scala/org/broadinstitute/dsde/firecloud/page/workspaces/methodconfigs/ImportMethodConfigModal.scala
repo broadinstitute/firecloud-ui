@@ -10,6 +10,8 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal("impo
   private val chooseConfigFromRepoButton = Button("import-from-repo-button" inside this)
   private val copyConfigFromWorkspaceButton = Button("copy-from-workspace-button" inside this)
 
+  override def awaitReady(): Unit = chooseConfigFromRepoButton.awaitVisible()
+
   def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     chooseConfigFromRepoButton.doClick()
     (await ready new SelectMethodView())

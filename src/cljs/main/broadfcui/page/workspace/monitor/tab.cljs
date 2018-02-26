@@ -34,7 +34,7 @@
        :as-text (constantly "View analysis details")
        :render #(links/create-internal {:data-test-id (str "submission-" %)
                                         :href (nav/get-link :workspace-submission workspace-id %)}
-                                       "View")}
+                  "View")}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
@@ -57,7 +57,7 @@
        :render (fn [submission-id]
                  (links/create-external {:href (str moncommon/google-cloud-context
                                                     bucketName "/" submission-id "/")}
-                                        submission-id))}]}
+                   submission-id))}]}
     :toolbar
     {:style {:alignItems "flex-end"}
      :get-items (constantly [flex/spring [QueueStatus]])}}])
