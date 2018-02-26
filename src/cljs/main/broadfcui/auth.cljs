@@ -156,15 +156,20 @@
        ;; than removing it from the page.
        [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
         [:div {:style {:margin "0 auto" :maxWidth 716}}
-         [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}} (if import-page? external-importer/import-title "New User?")]
-         [:div {:style {:marginBottom "1.5rem"}} (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
+         [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
+          (if import-page? external-importer/import-title "New User?")]
+         [:div {:style {:marginBottom "1.5rem"}}
+          (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
          [:div {:style {:display "flex"}}
           [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
-           (if import-page? external-importer/import-tutorial
-                            [:div {:style {:lineHeight "130%"}} "Need to create a FireCloud account? FireCloud uses your Google account. Once you have signed in and completed the user profile registration step, you can start using FireCloud."
-                             (links/create-external {:style {:display "block" :marginTop "0.3rem"}
-                                                     :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
-                               "Learn how to create a Google account with any email address.")])]
+           (if import-page?
+             (external-importer/render-import-tutorial)
+             [:div {:style {:lineHeight "130%"}}
+              "Need to create a FireCloud account? FireCloud uses your Google account. Once you have
+               signed in and completed the user profile registration step, you can start using FireCloud."
+              (links/create-external {:style {:display "block" :marginTop "0.3rem"}
+                                      :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
+                "Learn how to create a Google account with any email address.")])]
           [:div {:style {:width 180 :paddingLeft "2rem" :alignSelf "center"}
                  :className "g-signin2" :data-theme "dark" :data-width 180 :data-height 40 :data-longtitle true
                  :onClick #(this :-handle-sign-in-click)}]]]

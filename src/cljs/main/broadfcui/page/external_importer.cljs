@@ -11,7 +11,7 @@
 (def import-title "Import Workflow to FireCloud")
 (def import-subtitle "In order to import a workflow into FireCloud, you'll need two things:")
 
-(def import-tutorial
+(defn render-import-tutorial []
   (let [create-number-label
         (fn [number]
           [:div {:style {:flexShrink 0 :height "2rem" :width "2rem" :borderRadius "50%"
@@ -26,10 +26,9 @@
        "To pay any storage or compute costs"
        [:p {:style {:fontSize "80%"}}
         "Don’t know if you have one? If you own or have 'write & compute' access to an existing workspace, that means you have access to a billing project and you’re all set."
-        (links/create-external
-         {:style {:display "block" :marginTop "0.3rem"}
-          :href (config/billing-account-guide-url)}
-         "Click here for instructions on how to set up a new billing project.")]]]
+        (links/create-external {:style {:display "block" :marginTop "0.3rem"}
+                                :href (config/billing-account-guide-url)}
+          "Click here for instructions on how to set up a new billing project.")]]]
      [:div {:style {:display "flex"}}
       (create-number-label 2)
       [:div {:style {:marginLeft "0.5rem"}}
@@ -39,8 +38,7 @@
         "Need to create a FireCloud account? FireCloud uses your Google account. Once you have signed in and completed the user profile registration step, you can start using FireCloud."
         (links/create-external {:style {:display "block" :marginTop "0.3rem"}
                                 :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
-          "Learn how to create a Google account with any email address.")
-        ]]]]))
+          "Learn how to create a Google account with any email address.")]]]]))
 
 (react/defc Importer
   {:render
