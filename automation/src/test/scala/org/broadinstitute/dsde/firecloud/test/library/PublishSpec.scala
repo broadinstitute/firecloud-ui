@@ -6,6 +6,7 @@ import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page._
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
@@ -55,7 +56,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
     }
     "a published workspace" - {
-      "should be visible in the library table" in withWebDriver { implicit driver =>
+      "should be visible in the library table" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val curatorUser = UserPool.chooseCurator
         implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
         withWorkspace(namespace, "PublishSpec_curator_publish_") { wsName =>
@@ -66,6 +67,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             api.library.publishWorkspace(namespace, wsName)
             withSignIn(curatorUser) { _ =>
               val page = new DataLibraryPage().open
+              page.doSearch(wsName)
               page.hasDataset(wsName) shouldBe true
             }
           }
@@ -89,6 +91,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
               retry[Boolean](100.milliseconds, 1.minute)({
                 val libraryPage = wspage.goToDataLibrary()
+                libraryPage.doSearch(wsName)
                 if (libraryPage.hasDataset(wsName))
                   None
                 else Some(false)
@@ -119,6 +122,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 wspage.cloneWorkspace(namespace, clonedWsName)
                 wspage.hasPublishButton shouldBe true // this will fail if the Unpublish button is displayed.
                 val page = new DataLibraryPage().open
+                page.doSearch(wsName)
                 page.hasDataset(clonedWsName) shouldBe false
               }
             }
@@ -195,6 +199,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               val studentUser = UserPool.chooseStudent
               withSignIn(studentUser) { _ =>
                 val page = new DataLibraryPage().open
+                page.doSearch(wsName)
                 page.hasDataset(wsName) shouldBe true
                 page.openDataset(wsName)
                 //verify that Request Access modal is shown

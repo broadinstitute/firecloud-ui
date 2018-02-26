@@ -12,6 +12,8 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 ; The list of all assignable access levels in the system
@@ -115,18 +117,18 @@
                  :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
              (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
                    disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
-                                 (= (:email acl-entry) (utils/get-user-email)))]
+                                 (= (:email acl-entry) (user/get-email)))]
                (style/create-identity-select
-                {:ref (str "acl-value" i)
-                 :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
-                 :disabled disabled?
-                 :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
-                 :value (:accessLevel acl-entry)
-                 :onChange (fn [event]
-                             (let [new-access-level (aget event "target" "value")]
-                               (swap! state update-in [:non-project-owner-acl-vec i] assoc
-                                      :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
-                (if disabled? access-levels available-access-levels)))
+                 {:ref (str "acl-value" i)
+                  :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
+                  :disabled disabled?
+                  :data-test-id (str "role-dropdown-" (not (:read-only? acl-entry)))
+                  :value (:accessLevel acl-entry)
+                  :onChange (fn [event]
+                              (let [new-access-level (aget event "target" "value")]
+                                (swap! state update-in [:non-project-owner-acl-vec i] assoc
+                                       :accessLevel new-access-level :canCompute (common/access-greater-than-equal-to? new-access-level "WRITER"))))}
+                 (if disabled? access-levels available-access-levels)))
              (if (common/access-greater-than-equal-to? user-access-level "OWNER")
                [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
                 [:input {:type "checkbox"
@@ -199,7 +201,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/update-workspace-acl (:workspace-id props) invite-new?)
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :payload grant-filtered-acl
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)

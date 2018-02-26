@@ -8,8 +8,8 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
-   [broadfcui.test-utils :refer [text->test-id]]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.test :refer [text->test-id]]
    ))
 
 
@@ -50,14 +50,13 @@
        (modal/render
         {:content
          [:div {:data-test-id data-test-id}
-          (flex/box
-           {:style {:alignItems "flex-start"
-                    :borderBottom style/standard-line
-                    :padding "1rem 3rem 1rem"
-                    :fontSize "140%" :fontWeight 400 :lineHeight 1}}
-           [:span {:data-test-id (make-test-id "header")} header]
-           flex/spring
-           (when show-close? (buttons/x-button dismiss)))
+          (flex/box {:style {:alignItems "flex-start"
+                             :borderBottom style/standard-line
+                             :padding "1rem 3rem 1rem"
+                             :fontSize "140%" :fontWeight 400 :lineHeight 1}}
+            [:span {:data-test-id (make-test-id "header")} header]
+            flex/spring
+            (when show-close? (buttons/x-button dismiss)))
           [:div {:style {:padding "2rem 3rem" :backgroundColor (:background-light style/colors)}}
            [:div {:data-test-id (make-test-id "content")} content]
            (if button-bar

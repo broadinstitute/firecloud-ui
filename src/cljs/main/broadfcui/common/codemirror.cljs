@@ -64,15 +64,19 @@
       :read-only? true
       :mode "wdl"})
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state locals this]}]
      (let [{:keys [loaded? error?]} @state
            {:keys [read-only? text]} props]
-       [:div {}
+       [:div {:data-test-id (:data-test-id props)
+              :ref #(swap! locals assoc :container %)
+              :style (when loaded? {:border style/standard-line})}
         (cond
-          error? [:textarea {:readonly read-only? :wrap "off"
-                             :style {:width "100%" :height 300 :backgroundColor "white"
-                                     :fontFamily "Menlo, monospace"}}
-                  text]
+          error? (if read-only?
+                   [:textarea {:readonly true :wrap "off"
+                               :style {:width "100%" :height 300
+                                       :backgroundColor "white" :fontFamily "Menlo, monospace"}}
+                    text]
+                   [:h2 "There was an error loading the editor."])
           (not loaded?) [ScriptLoader
                          {:on-error #(swap! state assoc :error? true)
                           :on-load (fn []
@@ -83,15 +87,12 @@
                                      (when-let [init (:initialize props)]
                                        (init this))
                                      (swap! state assoc :loaded? true))
-                          :path "codemirror-deps.bundle.js"}])
-        [:div {:data-test-id (:data-test-id props)
-               :ref "container"
-               :style (when loaded? {:border style/standard-line})}]]))
+                          :path "codemirror-deps.bundle.js"}])]))
    :-display-code
-   (fn [{:keys [refs props locals]}]
+   (fn [{:keys [props locals]}]
      (let [{:keys [mode line-numbers? read-only? text]} props]
        (swap! locals assoc :codemirror-instance
-              (@codemirror-constructor (react/find-dom-node (@refs "container"))
+              (@codemirror-constructor (react/find-dom-node (:container @locals))
                (clj->js
                 (merge
                  (when text {:value text})

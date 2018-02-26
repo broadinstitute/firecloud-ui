@@ -13,6 +13,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -31,7 +32,7 @@
      (endpoints/call-ajax-orch
       {:endpoint endpoints/get-inputs-outputs
        :payload (:method-ref props)
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state assoc :inputs-outputs (get-parsed-response))
@@ -88,9 +89,9 @@
                                  :sort-by #(replace % [:namespace :name :snapshotId])
                                  :render (fn [{:keys [name namespace snapshotId] :as config}]
                                            (links/create-internal
-                                            (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
-                                                   (make-config-link-props config))
-                                            (style/render-name-id (str namespace "/" name) snapshotId)))}
+                                             (merge {:data-test-id (str namespace "-" name "-" snapshotId "-link")}
+                                                    (make-config-link-props config))
+                                             (style/render-name-id (str namespace "/" name) snapshotId)))}
                                 {:header "Method Snapshot" :initial-width 135 :filterable? false
                                  :column-data #(get-in % [:payloadObject :methodRepoMethod :methodVersion])}
                                 {:header "Synopsis" :initial-width :auto

@@ -98,10 +98,9 @@
    (fn [{:keys [props]}]
      (let [{:keys [rows-per-page per-page-options per-page-selected]} props]
        [:div {:style {:display "inline-flex" :alignItems "baseline"}}
-        (style/create-identity-select
-         {:data-test-id "per-page"
-          :value rows-per-page
-          :style {:width 60 :marginRight "0.75rem"}
-          :onChange #(per-page-selected (-> % .-target .-value int))}
-         per-page-options)
+        (style/create-identity-select {:data-test-id "per-page"
+                                       :value rows-per-page
+                                       :style {:width 60 :marginRight "0.75rem"}
+                                       :onChange #(per-page-selected (-> % .-target .-value int))}
+          per-page-options)
         "per page"]))})

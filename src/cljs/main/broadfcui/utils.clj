@@ -51,3 +51,6 @@
    #_=> {:a 2 :c 3}"
   [a & forms]
   `(swap! ~a (fn [x#] (-> x# ~@forms))))
+
+(defmacro generate-build-timestamp []
+  (System/currentTimeMillis))

@@ -10,6 +10,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -110,14 +111,15 @@
        (let [[source timestamp status-code code causes stack-trace message]
              (map error ["source" "timestamp" "statusCode" "code" "causes" "stackTrace" "message"])
              ;; method redact is responding with "code" for 401.  TODO: standardize and remove this extra logic
-             status-code (or status-code code)]
+             status-code (or status-code code)
+             data-test-id (:data-test-id props)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
                                   (icons/render-icon {:style {:color (:state-exception style/colors)}}
                                                      :warning)]
                                  (str "Error: " expected-msg))
-           [:div {:style {:textAlign "initial"}}
+           [:div {:style {:textAlign "initial"} :data-test-id data-test-id}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
                                    (icons/render-icon {:style {:color (:state-exception style/colors)}}
@@ -126,8 +128,8 @@
             (if (:expanded? @state)
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
-                                      (icons/render-icon {:className "fa-fw"} :disclosure-opened)
-                                      "Hide Details")
+                 (icons/render-icon {:className "fa-fw"} :disclosure-opened)
+                 "Hide Details")
                [:div {:style {:overflowX "auto" :paddingLeft icons/fw-icon-width}}
                 [:div {} (str "Code: " status-code)]
                 (when timestamp [:div {} "Occurred: "
@@ -147,8 +149,8 @@
                   [StackTraceViewer {:lines stack-trace}])]]
               [:div {}
                (links/create-internal {:onClick #(swap! state assoc :expanded? true)}
-                                      (icons/render-icon {:className "fa-fw"} :disclosure-closed)
-                                      "Show Details")])]))))})
+                 (icons/render-icon {:className "fa-fw"} :disclosure-closed)
+                 "Show Details")])]))))})
 
 
 (react/defc Breadcrumbs
@@ -225,7 +227,7 @@
    "You must have a billing project associated with your account to create a new workspace."
    (links/create-external {:href (config/billing-project-guide-url)
                            :style {:display "block"}}
-                          "Learn how to create a billing project.")])
+     "Learn how to create a billing project.")])
 
 
 ;; NOTE: TagAutocomplete currently fires :on-change on any update, due to the logic in
@@ -250,7 +252,7 @@
                                     :defaultValue (:tags props)
                                     :multiple true
                                     :data-test-id (:data-test-id props)}
-                                   (or (:data props) (:tags props))))
+       (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
      (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear? maximum-selection-length language]} props
@@ -260,7 +262,7 @@
                          {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
                                  :dataType "json"
                                  :type "GET"
-                                 :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                 :headers (user/get-bearer-token-header)
                                  :data (fn [params]
                                          (clj->js {:q (aget params "term")}))
                                  :processResults (this :-process-results)}})]
@@ -382,6 +384,6 @@
          [:span {}
           (:label props) " "
           (links/create-internal {:onClick #(swap! state update :collapsed? not)}
-                                 (icons/render-icon {} (if (:collapsed? @state) :expand :collapse)))
+            (icons/render-icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})

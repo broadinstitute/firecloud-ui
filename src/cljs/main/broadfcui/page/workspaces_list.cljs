@@ -22,6 +22,7 @@
    [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -221,8 +222,8 @@
        [:div {}
         (when request-access-modal-props
           [:div {:data-test-id "request-access-modal"}
-            [RequestAuthDomainAccessDialog
-             (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
+           [RequestAuthDomainAccessDialog
+            (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))]])
         [Table
          {:data-test-id "workspace-list"
           :persistence-key "workspace-table" :v 3
@@ -296,7 +297,7 @@
                     :get-items
                     (constantly
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
-                                             (if filters-expanded? "Collapse filters" "Expand filters"))
+                        (if filters-expanded? "Collapse filters" "Expand filters"))
                       flex/spring
                       [create/Button (select-keys props [:nav-context])]])}
           :sidebar (when filters-expanded?
@@ -322,10 +323,10 @@
       [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                       :backgroundColor "rgba(0,0,0,0.2)"}}]
       (style/center {}
-                    (case status
-                      "Complete" [icons/CompleteIcon]
-                      "Running" [icons/RunningIcon]
-                      "Exception" [icons/ExceptionIcon]))])
+        (case status
+          "Complete" [icons/CompleteIcon]
+          "Running" [icons/RunningIcon]
+          "Exception" [icons/ExceptionIcon]))])
    :-render-workspace-cell
    (fn [{:keys [this]} {:keys [status restricted? no-access? hover-text workspace-id auth-domain-groups]}]
      (let [{:keys [namespace name]} workspace-id
@@ -434,7 +435,7 @@
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
                  #(swap! state update :server-response assoc :workspaces-response %))})
-     (utils/get-google-bucket-file
+     (ajax/get-google-bucket-file
       "featured-workspaces"
       #(swap! state update :server-response assoc :featured-workspaces (set %))))})
 

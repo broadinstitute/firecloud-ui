@@ -95,4 +95,14 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
       action.clickAndHold(colToBeMoved).moveToElement(placeToMoveCol).release().build().perform()
     }
   }
+
+  def getRows: List[Map[String,String]] = {
+    val rows: List[List[String]] = getData
+    val cols = readColumnHeaders
+
+    val map = for (row <- rows) yield {
+      cols zip row toMap
+    }
+    map
+  }
 }

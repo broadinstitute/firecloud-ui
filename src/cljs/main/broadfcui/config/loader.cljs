@@ -6,6 +6,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (react/defc Component
@@ -21,7 +22,7 @@
    :component-did-mount
    (fn [{:keys [this]}]
      ;; Use basic ajax call here to bypass authentication.
-     (utils/ajax {:url "/config.json" :on-done #(this :-handle-response %)}))
+     (ajax/call {:url "/config.json" :on-done #(this :-handle-response %)}))
    :-handle-response
    (fn [{:keys [props state]} {:keys [success? raw-response status-code]}]
      (if success?

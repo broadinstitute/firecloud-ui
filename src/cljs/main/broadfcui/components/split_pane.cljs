@@ -5,6 +5,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.react :as react-utils]
    ))
 
 
@@ -18,10 +19,11 @@
       {:slider-position (or (:initial-slider-position props) 100)})
     :render
     (fn [{:keys [props state]}]
-      (let [{:keys [left right top bottom slider-padding]} props]
+      (let [{:keys [left right top bottom height slider-padding]} props]
         (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
         [:div {:style {:display "flex" :flexDirection (if left "row" "column")
-                       :maxHeight "-webkit-fill-available"}}
+                       :height height
+                       :maxHeight (when-not height "-webkit-fill-available")}}
          [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state) :overflow (:overflow-left props)}}
           (or left top)]
          [:div {:style {:flex "0 0 10px"
@@ -40,7 +42,7 @@
                                        :color (:text-lightest style/colors)}} :resize)]]
          [:div {:style {:flex "1 0 0" :overflow "auto"}}
           (or right bottom)]]))}
-   (utils/with-window-listeners
+   (react-utils/with-window-listeners
     {"mouseup"
      (fn [{:keys [state]}]
        (when (:dragging? @state)

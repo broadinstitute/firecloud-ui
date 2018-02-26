@@ -6,6 +6,6 @@
   font-size: 12px;
 
   .CodeMirror-scroll {
-    max-height: 500px;
+    max-height: 498px; // leave room for 2px of border
   }
 }

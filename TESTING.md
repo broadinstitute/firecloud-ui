@@ -34,24 +34,7 @@ For the Scala project, choose `File -> New -> Project from Existing Sources...` 
 
 ### Running with docker ("headless")
 
-Before you run tests for the first time, make sure your docker has enough memory allocated. Go to `Docker -> Preferences -> Advanced` and set the memory to at least 4 GB. 
-
-To generate a Docker container automatically and run the tests inside of it:
-
-```bash
-./run-tests.sh FIRECLOUD-LOCATION [dev] [vault token] [working dir]
-```
-
-**Arguments:** (arguments are positional)
-
-* FireCloud location (required)
-	* One of `fiab`, `local` (local UI, FIAB backend), `alpha`, `prod`, or an IP address. `fiab` and `local` will pull the IP from your `etc/hosts`.
-* `dev`
-	* Environment of your FiaB..
-* Vault auth token
-	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
-* Working directory
-	* Defaults to `$PWD`.
+See [firecloud-automated-testing](https://github.com/broadinstitute/firecloud-automated-testing).
 
 ### Running directly (real Chrome)
 
@@ -67,26 +50,27 @@ brew install chromedriver
 
 If your version of Chrome is 61 or later, check `chromedriver --version` to make sure you're up to at least 2.32. If not, use `brew upgrade chromedriver` to update.
  
-Also run the config render script. If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
+Also run the config render script. Configs are common across all test suites and live in [firecloud-automated-testing](https://github.com/broadinstitute/firecloud-automated-testing).  `render-local-env.sh` will clone a branch of custom configs or the default master branch.  
+If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
 
 ```bash
-./render-local-env.sh [working dir] [vault token] [dev] [local_ui]
+./render-local-env.sh [branch of firecloud-automated-testing] [vault token] [env] [service root]
 ```
 
 **Arguments:** (arguments are positional)
 
-* Working directory
-	* Defaults to `$PWD`.
+* branch of firecloud-automated-testing
+    * Configs branch; defaults to `master`
 * Vault auth token
 	* Defaults to reading it from the .vault-token via `$(cat ~/.vault-token)`.
-* `dev`
-	* Environment of your FiaB.
-* Local UI
-	* Enter `local_ui` here to run against a local UI stack.
+* env
+	* Environment of your FiaB; defaults to `dev`
+* service root
+    * the name of your local clone of firecloud-ui if not `firecloud-ui`
 
 #### Using a local UI
 
-Be sure you used the `local_ui` param when you rendered your configs (see above). When starting your UI, run:
+Set `LOCAL_UI=true` before calling `render-local-env.sh`.   When starting your UI, run:
 
 ```bash
 FIAB=true ./config/docker-rsync-local-ui.sh
@@ -126,7 +110,13 @@ To run a single test within a suite:
 # matches test via substring
 sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z \"have a search field\""
 ```
+To run Tagged Tests Only:
 
+As an example to run tests tagged with SmokeTest tag
+
+```bash
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly -- -n SmokeTest"
+```
 For more information see [SBT's documentation](http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments).
 
 

@@ -3,7 +3,9 @@ package org.broadinstitute.dsde.firecloud.test.user
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
+import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.service.{Sam, Thurloe}
@@ -39,7 +41,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
   "FireCloud registration" - {
 
-    "should allow a person to register" in withWebDriver { implicit driver =>
+    "should allow a person to register" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
 
       withSignInNewUserReal(testUser) { registrationPage =>
         registerCleanUpForDeleteUser(subjectId)
@@ -58,6 +60,14 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
           country = "USA")
 
         new DataLibraryPage().validateLocation()
+
+        val profilePage = new ProfilePage().open
+        val username = testUser.email.split("@").head
+/* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
+        profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
+*/
+        profilePage.readProxyGroupEmail should (startWith ("PROXY_") and endWith ("firecloud.org"))
+/**/
       }
     }
   }

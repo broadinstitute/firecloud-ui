@@ -11,11 +11,11 @@
    [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
-   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 
@@ -124,7 +124,7 @@
                                                            :backgroundColor "white"
                                                            :padding "0 6px"
                                                            :border style/standard-line}}
-                                                  (string/capitalize label))
+                             (string/capitalize label))
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
@@ -154,8 +154,8 @@
                                      :initial-slider-position 650
                                      :toolbar-items [(flex/strut 50)
                                                      (links/create-internal
-                                                      {:onClick #(this :-populate-description-from-wdl)}
-                                                      "Populate from WDL comment")]}]
+                                                       {:onClick #(this :-populate-description-from-wdl)}
+                                                       "Populate from WDL comment")]}]
            (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:data-test-id "synopsis-field"
                                      :ref "synopsis"
@@ -201,7 +201,7 @@
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/create-new-method-snapshot namespace name snapshotId redact?)
                :payload (assoc (utils/restructure synopsis documentation snapshotComment) :payload wdl)
-               :headers utils/content-type=json
+               :headers ajax/content-type=json
                :on-done
                (fn [{:keys [success? status-code get-parsed-response]}]
                  (if success?
@@ -213,7 +213,7 @@
             {:endpoint endpoints/post-method
              :payload (assoc (utils/restructure namespace name synopsis documentation snapshotComment)
                         :payload wdl :entityType "Workflow")
-             :headers utils/content-type=json
+             :headers ajax/content-type=json
              :on-done
              (fn [{:keys [success? get-parsed-response]}]
                (if success?

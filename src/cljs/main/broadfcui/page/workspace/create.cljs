@@ -15,8 +15,9 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -29,7 +30,7 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [creating-ws selected-project billing-loaded? server-error validation-errors]} @state
            {:keys [workspace-id]} props
-           billing-projects @user-info/saved-ready-billing-project-names]
+           billing-projects @user/saved-ready-billing-project-names]
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
@@ -50,10 +51,10 @@
            (style/create-form-label "Billing Project")
            (if billing-loaded?
              (style/create-identity-select-name
-              {:ref "project" :value selected-project
-               :data-test-id "billing-project-select"
-               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-              billing-projects)
+               {:ref "project" :value selected-project
+                :data-test-id "billing-project-select"
+                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+               billing-projects)
              (spinner {:style {:margin 0}} "Loading Billing..."))
            (style/create-form-label "Description (optional)")
            (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
@@ -68,8 +69,8 @@
                        Once set, it cannot be changed."]
                      [:span {:style {:white-space "pre"}}
                       (links/create-external
-                       {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
-                       "Read more about Authorization Domains")]]})]
+                        {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                        "Read more about Authorization Domains")]]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
@@ -79,9 +80,9 @@
            (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount
    (fn [{:keys [state]}]
-     (user-info/reload-billing-projects
+     (user/reload-billing-projects
       (fn []
-        (swap! state assoc :selected-project (first @user-info/saved-ready-billing-project-names)
+        (swap! state assoc :selected-project (first @user/saved-ready-billing-project-names)
                :billing-loaded? true)))
      (endpoints/get-groups
       (fn [_ parsed-response]
@@ -102,9 +103,9 @@
                                                 (:selected-groups @state))}]
          (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
-          {:endpoint (endpoints/create-workspace project name)
+          {:endpoint endpoints/create-workspace
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?
@@ -129,7 +130,7 @@
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
-           :headers utils/content-type=json
+           :headers ajax/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-ws)
                       (if success?
@@ -149,11 +150,11 @@
                [:div {}
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
-                  {:value opt
-                   :data-test-id "selected-auth-domain-group"
-                   :disabled (utils/seq-contains? locked-groups opt)
-                   :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
-                  (set/difference all-groups (set (utils/delete selected-groups i))))]
+                   {:value opt
+                    :data-test-id "selected-auth-domain-group"
+                    :disabled (utils/seq-contains? locked-groups opt)
+                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                   (set/difference all-groups (set (utils/delete selected-groups i))))]
                 [:div {:style {:float "right"}}
                  (if (utils/seq-contains? locked-groups opt)
                    (icons/render-icon {:style {:color (:text-lightest style/colors)
@@ -169,19 +170,19 @@
           (when (not-empty (set/difference all-groups selected-groups))
             [:div {:style {:float "left" :width "90%"}}
              (style/create-identity-select-name
-              {:defaultValue -1
-               :data-test-id "workspace-auth-domain-select"
-               :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-              (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+               {:defaultValue -1
+                :data-test-id "workspace-auth-domain-select"
+                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+               (set/difference all-groups (set selected-groups))
+               (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
           (common/clear-both)])))})
 
 
 (react/defc Button
   {:component-will-mount
    (fn [{:keys [state]}]
-     (add-watch user-info/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
-     (user-info/reload-billing-projects
+     (add-watch user/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
+     (user/reload-billing-projects
       (fn [err-text]
         (when err-text
           (swap! state assoc :error-message err-text)))))
@@ -199,9 +200,9 @@
           :icon :add-new
           :disabled? (cond
                        (not loaded?) "Project billing data has not yet been loaded."
-                       (empty? @user-info/saved-ready-billing-project-names) (comps/no-billing-projects-message)
+                       (empty? @user/saved-ready-billing-project-names) (comps/no-billing-projects-message)
                        error-message "Project billing data failed to load.")
           :onClick #(swap! state assoc :modal? true)}]]))
    :component-will-unmount
    (fn []
-     (remove-watch user-info/saved-ready-billing-project-names :ws-create-button))})
+     (remove-watch user/saved-ready-billing-project-names :ws-create-button))})

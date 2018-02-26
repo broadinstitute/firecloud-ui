@@ -26,8 +26,9 @@
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.synchronize :as ws-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
-   [broadfcui.user-info :as user-info]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -109,7 +110,7 @@
   {:component-will-mount
    (fn [{:keys [this locals]}]
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary"))
-     (add-watch user-info/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
+     (add-watch user/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response popup-error]} @state
@@ -160,7 +161,7 @@
        (this :refresh)))
    :component-will-unmount
    (fn []
-     (remove-watch user-info/saved-ready-billing-project-names :ws-summary))
+     (remove-watch user/saved-ready-billing-project-names :ws-summary))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
@@ -170,7 +171,7 @@
             {:keys [library-schema curator? billing-error?]} :server-response} @state
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
-           billing-projects @user-info/saved-ready-billing-project-names
+           billing-projects @user/saved-ready-billing-project-names
            status (common/compute-status workspace)
            published? (:library:published library-attributes)
            publisher? (and curator? (or catalog-with-read? owner?))
@@ -243,47 +244,47 @@
                                                    questions required-attributes))
                                              "All required dataset attributes must be set before publishing.")})])))
 
-           (when (or owner? writer?)
-             (if-not editing?
+             (when (or owner? writer?)
+               (if-not editing?
+                 [buttons/SidebarButton
+                  {:style :light :color :button-primary :margin :top
+                   :text "Edit" :icon :edit
+                   :onClick #(swap! state assoc :editing? true)}]
+                 [:div {}
+                  [buttons/SidebarButton
+                   {:style :light :color :button-primary :margin :top
+                    :text "Save" :icon :done
+                    :onClick (fn [_]
+                               (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
+                                     new-description ((@refs "description") :get-trimmed-text)
+                                     new-tags ((@refs "tags-autocomplete") :get-tags)]
+                                 (if error
+                                   (swap! state assoc :popup-error error)
+                                   (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
+                  [buttons/SidebarButton
+                   {:style :light :color :state-exception :margin :top
+                    :text "Cancel Editing" :icon :cancel
+                    :onClick #(swap! state dissoc :editing?)}]]))
+             (when-not editing?
                [buttons/SidebarButton
-                {:style :light :color :button-primary :margin :top
-                 :text "Edit" :icon :edit
-                 :onClick #(swap! state assoc :editing? true)}]
-               [:div {}
-                [buttons/SidebarButton
-                 {:style :light :color :button-primary :margin :top
-                  :text "Save" :icon :done
-                  :onClick (fn [_]
-                             (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
-                                   new-description ((@refs "description") :get-trimmed-text)
-                                   new-tags ((@refs "tags-autocomplete") :get-tags)]
-                               (if error
-                                 (swap! state assoc :popup-error error)
-                                 (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
-                [buttons/SidebarButton
-                 {:style :light :color :state-exception :margin :top
-                  :text "Cancel Editing" :icon :cancel
-                  :onClick #(swap! state dissoc :editing?)}]]))
-           (when-not editing?
-             [buttons/SidebarButton
-              {:data-test-id "open-clone-workspace-modal-button"
-               :style :light :margin :top :color :button-primary
-               :text (if (or billing-loaded? billing-error?)
+                {:data-test-id "open-clone-workspace-modal-button"
+                 :style :light :margin :top :color :button-primary
+                 :text (if (or billing-loaded? billing-error?)
                          "Clone..."
                          (spinner {:style {:margin 0}} "Getting billing info..."))
                  :icon :clone
-               :disabled? (cond
+                 :disabled? (cond
                               (not billing-loaded?) "Project billing data has not yet been loaded."
                               billing-error? "Unable to load billing projects from the server."
                               (empty? billing-projects) (comps/no-billing-projects-message))
-               :onClick #(swap! state assoc :cloning? true)}])
-           (when (and owner? (not editing?))
-             [buttons/SidebarButton
-              {:style :light :margin :top :color :button-primary
-               :text (if isLocked "Unlock" "Lock")
-               :icon (if isLocked :unlock :lock)
-               :onClick #(this :-lock-or-unlock isLocked)}])
-           (when (and owner? (not editing?))
+                 :onClick #(swap! state assoc :cloning? true)}])
+             (when (and owner? (not editing?))
+               [buttons/SidebarButton
+                {:style :light :margin :top :color :button-primary
+                 :text (if isLocked "Unlock" "Lock")
+                 :icon (if isLocked :unlock :lock)
+                 :onClick #(this :-lock-or-unlock isLocked)}])
+             (when (and owner? (not editing?))
                [buttons/SidebarButton
                 {:data-test-id "delete-workspace-button"
                  :style :light :margin :top :color (if isLocked :text-lighter :state-exception)
@@ -356,22 +357,22 @@
                [:div {:data-test-id "google-billing-detail"}
                 (links/create-external {:href (moncommon/google-billing-context (:namespace workspace-id))
                                         :title "Click to open the Google Cloud Storage browser for this bucket"}
-                                       (:namespace workspace-id))])))
+                  (:namespace workspace-id))])))
 
-           (render-detail-box
-            "Storage & Analysis"
+          (render-detail-box
+           "Storage & Analysis"
 
-            "Google Bucket"
-            [:div {}
-             (case bucket-access?
-               nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
-               true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
-                                            :title "Click to open the Google Cloud Storage browser for this bucket"}
-                                           bucketName)
-               false bucketName)]
+           "Google Bucket"
+           [:div {}
+            (case bucket-access?
+              nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
+              true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+                                           :title "Click to open the Google Cloud Storage browser for this bucket"}
+                     bucketName)
+              false bucketName)]
 
-            "Analysis Submissions"
-            [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]]
+           "Analysis Submissions"
+           [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]]
         [Collapse
          {:style {:marginBottom "2rem"}
           :title (style/create-section-header "Tags")
@@ -408,7 +409,7 @@
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/set-workspace-attributes (:workspace-id props))
        :payload new-attributes
-       :headers utils/content-type=json
+       :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:request-refresh props))
@@ -430,7 +431,7 @@
      (swap! state dissoc :server-response)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (user-info/reload-billing-projects
+     (user/reload-billing-projects
       (fn [err-text]
         (if err-text
           (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)

@@ -16,6 +16,7 @@
    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -100,7 +101,7 @@
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
                          (links/create-internal {:data-test-id (str projectName "-link")
                                                  :href (nav/get-link :billing-project projectName)}
-                                                projectName)
+                           projectName)
                          :else projectName)
                        (when message
                          [:div {:style {:float "right" :position "relative"
@@ -122,17 +123,17 @@
                 :text "Create New Billing Project..."
                 :onClick
                 (fn []
-                  (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
+                  (if (-> (user/get-user)
                           (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                     (swap! state assoc :show-create-billing-project? true)
                     (do
-                      (utils/add-user-listener
+                      (user/add-user-listener
                        ::billing
                        (fn [_]
-                         (utils/remove-user-listener ::billing)
+                         (user/remove-user-listener ::billing)
                          (swap! state assoc :show-create-billing-project? true)))
                       (js-invoke
-                       @utils/auth2-atom
+                       @user/auth2-atom
                        "grantOfflineAccess"
                        (clj->js {:redirect_uri "postmessage"
                                  :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]])}}])))

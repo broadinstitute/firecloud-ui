@@ -1,6 +1,5 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
-
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
@@ -8,7 +7,6 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
-
 import scala.concurrent.duration.DurationLong
 
 /**
@@ -16,6 +14,7 @@ import scala.concurrent.duration.DurationLong
   */
 class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   with Page with PageUtil[DataLibraryPage] {
+
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
   private val libraryTable = Table("library-table")
@@ -25,8 +24,15 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private def datasetLink(name: String) = Link(s"dataset-$name")
   private def researchPurposeCode(code: String) = Label(s"$code-tag")
 
-  private val tags = Tags("tags")
-  private val consentCodes = Tags("consent-codes")
+  private val tags = TagSelect("tags")
+  private val consentCodes = TagSelect("consent-codes")
+
+  //Hard Coded titles for facet sections in our UI code
+  val cohortPhenotypeIndicationSection = "Cohort Phenotype/Indication"
+  val experimentalStrategySection = "Experimental Strategy"
+  val projectNameSection = "Project Name"
+  val primaryDiseaseSiteSection = "Primary Disease Site"
+  val dataUseLimitationSection = "Data Use Limitation"
 
   override def awaitReady(): Unit = {
     libraryTable.awaitReady()
@@ -37,14 +43,14 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def hasDataset(name: String): Boolean = {
-    doSearch(name)
-    datasetLink(name).isVisible
+    Link(CSSQuery(libraryTable.query.queryString + " " + testId(s"dataset-$name").queryString)).isVisible
   }
 
   def waitForDataset(name: String): Option[DataLibraryPage] = {
+    val libraryPage = open
     retry[DataLibraryPage](10.seconds, 5.minutes)({
-      val libraryPage = open
-      if (libraryPage.hasDataset(name))
+      doSearch(name)
+      if (hasDataset(name))
         Some(libraryPage)
       else None
     })
@@ -58,6 +64,11 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     searchField.setText(searchParameter)
     pressKeys("\n")
     libraryTable.awaitReady()
+  }
+
+  def doTagSearch(tagWords: Seq[String]): Unit = {
+    tags.doSearch(tagWords: _*)
+    awaitReady()
   }
 
   def openResearchPurposeModal(): ResearchPurposeModal = {
@@ -77,6 +88,10 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   def getTags: Seq[String] = {
     tags.awaitVisible()
     tags.getTags
+  }
+
+  def getRows: List[Map[String, String]] = {
+    libraryTable.getRows
   }
 
   case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
@@ -113,5 +128,6 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     await enabled testId(tagTestId)
     Label(tagTestId).isVisible
   }
+
 }
 

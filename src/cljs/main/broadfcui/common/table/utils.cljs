@@ -120,8 +120,12 @@
          props))
 
 
+(defn map-to-string [m]
+  (string/join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
+
+
 (defn default-render [data]
-  (cond (map? data) (utils/map-to-string data)
+  (cond (map? data) (map-to-string data)
         (sequential? data) (string/join ", " data)
         :else (str data)))
 

@@ -23,6 +23,7 @@
    :disclosure-opened "fa-caret-down"
    :done "fa-check"
    :done-circle "fa-check-circle"
+   :download "fa-download"
    :edit "fa-pencil"
    :email "fa-envelope-o"
    :error "fa-exclamation-circle"
@@ -35,23 +36,27 @@
    :move-left "fa-angle-double-left"
    :move-right "fa-angle-double-right"
    :new-window "fa-external-link"
-   :publish "fa-upload"
    :public "fa-users"
+   :publish "fa-upload"
    :refresh "fa-refresh"
    :remove "fa-minus-circle"
    :reorder "fa-reorder"
-   :resize "fa-bars"
    :reset "fa-undo"
+   :resize "fa-bars"
    :search "fa-search"
    :settings "fa-cog"
    :share "fa-share-alt"
    :shield "fa-shield"
+   :show "fa-eye"
    :sort-asc "fa-sort-amount-asc"
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
    :unknown "fa-question"
    :unlock "fa-unlock"
    :warning "fa-exclamation-triangle"
+   :zoom-fit "fa-crosshairs"
+   :zoom-in "fa-search-plus"
+   :zoom-out "fa-search-minus"
    })
 
 (defn render-icon [attributes key]
@@ -59,8 +64,14 @@
 
 (def fw-icon-width "1.28571429rem")
 
+(defn render-inline-icon [icon]
+  (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} icon))
+
 (def external-link-icon
-  (render-icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
+  (render-inline-icon :external-link))
+
+(def download-icon
+  (render-inline-icon :download))
 
 (defn certified-icon
   ([] (certified-icon {}))
@@ -93,14 +104,13 @@
            spacer [:div {:style {:height spacer-height}}]]
        [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                        :height (:size props) :width (:size props)}}
-        (style/center
-         {}
-         [:div {}
-          (hamburger "white")
-          spacer
-          (hamburger (:color props))
-          spacer
-          (hamburger (:color props))])]))})
+        (style/center {}
+          [:div {}
+           (hamburger "white")
+           spacer
+           (hamburger (:color props))
+           spacer
+           (hamburger (:color props))])]))})
 
 (react/defc ExceptionIcon
   {:get-default-props

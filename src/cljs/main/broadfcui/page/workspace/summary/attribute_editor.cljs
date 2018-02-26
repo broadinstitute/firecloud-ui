@@ -13,6 +13,7 @@
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -129,7 +130,7 @@
                   :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                              (:namespace (:workspace-id props)) "/"
                              (:name (:workspace-id props)) "/exportAttributesTSV")
-                  :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                  :onClick #(user/set-access-token-cookie (user/get-access-token))
                   :target "_blank"}
               (str "Download Attributes")]
              (when writer?
@@ -195,12 +196,12 @@
                                 :render
                                 (fn [{:keys [type index]}]
                                   (style/create-identity-select
-                                   {:data-test-id (str key "-type")
-                                    :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                    :defaultValue type
-                                    :onChange #(swap! state update-in [:attributes index]
-                                                      assoc 2 (-> % .-target .-value))}
-                                   all-types))}]
+                                    {:data-test-id (str key "-type")
+                                     :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                     :defaultValue type
+                                     :onChange #(swap! state update-in [:attributes index]
+                                                       assoc 2 (-> % .-target .-value))}
+                                    all-types))}]
                               [{:id "key" :header (header "Key") :initial-width 300
                                 :column-data key
                                 :as-text name :sort-initial :asc}

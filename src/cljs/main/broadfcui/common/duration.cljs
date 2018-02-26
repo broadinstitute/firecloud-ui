@@ -1,14 +1,15 @@
 (ns broadfcui.common.duration
   (:require
+   [inflections.core :as inflections]
    [broadfcui.utils :as utils]
    ))
 
 (defn fuzzy-time [years months days hours minutes seconds]
-  (cond (pos? years) (utils/maybe-pluralize years "year")
-        (pos? months) (utils/maybe-pluralize months "month")
-        (pos? days) (utils/maybe-pluralize days "day")
-        (pos? hours) (utils/maybe-pluralize hours "hour")
-        (pos? minutes) (utils/maybe-pluralize minutes "minute")
+  (cond (pos? years) (inflections/pluralize years "year")
+        (pos? months) (inflections/pluralize months "month")
+        (pos? days) (inflections/pluralize days "day")
+        (pos? hours) (inflections/pluralize hours "hour")
+        (pos? minutes) (inflections/pluralize minutes "minute")
         (> seconds 30) "less than a minute"
         :else "a few seconds"))
 
