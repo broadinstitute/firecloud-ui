@@ -67,7 +67,7 @@
 
 
 (defn list-workspace-method-configs [workspace-id]
-  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
+  {:path (str "/workspaces/v2/" (id-path workspace-id) "/methodconfigs")
    :method :get})
 
 (defn post-workspace-method-config [workspace-id]
