@@ -130,6 +130,7 @@
                 [buttons/SidebarButton
                  {:style :light :color :button-primary :margin (when can-edit? :top)
                   :text "Publish..." :icon :share
+                  :disabled? (when-not (= source-repo "agora") "The method repository of the Referenced Method does not support publishing.")
                   :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
 
