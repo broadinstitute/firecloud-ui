@@ -81,7 +81,8 @@
                    redacted? name-validation-errors? snapshots
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
-           config-id (ws-common/config->id (:methodConfiguration loaded-config))]
+           config-id (ws-common/config->id (:methodConfiguration loaded-config))
+           source-repo (:sourceRepo (:methodRepoMethod loaded-config))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:show-delete-dialog? @state)
           [delete/DeleteDialog (merge (utils/restructure config-id workspace-id after-delete)
@@ -129,6 +130,7 @@
                 [buttons/SidebarButton
                  {:style :light :color :button-primary :margin (when can-edit? :top)
                   :text "Publish..." :icon :share
+                  :disabled? (when-not (= source-repo "agora") "The method repository of the Referenced Method does not support publishing.")
                   :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
 
