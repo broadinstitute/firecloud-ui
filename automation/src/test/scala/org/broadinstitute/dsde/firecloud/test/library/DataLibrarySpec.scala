@@ -79,11 +79,6 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
 
           val page = pageOption.get
 
-          //val page = new DataLibraryPage().open
-          page.hasDataset(wsName) shouldBe true
-
-
-
           //Verifying results
           val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",
             page.experimentalStrategySection -> s"$wsName+2",
