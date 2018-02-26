@@ -108,7 +108,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.validateLocation()
                   // TODO: add assertions for the new "request access" modal
                   // TODO: end test somewhere we can access the sign out button
-                  new RequestAccessModal().cancel()
+
+                  // close "request access" Modal
+                  workspaceListPage.closeModal()
                 }
               }
             }
@@ -306,7 +308,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
-                    new RequestAccessModal().cancel()
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -347,7 +351,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
-                    new RequestAccessModal().cancel()
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -364,7 +370,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: finish this test somewhere we can access the sign out button
-                    new RequestAccessModal().cancel()
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -398,7 +406,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
-                    new RequestAccessModal().cancel()
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
