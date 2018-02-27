@@ -42,7 +42,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         resultFields.get(0).getV.toString shouldBe "2"
       }
 
-      withCleanBillingProject(ownerUser) { projectName =>
+      withBillingProject("auto-goog-role") { projectName =>
         val preRoleFailure = bigQuery.startQuery(GoogleProject(projectName), "meh").failed.futureValue
 
         preRoleFailure shouldBe a[GoogleJsonResponseException]
@@ -86,7 +86,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         // end GAWB-3138 why does this fail so often
 
-      }
+      }(ownerToken)
     }
 
     "should not allow access alteration for arbitrary google roles" in {
@@ -96,7 +96,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
       val user: Credentials = UserPool.chooseStudent
 
-      withCleanBillingProject(ownerUser) { projectName =>
+      withBillingProject("auto-goog-role") { projectName =>
         roles foreach { role =>
           val addEx = intercept[RestException] {
             Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
@@ -108,7 +108,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
           }
           removeEx.getMessage should include(role)
         }
-      }
+      }(ownerToken)
     }
 
     "should not allow access alteration by non-owners" in {
