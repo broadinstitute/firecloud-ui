@@ -8,6 +8,7 @@
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
+   [broadfcui.page.external-importer :as external-importer]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
@@ -20,7 +21,7 @@
       (spinner "Loading auth...")])
    :component-did-mount
    (fn [{:keys [this]}]
-     (js-invoke js/gapi "load" "auth2" #(this :-handle-auth2-loaded)))
+     (js/gapi.load "auth2" #(this :-handle-auth2-loaded)))
    :-handle-auth2-loaded
    (fn [{:keys [props]}]
      (let [{:keys [on-loaded]} props
@@ -30,20 +31,19 @@
                     "https://www.googleapis.com/auth/devstorage.full_control"
                     "https://www.googleapis.com/auth/compute"])
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
-           auth2 (js-invoke (aget js/gapi "auth2") "init" init-options)]
+           auth2 (js/gapi.auth2.init init-options)]
        (user/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
 (react/defc- Policy
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:maxWidth 616 :backgroundColor "white"
-                    :padding "1.5rem" :margin "1rem auto"
-                    :border style/standard-line
+     [:div {:style {:maxWidth 716 :backgroundColor "white"
+                    :margin "2.5rem auto 0"
                     :fontSize (when (= (:context props) :logged-out) "88%")}}
       (when (= (:context props) :policy-page)
         (list
-         [:h3 {} "FireCloud Privacy Policy"]
+         [:h4 {} "FireCloud Privacy Policy"]
          [:p {}
           "The following Privacy Policy discloses our information gathering and dissemination
            practices for the Broad Institute FireCloud application accessed via the website "
@@ -118,7 +118,7 @@
           (links/create-external {:href (config/forum-url)} "User Forum")
           "."]
          [:hr]))
-      [:h3 {} "WARNING NOTICE"]
+      [:h4 {} "WARNING NOTICE"]
       [:p {}
        "You are accessing a US Government web site which may contain information that must be
         protected under the US Privacy Act or other sensitive information and is intended for
@@ -133,9 +133,9 @@
         communications or data transiting or stored on related to this website and is advised
         that if such monitoring reveals possible evidence of criminal activity, NIH may provide
         that evidence to law enforcement officials."]
-      [:h4 {} "WARNING NOTICE (when accessing controlled data)"]
+      [:h4 {} "WARNING NOTICE (when accessing TCGA controlled data)"]
       [:p {:style {:fontWeight "bold"}}
-       "You are reminded that when accessing controlled access information you are bound by the
+       "You are reminded that when accessing TCGA controlled access information you are bound by the
         dbGaP TCGA "
        (links/create-external {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014"}
          "DATA USE CERTIFICATION AGREEMENT (DUCA)")
@@ -145,25 +145,35 @@
   {:render
    (fn []
      [:div {:style {:padding "1rem" :margin -20 :marginTop "1rem"
-                    :backgroundColor (:background-light style/colors)}}
+                    :backgroundColor "white"}}
       [Policy {:context :policy-page}]])})
 
 (react/defc LoggedOut
   {:render
    (fn [{:keys [this props]}]
-     ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
-     ;; than removing it from the page.
-     [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
-      [:div {:style {:margin "0 auto" :maxWidth 616}}
-       [:div {:style {:textAlign "center"}}
-        [buttons/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click)}]]
-       [:div {:style {:margin "2rem 0"}}
-        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
-        [:p {}
-         "Please use the \"Sign In\" button above to sign-in with your Google Account.
-          Once you have successfully signed-in with Google, you will be taken to the FireCloud
-          registration page."]]]
-      [Policy {:context :logged-out}]])
+     (let [import-page? (string/starts-with? js/document.location.hash "#import")]
+       ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
+       ;; than removing it from the page.
+       [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
+        [:div {:style {:margin "0 auto" :maxWidth 716}}
+         [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
+          (if import-page? external-importer/import-title "New User?")]
+         [:div {:style {:marginBottom "1.5rem"}}
+          (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
+         [:div {:style {:display "flex"}}
+          [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
+           (if import-page?
+             (external-importer/render-import-tutorial)
+             [:div {:style {:lineHeight "130%"}}
+              "Need to create a FireCloud account? FireCloud uses your Google account. Once you have
+               signed in and completed the user profile registration step, you can start using FireCloud."
+              (links/create-external {:style {:display "block" :marginTop "0.3rem"}
+                                      :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
+                "Learn how to create a Google account with any email address.")])]
+          [:div {:style {:width 180 :paddingLeft "2rem" :alignSelf "center"}
+                 :className "g-signin2" :data-theme "dark" :data-width 180 :data-height 40 :data-longtitle true
+                 :onClick #(this :-handle-sign-in-click)}]]]
+        [Policy {:context :logged-out}]]))
    :component-did-mount
    (fn [{:keys [props locals]}]
      (swap! locals assoc :refresh-token-saved? true)

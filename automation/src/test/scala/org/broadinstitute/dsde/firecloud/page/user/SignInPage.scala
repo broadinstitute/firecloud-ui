@@ -1,8 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.component.Button
-import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
@@ -16,7 +15,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 
   override val url: String = baseUrl
 
-  private val signInButton = Button("sign-in-button")
+  private val signInButton = Button(CSSQuery("div.g-signin2"))
 
   /**
     * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.
