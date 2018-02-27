@@ -96,6 +96,8 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
       listPage.clickCreateWorkspaceButton(true)
 
       listPage.showsNoBillingProjectsModal() shouldBe true
+
+      listPage.closeModal()
     }
   }
 
