@@ -346,6 +346,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
           withSignIn(user) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
@@ -408,6 +410,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
@@ -431,6 +435,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
+              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")

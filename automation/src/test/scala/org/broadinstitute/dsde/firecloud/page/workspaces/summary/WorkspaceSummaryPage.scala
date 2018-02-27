@@ -26,18 +26,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       enabled(testId("workspace-details-error")) ||
       (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
     }
-    waitForGoogleBucket()
   }
 
   def validateLocation(): Unit = {
     assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
-  }
-
-  def waitForGoogleBucket(): Unit = {
-    while (shouldWaitForBucketAccess) {
-      Thread sleep 1000
-      goToSummaryTab()
-    }
   }
 
   private val authDomainGroups = Label("auth-domain-groups")
