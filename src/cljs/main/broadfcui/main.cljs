@@ -215,7 +215,9 @@
           (when-not (contains? user-status :signed-in)
             (style/render-text-logo))
           [:div {}
-           [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
+           [auth/LoggedOut {:spinner-text (cond (not config-loaded?) "Loading config..."
+                                                (not auth2) "Loading auth...")
+                            :auth2 auth2 :hidden? sign-in-hidden?
                             :on-change (fn [signed-in? token-saved?]
                                          (swap! state update :user-status
                                                 #(-> %
@@ -223,7 +225,7 @@
                                                       :signed-in)
                                                      ((if token-saved? conj disj)
                                                       :refresh-token-saved))))}]
-           (when (nil? auth2)
+           (when (and config-loaded? (not auth2))
              [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
            (cond
