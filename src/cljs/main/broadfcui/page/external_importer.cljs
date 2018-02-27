@@ -25,20 +25,20 @@
        [:h2 {:style {:margin "0 0 0.3rem"}} "Google Billing Project"]
        "To pay any storage or compute costs"
        [:p {:style {:fontSize "80%"}}
-        "Don’t know if you have one? If you own or have 'write & compute' access to an existing workspace, that means you have access to a billing project and you’re all set."
-        (links/create-external {:style {:display "block" :marginTop "0.3rem"}
-                                :href (config/billing-account-guide-url)}
-          "Click here for instructions on how to set up a new billing project.")]]]
+        "Don’t know if you have one? If you own or have 'write & compute' access to an existing workspace,
+         that means you have access to a billing project and you’re all set. If you don't, click "
+        (links/create-external {:href (config/billing-account-guide-url)} "here")
+        " for instructions on how to get one."]]]
      [:div {:style {:display "flex"}}
       (create-number-label 2)
       [:div {:style {:marginLeft "0.5rem"}}
        [:h2 {:style {:margin "0 0 0.3rem"}} "FireCloud Account"]
-       "To maintain control over your data."
+       "To use FireCloud services"
        [:p {:style {:fontSize "80%"}}
-        "Need to create a FireCloud account? FireCloud uses your Google account. Once you have signed in and completed the user profile registration step, you can start using FireCloud."
-        (links/create-external {:style {:display "block" :marginTop "0.3rem"}
-                                :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
-          "Learn how to create a Google account with any email address.")]]]]))
+        "Need to create a FireCloud account? FireCloud requires a Google account. Click "
+        (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"} "here")
+        " to learn how you can create a Google identity and link any email address to that Google account. Once
+         you have signed in and completed the user profile registration step you can start using FireCloud."]]]]))
 
 (react/defc Importer
   {:render
