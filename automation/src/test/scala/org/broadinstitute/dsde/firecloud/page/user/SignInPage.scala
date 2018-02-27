@@ -21,6 +21,8 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.
     */
   def signIn(email: String, password: String): Unit = {
+    signInButton.awaitVisible()
+
     val popup = beginSignIn()
     popup.signIn(email, password)
     await enabled testId("account-dropdown")
