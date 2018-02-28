@@ -30,7 +30,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 
   override val url: String = baseUrl
 
-  private val signInButton = Button(CSSQuery("div.g-signin2"))
+  private val signInButton = Button(CSSQuery("#sign-in-button"))
 
   /**
     * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.

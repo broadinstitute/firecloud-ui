@@ -4,7 +4,6 @@
    [clojure.string :as string]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
@@ -16,9 +15,7 @@
 
 (react/defc GoogleAuthLibLoader
   {:render
-   (fn []
-     [:div {:style {:padding "40px 0"}}
-      (spinner "Loading auth...")])
+   (constantly nil)
    :component-did-mount
    (fn [{:keys [this]}]
      (js/gapi.load "auth2" #(this :-handle-auth2-loaded)))
@@ -32,6 +29,7 @@
                     "https://www.googleapis.com/auth/compute"])
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js/gapi.auth2.init init-options)]
+       (gapi.signin2.render "sign-in-button" #js{:width 180 :height 40 :longtitle true :theme "dark"})
        (user/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
@@ -170,9 +168,10 @@
               (links/create-external {:style {:display "block" :marginTop "0.3rem"}
                                       :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
                 "Learn how to create a Google account with any email address.")])]
-          [:div {:style {:width 180 :paddingLeft "2rem" :alignSelf "center"}
-                 :className "g-signin2" :data-theme "dark" :data-width 180 :data-height 40 :data-longtitle true
-                 :onClick #(this :-handle-sign-in-click)}]]]
+          [:div {:id "sign-in-button"
+                 :style {:flexShrink 0 :width 180 :paddingLeft "2rem" :alignSelf "center"}
+                 :onClick #(this :-handle-sign-in-click)}
+           (spinner (:spinner-text props))]]]
         [Policy {:context :logged-out}]]))
    :component-did-mount
    (fn [{:keys [props locals]}]
