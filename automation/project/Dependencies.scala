@@ -7,8 +7,8 @@ object Dependencies {
 
   val workbenchModelV  = "0.10-6800f3a"
   val workbenchMetricsV  = "0.3-7ad0aa8"
-  val workbenchGoogleV = "0.16-8e9ac2a"
-  val workbenchServiceTestV = "0.5-3b5f213"
+  val workbenchGoogleV = "0.16-998a251-SNAP"
+  val workbenchServiceTestV = "0.5-998a251-SNAP"
 
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetrics: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-metrics" % workbenchMetricsV
@@ -19,8 +19,11 @@ object Dependencies {
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_2.11")
   )
 
-  val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*) withSources()
-  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % workbenchServiceTestV classifier "tests" excludeAll(workbenchExclusions:_*) withSources()
+  val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV //excludeAll(workbenchExclusions:_*)
+  val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % workbenchServiceTestV classifier "tests"
+  //excludeAll(workbenchExclusions:_*)
+
+  val workbenchGoogleTests: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV % "test" classifier "tests" excludeAll(workbenchExclusions:_*)
 
   val rootDependencies = Seq(
     // proactively pull in latest versions of Jackson libs, instead of relying on the versions
@@ -53,7 +56,13 @@ object Dependencies {
     workbenchGoogle,
     workbenchServiceTest,
 
-    // required by workbenchGoogle
+
+    workbenchGoogleTests,
+    "org.elasticsearch"   %  "elasticsearch"    % "2.2.0",
+    "org.elasticsearch"   %  "elasticsearch"    % "2.2.0" % "test" classifier "tests",
+
+
+  // required by workbenchGoogle
     "com.typesafe.akka" %% "akka-http-spray-json" % "10.0.6" % "provided"
   )
 }
