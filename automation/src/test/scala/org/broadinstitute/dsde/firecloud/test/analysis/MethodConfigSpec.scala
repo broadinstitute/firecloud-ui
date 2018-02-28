@@ -206,15 +206,21 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "import a method into a workspace from the method repo" ignore withWebDriver { implicit driver =>
+  "import a method into a workspace from the method repo" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(user) { _ =>
         val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-        val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethod.methodNamespace,
-          MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId, methodName, Some(MethodData.SimpleMethod.rootEntityType))
+
+        val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(
+          MethodData.SimpleMethod.methodNamespace,
+          MethodData.SimpleMethod.methodName,
+          MethodData.SimpleMethod.snapshotId,
+          SimpleMethodConfig.configName,
+          Some(MethodData.SimpleMethod.rootEntityType))
+
         methodConfigDetailsPage.editMethodConfig(inputs = Some(SimpleMethodConfig.inputs))
 
         methodConfigDetailsPage.isLoaded shouldBe true
