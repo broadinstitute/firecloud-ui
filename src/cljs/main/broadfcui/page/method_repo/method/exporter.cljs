@@ -89,9 +89,10 @@
        [:div {:style {:backgroundColor "white" :padding "1rem" :width "100vw" :maxWidth "calc(100% - 2rem)"}}
         [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
          "Select Method Configuration"]
-        [:div {:style {:maxHeight 580}}
+        [:div {:style {:height 500}}
          [SplitPane
-          {:left [method-common/ConfigTable
+          {:height "100%"
+           :left [method-common/ConfigTable
                   {:method-id (:method-id props)
                    :snapshot-id (:selected-snapshot-id props)
                    :style {:body-row (fn [{:keys [row]}]
