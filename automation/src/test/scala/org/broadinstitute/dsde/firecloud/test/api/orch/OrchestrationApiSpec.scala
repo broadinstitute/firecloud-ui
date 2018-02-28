@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
 import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
-import org.broadinstitute.dsde.workbench.service.Orchestration
+import org.broadinstitute.dsde.workbench.service.{Orchestration, RestException}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Minutes, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
@@ -19,10 +19,14 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
   with BillingFixtures {
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)))
 
+  def nowPrint(text: String): Unit = {
+    println(s"${Instant.now} : $text")
+  }
+
   "Orchestration" - {
     "should grant and remove google role access" in {
       // google roles can take a while to take effect
-      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Minutes)), interval = scaled(Span(10, Seconds)))
+      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(1, Minutes)), interval = scaled(Span(10, Seconds)))
 
       val ownerUser: Credentials = UserPool.chooseProjectOwner
       val ownerToken: AuthToken = ownerUser.makeAuthToken()
@@ -44,7 +48,11 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         resultFields.get(0).getV.toString shouldBe "2"
       }
 
+      nowPrint("Begin Test")
+
       withCleanBillingProject(ownerUser) { projectName =>
+
+        nowPrint("Project created")
 
         val preRoleFailure = bigQuery.startQuery(GoogleProject(projectName), "meh").failed.futureValue
 
@@ -53,7 +61,11 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         preRoleFailure.getMessage should include(projectName)
         preRoleFailure.getMessage should include("bigquery.jobs.create")
 
+        nowPrint("Passed - user can't query in new project")
+
         Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
+
+        nowPrint("Role granted")
 
         // The google role might not have been applied the first time we call startQuery() - poll until it has
         val queryReference = eventually {
@@ -61,6 +73,8 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
           start shouldBe a[JobReference]
           start
         }
+
+        nowPrint("Passed - user can start query after role granted")
 
         // poll for query status until it completes
         val queryJob = eventually {
@@ -72,24 +86,27 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         val queryResult = bigQuery.getQueryResult(queryJob).futureValue
         assertExpectedShakespeareResult(queryResult)
 
+        nowPrint("Passed - query completed")
+
         Orchestration.billing.removeGoogleRoleFromBillingProjectUser(projectName, user.email, role)(ownerToken)
 
-        // begin GAWB-3138 why does this fail so often
+        nowPrint("Role denied")
 
         // The google role might not have been removed the first time we call startQuery() - poll until it has
-//        val postRoleFailure = eventually {
-//          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
-//          failure shouldBe a[GoogleJsonResponseException]
-//          failure
-//        }
-//
-//        postRoleFailure.getMessage should include(user.email)
-//        postRoleFailure.getMessage should include(projectName)
-//        postRoleFailure.getMessage should include("bigquery.jobs.create")
+        val postRoleFailure = eventually {
+          val failure = bigQuery.startQuery(GoogleProject(projectName), shakespeareQuery).failed.futureValue
+          failure shouldBe a[GoogleJsonResponseException]
+          failure
+        }
 
-        // end GAWB-3138 why does this fail so often
+        postRoleFailure.getMessage should include(user.email)
+        postRoleFailure.getMessage should include(projectName)
+        postRoleFailure.getMessage should include("bigquery.jobs.create")
 
+        nowPrint("Passed - user can't query after role denied")
       }
+
+      nowPrint("End Test")
     }
 
     "should not allow access alteration for arbitrary google roles" in {
