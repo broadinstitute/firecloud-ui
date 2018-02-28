@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.api.orch
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.StatusCodes
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.bigquery.model.{GetQueryResultsResponse, JobReference}
@@ -7,9 +9,9 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.dao.Google.googleBigQueryDAO
 import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
-import org.broadinstitute.dsde.workbench.service.{Orchestration, RestException}
+import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.time.{Minutes, Second, Seconds, Span}
+import org.scalatest.time.{Minutes, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 import org.broadinstitute.dsde.workbench.model.google.GoogleProject
 
@@ -42,7 +44,8 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
         resultFields.get(0).getV.toString shouldBe "2"
       }
 
-      withBillingProject("auto-goog-role") { projectName =>
+      withCleanBillingProject(ownerUser) { projectName =>
+
         val preRoleFailure = bigQuery.startQuery(GoogleProject(projectName), "meh").failed.futureValue
 
         preRoleFailure shouldBe a[GoogleJsonResponseException]
@@ -86,7 +89,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
         // end GAWB-3138 why does this fail so often
 
-      }(ownerToken)
+      }
     }
 
     "should not allow access alteration for arbitrary google roles" in {
