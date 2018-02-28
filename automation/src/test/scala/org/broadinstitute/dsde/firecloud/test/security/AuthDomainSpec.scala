@@ -551,7 +551,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
         register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
@@ -595,7 +595,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
         register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
@@ -623,7 +623,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke1x", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
@@ -646,7 +646,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
@@ -669,7 +669,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -694,7 +694,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
@@ -721,7 +721,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
@@ -746,7 +746,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(owner) { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
