@@ -11,7 +11,22 @@ import org.scalatest.selenium.{Page, WebBrowser}
   * Page class for the page displayed when accessing FireCloud when not signed in.
   */
 class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends FireCloudView with Page with PageUtil[SignInPage] {
-  override def awaitReady(): Unit = signInButton awaitReady()
+  override def awaitReady(): Unit = {
+    signInButton awaitReady()
+    /*
+     * The FireCloud not-signed-in page renders the sign-in button while it is still doing some
+     * initialization. If you log the status of the App components state for user-status and auth2
+     * with each render, you see the following sequence:
+     *   '#{}' ''
+     *   '#{}' '[object Object]'
+     *   '#{:refresh-token-saved}' '[object Object]'
+     * If the page is used before this is complete (for example window.forceSignedIn adding
+     * :signed-in to user-status), bad things happen (for example :signed-in being dropped from
+     * user-status). Instead of reworking the sign-in logic for a case that (for the most part) only
+     * a computer will operate fast enough to encounter, we'll just slow the computer down a little.
+     */
+    Thread.sleep(250)
+  }
 
   override val url: String = baseUrl
 
