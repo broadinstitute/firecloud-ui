@@ -1,9 +1,13 @@
 (ns broadfcui.page.external-importer
   (:require
    [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -40,9 +44,62 @@
         " to learn how you can create a Google identity and link any email address to that Google account. Once
          you have signed in and completed the user profile registration step you can start using FireCloud."]]]]))
 
+
+(defn nowhere-to-save-message []
+  (list
+   [:div {:style {:fontSize "150%"}}
+    (icons/render-icon {:style {:color (:state-exception style/colors) :marginRight "0.5rem"}}
+      :error)
+    "Billing Account Required"]
+   [:p {} "In order to import this workflow, you must be able to save it to a workspace."]
+   [:p {}
+    "You must have a billing project associated with your account to create a new workspace,
+     or else you must be granted write access to an existing workspace."]
+   [:p {}
+    (links/create-external {:href (config/billing-account-guide-url)}
+      "Learn how to create a billing project.")]))
+
 (react/defc Importer
   {:render
-   (constantly nil)})
+   (fn [{:keys [props state]}]
+     (let [{:keys [source id]} props
+           {:keys [load-status error error-response]} @state]
+       [:div {:style style/thin-page-style}
+        [:div {:style {:fontWeight 500 :fontSize "125%" :marginBottom "2rem"}}
+         (str "Importing " id " from " source)]
+        (case load-status
+          :workspace-check (spinner "Checking workspace access...")
+          :version-check (spinner "Loading available method versions...")
+          :no-destination (nowhere-to-save-message)
+          :done nil)
+        (when error
+          (list
+           [:div {:style {:marginBottom "1rem" :fontSize "125%"}}
+            error]
+           [comps/ErrorViewer {:error error-response}]))]))
+   :component-will-mount
+   (fn [{:keys [this]}]
+     (this :-check-workspace-access))
+   :-check-workspace-access
+   (fn [{:keys [state this]}]
+     (swap! state assoc :load-status :workspace-check)
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/import-status
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if-not success?
+                    (swap! state assoc
+                           :load-status :done
+                           :error "Error checking import status"
+                           :error-response (get-parsed-response false))
+                    (let [{:keys [billingProject writableWorkspace]} (get-parsed-response)]
+                      (if (or billingProject writableWorkspace)
+                        (this :-load-method-versions)
+                        (swap! state assoc :load-status :no-destination)))))}))
+   :-load-method-versions
+   (fn [{:keys [state]}]
+     (swap! state assoc :load-status :version-check)
+     ;; TODO: do it
+     )})
 
 (defn add-nav-paths []
   (nav/defpath

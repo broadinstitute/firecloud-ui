@@ -457,3 +457,6 @@
     :on-done on-done}
    :service-prefix "/version"))
 
+(def import-status
+  {:path "/profile/importstatus"
+   :method :get})
