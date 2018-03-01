@@ -20,13 +20,17 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
   }
 
   def ensureExpanded(): Unit = {
-    if (!isExpanded)
+    if (!isExpanded) {
       click on toggleComponent
+      awaitState("expanded")
+    }
   }
 
   def ensureCollapsed(): Unit = {
-    if (isExpanded)
+    if (isExpanded) {
       click on toggleComponent
+      awaitState("collapsed")
+    }
   }
 
   def getInner: A = {
