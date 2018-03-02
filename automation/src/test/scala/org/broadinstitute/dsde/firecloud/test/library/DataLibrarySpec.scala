@@ -54,7 +54,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   }
 
 
-  "Dataset to test facets values" ignore  withWebDriver { implicit driver =>
+  "Dataset to test facets values" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "Facets", attributes = Some(WorkspaceData.tags)) { wsName =>
