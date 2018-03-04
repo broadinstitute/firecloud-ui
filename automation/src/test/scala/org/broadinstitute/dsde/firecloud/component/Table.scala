@@ -101,7 +101,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     val cols = readColumnHeaders
 
     val map = for (row <- rows) yield {
-      cols zip row toMap
+      (cols zip(row)).toMap
     }
     map
   }
