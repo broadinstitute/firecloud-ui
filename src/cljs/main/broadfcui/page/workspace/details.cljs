@@ -91,7 +91,7 @@
            tabs [[SUMMARY :workspace-summary]
                  [DATA :workspace-data]
                  [ANALYSIS :workspace-analysis]
-                 (when (get @whitelisted-users (user/get-email)) [NOTEBOOKS :workspace-notebooks])
+                 [NOTEBOOKS :workspace-notebooks]
                  [CONFIGS :workspace-method-configs]
                  [MONITOR :workspace-monitor]]]
        [:div {}

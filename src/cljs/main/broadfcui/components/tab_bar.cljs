@@ -11,7 +11,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [data-test-id first? active? label href on-refresh]} props]
        [:a {:data-test-id data-test-id
-            :style {:flex "0 0 auto" :padding "1em 2em"
+            :style {:flex "0 0 auto" :padding (if (= label "Notebooks") ".70em 2em" "1em 2em")
                     :borderLeft (when first? style/standard-line)
                     :borderRight style/standard-line
                     :backgroundColor (when active? "white")
@@ -22,6 +22,7 @@
             :onMouseOut #(swap! state dissoc :hovering?)
             :onClick on-refresh}
         label
+        (when (= label "Notebooks") [:span {:style {:marginLeft 4}} (map style/render-tag (list "BETA"))])
         (when (or active? (:hovering? @state))
           [:div {:style {:position "absolute" :top "-0.25rem" :left 0
                          :width "100%" :height "0.25rem"
@@ -49,7 +50,9 @@
   [:div {:style {:marginTop "1rem"
                  :display "flex" :backgroundColor (:background-light style/colors)
                  :borderTop style/standard-line :borderBottom style/standard-line
-                 :padding "0 1.5rem" :justifyContent "space-between"}}
+                 :padding "0 1.5rem" :justifyContent "space-between"
+                 }}
+
    [:div {:data-test-id (or data-test-id "tabs")
           :style {:display "flex"}}
     (map-indexed

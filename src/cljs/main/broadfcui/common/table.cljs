@@ -224,7 +224,7 @@
                                                          (map #(assoc % :show-initial? false)))
                                      mentioned (set/union (set (defaults "shown"))
                                                           (set (defaults "hidden")))]
-                                 (concat default-showing default-hiding
+                                 (concat (utils/log default-showing) (utils/log default-hiding)
                                          (remove (fn [{:keys [id header]}]
                                                    (contains? mentioned (or id header)))
                                                  columns)))
