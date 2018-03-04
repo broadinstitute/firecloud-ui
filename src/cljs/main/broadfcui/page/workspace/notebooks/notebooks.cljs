@@ -16,6 +16,7 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
@@ -105,6 +106,8 @@
               [:div {}
                (style/create-form-label "Extension URI")
                [input/TextField {:ref "extensionURI" :autoFocus true :style {:width "100%"}}]
+               [FoundationTooltip {:text (style/create-form-label "Custom Script URI") :tooltip "The GCS URI of a bash script you wish to run on your cluster before it starts up."}]
+               [input/TextField {:ref "userScriptURI" :autoFocus true :style {:width "100%" :marginTop 4}}]
                [:div {:display "inline-block"}
                 [:span {:style {:paddingRight "19%"}} (create-inline-form-label "Master Machine Type")]
                 [:span {} (create-inline-form-label "Master Disk Size")]]
@@ -172,17 +175,19 @@
    :-create-cluster
    (fn [{:keys [this state refs props]}]
      (swap! state dissoc :server-error :validation-errors)
-     (let [[clusterNameCreate extensionURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI")
-           payload {:bucketPath ""
-                    :labels (this :-process-labels)}
+     (let [[clusterNameCreate extensionURI userScriptURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI" "userScriptURI")
+           payload {:labels (this :-process-labels)}
+
            machineConfig (this :-process-machine-config)]
        (if fails
          (swap! state assoc :validation-errors fails)
          (do (swap! state assoc :creating? true)
              (endpoints/call-ajax-leo
               {:endpoint (endpoints/create-cluster (get-in props [:workspace-id :namespace]) clusterNameCreate)
-               :payload (assoc (if (= "" (:jupyterExtensionUri extensionURI)) payload (merge payload extensionURI))
-                          :machineConfig machineConfig)
+               :payload (merge payload
+                               {:machineConfig machineConfig}
+                               (when-not (string/blank? extensionURI) {:jupyterExtensionUri extensionURI})
+                               (when-not (string/blank? userScriptURI) {:jupyterUserScriptUri userScriptURI}))
                :headers ajax/content-type=json
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :creating?)
