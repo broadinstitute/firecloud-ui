@@ -373,8 +373,8 @@
   ;   {:cluster-status-gensym (gensym)})
    :refresh
    (fn [{:keys [this]}]
-     (this :-get-clusters-list-if-whitelisted)
-     (this :-schedule-cookie-refresh-if-whitelisted))
+     (this :-get-clusters-list)
+     (this :-schedule-cookie-refresh))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response show-create-dialog? cluster-status-gensym]} @state
@@ -385,7 +385,7 @@
                                                   (swap! state #(-> % (assoc :cluster-status-gensym (gensym))
                                                                          (dissoc :show-create-dialog?)))
                                                   )
-                                       :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
+                                       :reload-after-create #(this :-get-clusters-list))])
         [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10 }} "Spark Clusters"]]
         [:div {:style {:margin 10 :fontSize "88%"} }
          "Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail.
@@ -400,11 +400,12 @@
                           :clusters clusters
                         ;  :cluster-status-gensym cluster-status-gensym
                          ; :reset-cluster-status-gensym (swap! state assoc :cluster-status-gensym (gensym))
-                          :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]
+                          :reload-after-delete #(this :-get-clusters-list))]
             [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")]))]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-is-leo-whitelisted)
+     (this :-get-clusters-list)
+     (this :-schedule-cookie-refresh)
      (.addEventListener js/window "message" (react/method this :-notebook-extension-listener)))
 
    :component-will-unmount
@@ -423,25 +424,25 @@
                      (config/leonardo-url-root))))
 
    ; Checks if the user is on the Leo whitelist
-   :-is-leo-whitelisted
-   (fn [{:keys [state this]}]
-     (endpoints/call-ajax-leo
-      {:endpoint endpoints/is-leo-whitelisted
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (do (swap! state assoc :is-leo-whitelisted? true)
-                        (this :-get-clusters-list-if-whitelisted)
-                        (this :-schedule-cookie-refresh-if-whitelisted))
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+   ;:-is-leo-whitelisted
+   ;(fn [{:keys [state this]}]
+   ;  (endpoints/call-ajax-leo
+   ;   {:endpoint endpoints/is-leo-whitelisted
+   ;    :headers ajax/content-type=json
+   ;    :on-done (fn [{:keys [success? get-parsed-response]}]
+   ;               (if success?
+   ;                 (do (swap! state assoc :is-leo-whitelisted? true)
+   ;                     (this :-get-clusters-list-if-whitelisted)
+   ;                     (this :-schedule-cookie-refresh-if-whitelisted))
+   ;                 (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
-   :-schedule-cookie-refresh-if-whitelisted
+   :-schedule-cookie-refresh
    (fn [{:keys [state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
-       (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
+       (when (not (:dead? @locals))
          (when (contains-statuses clusters ["Running"])
            (this :-process-running-clusters))
-         (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))
+         (js/setTimeout #(this :-schedule-cookie-refresh) 120000))))
 
    :-process-running-clusters
    (fn [{:keys [state]}]
@@ -457,9 +458,9 @@
                       (when-not success?
                         (swap! state assoc :server-error raw-response)))}))))
 
-   :-get-clusters-list-if-whitelisted
+   :-get-clusters-list
    (fn [{:keys [props state locals this]}]
-     (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
+     (when (not (:dead? @locals))
        (endpoints/call-ajax-leo
         {:endpoint endpoints/get-clusters-list
          :headers ajax/content-type=json
@@ -471,7 +472,7 @@
                           (swap! state assoc :server-response {:clusters filtered-clusters}))
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
                         (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
-                          (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000))
+                          (js/setTimeout #(this :-get-clusters-list) 10000))
                         ; If there are running clusters, call the /setCookie endpoint immediately.
                         (when (contains-statuses filtered-clusters ["Running"])
                           (this :-process-running-clusters)))

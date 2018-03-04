@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.workbench.config.Config
-import org.broadinstitute.dsde.workbench.google.gcs.GcsPath
+import org.broadinstitute.dsde.workbench.model.google.GcsPath
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.{Page, WebBrowser}
@@ -49,7 +49,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     testCode
 
     openDeleteClusterModal(clusterName).deleteCluster
-    await (getClusterStatus(clusterName) == "Deleting")
+    await condition (getClusterStatus(clusterName) == "Deleting")
     logger.info("Deleting dataproc cluster " + clusterName)
     waitUntilClusterIsDeleted(clusterName)
     await text noClustersMessage
@@ -101,7 +101,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 }
 
 
-class CreateClusterModal extends OKCancelModal("create-cluster-modal") {
+class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("create-cluster-modal") {
 
   // ids for all inputs and labels (test ids for labels should increment
   private val clusterNameField = TextField("cluster-name-input" inside this)
@@ -110,15 +110,15 @@ class CreateClusterModal extends OKCancelModal("create-cluster-modal") {
   private val optionalSettingsArea = Collapse("optional-settings", new FireCloudView {
     override def awaitReady(): Unit = masterMachineTypeSelect.awaitVisible()
 
-    val masterMachineTypeSelect = Select("master-machine-type-select" inside this)
-    val masterDiskSizeField = TextField("master-disk-size-input" inside this)
-    val workerField = TextField("workers-input" inside this)
-    val workerMachineTypeSelect = Select("worker-machine-type-select" inside this)
-    val workerDiskSizeField = TextField("worker-disk-size-input" inside this)
-    val workerLocalSSDsField = TextField("worker-local-ssds-input" inside this)
-    val localPreemptibleWorkersField = TextField("preemptible-workers-input" inside this)
-    val extensionURIField = TextField("extension-uri-input" inside this)
-    val customScriptURIField = TextField("custom-script-uri-input" inside this)
+    val masterMachineTypeSelect = Select("master-machine-type-select")
+    val masterDiskSizeField = TextField("master-disk-size-input")
+    val workerField = TextField("workers-input")
+    val workerMachineTypeSelect = Select("worker-machine-type-select")
+    val workerDiskSizeField = TextField("worker-disk-size-input")
+    val workerLocalSSDsField = TextField("worker-local-ssds-input")
+    val localPreemptibleWorkersField = TextField("preemptible-workers-input")
+    val extensionURIField = TextField("extension-uri-input")
+    val customScriptURIField = TextField("custom-script-uri-input")
     val addLabelButton = Button("add-label-button")
 
   })
@@ -180,7 +180,7 @@ class CreateClusterModal extends OKCancelModal("create-cluster-modal") {
 
 }
 
-class DeleteClusterModal(clusterName: String) extends OKCancelModal("delete-cluster-modal") {
+class DeleteClusterModal(clusterName: String)(implicit webDriver: WebDriver) extends OKCancelModal("delete-cluster-modal") {
   def deleteCluster() = {
     submit
   }

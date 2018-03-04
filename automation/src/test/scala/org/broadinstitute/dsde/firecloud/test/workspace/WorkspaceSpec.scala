@@ -459,34 +459,4 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       }
     }
   }
-
-  "Notebooks whitelist" - {
-    "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseNotebooksWhitelisted
-      implicit val authToken: AuthToken = user.makeAuthToken()
-
-      withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
-        withSignIn(user) { listPage =>
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          Label("Notebooks-tab").awaitVisible()
-          val notebooksTab = detailPage.goToNotebooksTab()
-          notebooksTab.createClusterButtonEnabled() shouldBe true
-        }
-      }
-    }
-
-    "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseCurator
-      implicit val authToken: AuthToken = user.makeAuthToken()
-
-      withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
-        withSignIn(user) { listPage =>
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          //go directly to notebooks page
-          val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
-          notebooksTab.checkUnauthorized
-        }
-      }
-    }
-  }
 }
