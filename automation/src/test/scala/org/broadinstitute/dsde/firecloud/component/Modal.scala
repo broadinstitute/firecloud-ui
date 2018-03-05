@@ -33,7 +33,6 @@ class OKCancelModal(id: String)(implicit webDriver: WebDriver) extends Modal(id)
   protected val cancelButton = Button(innerElement("cancel-button"))
 
   override def awaitReady(): Unit = {
-    header.awaitVisible()
     okButton.awaitVisible()
   }
 
