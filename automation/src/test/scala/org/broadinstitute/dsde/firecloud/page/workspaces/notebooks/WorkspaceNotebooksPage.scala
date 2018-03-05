@@ -157,7 +157,7 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
     }
     customScriptURI match {
       case Some(path) => optionalSettingsArea.getInner.customScriptURIField.setText(path.toUri)
-      case None => 
+      case None =>
     }
     addLabels(labels)
     submit

@@ -20,7 +20,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "NotebooksSpec_create_delete_cluster") { workspaceName =>
       withSignIn(user) { _ =>
-        val clusterName = "NotebookSpec-" + UUID.randomUUID()
+        val clusterName = "notebookSpec-" + UUID.randomUUID()
         new WorkspaceNotebooksPage(billingProject, workspaceName).open
           .withNewCluster(clusterName) { notebooksPage =>
             notebooksPage.openJupyterPage(clusterName).returnToNotebooksList()
