@@ -303,7 +303,7 @@
                    (fn [cluster]
                      (if (or (= (:status cluster) "Running") (= (:status cluster) "Error"))
                        (links/create-internal
-                         {:data-test-id "x-button"
+                         {:data-test-id (str (:clusterName cluster) "-delete-button")
                           :id (:id props)
                           :style {:color (:text-light style/colors)
                                   :minHeight 30 :minWidth 30}
