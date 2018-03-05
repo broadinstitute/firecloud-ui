@@ -35,11 +35,11 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
                      workerDiskSize: Int = 500,
                      workerLocalSSDs: Int = 0,
                      preemptibleWorkers: Int = 0,
-                     extensionURI: GcsPath = null,
-                     customScriptURI: GcsPath = null,
+                     extensionURI: Option[GcsPath] = None,
+                     customScriptURI: Option[GcsPath] = None,
                      labels: Map[String, String] = Map())(testCode: (WorkspaceNotebooksPage) => Any) = {
 
-    openCreateClusterModal.createCluster(clusterName, masterMachineType, masterDiskSize, workers, workerMachineType, workerDiskSize, workerLocalSSDs, preemptibleWorkers, extensionURI,  customScriptURI, labels)
+    openCreateClusterModal.createCluster(clusterName, masterMachineType, masterDiskSize, workers, workerMachineType, workerDiskSize, workerLocalSSDs, preemptibleWorkers, extensionURI, customScriptURI, labels)
     await text clusterName
     assert(getClusterStatus(clusterName) == "Creating")
     logger.info("Creating dataproc cluster " + clusterName)
@@ -134,8 +134,8 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
                     workerDiskSize: Int,
                     workerLocalSSDs: Int,
                     preemptibleWorkers: Int,
-                    extensionURI: GcsPath,
-                    customScriptURI: GcsPath,
+                    extensionURI: Option[GcsPath],
+                    customScriptURI: Option[GcsPath],
                     labels: Map[String, String]) = {
 
     clusterNameField.setText(clusterName)
@@ -151,9 +151,14 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
     optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs)
     optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers)
 
-    optionalSettingsArea.getInner.extensionURIField.setText(extensionURI.toUri)
-    optionalSettingsArea.getInner.customScriptURIField.setText(customScriptURI.toUri)
-
+    extensionURI match {
+      case Some(path) => optionalSettingsArea.getInner.extensionURIField.setText(path.toUri)
+      case None =>
+    }
+    customScriptURI match {
+      case Some(path) => optionalSettingsArea.getInner.customScriptURIField.setText(path.toUri)
+      case None => 
+    }
     addLabels(labels)
     submit
   }
