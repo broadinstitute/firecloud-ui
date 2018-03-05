@@ -50,8 +50,7 @@
   [:div {:style {:marginTop "1rem"
                  :display "flex" :backgroundColor (:background-light style/colors)
                  :borderTop style/standard-line :borderBottom style/standard-line
-                 :padding "0 1.5rem" :justifyContent "space-between"
-                 }}
+                 :padding "0 1.5rem" :justifyContent "space-between"}}
 
    [:div {:data-test-id (or data-test-id "tabs")
           :style {:display "flex"}}
