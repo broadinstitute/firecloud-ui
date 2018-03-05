@@ -11,6 +11,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [data-test-id first? active? label href on-refresh]} props]
        [:a {:data-test-id data-test-id
+            ;; Notebooks tab label has different padding because of the temporary "BETA" tag
             :style {:flex "0 0 auto" :padding (if (= label "Notebooks") ".70em 2em" "1em 2em")
                     :borderLeft (when first? style/standard-line)
                     :borderRight style/standard-line

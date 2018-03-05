@@ -20,41 +20,8 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
 
   private val clustersTable = Table("spark-clusters-table")
-  private val clustersTableTestId = testId("spark-clusters-table")
-  private val clusterErrorMessage = testId("notebooks-error")
-  private val sparkClustersHeader = testId("spark-clusters-title")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")
-  private val noClustersMessage = "There are no clusters to display."
-
-  //  withNewCluster - open modal, create cluster, wait for it to appear/running state, open delete modal, delete cluster, wait for delete
-  def withNewCluster(clusterName: String,
-                     masterMachineType: String = "n1-standard-4",
-                     masterDiskSize: Int = 500,
-                     workers: Int = 0,
-                     workerMachineType: String = "n1-standard-4",
-                     workerDiskSize: Int = 500,
-                     workerLocalSSDs: Int = 0,
-                     preemptibleWorkers: Int = 0,
-                     extensionURI: Option[GcsPath] = None,
-                     customScriptURI: Option[GcsPath] = None,
-                     labels: Map[String, String] = Map())(testCode: (WorkspaceNotebooksPage) => Any) = {
-
-    openCreateClusterModal.createCluster(clusterName, masterMachineType, masterDiskSize, workers, workerMachineType, workerDiskSize, workerLocalSSDs, preemptibleWorkers, extensionURI, customScriptURI, labels)
-    await text clusterName
-    assert(getClusterStatus(clusterName) == "Creating")
-    logger.info("Creating dataproc cluster " + clusterName)
-    waitUntilClusterIsRunning(clusterName)
-    logger.info("Created dataproc cluster " + clusterName)
-
-    testCode
-
-    openDeleteClusterModal(clusterName).deleteCluster
-    await condition (getClusterStatus(clusterName) == "Deleting")
-    logger.info("Deleting dataproc cluster " + clusterName)
-    waitUntilClusterIsDeleted(clusterName)
-    await text noClustersMessage
-    logger.info("Deleted dataproc cluster " + clusterName)
-  }
+  val noClustersMessage = "There are no clusters to display."
 
   // Goes to a Jupyter page. Currently doesn't return a page object
   // because Jupyter functionality is tested in leo automated tests.
@@ -63,7 +30,6 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     val initialWindowHandles = windowHandles
 
     val clusterLink = Link(clusterName + "-link")
-    await ready clusterLink
     clusterLink.doClick()
 
     await condition (windowHandles.size > 1)
@@ -73,16 +39,15 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     new JupyterPage().awaitLoaded()
   }
 
-  private def waitUntilClusterIsRunning(clusterName: String) = {
-    while (getClusterStatus(clusterName) == "Creating") { Thread sleep 10000 }
+  def waitUntilClusterIsRunning(clusterName: String) = {
+    await condition (getClusterStatus(clusterName) == "Running", 900)
   }
 
-  private def waitUntilClusterIsDeleted(clusterName: String) = {
-    while (getClusterStatus(clusterName) == "Deleting") { Thread sleep 10000 }
+  def waitUntilClusterIsDeleted(clusterName: String) = {
+    await condition (getClusterStatus(clusterName) == "", 900)
   }
 
   def openCreateClusterModal(): CreateClusterModal = {
-    openCreateClusterModalButton.isStateEnabled
     openCreateClusterModalButton.doClick()
     await ready new CreateClusterModal
   }
@@ -97,6 +62,10 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   def getClusterStatus(clusterName: String): String = {
     val clusterStatusId = testId(clusterName + "-status")
     readText(clusterStatusId)
+  }
+
+  def getClusters() = {
+    clustersTable.getData
   }
 }
 
@@ -127,29 +96,29 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
   import scala.language.reflectiveCalls
 
   def createCluster(clusterName: String,
-                    masterMachineType: String,
-                    masterDiskSize: Int,
-                    workers: Int,
-                    workerMachineType: String,
-                    workerDiskSize: Int,
-                    workerLocalSSDs: Int,
-                    preemptibleWorkers: Int,
-                    extensionURI: Option[GcsPath],
-                    customScriptURI: Option[GcsPath],
-                    labels: Map[String, String]) = {
+                    masterMachineType: String = "n1-standard-4",
+                    masterDiskSize: Int = 500,
+                    workers: Int = 0,
+                    workerMachineType: String = "n1-standard-4",
+                    workerDiskSize: Int = 500,
+                    workerLocalSSDs: Int = 0,
+                    preemptibleWorkers: Int = 0,
+                    extensionURI: Option[GcsPath] = None,
+                    customScriptURI: Option[GcsPath] = None,
+                    labels: Map[String, String] = Map()) = {
 
     clusterNameField.setText(clusterName)
     optionalSettingsArea.toggle
 
     optionalSettingsArea.getInner.masterMachineTypeSelect.select(masterMachineType)
-    optionalSettingsArea.getInner.masterDiskSizeField.setText(masterDiskSize)
+    optionalSettingsArea.getInner.masterDiskSizeField.setText(masterDiskSize.toString)
 
-    optionalSettingsArea.getInner.workerField.setText(workers)
+    optionalSettingsArea.getInner.workerField.setText(workers.toString)
     optionalSettingsArea.getInner.workerMachineTypeSelect.select(workerMachineType)
-    optionalSettingsArea.getInner.workerDiskSizeField.setText(workerDiskSize)
+    optionalSettingsArea.getInner.workerDiskSizeField.setText(workerDiskSize.toString)
 
-    optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs)
-    optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers)
+    optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs.toString)
+    optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers.toString)
 
     extensionURI match {
       case Some(path) => optionalSettingsArea.getInner.extensionURIField.setText(path.toUri)
@@ -160,12 +129,11 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
       case None =>
     }
     addLabels(labels)
-    submit
+    clickOk()
   }
 
   def addLabels(labels: Map[String, String]) = {
     optionalSettingsArea.ensureExpanded()
-    optionalSettingsArea.getInner.addLabelButton.awaitEnabled()
     var labelIndex = 0
     labels.map{ label =>
       optionalSettingsArea.getInner.addLabelButton.doClick()
