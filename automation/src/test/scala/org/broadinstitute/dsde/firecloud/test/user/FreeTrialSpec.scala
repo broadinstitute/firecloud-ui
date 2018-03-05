@@ -46,52 +46,35 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
-    register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
+    register cleanUp Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
   "A user whose free trial status is" - {
 
     "Blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
-          bannerTitleElement.isVisible shouldBe false
+        withSignIn(testUser) { listPage =>
+          listPage.isTrialBannerVisible shouldBe false
         }
       }
     }
 
     "Enabled" - {
       "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+        registerCleanUpForDeleteTrialState()
         setUpEnabledUserAndProject(testUser)
         val trialAuthToken = TrialBillingAccountAuthToken()
         api.trial.reportTrialProjects().foreach { x =>
           register cleanUp Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value), WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())
         }
 
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe true
-          bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
+        withSignIn(testUser) { listPage =>
+          listPage.isTrialBannerVisible shouldBe true
+          listPage.getTrialBannerTitle shouldBe "Welcome to FireCloud!"
 
-          val bannerButton = await ready Button(TestId("trial-banner-button"))
-          bannerButton.doClick()
+          listPage.enrollInFreeTrial()
 
-          val reviewButton = await ready Button(TestId("review-terms-of-service"))
-          reviewButton.doClick()
-
-          val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
-          agreeTermsCheckbox.ensureChecked()
-
-          val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
-          agreeCloudTermsCheckbox.ensureChecked()
-
-          val acceptButton = await ready Button(TestId("accept-terms-of-service"))
-          acceptButton.doClick()
-
-          await condition bannerButton.getState == "ready"
-          bannerTitleElement.getText shouldBe "Access Free Credits"
+          listPage.getTrialBannerTitle shouldBe "Access Free Credits"
         }
 
         // Verify that the user has been added to the corresponding billing project
@@ -113,8 +96,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         val errMsg = "The trial user's billing project should have been removed from the billing account."
         assert(billingAccountUponTermination.isEmpty, errMsg)
-
-        registerCleanUpForDeleteTrialState()
       }
     }
 
@@ -123,11 +104,9 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe true
-          bannerTitleElement.getText shouldBe "Your free credits have expired"
+        withSignIn(testUser) { listPage =>
+          listPage.isTrialBannerVisible shouldBe true
+          listPage.getTrialBannerTitle shouldBe "Your free credits have expired"
         }
       }
     }
@@ -137,10 +116,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe false
+        withSignIn(testUser) { listPage =>
+          listPage.isTrialBannerVisible shouldBe false
         }
       }
     }
@@ -150,10 +127,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
 
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe false
+        withSignIn(testUser) { listPage =>
+          listPage.isTrialBannerVisible shouldBe false
         }
       }
     }
