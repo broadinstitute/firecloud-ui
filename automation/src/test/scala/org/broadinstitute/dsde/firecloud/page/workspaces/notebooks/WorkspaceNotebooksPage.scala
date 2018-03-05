@@ -142,14 +142,14 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
     optionalSettingsArea.toggle
 
     optionalSettingsArea.getInner.masterMachineTypeSelect.select(masterMachineType)
-    optionalSettingsArea.getInner.masterDiskSizeField.setText(masterDiskSize.toString)
+    optionalSettingsArea.getInner.masterDiskSizeField.setText(masterDiskSize)
 
-    optionalSettingsArea.getInner.workerField.setText(workers.toString)
+    optionalSettingsArea.getInner.workerField.setText(workers)
     optionalSettingsArea.getInner.workerMachineTypeSelect.select(workerMachineType)
-    optionalSettingsArea.getInner.workerDiskSizeField.setText(workerDiskSize.toString)
+    optionalSettingsArea.getInner.workerDiskSizeField.setText(workerDiskSize)
 
-    optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs.toString)
-    optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers.toString)
+    optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs)
+    optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers)
 
     optionalSettingsArea.getInner.extensionURIField.setText(extensionURI.toUri)
     optionalSettingsArea.getInner.customScriptURIField.setText(customScriptURI.toUri)
