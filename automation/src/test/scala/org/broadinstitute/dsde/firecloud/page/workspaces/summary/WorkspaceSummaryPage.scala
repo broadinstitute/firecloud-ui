@@ -61,7 +61,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
     override def awaitReady(): Unit = {
       table.awaitReady()
-      await condition getState == "enabled"
+      awaitState("enabled")
     }
 
     val newButton = Button("add-new-button")
