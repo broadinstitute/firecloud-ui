@@ -12,7 +12,9 @@ trait Clickable { this: Component =>
     * Click on the element modeled by this Component
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
+    awaitVisible()
     scrollToVisible()
+    awaitEnabled()
     click on query
   }
 }
