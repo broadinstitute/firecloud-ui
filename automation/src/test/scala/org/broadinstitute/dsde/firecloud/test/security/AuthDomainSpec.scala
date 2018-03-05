@@ -52,7 +52,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     error should include("does not exist")
   }
 
-  /*"A workspace with an authorization domain" - {
+  "A workspace with an authorization domain" - {
     "with one group inside of it" - {
       "can be created" in withWebDriver { implicit driver =>
         val user = UserPool.chooseAuthDomainUser
@@ -765,7 +765,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
     }
-  }*/
+  }
 
   def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
     withWebDriver { implicit driver =>

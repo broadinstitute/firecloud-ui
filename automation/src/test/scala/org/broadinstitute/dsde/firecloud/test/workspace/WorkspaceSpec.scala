@@ -2,11 +2,8 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.component.Label
-import org.broadinstitute.dsde.firecloud.component.Component.string2QueryString
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken

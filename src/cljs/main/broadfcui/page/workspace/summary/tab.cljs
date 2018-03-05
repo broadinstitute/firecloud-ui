@@ -377,7 +377,6 @@
          {:style {:marginBottom "2rem"}
           :title (style/create-section-header "Tags")
           :contents
-
           [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
            (cond editing? (react/create-element [comps/TagAutocomplete
                                                  {:tags processed-tags :ref "tags-autocomplete"}])

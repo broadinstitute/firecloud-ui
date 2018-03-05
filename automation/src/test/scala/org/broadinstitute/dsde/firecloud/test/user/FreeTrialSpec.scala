@@ -48,7 +48,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   }
 
   "A user whose free trial status is" - {
-/*
+
     "Blank" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
         withSignIn(testUser) { _ =>
@@ -151,6 +151,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           bannerTitleElement.isVisible shouldBe false
         }
       }
-    }*/
+    }
   }
 }

@@ -24,7 +24,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
   }
 
   "Orchestration" - {
-   /* "should grant and remove google role access" in {
+    "should grant and remove google role access" in {
       // google roles can take a while to take effect
       implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(1, Minutes)), interval = scaled(Span(10, Seconds)))
 
@@ -150,6 +150,6 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
       }
       removeEx.getMessage should include(errorMsg)
       removeEx.getMessage should include(StatusCodes.Forbidden.intValue.toString)
-    }*/
+    }
   }
 }

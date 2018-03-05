@@ -423,19 +423,6 @@
                      (clj->js {:type "bootstrap-auth.response" :body {:googleClientId (config/google-client-id)}})
                      (config/leonardo-url-root))))
 
-   ; Checks if the user is on the Leo whitelist
-   ;:-is-leo-whitelisted
-   ;(fn [{:keys [state this]}]
-   ;  (endpoints/call-ajax-leo
-   ;   {:endpoint endpoints/is-leo-whitelisted
-   ;    :headers ajax/content-type=json
-   ;    :on-done (fn [{:keys [success? get-parsed-response]}]
-   ;               (if success?
-   ;                 (do (swap! state assoc :is-leo-whitelisted? true)
-   ;                     (this :-get-clusters-list-if-whitelisted)
-   ;                     (this :-schedule-cookie-refresh-if-whitelisted))
-   ;                 (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
-
    :-schedule-cookie-refresh
    (fn [{:keys [state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]

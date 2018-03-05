@@ -72,7 +72,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
     }
   }
 
-  /*"should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
+  "should show billing account instructions for a newly registered user" in withWebDriver { implicit driver =>
 
     withSignInNewUserReal(testUser) { registrationPage =>
       registerCleanUpForDeleteUser(subjectId)
@@ -99,7 +99,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
       listPage.closeModal()
     }
-  }*/
+  }
 
 /*
   behavior of "FireCloud registration page"

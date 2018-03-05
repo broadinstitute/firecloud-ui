@@ -22,7 +22,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-/*
+
   "launch a simple workflow" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
@@ -403,7 +403,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
-  }*/
+  }
 
 
   // negative tests
