@@ -21,7 +21,7 @@ class SelectConfigurationView(importing: Boolean)(implicit webDriver: WebDriver)
   def selectConfiguration(namespace: String, name: String, snapshotId: Int): ConfirmMethodImportExportView = {
     configTable.filter(name)
     configLink(namespace, name, snapshotId).doClick()
-    useSelectedButton.awaitEnabled()
+    useSelectedButton.awaitEnabledState()
     useSelectedButton.doClick()
     await ready new ConfirmMethodImportExportView(importing)
   }

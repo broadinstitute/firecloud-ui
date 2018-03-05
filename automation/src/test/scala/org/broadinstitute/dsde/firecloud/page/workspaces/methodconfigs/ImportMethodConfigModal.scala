@@ -94,7 +94,7 @@ private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends FireC
   private val nameField = TextField("name-field")
   private val importButton = Button("import-button")
 
-  override def awaitReady(): Unit = importButton.awaitEnabled()
+  override def awaitReady(): Unit = importButton.awaitEnabledState()
 
   def importAsIs(): Unit = importAs()
 

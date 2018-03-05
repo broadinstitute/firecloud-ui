@@ -18,5 +18,5 @@ case class Button(queryString: QueryString)(implicit webDriver: WebDriver)
 
   def isStateEnabled: Boolean = { awaitVisible(); getState == enabledState }
   def isStateDisabled: Boolean = { awaitVisible(); getState == disabledState }
-  override def awaitEnabled(): Unit = awaitState(enabledState)
+  def awaitEnabledState(): Unit = awaitState(enabledState)
 }
