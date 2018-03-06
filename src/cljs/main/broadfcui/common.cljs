@@ -155,8 +155,8 @@
 (defn row->workspace-id [row]
   (select-keys row [:namespace :name]))
 
-(defn workspace-id->string [workspace-id]
-  (str (:namespace workspace-id) "/" (:name workspace-id)))
+(defn workspace-id->string [{:keys [namespace name]}]
+  (str namespace "/" name))
 
 (defn get-id-from-nav-segment [segment]
   (when-not (clojure.string/blank? segment)

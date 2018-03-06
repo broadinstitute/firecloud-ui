@@ -1,6 +1,7 @@
 (ns broadfcui.page.method-repo.method.exporter
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
@@ -74,7 +75,8 @@
                              (this :-render-export-page-buttons)
                              (this :-render-config-selector-buttons))]
          [modals/OKCancelForm
-          {:header (str "Export " method-name " to Workspace")
+          {:data-test-id "export-config-to-workspace-modal"
+           :header (str "Export " method-name " to Workspace")
            :content (react/create-element exporter)
            :button-bar (if selected-config
                          (this :-render-export-page-buttons)
@@ -140,9 +142,9 @@
         (when-not workspace-id
           (list
            (style/create-form-label "Destination Workspace")
-           [WorkspaceSelector {:style {:width "100%"}
-                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")
-                               :on-select #(swap! locals assoc :selected-workspace-id (ws-common/workspace->id %))}]))
+           [WorkspaceSelector {:ref #(swap! locals assoc :workspace-selector %)
+                               :style {:width "100%"}
+                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}]))
         [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
         (style/create-validation-error-message (:validation-errors @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
@@ -154,20 +156,21 @@
            (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
            "Choose Another Configuration"))
        flex/spring
-       [buttons/Button {:text (if (:workspace-id props) "Import Method" "Export to Workspace")
+       [buttons/Button {:data-test-id "import-export-confirm-button"
+                        :text (if (:workspace-id props) "Import Method" "Export to Workspace")
                         :onClick #(this :-export)}]))
    :-export
-   (fn [{:keys [props state refs this]}]
-     (let [[name & errors] (input/get-and-validate refs "name-field")
-           new-id (assoc (select-keys (:method-id props) [:namespace])
+   (fn [{:keys [props state refs locals this]}]
+     (let [{:keys [workspace-id method-id]} props
+           [name & name-errors] (input/get-and-validate refs "name-field")
+           new-workspace-errors (when-not workspace-id ((:workspace-selector @locals) :validate))
+           errors (not-empty (concat name-errors new-workspace-errors))
+           new-id (assoc (select-keys method-id [:namespace])
                     :name name)
            {:keys [selected-config]} @state]
        (cond errors (swap! state assoc :validation-errors errors)
              (= :blank selected-config) (this :-create-template new-id)
-             :else (do
-                     (this :-export-loaded-config (merge (:payloadObject selected-config) new-id))
-                     (swap! state assoc :banner "Resolving...")))))
-
+             :else (this :-resolve-workspace (merge (:payloadObject selected-config) new-id)))))
    :-create-template
    (fn [{:keys [props state refs this]} new-id]
      (swap! state assoc :banner "Creating template...")
@@ -181,19 +184,37 @@
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      (this :-export-loaded-config
-                            (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
+                      (this :-resolve-workspace (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
                       (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
+   :-resolve-workspace
+   (fn [{:keys [props state locals this]} config]
+     (if-let [workspace-id (:workspace-id props)]
+       (this :-export-loaded-config workspace-id config)
+       (let [{:keys [existing-workspace new-workspace]} ((:workspace-selector @locals) :get-selected-workspace)
+             {:keys [project name description auth-domain]} new-workspace]
+         (if existing-workspace
+           (this :-export-loaded-config (ws-common/workspace->id existing-workspace) config)
+           (do (swap! state assoc :banner "Creating workspace...")
+               (endpoints/call-ajax-orch
+                {:endpoint endpoints/create-workspace
+                 :payload {:namespace project
+                           :name name
+                           :attributes (if (string/blank? description) {} {:description description})
+                           :authorizationDomain auth-domain}
+                 :headers ajax/content-type=json
+                 :on-done (fn [{:keys [success? get-parsed-response]}]
+                            (if success?
+                              (this :-export-loaded-config {:namespace project :name name} config)
+                              (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))))))
    :-export-loaded-config
-   (fn [{:keys [props state locals]} config]
+   (fn [{:keys [props state]} workspace-id config]
      (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
-     (let [workspace-id (or (:workspace-id props) (:selected-workspace-id @locals))]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/post-workspace-method-config workspace-id)
-         :payload config
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      ((:on-export props) workspace-id (ws-common/config->id config))
-                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))})
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/post-workspace-method-config workspace-id)
+       :payload config
+       :headers ajax/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    ((:on-export props) workspace-id (ws-common/config->id config))
+                    (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))})

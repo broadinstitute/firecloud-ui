@@ -26,18 +26,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       enabled(testId("workspace-details-error")) ||
       (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
     }
-    waitForGoogleBucket()
   }
 
   def validateLocation(): Unit = {
     assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
-  }
-
-  def waitForGoogleBucket(): Unit = {
-    while (shouldWaitForBucketAccess) {
-      Thread sleep 1000
-      goToSummaryTab()
-    }
   }
 
   private val authDomainGroups = Label("auth-domain-groups")
@@ -55,19 +47,22 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = getState == "ready"
 
-    val editButton = Button("edit-button")
-    val saveButton = Button("save-button")
-    val cancelButton = Button("cancel-editing-button")
+    val editButton = Button("edit-button" inside this)
+    val saveButton = Button("save-button" inside this)
+    val cancelButton = Button("cancel-editing-button" inside this)
 
-    val cloneButton = Button("open-clone-workspace-modal-button")
-    val deleteWorkspaceButton = Button("delete-workspace-button")
-    val publishButton = Button("publish-button")
-    val unpublishButton = Button("unpublish-button")
-    val shareWorkspaceButton = Button("share-workspace-button")
+    val cloneButton = Button("open-clone-workspace-modal-button" inside this)
+    val deleteWorkspaceButton = Button("delete-workspace-button" inside this)
+    val publishButton = Button("publish-button" inside this)
+    val unpublishButton = Button("unpublish-button" inside this)
+    val shareWorkspaceButton = Button("share-workspace-button" inside this)
   }
 
   private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
-    override def awaitReady(): Unit = table.awaitReady()
+    override def awaitReady(): Unit = {
+      table.awaitReady()
+      awaitState("enabled")
+    }
 
     val newButton = Button("add-new-button")
     val table = Table("workspace-attributes")

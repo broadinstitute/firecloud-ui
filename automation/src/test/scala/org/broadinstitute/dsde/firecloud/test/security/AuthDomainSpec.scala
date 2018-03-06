@@ -108,6 +108,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                   workspaceListPage.validateLocation()
                   // TODO: add assertions for the new "request access" modal
                   // TODO: end test somewhere we can access the sign out button
+
+                  // close "request access" Modal
+                  workspaceListPage.closeModal()
                 }
               }
             }
@@ -305,6 +308,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -345,6 +351,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.validateLocation()
                     // TODO: add assertions for the new "request access" modal
                     // TODO: finish this test somewhere we can access the sign out button
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -361,6 +370,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
                     // TODO: finish this test somewhere we can access the sign out button
+
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -394,6 +406,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
                     workspaceListPage.showsRequestAccessModal shouldEqual true
                     workspaceListPage.validateLocation()
+                    // close "request access" Modal
+                    workspaceListPage.closeModal()
                   }
                 }
               }
@@ -537,7 +551,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
         register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
@@ -581,7 +595,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
         register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
 
@@ -609,7 +623,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke1x", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
@@ -632,7 +646,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             checkNoAccess(user, projectName, workspaceName)
@@ -655,7 +669,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -680,7 +694,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
@@ -707,7 +721,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
@@ -732,7 +746,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withBillingProject("auth-domain-spec") { projectName =>
+      withCleanBillingProject(creator) { projectName =>
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>

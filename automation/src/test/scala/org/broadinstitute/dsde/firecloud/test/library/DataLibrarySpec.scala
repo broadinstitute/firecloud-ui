@@ -54,7 +54,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   }
 
 
-  "Dataset to test facets values" ignore  withWebDriver { implicit driver =>
+  "Dataset to test facets values" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withWorkspace(namespace, "Facets", attributes = Some(WorkspaceData.tags)) { wsName =>
@@ -78,11 +78,6 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           pageOption should not be None
 
           val page = pageOption.get
-
-          //val page = new DataLibraryPage().open
-          page.hasDataset(wsName) shouldBe true
-
-
 
           //Verifying results
           val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",

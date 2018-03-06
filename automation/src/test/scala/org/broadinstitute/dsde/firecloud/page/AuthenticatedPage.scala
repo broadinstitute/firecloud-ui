@@ -2,6 +2,8 @@ package org.broadinstitute.dsde.firecloud.page
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.interactions.Actions
+import org.openqa.selenium.Keys
 
 /**
   * Base class for pages that are reachable after signing in.
@@ -20,6 +22,13 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
     ui.readUserEmail()
   }
 
+  /**
+    * Press ESP key to close open Modal
+    */
+  def closeModal(): Unit = {
+    val modal = find(CssSelectorQuery("body.broadinstitute-modal-open"))
+    modal.foreach(_ => new Actions(webDriver).sendKeys(Keys.ESCAPE).perform())
+  }
 
   trait UI {
     private val accountDropdown = testId("account-dropdown")

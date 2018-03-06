@@ -55,8 +55,9 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
 
   def awaitVisible(): Unit = await visible query
   def awaitNotVisible(): Unit = await notVisible query
+  def awaitEnabled(): Unit = await enabled query
 
-  def isVisible: Boolean = find(query).isDefined
+  def isVisible: Boolean = find(query).exists(_.isDisplayed)
   def isEnabled: Boolean = enabled(query)
 
   override def awaitReady(): Unit = awaitVisible()
