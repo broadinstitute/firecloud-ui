@@ -43,9 +43,13 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (testCode: (T) => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
-      val page: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
-      logger.info("SignIn button: " + webDriver.findElement(CssSelectorQuery("#sign-in-button").by).getAttribute("id"))
-      logger.info("SignIn executeScript: " + executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')"))
+      val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
+      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+      // retry execute JS one more time if still on SignIn page
+      openedPage.signInButton.isVisible match {
+        case true => logger.warn("retried window.forceSignedIn."); executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+        case false => None
+      }
     }, page, testCode)
   }
 
