@@ -48,6 +48,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
       retry[T](1.seconds, 60.seconds) ({
           openedPage.signInButton.awaitVisible()
           executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+          logger.info("Executed JS forceSignedIn")
           try {
             await.ready(page, 30)
             Some(page)
