@@ -25,7 +25,7 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
     */
   def withSignInReal(user: Credentials)
                     (testCode: (WorkspaceListPage) => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignInReal(user, new WorkspaceListPage)(testCode)
+    withSignIn(user, new WorkspaceListPage)(testCode)
   }
 
   /**

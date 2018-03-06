@@ -19,4 +19,5 @@ abstract class FireCloudView(implicit webDriver: WebDriver)
     val allText = findAll(q) map { _.text }
     allText.toList
   }
+
 }
