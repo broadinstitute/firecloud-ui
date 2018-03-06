@@ -25,7 +25,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
      * user-status). Instead of reworking the sign-in logic for a case that (for the most part) only
      * a computer will operate fast enough to encounter, we'll just slow the computer down a little.
      */
-    Thread.sleep(250)
+    Thread.sleep(500)
   }
 
   override val url: String = baseUrl
