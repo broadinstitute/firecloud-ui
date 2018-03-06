@@ -22,6 +22,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   private val clustersTable = Table("spark-clusters-table")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")
   val noClustersMessage = "There are no clusters to display."
+  def clusterStatusId(clusterName: String) = clusterName + "-status"
 
   // Goes to a Jupyter page. Currently doesn't return a page object
   // because Jupyter functionality is tested in leo automated tests.
@@ -44,7 +45,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   }
 
   def waitUntilClusterIsDeleted(clusterName: String) = {
-    await condition (getClusterStatus(clusterName) == "", 900)
+    await notVisible (testId(clusterStatusId(clusterName)), 900)
   }
 
   def openCreateClusterModal(): CreateClusterModal = {
@@ -60,9 +61,9 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   }
 
   def getClusterStatus(clusterName: String): String = {
-    val clusterStatusId = Label(clusterName + "-status")
-    await ready clusterStatusId
-    clusterStatusId.getText
+    val clusterStatus = Label(clusterStatusId(clusterName))
+    await ready clusterStatus
+    clusterStatus.getText
   }
 
   def getClusters() = {
