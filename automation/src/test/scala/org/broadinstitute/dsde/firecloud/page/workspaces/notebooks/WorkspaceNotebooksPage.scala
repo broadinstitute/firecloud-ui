@@ -60,8 +60,9 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   }
 
   def getClusterStatus(clusterName: String): String = {
-    val clusterStatusId = testId(clusterName + "-status")
-    readText(clusterStatusId)
+    val clusterStatusId = Label(clusterName + "-status")
+    await ready clusterStatusId
+    clusterStatusId.getText
   }
 
   def getClusters() = {
