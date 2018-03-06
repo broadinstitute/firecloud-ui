@@ -1,10 +1,12 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
+import java.util.concurrent.TimeUnit
+
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
-import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
+import org.broadinstitute.dsde.firecloud.page.user.{SignInPage, RegistrationPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.config.{Credentials, Config}
+import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, CleanUp}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
 
@@ -41,8 +43,9 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (testCode: (T) => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
-      new SignInPage(Config.FireCloud.baseUrl).open
-      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+      val page: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
+      logger.info("SignIn button: " + page.find(cssSelector("#sign-in-button").queryString).get.attribute("id"))
+      logger.info("SignIn executeScript: " + executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')"))
     }, page, testCode)
   }
 
