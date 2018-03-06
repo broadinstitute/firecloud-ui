@@ -44,7 +44,7 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       val page: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
-      logger.info("SignIn button: " + page.find(cssSelector("#sign-in-button").queryString).get.attribute("id"))
+      logger.info("SignIn button: " + webDriver.findElement(CssSelectorQuery("#sign-in-button").by).getAttribute("id"))
       logger.info("SignIn executeScript: " + executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')"))
     }, page, testCode)
   }
