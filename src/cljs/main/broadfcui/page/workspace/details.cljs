@@ -22,8 +22,6 @@
    ))
 
 
-(defonce ^:private whitelisted-users (atom {}))
-
 
 (defn- protected-banner [workspace]
   (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain])]
@@ -164,12 +162,6 @@
        (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
-     (when-not (contains? @whitelisted-users (user/get-email))
-       (endpoints/call-ajax-leo
-        {:endpoint endpoints/is-leo-whitelisted
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success?]}]
-                    (swap! whitelisted-users assoc (user/get-email) success?))}))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [status-code success?]}]

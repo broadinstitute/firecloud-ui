@@ -23,7 +23,7 @@
             :onMouseOut #(swap! state dissoc :hovering?)
             :onClick on-refresh}
         label
-        (when (= label "Notebooks") [:span {:style {:marginLeft 4}} (map style/render-tag (list "BETA"))])
+        (when (= label "Notebooks") [:span {:style {:marginLeft 4}} (style/render-tag "BETA")])
         (when (or active? (:hovering? @state))
           [:div {:style {:position "absolute" :top "-0.25rem" :left 0
                          :width "100%" :height "0.25rem"

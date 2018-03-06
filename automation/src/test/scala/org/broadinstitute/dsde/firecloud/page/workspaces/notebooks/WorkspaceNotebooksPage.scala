@@ -122,14 +122,9 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
     optionalSettingsArea.getInner.workerLocalSSDsField.setText(workerLocalSSDs.toString)
     optionalSettingsArea.getInner.localPreemptibleWorkersField.setText(preemptibleWorkers.toString)
 
-    extensionURI match {
-      case Some(path) => optionalSettingsArea.getInner.extensionURIField.setText(path.toUri)
-      case None =>
-    }
-    customScriptURI match {
-      case Some(path) => optionalSettingsArea.getInner.customScriptURIField.setText(path.toUri)
-      case None =>
-    }
+    extensionURI    foreach {path => optionalSettingsArea.getInner.extensionURIField.setText(path.toUri) }
+    customScriptURI foreach {path => optionalSettingsArea.getInner.customScriptURIField.setText(path.toUri) }
+
     addLabels(labels)
     clickOk()
   }
