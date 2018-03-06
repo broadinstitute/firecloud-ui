@@ -1,7 +1,6 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import java.util.concurrent.TimeUnit
-
+import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{SignInPage, RegistrationPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
@@ -9,8 +8,10 @@ import org.broadinstitute.dsde.workbench.config.{Credentials, Config}
 import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, CleanUp}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import scala.concurrent.duration._
 
-trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
+trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: WebBrowserSpec with TestSuite =>
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
@@ -44,12 +45,16 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
-      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
-      // retry execute JS one more time if still on SignIn page
-      openedPage.signInButton.isVisible match {
-        case true => logger.warn("retried window.forceSignedIn."); executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
-        case false => None
-      }
+      retry[T](1.seconds, 60.seconds) ({
+          openedPage.signInButton.awaitVisible()
+          executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+          try {
+            await.ready(page, 30)
+            Some(page)
+          } catch {
+            case _: Throwable => None
+          }
+      })
     }, page, testCode)
   }
 
