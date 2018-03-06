@@ -52,11 +52,9 @@
 
 
 (def spinner-icon
-  [:span {:style {
-                  :display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"
-                  }
+                  :borderRadius 3 :margin "-4px 4px 0 0"}
           :data-test-id "status-icon" :data-test-value "unknown"}
    (spinner)])
 
@@ -265,7 +263,7 @@
   {:render
    (fn [{:keys [state props]}]
      (let [{:keys [show-error-dialog? errored-cluster-to-show]} @state
-           {:keys [clusters toolbar-items cluster-status-gensym]} props]
+           {:keys [clusters toolbar-items]} props]
        [:div {}
         (when show-error-dialog?
           [modals/OKCancelForm {:header "Cluster Error"
@@ -281,12 +279,7 @@
                                                  :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
                                   (:errorMessage (first (:errors errored-cluster-to-show)))]]}])
         (when (:show-delete-dialog? @state)
-          [ClusterDeleter (assoc props :dismiss (fn []
-                                                  (:reset-cluster-status-gensym @state)
-                                                  (swap! state dissoc :show-delete-dialog?)
-                                                   ;(swap! state #(-> % (assoc :cluster-status-gensym (gensym))
-                                                  ;                       (dissoc :show-delete-dialog?)
-                                                  )
+          [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-delete-dialog?)
                                        :cluster-to-delete (:cluster-to-delete @state))])
         [Table
          {:data clusters :data-test-id "spark-clusters-table"
@@ -314,10 +307,6 @@
                    :as-text :clusterName :sort-by :clusterName :sort-initial :asc
                    :render
                    (fn [cluster]
-                     ;(condp = (:status cluster)
-                     ;  "Running" (links/create-external {:href (leo-notebook-url cluster)} (:clusterName cluster))
-                     ;  "Error" (:errorMessage (first (utils/log (:errors cluster))))
-                     ;  (:clusterName cluster))
                      (let [clusterName (:clusterName cluster)] (if (= (:status cluster) "Running")
                        (links/create-external {:href (leo-notebook-url cluster)
                                                :data-test-id (str clusterName "-link")} clusterName)
@@ -326,8 +315,8 @@
                    :as-text :status
                    :render (fn [cluster]
                              (let [clusterNameStatusId (str (:clusterName cluster) "-status")]
-                               [:div {:key cluster-status-gensym
-                                    :style {:height table-style/table-icon-size}}
+                               [:div {:key (if clusters (str (gensym))) ;this makes the spinners sync
+                                      :style {:height table-style/table-icon-size}}
                                 (icon-for-cluster-status (:status cluster))
                                (if (= (:status cluster) "Error")
                                 (links/create-internal
@@ -368,23 +357,17 @@
           :toolbar {:get-items (constantly toolbar-items)}}]]))})
 
 (react/defc NotebooksContainer
-  {;{:get-initial-state
-  ; (fn []
-  ;   {:cluster-status-gensym (gensym)})
-   :refresh
+  {:refresh
    (fn [{:keys [this]}]
      (this :-get-clusters-list)
      (this :-schedule-cookie-refresh))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [server-response show-create-dialog? cluster-status-gensym]} @state
+     (let [{:keys [server-response show-create-dialog?]} @state
            {:keys [clusters server-error]} server-response]
        [:div {:display "inline-flex"}
         (when show-create-dialog?
-          [ClusterCreator (assoc props :dismiss (fn []
-                                                  (swap! state #(-> % (assoc :cluster-status-gensym (gensym))
-                                                                         (dissoc :show-create-dialog?)))
-                                                  )
+          [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
                                        :reload-after-create #(this :-get-clusters-list))])
         [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10 }} "Spark Clusters"]]
         [:div {:style {:margin 10 :fontSize "88%"} }
@@ -398,8 +381,6 @@
                                                                        :data-test-id "create-modal-button"
                                                                        :onClick #(swap! state assoc :show-create-dialog? true)}]]
                           :clusters clusters
-                        ;  :cluster-status-gensym cluster-status-gensym
-                         ; :reset-cluster-status-gensym (swap! state assoc :cluster-status-gensym (gensym))
                           :reload-after-delete #(this :-get-clusters-list))]
             [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")]))]))
    :component-did-mount
