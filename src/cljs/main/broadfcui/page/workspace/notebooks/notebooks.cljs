@@ -106,10 +106,10 @@
                (flex/box {}
                  [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
                   [FoundationTooltip {:text (create-inline-form-label "Master Machine Type")
-                                      :tooltip "Determines the number of CPUs and memory for the master node."}]]
+                                      :tooltip "Determines the number of CPUs and memory for the master VM."}]]
                  [:div {:style {:width "48%" :marginBottom "1%"}}
                   [FoundationTooltip {:text (create-inline-form-label "Master Disk Size")
-                                      :tooltip "Size of the disk on the master node. Minimum size is 100GB."}]])
+                                      :tooltip "Size of the disk on the master VM. Minimum size is 100GB."}]])
                [:div {:display "inline-block"}
                 (style/create-identity-select {:data-test-id "master-machine-type-select" :ref "masterMachineType"
                                                :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
@@ -137,10 +137,10 @@
                (flex/box {}
                  [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
                   [FoundationTooltip {:text (create-inline-form-label "Worker Machine Type")
-                                      :tooltip "Determines the number of CPUs and memory for the worker nodes. Ignored if Workers is 0."}]]
+                                      :tooltip "Determines the number of CPUs and memory for each worker VM. Ignored if Workers is 0."}]]
                  [:div {:style {:width "48%" :marginBottom "1%"}}
                   [FoundationTooltip {:text (create-inline-form-label "Worker Disk Size")
-                                      :tooltip "Size of the disk on each worker node. Minimum size is 100GB. Ignored if Workers is 0."}]])
+                                      :tooltip "Size of the disk on each worker VM. Minimum size is 100GB. Ignored if Workers is 0."}]])
                [:div {:display "inline-block"}
                 (style/create-identity-select {:data-test-id "worker-machine-type-select" :ref "workerMachineType"
                                                :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
