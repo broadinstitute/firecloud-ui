@@ -184,8 +184,7 @@
                                                      :style {:ref (str "val" i) :marginBottom 0 :width "48%"}
                                                      :defaultValue (last label)
                                                      :onChange #(swap! state update-in [:labels i]
-                                                                       assoc 1 (-> % .-target .-value))}]
-                                   (common/clear-both)))
+                                                                       assoc 1 (-> % .-target .-value))}]))
                                (:labels @state))])
                [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10} :data-test-id "add-label-button"
                                 :onClick (fn []
@@ -413,7 +412,7 @@
    :-schedule-cookie-refresh
    (fn [{:keys [state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
-       (when (not (:dead? @locals))
+       (when-not (:dead? @locals)
          (when (contains-statuses clusters ["Running"])
            (this :-process-running-clusters))
          (js/setTimeout #(this :-schedule-cookie-refresh) 120000))))
@@ -434,7 +433,7 @@
 
    :-get-clusters-list
    (fn [{:keys [props state locals this]}]
-     (when (not (:dead? @locals))
+     (when-not (:dead? @locals)
        (endpoints/call-ajax-leo
         {:endpoint endpoints/get-clusters-list
          :headers ajax/content-type=json
