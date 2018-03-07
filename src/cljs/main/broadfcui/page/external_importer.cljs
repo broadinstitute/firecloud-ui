@@ -124,7 +124,7 @@
    :-export
    (fn [{:keys [locals this]}]
      (let [{:keys [form]} @locals]
-       (when (empty? (form :validate))
+       (when (form :valid?)
          (this :-resolve-workspace (form :get-field-values)))))
    :-resolve-workspace
    (fn [{:keys [state this]} {:keys [workspace] :as form-data}]

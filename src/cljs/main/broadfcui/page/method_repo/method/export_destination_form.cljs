@@ -10,7 +10,7 @@
 
 
 (react/defc ExportDestinationForm
-  {:validate
+  {:valid?
    (fn [{:keys [props state refs locals]}]
      (let [{:keys [workspace-id]} props
            {:keys [workspace-selector]} @locals
@@ -18,7 +18,7 @@
                                   (concat (when-not workspace-id (workspace-selector :validate)))
                                   not-empty)]
        (swap! state assoc :validation-errors validation-errors)
-       validation-errors))
+       (empty? validation-errors)))
    :get-field-values
    (fn [{:keys [props refs locals]}]
      (let [{:keys [workspace-id select-root-entity-type?]} props
