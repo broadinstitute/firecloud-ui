@@ -153,7 +153,7 @@
      (flex/box {:style {:alignItems "center"}}
        (links/create-internal {:onClick #(swap! state dissoc :selected-config)}
          (flex/box {:style {:alignItems "center"}}
-           (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+           (icons/render-icon {:style {:fontSize "150%" :margin "-3px 0.5rem 0 0"}} :angle-left)
            "Choose Another Configuration"))
        flex/spring
        [buttons/Button {:data-test-id "import-export-confirm-button"
