@@ -1,16 +1,20 @@
 (ns broadfcui.page.external-importer
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
+   [broadfcui.page.method-repo.method.export-destination-form :refer [ExportDestinationForm]]
    [broadfcui.page.method-repo.method.wdl :refer [WDLViewer]]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    ))
@@ -102,10 +106,15 @@
            {:text "Use Selected Version"
             :onClick #(swap! state assoc :selected-version highlighted-version)}])]))
    :-render-select-workspace
-   (fn [{:keys [state this]}]
-     [:div {:style {:width 500 :margin "0 auto"}}
+   (fn [{:keys [props state locals this]}]
+     [:div {:style {:width 550 :margin "0 auto"}}
+      (blocker (:banner @state))
+      [ExportDestinationForm {:ref #(swap! locals assoc :form %)
+                              :initial-name (:method-name props)
+                              :select-root-entity-type? true}]
+      [comps/ErrorViewer {:error (:server-error @state)}]
       (flex/box {:style {:alignItems "center"}}
-        (links/create-internal {:onClick #(swap! state dissoc :selected-version)}
+        (links/create-internal {:onClick #(swap! state dissoc :selected-version :server-error)}
           (flex/box {:style {:alignItems "center"}}
             (icons/render-icon {:style {:fontSize "150%" :margin "-3px 0.5rem 0 0"}} :angle-left)
             "Choose Another Version"))
@@ -113,7 +122,45 @@
         [buttons/Button {:text "Export to Workspace"
                          :onClick #(this :-export)}])])
    :-export
-   (fn [])})
+   (fn [{:keys [locals this]}]
+     (let [{:keys [form]} @locals]
+       (when (empty? (form :validate))
+         (this :-resolve-workspace (form :get-field-values)))))
+   :-resolve-workspace
+   (fn [{:keys [state this]} {:keys [workspace] :as form-data}]
+     (swap! state assoc :banner "Resolving workspace...")
+     (let [{:keys [existing-workspace new-workspace]} workspace
+           {:keys [project name description auth-domain]} new-workspace]
+       (if existing-workspace
+         (this :-export-method (ws-common/workspace->id existing-workspace) form-data)
+         (endpoints/call-ajax-orch
+          {:endpoint endpoints/create-workspace
+           :payload {:namespace project
+                     :name name
+                     :attributes (if (string/blank? description) {} {:description description})
+                     :authorizationDomain auth-domain}
+           :headers ajax/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (if success?
+                        (this :-export-method {:namespace project :name name} form-data)
+                        (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
+                                                 (dissoc :banner))))}))))
+   :-export-method
+   (fn [{:keys [state]} {:keys [namespace] :as workspace-id} {:keys [name root-entity-type]}]
+     (swap! state assoc :banner "Exporting method...")
+     (let [config-id (utils/restructure namespace name)]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/post-workspace-method-config workspace-id)
+         :payload {:namespace namespace
+                   :name name
+                   :rootEntityType root-entity-type
+                   :inputs {} :outputs {} :prerequisites {}}
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (nav/go-to-path :workspace-method-config workspace-id config-id)
+                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
+                                               (dissoc :banner))))})))})
 
 
 (defn nowhere-to-save-message []
@@ -144,7 +191,7 @@
           :no-destination (nowhere-to-save-message)
           :done nil)
         (when docker-payload
-          [DockstoreImporter docker-payload])
+          [DockstoreImporter (assoc docker-payload :method-name (last (string/split id "/")))])
         (when error
           (list
            [:div {:style {:marginBottom "1rem" :fontSize "125%"}}
