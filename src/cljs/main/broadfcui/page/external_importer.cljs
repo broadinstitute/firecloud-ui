@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
@@ -110,8 +111,7 @@
      [:div {:style {:width 550 :margin "0 auto"}}
       (blocker (:banner @state))
       [ExportDestinationForm {:ref #(swap! locals assoc :form %)
-                              :initial-name (:method-name props)
-                              :select-root-entity-type? true}]
+                              :initial-name (:method-name props)}]
       [comps/ErrorViewer {:error (:server-error @state)}]
       (flex/box {:style {:alignItems "center"}}
         (links/create-internal {:onClick #(swap! state dissoc :selected-version :server-error)}
@@ -146,14 +146,14 @@
                         (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
                                                  (dissoc :banner))))}))))
    :-export-method
-   (fn [{:keys [state]} {:keys [namespace] :as workspace-id} {:keys [name root-entity-type]}]
+   (fn [{:keys [state]} {:keys [namespace] :as workspace-id} {:keys [name]}]
      (swap! state assoc :banner "Exporting method...")
      (let [config-id (utils/restructure namespace name)]
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/post-workspace-method-config workspace-id)
          :payload {:namespace namespace
                    :name name
-                   :rootEntityType root-entity-type
+                   :rootEntityType (first common/root-entity-types)
                    :inputs {} :outputs {} :prerequisites {}}
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
