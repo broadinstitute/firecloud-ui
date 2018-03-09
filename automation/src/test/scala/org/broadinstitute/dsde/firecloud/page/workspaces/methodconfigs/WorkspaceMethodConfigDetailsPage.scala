@@ -97,7 +97,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def isLoaded: Boolean = {
-    openLaunchAnalysisModalButton.isVisible && openLaunchAnalysisModalButton.isStateEnabled
+    openLaunchAnalysisModalButton.isVisible
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {

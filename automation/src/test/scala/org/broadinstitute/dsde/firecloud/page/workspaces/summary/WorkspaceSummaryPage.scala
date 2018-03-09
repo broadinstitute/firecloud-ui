@@ -15,9 +15,7 @@ import org.scalatest.selenium.Page
   * Page class for the Workspace Detail page.
   */
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
-
-  wsSummaryPage: WorkspaceSummaryPage =>
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful { wsSummaryPage: WorkspaceSummaryPage =>
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
@@ -48,7 +46,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
     override def awaitReady(): Unit = {
-      await condition (getState == "ready")
+      awaitState("ready")
     }
 
     val editButton = Button("edit-button" inside this)
@@ -76,14 +74,14 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       wsSummaryPage.awaitReady()
     }
 
-    def clickClone(): Unit = {
+    def clickClone(): CloneWorkspaceModal = {
       cloneButton.doClick()
-      wsSummaryPage.awaitReady()
+      await ready new CloneWorkspaceModal()
     }
 
-    def clickDeleteWorkspace(): Unit = {
+    def clickDeleteWorkspace(): DeleteWorkspaceModal = {
       deleteWorkspaceButton.doClick()
-      wsSummaryPage.awaitReady()
+      await ready new DeleteWorkspaceModal
     }
 
     def clickPublish(): Unit = {
@@ -91,14 +89,14 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       wsSummaryPage.awaitReady()
     }
 
-    def clickUnpublish(): Unit = {
+    def clickUnpublish(): MessageModal = {
       unpublishButton.doClick()
-      wsSummaryPage.awaitReady()
+      await ready new MessageModal
     }
 
-    def clickShareWorkspaceButton(): Unit = {
+    def clickShareWorkspaceButton(): AclEditor = {
       shareWorkspaceButton.doClick()
-      await condition new AclEditor().isVisible
+      await ready new AclEditor()
     }
   }
 
@@ -147,14 +145,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    sidebar.clickClone()
-    val cloneModal = await ready new CloneWorkspaceModal
+    val cloneModal = sidebar.clickClone()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
   }
 
   def unpublishWorkspace(): Unit = {
-    sidebar.clickUnpublish()
-    val msgModal = await ready new MessageModal
+    val msgModal = sidebar.clickUnpublish()
     msgModal.clickOk()
   }
 
@@ -163,8 +159,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * to the resulting view after successful deletion.
     */
   def deleteWorkspace(): WorkspaceListPage = {
-    sidebar.clickDeleteWorkspace()
-    val workspaceDeleteModal = await ready new DeleteWorkspaceModal
+    val workspaceDeleteModal = sidebar.clickDeleteWorkspace()
     workspaceDeleteModal.confirmDelete()
     await ready new WorkspaceListPage
   }

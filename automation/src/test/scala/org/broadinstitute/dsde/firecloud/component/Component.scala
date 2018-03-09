@@ -62,7 +62,6 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   def isEnabled: Boolean = enabled(query)
 
   override def awaitReady(): Unit = {
-    // combined awaitVisible and awaitEnabled
     await condition {
       isVisible && isEnabled
     }

@@ -13,7 +13,9 @@ trait Clickable extends LazyLogging { this: Component =>
     * Click on the element modeled by this Component
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
-    awaitReady
+    await condition {
+      isVisible && isEnabled
+    }
     scrollToVisible
     click on query
     logger.info(s"clicked on query:  '$query'") // debugging - remove this once done with all flaky tests

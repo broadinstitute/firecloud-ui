@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud
 
-import org.broadinstitute.dsde.workbench.service.test.{WebBrowserUtil, Awaiter}
+import org.broadinstitute.dsde.workbench.service.test.{Awaiter, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 

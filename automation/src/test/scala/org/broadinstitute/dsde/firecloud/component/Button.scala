@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.{Stateful, FireCloudView}
+import org.broadinstitute.dsde.firecloud.Stateful
 import org.openqa.selenium.WebDriver
 
 /**

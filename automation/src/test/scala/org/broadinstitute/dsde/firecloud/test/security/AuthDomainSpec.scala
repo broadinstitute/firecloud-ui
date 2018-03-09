@@ -11,7 +11,6 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.openqa.selenium.WebDriver
 import org.scalatest._
 
 /*
