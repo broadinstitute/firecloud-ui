@@ -18,7 +18,7 @@
   (let [config-keys (set (keys config))
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"isDebug" :boolean "shibbolethUrlRoot" :string "leonardoUrlRoot" :string
-                  "submissionStatusRefresh" :integer "userGuideUrl" :string
+                  "submissionStatusRefresh" :integer "userGuideUrl" :string "userNotebooksGuideUrl" :string
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
                   "forumUrl" :string "authDomainGuideUrl" :string
@@ -50,6 +50,7 @@
 (defn status-alerts-refresh [] (get @config "alertsPollInterval" 60000)) ;; milliseconds
 (defn max-retry-attempts [] (get @config "maxRetryAttempts" 6)) ;; 6 exponential retries = ~ 2 minutes
 (defn user-guide-url [] (get @config "userGuideUrl"))
+(defn user-notebooks-guide-url [] (get @config "userNotebooksGuideUrl"))
 (defn forum-url [] (get @config "forumUrl"))
 (defn billing-project-guide-url [] (get @config "billingProjectGuideUrl"))
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
