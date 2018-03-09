@@ -66,7 +66,6 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     await condition {
       isVisible && isEnabled
     }
-    scrollToVisible()
   }
 
   def scrollToVisible(): Unit = {

@@ -32,7 +32,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 
   private val signInButton = Button(CSSQuery("#sign-in-button"))
 
-  def isLoaded = signInButton.isVisible
+  def isOpen = signInButton.isVisible
 
   /**
     * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.

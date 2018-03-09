@@ -12,7 +12,6 @@ import org.scalatest.{FreeSpec, Matchers, BeforeAndAfter}
 
 import scala.util.Try
 
-
 /**
   * Tests for new user registration scenarios.
   */

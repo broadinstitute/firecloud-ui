@@ -98,7 +98,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickShareWorkspaceButton(): Unit = {
       shareWorkspaceButton.doClick()
-      await condition new AclEditor().isOpen()
+      await condition new AclEditor().isVisible
     }
   }
 
