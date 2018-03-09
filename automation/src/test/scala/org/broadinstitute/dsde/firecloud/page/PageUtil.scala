@@ -17,7 +17,8 @@ trait PageUtil[P <: Page] extends FireCloudView { self: P =>
     * @return the Page object
     */
   def open(implicit webDriver: WebDriver): P = {
-    go to this
+    webDriver.navigate().to(this.url)
+    //go to this
     awaitReady()
     this
   }
