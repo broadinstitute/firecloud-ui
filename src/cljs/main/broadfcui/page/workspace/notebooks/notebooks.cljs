@@ -16,6 +16,7 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
@@ -93,76 +94,99 @@
           [:div {:style {:marginBottom -20}}
            (when creating? (blocker "Creating cluster..."))
            (style/create-form-label "Name")
-           [input/TextField {:ref "clusterNameCreate" :autoFocus true :style {:width "100%"}
-                             :defaultValue ""
-                             :predicates [(input/nonempty "Cluster name")
-                                          (input/alphanumeric_- "Cluster name")]}]
+           [input/TextField {:data-test-id "cluster-name-input" :ref "clusterNameCreate" :autoFocus true :style {:width "100%"}
+                             :defaultValue "" :predicates [(input/nonempty "Cluster name") (input/alphanumeric_- "Cluster name")]}]
            [Collapse
-            {:style {:marginLeft -20} :default-hidden? true
+            {:data-test-id "optional-settings"
+             :style {:marginLeft -20} :default-hidden? true
              :title [:span {:style {:marginBottom 20 :fontStyle "italic"}} "Optional Settings..."]
              :contents
              (react/create-element
               [:div {}
-               (style/create-form-label "Extension URI")
-               [input/TextField {:ref "extensionURI" :autoFocus true :style {:width "100%"}}]
+               (flex/box {}
+                 [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (create-inline-form-label "Master Machine Type")
+                                      :tooltip "Determines the number of CPUs and memory for the master VM."}]]
+                 [:div {:style {:width "48%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (create-inline-form-label "Master Disk Size")
+                                      :tooltip "Size of the disk on the master VM. Minimum size is 100GB."}]])
                [:div {:display "inline-block"}
-                [:span {:style {:paddingRight "19%"}} (create-inline-form-label "Master Machine Type")]
-                [:span {} (create-inline-form-label "Master Disk Size")]]
-               [:div {:display "inline-block"}
-                (style/create-identity-select {:ref "masterMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"}
+                (style/create-identity-select {:data-test-id "master-machine-type-select" :ref "masterMachineType"
+                                               :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
                   machineTypes)
-                [input/TextField {:ref "masterDiskSize" :autoFocus true :style {:width "41%"}
-                                  :defaultValue 500 :min 0 :type "number"}]
+                [input/TextField {:data-test-id "master-disk-size-input" :ref "masterDiskSize" :autoFocus true
+                                  :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
-               (style/create-form-label "Workers")
-               [input/TextField {:ref "numberOfWorkers" :autoFocus true :style {:width "100%"}
-                                 :defaultValue 0 :min 0 :type "number"}]
+               [:div {:style {:marginBottom "1%"}}
+                [FoundationTooltip {:text (style/create-form-label "Workers")
+                                    :tooltip "Workers can be 0, 2 or more. Google Dataproc does not allow 1 worker."}]]
+               [input/TextField {:data-test-id "workers-input" :ref "numberOfWorkers" :autoFocus true
+                                 :style {:width "100%"} :defaultValue 0 :min 0 :type "number"}]
+               (flex/box {}
+                 [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (style/create-form-label "Worker Local SSDs")
+                                      :tooltip "The number of local solid state disks for workers. Ignored if Workers is 0."}]]
+                 [:div {:style {:width "48%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (style/create-form-label "Preemptible Workers")
+                                      :tooltip "Ignored if Workers is 0."}]])
+               (flex/box {}
+                 [input/TextField {:data-test-id "worker-local-ssds-input" :ref "numberOfWorkerLocalSSDs" :autoFocus true
+                                   :style {:width "48%" :marginRight "4%"} :defaultValue 0 :min 0 :type "number"}]
+                 [input/TextField {:data-test-id "preemptible-workers-input" :ref "numberOfPreemptibleWorkers"
+                                   :autoFocus true :style {:width "48%"} :defaultValue 0 :min 0 :type "number"}])
+               (flex/box {}
+                 [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (create-inline-form-label "Worker Machine Type")
+                                      :tooltip "Determines the number of CPUs and memory for each worker VM. Ignored if Workers is 0."}]]
+                 [:div {:style {:width "48%" :marginBottom "1%"}}
+                  [FoundationTooltip {:text (create-inline-form-label "Worker Disk Size")
+                                      :tooltip "Size of the disk on each worker VM. Minimum size is 100GB. Ignored if Workers is 0."}]])
                [:div {:display "inline-block"}
-                [:span {:style {:paddingRight "19%"}} (create-inline-form-label "Worker Machine Type")]
-                [:span {} (create-inline-form-label "Worker Disk Size")]]
-               [:div {:display "inline-block"}
-                (style/create-identity-select {:ref "workerMachineType" :style {:width "48%" :marginRight "4%"}
-                                               :defaultValue "n1-standard-4"}
+                (style/create-identity-select {:data-test-id "worker-machine-type-select" :ref "workerMachineType"
+                                               :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
                   machineTypes)
-                [input/TextField {:ref "workerDiskSize" :autoFocus true :style {:width "41%"}
-                                  :defaultValue 500 :min 0 :type "number"}]
+                [input/TextField {:data-test-id "worker-disk-size-input" :ref "workerDiskSize" :autoFocus true
+                                  :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
                 [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
-               [:div {:display "inline-block"}
-                [:span {:style {:paddingRight "23%"}} (create-inline-form-label "Worker Local SSDs")]
-                [:span {} (create-inline-form-label "Preemptible Workers")]]
-               [:div {:display "inline-block"}
-                [input/TextField {:ref "numberOfWorkerLocalSSDs" :autoFocus true :style {:width "48%" :marginRight "4%"}
-                                  :defaultValue 0 :min 0 :type "number"}]
-                [input/TextField {:ref "numberOfPreemptibleWorkers" :autoFocus true :style {:width "48%"}
-                                  :defaultValue 0 :min 0 :type "number"}]]
+
+               [:div {:style {:marginBottom "1%"}}
+                [FoundationTooltip {:text (style/create-form-label "Extension URI")
+                                    :tooltip "The GCS URI of an archive containing Jupyter notebook extension files.
+                                    The archive must be in tar.gz format, must not include a parent directory,
+                                    and must have an entry point named 'main'."}]]
+               [input/TextField {:data-test-id "extension-uri-input" :ref "extensionURI" :autoFocus true :style {:width "100%"}}]
+               [:div {:style {:marginBottom "1%"}}
+                [FoundationTooltip {:text (style/create-form-label "Custom Script URI")
+                                    :tooltip "The GCS URI of a bash script you wish to run on your cluster before it starts up."}]]
+               [input/TextField {:data-test-id "custom-script-uri-input" :ref "userScriptURI" :autoFocus true :style {:width "100%"}}]
                (when (seq (:labels @state))
                  [:div {:key (:label-gensym @state)}
-                  [:div {:display "inline-block"}
-                   [:span {:style {:paddingRight "47%"}} (create-inline-form-label "Key")]
-                   [:span {} (create-inline-form-label "Value")]]
+                  (flex/box {}
+                    [:span {:style {:width "50%"}} (create-inline-form-label "Key")]
+                    [:span {:style {:width "50%" :marginLeft "4%"}} (create-inline-form-label "Value")])
                   (map-indexed (fn [i label]
-                                 [:div {:display "inline-block" :style {:marginBottom 10}}
-                                  (links/create-internal
-                                    {:style {:color (:text-light style/colors)
-                                             :marginRight "2.5%" :marginLeft -20 :minHeight 30 :minWidth 30}
-                                     :href "javascript:;"
-                                     :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                       (update :labels utils/delete i))))}
-                                    (icons/render-icon {} :remove))
-                                  [input/TextField {:style {:ref (str "key" i)
-                                                            :marginBottom 0 :width "47.5%" :marginRight "4%"}
-                                                    :defaultValue (first label)
-                                                    :onChange #(swap! state update-in [:labels i]
-                                                                      assoc 0 (-> % .-target .-value))}]
-                                  [input/TextField {:style {:ref (str "val" i)
-                                                            :marginBottom 0 :width "47.5%"}
-                                                    :defaultValue (last label)
-                                                    :onChange #(swap! state update-in [:labels i]
-                                                                      assoc 1 (-> % .-target .-value))}]
-                                  (common/clear-both)])
+                                 (flex/box {:style {:marginBottom 10}}
+                                   (links/create-internal
+                                     {:style {:color (:text-light style/colors)
+                                              :marginLeft -20
+                                              :minHeight 20 :minWidth 20
+                                              }
+                                      :href "javascript:;"
+                                      :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                        (update :labels utils/delete i))))}
+                                     (icons/render-icon {:style {:marginTop "35%"}} :remove))
+                                   [input/TextField {:data-test-id (str "key-" i "-input")
+                                                     :style {:ref (str "key" i) :marginBottom 0 :width "48%" :marginRight "4%"}
+                                                     :defaultValue (first label)
+                                                     :onChange #(swap! state update-in [:labels i]
+                                                                       assoc 0 (-> % .-target .-value))}]
+                                   [input/TextField {:data-test-id (str "value-" i "-input")
+                                                     :style {:ref (str "val" i) :marginBottom 0 :width "48%"}
+                                                     :defaultValue (last label)
+                                                     :onChange #(swap! state update-in [:labels i]
+                                                                       assoc 1 (-> % .-target .-value))}]))
                                (:labels @state))])
-               [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10}
+               [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10} :data-test-id "add-label-button"
                                 :onClick (fn []
                                            (swap! state #(-> %
                                                              (update :labels conj ["" ""])
@@ -172,17 +196,18 @@
    :-create-cluster
    (fn [{:keys [this state refs props]}]
      (swap! state dissoc :server-error :validation-errors)
-     (let [[clusterNameCreate extensionURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI")
-           payload {:bucketPath ""
-                    :labels (this :-process-labels)}
+     (let [[clusterNameCreate extensionURI userScriptURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI" "userScriptURI")
+           payload {:labels (this :-process-labels)}
            machineConfig (this :-process-machine-config)]
        (if fails
          (swap! state assoc :validation-errors fails)
          (do (swap! state assoc :creating? true)
              (endpoints/call-ajax-leo
               {:endpoint (endpoints/create-cluster (get-in props [:workspace-id :namespace]) clusterNameCreate)
-               :payload (assoc (if (= "" (:jupyterExtensionUri extensionURI)) payload (merge payload extensionURI))
-                          :machineConfig machineConfig)
+               :payload (merge payload
+                               {:machineConfig machineConfig}
+                               (when-not (string/blank? extensionURI) {:jupyterExtensionUri extensionURI})
+                               (when-not (string/blank? userScriptURI) {:jupyterUserScriptUri userScriptURI}))
                :headers ajax/content-type=json
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :creating?)
@@ -191,8 +216,9 @@
                             (swap! state assoc :server-error (get-parsed-response false))))})))))
    :-process-labels
    (fn [{:keys [state]}]
-     (zipmap (map (comp keyword first) (:labels @state))
-             (map last (:labels @state))))
+     (let [labelsEmptyRemoved (filter #(not= % ["" ""]) (:labels @state))]
+     (zipmap (map (comp keyword first) labelsEmptyRemoved)
+             (map last labelsEmptyRemoved))))
    :-process-machine-config
    (fn [{:keys [refs]}]
      (let [getInt #(if (string/blank? %) % (js/parseInt %))
@@ -240,16 +266,32 @@
 (react/defc- NotebooksTable
   {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [clusters toolbar-items]} props]
+     (let [{:keys [show-error-dialog? errored-cluster-to-show]} @state
+           {:keys [clusters toolbar-items]} props]
        [:div {}
+        (when show-error-dialog?
+          [modals/OKCancelForm {:header "Cluster Error"
+                                :dismiss #(swap! state assoc :show-error-dialog? false)
+                                :ok-button {:text "Done"
+                                            :onClick #(swap! state assoc :show-error-dialog? false)}
+                                :show-cancel? false
+                                :content
+                                [:div {:style {:width 700}}
+                                 [:span {} (str "Cluster " (:clusterName errored-cluster-to-show) " failed with message:")]
+                                 [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                                :fontSize "90%" :maxHeight 206
+                                                :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+                                  (:errorMessage (first (:errors errored-cluster-to-show)))]]}])
         (when (:show-delete-dialog? @state)
           [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-delete-dialog?)
                                        :cluster-to-delete (:cluster-to-delete @state))])
         [Table
-         {:data clusters :data-test-id "spark-clusters-table"
+         {:data-test-id "spark-clusters-table" :data clusters
           :body {:empty-message "There are no clusters to display."
                  :style table-style/table-light
                  :fixed-column-count 1
+                 :column-defaults {"shown" ["delete" "Name" "Status" "Workers" "Create Date"]
+                                   "hidden" ["Master Machine Type" "Master Disk Size (GB)" "Worker Machine Type" "Worker Disk Size (GB)" "Worker Local SSDs" "Preemptible Workers"]}
                  :columns
                  [{:id "delete" :initial-width 30
                    :resizable? false :sortable? false :filterable? false :hidden? true
@@ -258,25 +300,36 @@
                    (fn [cluster]
                      (if (or (= (:status cluster) "Running") (= (:status cluster) "Error"))
                        (links/create-internal
-                         {:data-test-id "x-button"
+                         {:data-test-id (str (:clusterName cluster) "-delete-button")
                           :id (:id props)
                           :style {:color (:text-light style/colors)
                                   :minHeight 30 :minWidth 30}
                           :onClick #(swap! state assoc :show-delete-dialog? true :cluster-to-delete (:clusterName cluster))}
                          (icons/render-icon {} :delete))))}
 
-                  {:header "Name" :initial-width 150
+                  {:header "Name" :initial-width 250
                    :as-text :clusterName :sort-by :clusterName :sort-initial :asc
                    :render
                    (fn [cluster]
-                     (if (= (:status cluster) "Running")
-                       (links/create-external {:href (leo-notebook-url cluster)} (:clusterName cluster))
-                       (:clusterName cluster)))}
-                  {:header "Status" :initial-width 100
-                   :column-data :status
-                   :render (fn [status]
-                             [:div {:style {:height table-style/table-icon-size}}
-                              (icon-for-cluster-status status) status])}
+                     (let [clusterName (:clusterName cluster)]
+                       (if (= (:status cluster) "Running")
+                         (links/create-external {:data-test-id (str clusterName "-link")
+                                                 :href (leo-notebook-url cluster)} clusterName)
+                         clusterName)))}
+                  {:header "Status" :initial-width 150
+                   :as-text :status
+                   :render (fn [cluster]
+                             (let [clusterNameStatusId (str (:clusterName cluster) "-status")]
+                               [:div {:key (when clusters (str (gensym))) ;this makes the spinners sync
+                                      :style {:height table-style/table-icon-size}}
+                                (icon-for-cluster-status (:status cluster))
+                                (if (= (:status cluster) "Error")
+                                  (links/create-internal
+                                    {:data-test-id clusterNameStatusId
+                                     :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                     :onClick #(swap! state assoc :show-error-dialog? true :errored-cluster-to-show cluster)}
+                                    "View error")
+                                  [:span {:data-test-id clusterNameStatusId} (:status cluster)])]))}
                   (table-utils/date-column {:column-data :createdDate :style {}})
                   {:header "Master Machine Type" :initial-width 150
                    :column-data (comp :masterMachineType :machineConfig)}
@@ -293,7 +346,7 @@
                   {:header "Preemptible Workers" :initial-width 150
                    :column-data (comp :numberOfPreemptibleWorkers :machineConfig)}
                   {:header "Labels" :initial-width :auto
-                   :column-data #(dissoc (:labels %) :serviceAccount :clusterName :googleProject :googleBucket)
+                   :column-data #(dissoc (:labels %) :clusterServiceAccount :clusterName :googleProject :googleBucket)
                    :sort-by (comp vec keys)
                    :render
                    (fn [labels]
@@ -311,9 +364,8 @@
 (react/defc NotebooksContainer
   {:refresh
    (fn [{:keys [this]}]
-     (this :-get-clusters-list-if-whitelisted)
-     (this :-schedule-cookie-refresh-if-whitelisted))
-
+     (this :-get-clusters-list)
+     (this :-schedule-cookie-refresh))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response show-create-dialog?]} @state
@@ -321,20 +373,25 @@
        [:div {:display "inline-flex"}
         (when show-create-dialog?
           [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                       :reload-after-create #(this :-get-clusters-list-if-whitelisted))])
-        [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10}} "Spark Clusters"]]
+                                       :reload-after-create #(this :-get-clusters-list))])
+        [:div {} [:span {:data-test-id "spark-clusters-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Spark Clusters"]]
+        [:div {:style {:margin 10 :fontSize "88%"}}
+         "Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail.
+          This beta feature is under active development. See documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
         (if server-error
-          [comps/ErrorViewer {:error server-error :data-test-id "notebooks-error"}]
+          [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
           (if clusters
             [NotebooksTable
-             (assoc props :toolbar-items [flex/spring [buttons/Button {:text "Create Cluster..." :style {:marginRight 7}
-                                                                       :data-test-id "create-modal-button"
+             (assoc props :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
+                                                                       :text "Create Cluster..." :style {:marginRight 7}
                                                                        :onClick #(swap! state assoc :show-create-dialog? true)}]]
                           :clusters clusters
-                          :reload-after-delete #(this :-get-clusters-list-if-whitelisted))]))]))
+                          :reload-after-delete #(this :-get-clusters-list))]
+            [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")]))]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-is-leo-whitelisted)
+     (this :-get-clusters-list)
+     (this :-schedule-cookie-refresh)
      (.addEventListener js/window "message" (react/method this :-notebook-extension-listener)))
 
    :component-will-unmount
@@ -352,26 +409,13 @@
                      (clj->js {:type "bootstrap-auth.response" :body {:googleClientId (config/google-client-id)}})
                      (config/leonardo-url-root))))
 
-   ; Checks if the user is on the Leo whitelist
-   :-is-leo-whitelisted
-   (fn [{:keys [state this]}]
-     (endpoints/call-ajax-leo
-      {:endpoint endpoints/is-leo-whitelisted
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (do (swap! state assoc :is-leo-whitelisted? true)
-                        (this :-get-clusters-list-if-whitelisted)
-                        (this :-schedule-cookie-refresh-if-whitelisted))
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
-
-   :-schedule-cookie-refresh-if-whitelisted
+   :-schedule-cookie-refresh
    (fn [{:keys [state locals this]}]
      (let [{{:keys [clusters]} :server-response} @state]
-       (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
+       (when-not (:dead? @locals)
          (when (contains-statuses clusters ["Running"])
            (this :-process-running-clusters))
-         (js/setTimeout #(this :-schedule-cookie-refresh-if-whitelisted) 120000))))
+         (js/setTimeout #(this :-schedule-cookie-refresh) 120000))))
 
    :-process-running-clusters
    (fn [{:keys [state]}]
@@ -387,9 +431,9 @@
                       (when-not success?
                         (swap! state assoc :server-error raw-response)))}))))
 
-   :-get-clusters-list-if-whitelisted
+   :-get-clusters-list
    (fn [{:keys [props state locals this]}]
-     (when (and (not (:dead? @locals)) (:is-leo-whitelisted? @state))
+     (when-not (:dead? @locals)
        (endpoints/call-ajax-leo
         {:endpoint endpoints/get-clusters-list
          :headers ajax/content-type=json
@@ -401,7 +445,7 @@
                           (swap! state assoc :server-response {:clusters filtered-clusters}))
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
                         (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
-                          (js/setTimeout #(this :-get-clusters-list-if-whitelisted) 10000))
+                          (js/setTimeout #(this :-get-clusters-list) 10000))
                         ; If there are running clusters, call the /setCookie endpoint immediately.
                         (when (contains-statuses filtered-clusters ["Running"])
                           (this :-process-running-clusters)))
