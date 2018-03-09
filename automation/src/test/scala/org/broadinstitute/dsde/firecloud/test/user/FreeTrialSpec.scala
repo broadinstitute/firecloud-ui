@@ -1,54 +1,50 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.component.{Label, Checkbox, Button, TestId}
+import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.auth.{TrialBillingAccountAuthToken, AuthToken}
+import org.broadinstitute.dsde.workbench.auth.{AuthToken, TrialBillingAccountAuthToken}
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.service.{Google, Thurloe, Orchestration}
-import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, CleanUp}
-import org.scalatest.{FreeSpec, Matchers, BeforeAndAfter}
+import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Thurloe}
+import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
 import scala.util.Try
+
 
 /**
   * Tests for new user registration scenarios.
   */
-class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec
+class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
   with UserFixtures with CleanUp with LazyLogging {
 
   val adminUser: Credentials = UserPool.chooseAdmin
   val campaignManager: Credentials = UserPool.chooseCampaignManager
-  implicit val adminAuthToken: AuthToken = adminUser.makeAuthToken()
+  implicit val authToken: AuthToken = adminUser.makeAuthToken()
   val trialKVPKeys = Seq("trialState", "trialBillingProjectName", "trialEnabledDate", "trialEnrolledDate",
     "trialTerminatedDate", "trialExpirationDate", "userAgreed")
 
   var testUser: Credentials = _
-  var testUserAuthToken: AuthToken = _
+  var userAuthToken: AuthToken = _
   var subjectId : String = _
 
-   before {
+  override def beforeEach {
     testUser = UserPool.chooseStudent
-    testUserAuthToken = testUser.makeAuthToken()
-    subjectId = Orchestration.profile.getUser()(testUserAuthToken)("userId").toString
-    Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)(adminAuthToken)})
+    userAuthToken = testUser.makeAuthToken()
+    subjectId = Orchestration.profile.getUser()(userAuthToken)("userId").toString
+    Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
-
-   after {
-    Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)(adminAuthToken)})
-  }
-  
 
   private def setUpEnabledUserAndProject(user: Credentials): Unit = {
-    implicit val managerAuthToken: AuthToken = campaignManager.makeAuthToken()
-    api.trial.createTrialProjects(1)(managerAuthToken)
+    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
+    api.trial.createTrialProjects(1)
     logger.info(s"Attempting to enable user [${user.email}] as campaign manager [${campaignManager.email}]")
-    api.trial.enableUser(user.email)((managerAuthToken))
+    api.trial.enableUser(user.email)
   }
 
   private def registerCleanUpForDeleteTrialState(): Unit = {
-    register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)(adminAuthToken)})
+    register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
   "A user whose free trial status is" - {
@@ -93,10 +89,10 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
         }
 
         // Verify that the user has been added to the corresponding billing project
-        val billingProject = Thurloe.keyValuePairs.getAll(subjectId)(testUserAuthToken).get("trialBillingProjectName")
+        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
         assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
 
-        val userBillingProjects = api.profile.getUserBillingProjects()(testUserAuthToken)
+        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
         assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
 
         val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
@@ -107,17 +103,20 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
         val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
 
-        api.trial.terminateUser(testUser.email)(adminAuthToken)
+        api.trial.terminateUser(testUser.email)
 
         val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         val errMsg = "The trial user's billing project should have been removed from the billing account."
         assert(billingAccountUponTermination.isEmpty, errMsg)
+
+        registerCleanUpForDeleteTrialState()
       }
     }
 
     "Terminated" - {
       "should see that they are inactive" in withWebDriver { implicit driver =>
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")(adminAuthToken)
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -130,7 +129,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
 
     "Disabled" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")(adminAuthToken)
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -142,7 +142,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfter with Matchers with WebB
    
    "Finalized" - {
       "should not see the free trial banner" in withWebDriver { implicit driver =>
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")(adminAuthToken)
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
