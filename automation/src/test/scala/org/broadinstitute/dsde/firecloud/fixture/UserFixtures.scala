@@ -45,10 +45,13 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
+      // One way to workaround flaky SignIn issue
+      var counter = 0
       retry[T](1.seconds, 60.seconds) ({
           openedPage.signInButton.awaitVisible()
           executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
-          logger.info("Executed JS forceSignedIn")
+          if (counter > 0) logger.warn(s"Retried forceSignedIn. $counter")
+        counter +=1
           try {
             await.ready(page, 30)
             Some(page)

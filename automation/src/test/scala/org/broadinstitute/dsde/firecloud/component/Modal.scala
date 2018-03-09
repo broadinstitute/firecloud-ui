@@ -21,6 +21,10 @@ abstract class Modal(id: String)(implicit webDriver: WebDriver) extends Componen
     clickXButton()
     awaitDismissed()
   }
+
+  def isOpen(): Boolean = {
+    find(CssSelectorQuery("body.broadinstitute-modal-open")).isDefined
+  }
 }
 
 class OKCancelModal(id: String)(implicit webDriver: WebDriver) extends Modal(id) {
