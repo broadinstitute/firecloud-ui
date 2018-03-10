@@ -16,7 +16,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   override def awaitReady(): Unit = {
     await condition {
-      tab.isTabOpen("Method Configurations")
       isLoaded
     }
     await.spinner("Checking permissions...",15) // brittle. won't work if text changes
