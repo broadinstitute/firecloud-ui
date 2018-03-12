@@ -9,7 +9,6 @@ import org.scalatest.selenium.WebBrowser
   */
 abstract class FireCloudView(implicit webDriver: WebDriver)
   extends Awaiter with WebBrowser with WebBrowserUtil {
-  def awaitReady(): Unit
 
   def readText(q: Query): String = {
     find(q) map { _.text } getOrElse ""
@@ -19,4 +18,5 @@ abstract class FireCloudView(implicit webDriver: WebDriver)
     val allText = findAll(q) map { _.text }
     allText.toList
   }
+
 }
