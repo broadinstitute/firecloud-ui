@@ -174,8 +174,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     */
 
   def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false, grantMethodPermission: Option[Boolean] = None): WorkspaceSummaryPage = {
-    sidebar.clickShareWorkspaceButton()
-    val aclEditor = await ready new AclEditor
+    val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
       val syncModal = new SynchronizeMethodAccessModal("method-access")
@@ -190,8 +189,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def openShareDialog(email: String, accessLevel: String): AclEditor = {
-    sidebar.clickShareWorkspaceButton()
-    val aclEditor = await ready new AclEditor
+    val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.fillEmailAndAccess(email, WorkspaceAccessLevel.withName(accessLevel))
     aclEditor
   }

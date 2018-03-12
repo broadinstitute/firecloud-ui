@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
@@ -11,17 +12,12 @@ import org.scalatest.selenium.Page
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
 
-  private val tab = TabBar()
-  private val methodConfigListpage = new WorkspaceMethodConfigListPage(namespace, name)
-
   override def awaitReady(): Unit = {
-    await condition {
-      isLoaded
-    }
-    await.spinner("Checking permissions...",15) // brittle. won't work if text changes
+    await condition isLoaded
+    await spinner "Checking permissions..."
   }
 
-  override val url: String = s"${methodConfigListpage.url}/$methodConfigNamespace/$methodConfigName"
+  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
   private val openLaunchAnalysisModalButton = Button("open-launch-analysis-modal-button")
   private val openEditModeButton = Button("edit-method-config-button")
