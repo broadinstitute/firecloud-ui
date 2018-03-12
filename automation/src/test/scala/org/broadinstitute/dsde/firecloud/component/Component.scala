@@ -61,11 +61,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   def isVisible: Boolean = find(query).exists(_.isDisplayed)
   def isEnabled: Boolean = enabled(query)
 
-  override def awaitReady(): Unit = {
-    await condition {
-      isVisible && isEnabled
-    }
-  }
+  override def awaitReady(): Unit = awaitVisible()
 
   def scrollToVisible(): Unit = {
     webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(query).get.underlying)
