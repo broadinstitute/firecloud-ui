@@ -147,3 +147,24 @@
          (if (= bucket-name workspace-bucket)
            object
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
+
+(react/defc DOSFilePreviewLink
+  {:component-did-mount
+   (fn [{:keys [state props]}]
+     (let [{:keys [workspace-bucket dos-uri]} props]
+       (ajax/call-martha dos-uri
+         {:on-done (fn [{:keys [success? status-code raw-response status-text]}]
+                     (if success?
+                       (swap! state assoc :gcs-uri raw-response :error :false)
+                       (swap! state assoc :error :true :error-message status-text)))})))
+   :render
+   (fn [{:keys [state props]}]
+     (case (:error @state)
+       nil (spinner "Translating DOS uri...")
+       :true (str "Error translating DOS uri: " (:error-message @state))
+       :false (let [{:keys [workspace-bucket gcs-uri attributes]} props]
+                (let [parsed (common/parse-gcs-uri gcs-uri)]
+                  [GCSFilePreviewLink
+                   (assoc parsed
+                     :workspace-bucket workspace-bucket
+                     :attributes attributes)]))))})
