@@ -56,4 +56,5 @@
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
+(defn martha-url [] (get @config "marthaUrl"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")

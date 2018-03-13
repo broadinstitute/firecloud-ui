@@ -108,3 +108,11 @@
                            (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
                            (check-server-down status-code) (reset! server-down? true)))
                        (on-done m))))))
+
+(defn call-martha [data arg-map]
+  (let [on-done (:on-done arg-map)]
+    (call (assoc arg-map
+            :url (config/martha-url)
+            :data data
+            :on-done (fn [{:keys [status-code status-text] :as m}]
+                       (on-done {m}))))))
