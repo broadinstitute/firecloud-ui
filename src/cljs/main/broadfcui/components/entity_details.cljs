@@ -7,6 +7,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
    ))
 
 (react/defc EntityDetails

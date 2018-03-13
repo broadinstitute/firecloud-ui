@@ -59,19 +59,36 @@
              :else (spinner "Loading details..."))))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load-agora-method))
-   :load-agora-method
+     (this :load-method-from-repo))
+   :load-method-from-repo
    (fn [{:keys [props state]} & [method-ref]]
      (let [{:keys [namespace name snapshotId]} (or method-ref props)
-           method (:method props)]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
-                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
-                                                               {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
+           method (utils/cljslog (:methodRepoMethod props))]
+       (let [repo (:sourceRepo method)]
+         (case repo
+           "agora" (let [namespace (:methodNamespace method)
+                         name (:methodName method)
+                         snapshotId (:methodVersion method)]
+                     (endpoints/call-ajax-orch
+                      {:endpoint (endpoints/get-agora-method namespace name snapshotId) ;;
+                       :headers ajax/content-type=json
+                       :on-done (fn [{:keys [success? get-parsed-response]}]
+                                  (if success?
+                                    (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
+                                    (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
+                                                                             {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))}))
+           "dockstore" (let [path (:methodPath method)
+                             version (:methodVersion method)]
+                         (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/%23workflow%2F"
+                                               (js/encodeURIComponent path)
+                                               "/versions/"
+                                               (js/encodeURIComponent version)
+                                               "/WDL/descriptor")
+                                     :method "GET"
+                                     :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                (if success?
+                                                  (swap! state assoc :loaded-method {:payload (:descriptor (get-parsed-response))} :redacted? false)
+                                                  (swap! state assoc :loaded-method nil :redacted? true)))}))))))})
 
 
 (react/defc- Sidebar
@@ -156,7 +173,7 @@
        (when (and (not methods) loaded-config)
          (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
            (endpoints/call-ajax-orch
-            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName) ; list versions from dockstore
              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                         (let [response (get-parsed-response)]
                           (if success?
@@ -227,11 +244,12 @@
                        (first methods-response))]
           (create-section [MethodDetailsViewer
                            (merge {:ref "methodDetailsViewer"
-                                   :name methodName
-                                   :namespace methodNamespace
-                                   :snapshotId methodVersion
+                                   :methodRepoMethod methodRepoMethod
+                                   ;:name methodName
+                                   ;:namespace methodNamespace
+                                   ;:snapshotId methodVersion
                                    :onSnapshotIdChange #(this :-load-new-method-template %)
-                                   :method method
+                                   ;:method method
                                    :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                   (utils/restructure redacted? config methods editing? wdl-parse-error))]))
         (create-section-header "Root Entity Type")
@@ -288,7 +306,7 @@
      (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
+       ((@refs "methodDetailsViewer") :load-method-from-repo {:namespace (:methodNamespace method-ref)
                                                           :name (:methodName method-ref)
                                                           :snapshotId (:methodVersion method-ref)})))
    :-commit
@@ -351,7 +369,7 @@
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace method-namespace
+       ((@refs "methodDetailsViewer") :load-method-from-repo {:namespace method-namespace
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
