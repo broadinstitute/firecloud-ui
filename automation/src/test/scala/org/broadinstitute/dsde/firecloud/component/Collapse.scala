@@ -17,6 +17,7 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
   def toggle(): Unit = {
     awaitVisible()
     click on toggleComponent
+    awaitReady()
   }
 
   def ensureExpanded(): Unit = {
@@ -24,6 +25,7 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
       click on toggleComponent
       await condition isExpanded
     }
+    awaitReady()
   }
 
   def ensureCollapsed(): Unit = {
@@ -31,6 +33,7 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
       click on toggleComponent
       await condition stateOf(toggleComponent) == "collapsed"
     }
+    awaitReady()
   }
 
   def getInner: A = {

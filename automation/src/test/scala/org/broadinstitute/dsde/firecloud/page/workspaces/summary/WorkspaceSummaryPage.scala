@@ -2,9 +2,9 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspacePage, WorkspaceListPage}
 import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
-import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
+import org.broadinstitute.dsde.firecloud.{Stateful, FireCloudView}
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
@@ -15,7 +15,7 @@ import org.scalatest.selenium.Page
   * Page class for the Workspace Detail page.
   */
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful { wsSummaryPage: WorkspaceSummaryPage =>
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
@@ -45,7 +45,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
-    override def awaitReady(): Unit = getState == "ready"
+    override def awaitReady(): Unit = {
+      awaitState("ready")
+    }
 
     val editButton = Button("edit-button" inside this)
     val saveButton = Button("save-button" inside this)
@@ -56,18 +58,61 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val publishButton = Button("publish-button" inside this)
     val unpublishButton = Button("unpublish-button" inside this)
     val shareWorkspaceButton = Button("share-workspace-button" inside this)
+
+    def clickEdit(): Unit = {
+      editButton.doClick()
+      wsSummaryPage.awaitReady()
+    }
+
+    def clickSave(): Unit = {
+      saveButton.doClick()
+      wsSummaryPage.awaitReady()
+    }
+
+    def clickCancel(): Unit = {
+      cancelButton.doClick()
+      wsSummaryPage.awaitReady()
+    }
+
+    def clickClone(): CloneWorkspaceModal = {
+      cloneButton.doClick()
+      await ready new CloneWorkspaceModal()
+    }
+
+    def clickDeleteWorkspace(): DeleteWorkspaceModal = {
+      deleteWorkspaceButton.doClick()
+      await ready new DeleteWorkspaceModal
+    }
+
+    def clickPublish(): Unit = {
+      publishButton.doClick()
+      wsSummaryPage.awaitReady()
+    }
+
+    def clickUnpublish(): MessageModal = {
+      unpublishButton.doClick()
+      await ready new MessageModal
+    }
+
+    def clickShareWorkspaceButton(): AclEditor = {
+      shareWorkspaceButton.doClick()
+      await ready new AclEditor()
+    }
   }
 
   private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
     override def awaitReady(): Unit = {
       table.awaitReady()
-      awaitState("enabled")
+      wsSummaryPage.awaitReady()
     }
 
     val newButton = Button("add-new-button")
     val table = Table("workspace-attributes")
 
-    def clickNewButton(): Unit = newButton.doClick()
+    def clickNewButton(): Unit = {
+      newButton.doClick()
+      awaitReady()
+    }
   })
   import scala.language.reflectiveCalls
 
@@ -100,14 +145,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
-    sidebar.cloneButton.doClick()
-    val cloneModal = await ready new CloneWorkspaceModal
+    val cloneModal = sidebar.clickClone()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
   }
 
   def unpublishWorkspace(): Unit = {
-    sidebar.unpublishButton.doClick()
-    val msgModal = await ready new MessageModal
+    val msgModal = sidebar.clickUnpublish()
     msgModal.clickOk()
   }
 
@@ -116,8 +159,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * to the resulting view after successful deletion.
     */
   def deleteWorkspace(): WorkspaceListPage = {
-    sidebar.deleteWorkspaceButton.doClick()
-    val workspaceDeleteModal = await ready new DeleteWorkspaceModal
+    val workspaceDeleteModal = sidebar.clickDeleteWorkspace()
     workspaceDeleteModal.confirmDelete()
     await ready new WorkspaceListPage
   }
@@ -132,8 +174,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     */
 
   def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false, grantMethodPermission: Option[Boolean] = None): WorkspaceSummaryPage = {
-    sidebar.shareWorkspaceButton.doClick()
-    val aclEditor = await ready new AclEditor
+    val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
       val syncModal = new SynchronizeMethodAccessModal("method-access")
@@ -148,14 +189,13 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def openShareDialog(email: String, accessLevel: String): AclEditor = {
-    sidebar.shareWorkspaceButton.doClick()
-    val aclEditor = await ready new AclEditor
+    val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.fillEmailAndAccess(email, WorkspaceAccessLevel.withName(accessLevel))
     aclEditor
   }
 
   def clickPublishButton(expectSuccess: Boolean): OKCancelModal = {
-    sidebar.publishButton.doClick()
+    sidebar.clickPublish()
     if (expectSuccess) {
       // TODO: no test uses this yet
       null
@@ -177,7 +217,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def clickCloneButton(): CloneWorkspaceModal = {
-    sidebar.cloneButton.doClick()
+    sidebar.clickClone()
     await ready new CloneWorkspaceModal
   }
 
@@ -217,7 +257,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   def edit(action: => Unit): Unit = {
     if (!isEditing)
-      sidebar.editButton.doClick()
+      sidebar.clickEdit()
     else
       throw new IllegalStateException("Already editing")
 
@@ -225,7 +265,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     if (isEditing) {
       sidebar.saveButton.scrollToVisible()
-      sidebar.saveButton.doClick()
+      sidebar.clickSave()
       awaitReady()
     }
     else

@@ -2,8 +2,6 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import java.io.{File, PrintWriter}
-import java.nio.file.attribute.PosixFilePermission
-import java.nio.file.{Files, Paths}
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
@@ -18,7 +16,6 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.collection.JavaConverters._
 import scala.io.Source
 
 class DataSpec extends FreeSpec with WebBrowserSpec
