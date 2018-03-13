@@ -70,7 +70,7 @@
                          name (:methodName method)
                          snapshotId (:methodVersion method)]
                      (endpoints/call-ajax-orch
-                      {:endpoint (endpoints/get-agora-method namespace name snapshotId) ;;
+                      {:endpoint (endpoints/get-agora-method namespace name snapshotId)
                        :headers ajax/content-type=json
                        :on-done (fn [{:keys [success? get-parsed-response]}]
                                   (if success?
@@ -87,7 +87,10 @@
                                      :method "GET"
                                      :on-done (fn [{:keys [success? get-parsed-response]}]
                                                 (if success?
-                                                  (swap! state assoc :loaded-method {:payload (:descriptor (get-parsed-response))} :redacted? false)
+                                                  (swap! state assoc :loaded-method {:name path
+                                                                                     :snapshotId version
+                                                                                     :entityType "Workflow"
+                                                                                     :payload (:descriptor (get-parsed-response))} :redacted? false)
                                                   (swap! state assoc :loaded-method nil :redacted? true)))}))))))})
 
 
@@ -171,17 +174,28 @@
    (fn [{:keys [state]}]
      (let [{:keys [methods loaded-config]} @state]
        (when (and (not methods) loaded-config)
-         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
-           (endpoints/call-ajax-orch
-            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName) ; list versions from dockstore
-             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                        (let [response (get-parsed-response)]
-                          (if success?
-                            (swap! state assoc
-                                   :methods-response response
-                                   :methods {[methodNamespace methodName] (mapv :snapshotId response)})
-                            ;; FIXME: :error-message is unused
-                            (swap! state assoc :error-message status-text))))})))))
+         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])
+               repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
+           (case repo
+             "agora" (endpoints/call-ajax-orch
+                      {:endpoint (endpoints/list-method-snapshots methodNamespace methodName) ; list versions from dockstore
+                       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                                  (let [response (get-parsed-response)]
+                                    (if success?
+                                      (swap! state assoc
+                                             :methods-response response
+                                             :methods {[methodNamespace methodName] (mapv :snapshotId response)})
+                                      ;; FIXME: :error-message is unused
+                                      (swap! state assoc :error-message status-text))))})
+             "dockstore" (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
+                           (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/%23workflow%2F"
+                                                 (js/encodeURIComponent path)
+                                                 "/versions")
+                                       :method "GET"
+                                       :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                  (swap! state assoc
+                                                         #_:methods-response #_response
+                                                         :methods (utils/cljslog {[methodNamespace methodName] (mapv :name (get-parsed-response))})))})))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
