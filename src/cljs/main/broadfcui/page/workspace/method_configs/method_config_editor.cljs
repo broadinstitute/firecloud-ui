@@ -388,7 +388,7 @@
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
-         :payload method-ref
+         :payload method-ref ; needs to have sourceRepo, other new fields
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]
