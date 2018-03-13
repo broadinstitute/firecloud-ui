@@ -22,7 +22,7 @@
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
                   "forumUrl" :string "authDomainGuideUrl" :string
-                  "googleBucketUrl" :string}
+                  "googleBucketUrl" :string "marthaUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (set/difference config-keys (set (keys all)))
