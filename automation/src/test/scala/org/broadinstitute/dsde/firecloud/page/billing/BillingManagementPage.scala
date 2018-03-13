@@ -72,7 +72,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     billingProjectTable.filter(projectName)
     val billingProjectLink = testId(projectName + "-link")
     click on (await enabled billingProjectLink)
-    addUserButton.awaitEnabled()
+    addUserButton.awaitEnabledState()
   }
 
 

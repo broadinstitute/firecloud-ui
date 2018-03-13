@@ -84,7 +84,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   * Page class for the import data modal.
   */
 class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("import-metadata-modal") {
-  override def awaitReady(): Unit = importFromFileButton.isVisible
+  override def awaitReady(): Unit = importFromFileButton.awaitVisible()
 
   private val importFromFileButton = Button("import-from-file-button" inside this)
   private val fileUploadInput = FileSelector("data-upload-input" inside this)

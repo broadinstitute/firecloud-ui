@@ -93,13 +93,18 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           }
         }
 
-        "should be able to run a method in a new workspace in the billing project" ignore {
-          // Create new billing project
+        "should be able to run a method in a new workspace in the billing project" in {
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()
 
+          /*
+           * This must continue to create a new billing project rather than using an allocated one.
+           * Otherwise it's not covering the entirety of the intended scenario (which is one that we
+           * have seen break in the past that relied on using a brand new billing project).
+           */
           withBillingProject("billing-spec-method") { billingProjectName =>
             withWorkspace(billingProjectName, "BillingSpec_runMethod") { workspaceName =>
+              api.workspaces.waitForBucketReadAccess(billingProjectName, workspaceName)
               api.importMetaData(billingProjectName, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
 
               val methodConfigName: String = "test_method" + UUID.randomUUID().toString

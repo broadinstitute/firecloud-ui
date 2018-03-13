@@ -48,8 +48,6 @@ class RegistrationPage(implicit webDriver: WebDriver) extends AuthenticatedPage 
     programLocationCountryInput.setText(country)
 
     registerButton.doClick()
-    await condition registrationCompleteMessageIsPresent()
-    await condition !registrationCompleteMessageIsPresent()
   }
 
   private def registrationCompleteMessageIsPresent(): Boolean = {

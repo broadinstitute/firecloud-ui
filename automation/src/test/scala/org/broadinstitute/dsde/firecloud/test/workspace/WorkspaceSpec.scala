@@ -2,12 +2,9 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.component.Label
-import org.broadinstitute.dsde.firecloud.component.Component.string2QueryString
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceNotebooksPage.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
@@ -158,6 +155,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.canComputeBox.isChecked shouldBe true
             aclEditor.canComputeBox.ensureUnchecked()
             aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.cancel()
           }
         }
 
@@ -174,6 +172,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.updateAccess("READER")
             aclEditor.canComputeBox.isChecked shouldBe false
             aclEditor.canComputeBox.isEnabled shouldBe false
+            aclEditor.cancel()
           }
         }
       }
@@ -191,6 +190,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canShareBox.isChecked shouldBe false
             aclEditor.canShareBox.isEnabled shouldBe false
+            aclEditor.cancel()
           }
         }
       }
@@ -207,6 +207,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val aclEditor = detailPage.openShareDialog(user2.email, "OWNER")
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canComputeBox.isChecked shouldBe true
+            aclEditor.cancel()
           }
         }
 
@@ -224,6 +225,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val aclEditor = detailPage.openShareDialog(user2.email, "READER")
             aclEditor.canComputeBox.isEnabled shouldBe false
             aclEditor.canComputeBox.isChecked shouldBe false
+            aclEditor.cancel()
           }
         }
 
@@ -346,6 +348,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
           withSignIn(user) { listPage =>
             api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName", 1,
               SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
@@ -408,6 +412,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
@@ -431,6 +437,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
+              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                 SimpleMethodConfig.configNamespace, methodConfigName, 1,
                 SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
@@ -444,36 +452,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
               }
             }(authTokenOwner)
           }(authTokenOwner)
-        }
-      }
-    }
-  }
-
-  "Notebooks whitelist" - {
-    "Members should be able to see and access the Notebooks tab" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseNotebooksWhitelisted
-      implicit val authToken: AuthToken = user.makeAuthToken()
-
-      withWorkspace(billingProject, "WorkspaceSpec_whitelisted") { workspaceName =>
-        withSignIn(user) { listPage =>
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          Label("Notebooks-tab").awaitVisible()
-          val notebooksTab = detailPage.goToNotebooksTab()
-          notebooksTab.createClusterButtonEnabled() shouldBe true
-        }
-      }
-    }
-
-    "Non-members should NOT be able to access the Notebooks tab" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseCurator
-      implicit val authToken: AuthToken = user.makeAuthToken()
-
-      withWorkspace(billingProject, "WorkspaceSpec_unWhitelisted") { workspaceName =>
-        withSignIn(user) { listPage =>
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          //go directly to notebooks page
-          val notebooksTab = new WorkspaceNotebooksPage(billingProject, workspaceName).open
-          notebooksTab.checkUnauthorized
         }
       }
     }

@@ -27,11 +27,12 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
 
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
@@ -47,12 +48,13 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       val methodConfigName = workspaceName + "MethodConfig"
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod, billingProject,
         methodConfigName, SimpleMethodConfig.snapshotId, Map.empty, Map.empty, "participant_set")
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, billingProject, methodConfigName).open
         val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
         launchModal.verifyNoRowsMessage() shouldBe true
@@ -65,6 +67,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_with_workflows_warning") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
 
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
@@ -74,7 +77,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
@@ -91,13 +93,14 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
@@ -115,6 +118,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_on_set_without_expression") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
 
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
@@ -124,7 +128,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
@@ -142,6 +145,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_input_not_defined") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       val method = MethodData.InputRequiredMethod
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method,
@@ -149,7 +154,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         Map.empty, Map.empty, method.rootEntityType)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
 
         val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
@@ -202,15 +206,21 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     }
   }
 
-  "import a method into a workspace from the method repo" ignore withWebDriver { implicit driver =>
+  "import a method into a workspace from the method repo" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_import_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       withSignIn(user) { _ =>
         val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-        val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(MethodData.SimpleMethod.methodNamespace,
-          MethodData.SimpleMethod.methodName, MethodData.SimpleMethod.snapshotId, methodName, Some(MethodData.SimpleMethod.rootEntityType))
+
+        val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(
+          MethodData.SimpleMethod.methodNamespace,
+          MethodData.SimpleMethod.methodName,
+          MethodData.SimpleMethod.snapshotId,
+          SimpleMethodConfig.configName,
+          Some(MethodData.SimpleMethod.rootEntityType))
+
         methodConfigDetailsPage.editMethodConfig(inputs = Some(SimpleMethodConfig.inputs))
 
         methodConfigDetailsPage.isLoaded shouldBe true
@@ -222,12 +232,13 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_config_from_workspace") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
         SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -241,13 +252,14 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
         MethodData.SimpleMethod, SimpleMethodConfig.configNamespace, methodName, 1,
         SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -261,6 +273,8 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withWorkspace(billingProject, "TestSpec_FireCloud_abort_submission") { workspaceName =>
+      api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
       val shouldUseCallCaching = false
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
       api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
@@ -268,7 +282,6 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
       withSignIn(user) { _ =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
         val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
         //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
@@ -322,6 +335,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
+
     "should have warning icon in config list" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
@@ -340,10 +354,13 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
+
     "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
         withMethod("MethodConfigTabSpec_redacted_launch_analysis_error", MethodData.SimpleMethod) { methodName =>
           val configName = methodName + "Config"
           api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
@@ -361,6 +378,7 @@ class MethodConfigSpec extends FreeSpec with WebBrowserSpec with CleanUp with Wo
         }
       }
     }
+
     "should be able to be deleted when no unredacted snapshot exists" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()

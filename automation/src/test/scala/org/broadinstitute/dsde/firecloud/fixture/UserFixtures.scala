@@ -1,14 +1,17 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
+import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
-import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
+import org.broadinstitute.dsde.firecloud.page.user.{SignInPage, RegistrationPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.config.{Credentials, Config}
+import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, CleanUp}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import scala.concurrent.duration._
 
-trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
+trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: WebBrowserSpec with TestSuite =>
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
@@ -41,8 +44,20 @@ trait UserFixtures extends CleanUp { self: WebBrowserSpec with TestSuite =>
                                                 (testCode: (T) => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
-      new SignInPage(Config.FireCloud.baseUrl).open
-      executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+      val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
+      // One way to workaround flaky SignIn issue
+      var counter = 0
+      retry(Seq.fill(2)(5.seconds)) ({
+        executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+        if (counter > 0) logger.warn(s"Retried forceSignedIn. $counter") // how many times has retried. log to be removed
+        counter +=1
+        try {
+          await.ready(page, 30) // workspace list page could be taking up to 30 sec to load
+          Some(page)
+        } catch {
+          case _: Throwable => None
+        }
+      })
     }, page, testCode)
   }
 

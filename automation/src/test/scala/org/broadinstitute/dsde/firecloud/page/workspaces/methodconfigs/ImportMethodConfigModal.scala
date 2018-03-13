@@ -4,6 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.MethodTable
+import org.broadinstitute.dsde.firecloud.page.methodcommon.SelectConfigurationView
 import org.openqa.selenium.WebDriver
 
 class ImportMethodConfigModal(implicit webDriver: WebDriver) extends Modal("import-method-configuration-modal") {
@@ -54,33 +55,7 @@ private class MethodSummaryView(implicit webDriver: WebDriver) extends FireCloud
 
   def confirm(): SelectConfigurationView = {
     selectButton.doClick()
-    await ready new SelectConfigurationView()
-  }
-}
-
-private class SelectConfigurationView(implicit webDriver: WebDriver) extends FireCloudView {
-  private val configTable = Table("config-table")
-  private val useSelectedButton = Button("use-selected-configuration-button")
-  private def configLink(namespace: String, name: String, snapshotId: Int) = Link(s"$namespace-$name-$snapshotId-link")
-
-  override def awaitReady(): Unit = configTable.awaitReady()
-
-  def selectConfiguration(namespace: String, name: String, snapshotId: Int): ConfirmMethodRepoImportView = {
-    configTable.filter(name)
-    configLink(namespace, name, snapshotId).doClick()
-    useSelectedButton.awaitEnabled()
-    useSelectedButton.doClick()
-    await ready new ConfirmMethodRepoImportView()
-  }
-}
-
-private class ConfirmMethodRepoImportView(implicit webDriver: WebDriver) extends FireCloudView {
-  private val importMethodButton = Button("import-method-button")
-
-  override def awaitReady(): Unit = importMethodButton.awaitVisible()
-
-  def confirm(): Unit = {
-    importMethodButton.doClick()
+    await ready new SelectConfigurationView(importing = true)
   }
 }
 
@@ -119,7 +94,7 @@ private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends FireC
   private val nameField = TextField("name-field")
   private val importButton = Button("import-button")
 
-  override def awaitReady(): Unit = importButton.awaitEnabled()
+  override def awaitReady(): Unit = importButton.awaitEnabledState()
 
   def importAsIs(): Unit = importAs()
 

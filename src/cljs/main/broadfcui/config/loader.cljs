@@ -12,13 +12,11 @@
 (react/defc Component
   {:render
    (fn [{:keys [state]}]
-     [:div {:style {:padding "40px 0"}}
-      (if-let [errors (:errors @state)]
-        [:div {:style {:color (:state-exception style/colors)}}
-         "Error loading configuration:"
-         [:ul {}
-          (common/mapwrap :li errors)]]
-        (spinner "Loading configuration..."))])
+     (when-let [errors (:errors @state)]
+       [:div {:style {:padding "40px 0" :color (:state-exception style/colors)}}
+        "Error loading configuration:"
+        [:ul {}
+         (common/mapwrap :li errors)]]))
    :component-did-mount
    (fn [{:keys [this]}]
      ;; Use basic ajax call here to bypass authentication.

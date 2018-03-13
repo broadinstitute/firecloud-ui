@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.openqa.selenium.{JavascriptExecutor, WebDriver}
+import org.openqa.selenium.{WebDriver, JavascriptExecutor}
 
 /**
   * Components can be specified either by an arbitrary CSS selector query, or by the data-test-id directly
@@ -22,6 +22,7 @@ case class CSSQuery(text: String) extends QueryString
   * @param webDriver webdriver
   */
 abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver) extends FireCloudView {
+
   val query: CssSelectorQuery = queryString match {
     case TestId(id) => testId(id)
     case CSSQuery(text) => CssSelectorQuery(text)
@@ -55,8 +56,9 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
 
   def awaitVisible(): Unit = await visible query
   def awaitNotVisible(): Unit = await notVisible query
+  def awaitEnabled(): Unit = await enabled query
 
-  def isVisible: Boolean = find(query).isDefined
+  def isVisible: Boolean = find(query).exists(_.isDisplayed)
   def isEnabled: Boolean = enabled(query)
 
   override def awaitReady(): Unit = awaitVisible()

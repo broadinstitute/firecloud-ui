@@ -17,15 +17,16 @@
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
    [broadfcui.footer :as footer]
-   [broadfcui.injections :as injections]
    [broadfcui.header :as header]
+   [broadfcui.injections :as injections]
    [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
    [broadfcui.page.billing.billing-management :as billing-management]
+   [broadfcui.page.external-importer :as external-importer]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
-   [broadfcui.page.method-repo.method.details :as method-details]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.method-repo.method.details :as method-details]
    [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
@@ -45,16 +46,18 @@
   (nav/clear-paths)
   (auth/add-nav-paths)
   (billing-management/add-nav-paths)
+  (billing-notifications/add-nav-paths)
+  (external-importer/add-nav-paths)
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-details/add-nav-paths)
   (method-repo/add-nav-paths)
-  (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (style-guide/add-nav-paths)
   (workspace-details/add-nav-paths)
-  (workspaces/add-nav-paths))
+  (workspaces/add-nav-paths)
+  )
 
 (react/defc- LoggedIn
   {:render
@@ -212,15 +215,18 @@
           (when-not (contains? user-status :signed-in)
             (style/render-text-logo))
           [:div {}
-           (when auth2
-             [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
-                              :on-change (fn [signed-in? token-saved?]
-                                           (swap! state update :user-status
-                                                  #(-> %
-                                                       ((if signed-in? conj disj)
-                                                        :signed-in)
-                                                       ((if token-saved? conj disj)
-                                                        :refresh-token-saved))))}])
+           [auth/LoggedOut {:spinner-text (cond (not config-loaded?) "Loading config..."
+                                                (not auth2) "Loading auth...")
+                            :auth2 auth2 :hidden? sign-in-hidden?
+                            :on-change (fn [signed-in? token-saved?]
+                                         (swap! state update :user-status
+                                                #(-> %
+                                                     ((if signed-in? conj disj)
+                                                      :signed-in)
+                                                     ((if token-saved? conj disj)
+                                                      :refresh-token-saved))))}]
+           (when (and config-loaded? (not auth2))
+             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
            (cond
              (not config-loaded?)
@@ -236,8 +242,6 @@
              [:h2 {} "Page not found."]
              public?
              [component (make-props)]
-             (nil? auth2)
-             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
              (contains? user-status :signed-in)
              (cond
                (not (contains? user-status :go))
