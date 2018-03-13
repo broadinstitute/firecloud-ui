@@ -135,16 +135,16 @@
                               :overflow "hidden" :textOverflow "ellipsis"
                               :textAlign "left"}}]
      (cond (not (string? maybe-uri)) (default-render maybe-uri)
-       (string/starts-with? "gs://" maybe-uri
+       (string/starts-with? "gs://" maybe-uri)
          (let [parsed (common/parse-gcs-uri maybe-uri)]
            [GCSFilePreviewLink
             (assoc parsed
               :workspace-bucket workspace-bucket
-              :attributes attributes)]))
-       (string/starts-with? "dos://" maybe-uri
+              :attributes attributes)])
+       (string/starts-with? "dos://" maybe-uri)
          (let [preview-info {:dos-uri maybe-uri}]
            [DOSFilePreviewLink
             (assoc preview-info
               :workspace-bucket workspace-bucket
-              :attributes attributes)]))
+              :attributes attributes)])
        :else maybe-uri))))
