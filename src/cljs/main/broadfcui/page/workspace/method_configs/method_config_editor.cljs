@@ -375,23 +375,19 @@
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
-     (let [[method-namespace method-name] (map (fn [key]
-                                                 (get-in (:loaded-config @state)
+     (let [[method-namespace method-name method-path source-repo] (map (fn [key]
+                                                 (get-in (utils/cljslog (:loaded-config @state))
                                                          [:methodConfiguration :methodRepoMethod key]))
-                                               [:methodNamespace :methodName])
+                                               [:methodNamespace :methodName :methodPath :sourceRepo])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
                                               [:namespace :name])
-           method-ref {:sourceRepo nil
-                       :methodPath nil
+           method-ref {:sourceRepo source-repo
+                       :methodPath method-path
                        :methodNamespace method-namespace
                        :methodName method-name
-                       :methodVersion new-snapshot-id}]
+                       :methodVersion (utils/cljslog "SS ID " new-snapshot-id)}]
        (swap! state assoc :blocker "Updating...")
-       ((@refs "methodDetailsViewer") :load-method-from-repo {:sourceRepo nil
-                                                              :methodPath nil
-                                                              :namespace method-namespace
-                                                              :name method-name
-                                                              :snapshotId new-snapshot-id})
+       ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
          :payload method-ref ; needs to have sourceRepo, other new fields

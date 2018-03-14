@@ -57,7 +57,7 @@
                                                      :style {:width 120}
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                 #(f (int (common/get-trimmed-text refs "snapshotId"))))}
+                                                                 #(f (common/get-trimmed-text refs "snapshotId")))} ; could be a string now
                    (:snapshots props)
                    redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
