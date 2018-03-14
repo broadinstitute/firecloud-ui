@@ -6,7 +6,6 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
-   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -14,6 +13,10 @@
 
 (def import-title "Import Workflow to FireCloud")
 (def import-subtitle "In order to import a workflow into FireCloud, you'll need two things:")
+
+;; TODO: move these to configs
+(def ^:private billing-project-guide-url "https://software.broadinstitute.org/firecloud/documentation/article?id=9765")
+(def ^:private firecloud-help-url "https://software.broadinstitute.org/firecloud/documentation/article?id=9846")
 
 (defn render-import-tutorial []
   (let [create-number-label
@@ -31,7 +34,7 @@
        [:p {:style {:fontSize "80%"}}
         "Don’t know if you have one? If you own or have 'write & compute' access to an existing workspace,
          that means you have access to a billing project and you’re all set. If you don't, click "
-        (links/create-external {:href (config/billing-account-guide-url)} "here")
+        (links/create-external {:href billing-project-guide-url} "here")
         " for instructions on how to get one."]]]
      [:div {:style {:display "flex"}}
       (create-number-label 2)
@@ -40,7 +43,7 @@
        "To use FireCloud services"
        [:p {:style {:fontSize "80%"}}
         "Need to create a FireCloud account? FireCloud requires a Google account. Click "
-        (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"} "here")
+        (links/create-external {:href firecloud-help-url} "here")
         " to learn how you can create a Google identity and link any email address to that Google account. Once
          you have signed in and completed the user profile registration step you can start using FireCloud."]]]]))
 
@@ -56,7 +59,7 @@
     "You must have a billing project associated with your account to create a new workspace,
      or else you must be granted write access to an existing workspace."]
    [:p {}
-    (links/create-external {:href (config/billing-account-guide-url)}
+    (links/create-external {:href billing-project-guide-url}
       "Learn how to create a billing project.")]))
 
 (react/defc Importer
