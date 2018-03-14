@@ -62,9 +62,9 @@
      (this :load-method-from-repo))
    :load-method-from-repo
    (fn [{:keys [props state]} & [method-ref]]
-     (let [{:keys [namespace name snapshotId]} (or method-ref props)
-           method (utils/cljslog (:methodRepoMethod props))]
+     (let [method (or method-ref (:methodRepoMethod props))]
        (let [repo (:sourceRepo method)]
+         (assert (some? repo) "Caller must specify source repo for method")
          (case repo
            "agora" (let [namespace (:methodNamespace method)
                          name (:methodName method)
@@ -320,9 +320,11 @@
      (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
-       ((@refs "methodDetailsViewer") :load-method-from-repo {:namespace (:methodNamespace method-ref)
-                                                          :name (:methodName method-ref)
-                                                          :snapshotId (:methodVersion method-ref)})))
+       ((@refs "methodDetailsViewer") :load-method-from-repo {:sourceRepo nil
+                                                              :methodPath nil
+                                                              :namespace (:methodNamespace method-ref)
+                                                              :name (:methodName method-ref)
+                                                              :snapshotId (:methodVersion method-ref)})))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
@@ -379,13 +381,17 @@
                                                [:methodNamespace :methodName])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
                                               [:namespace :name])
-           method-ref {:methodNamespace method-namespace
+           method-ref {:sourceRepo nil
+                       :methodPath nil
+                       :methodNamespace method-namespace
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       ((@refs "methodDetailsViewer") :load-method-from-repo {:namespace method-namespace
-                                                          :name method-name
-                                                          :snapshotId new-snapshot-id})
+       ((@refs "methodDetailsViewer") :load-method-from-repo {:sourceRepo nil
+                                                              :methodPath nil
+                                                              :namespace method-namespace
+                                                              :name method-name
+                                                              :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
          :payload method-ref ; needs to have sourceRepo, other new fields
