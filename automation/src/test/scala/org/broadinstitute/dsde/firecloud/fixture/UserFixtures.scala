@@ -73,8 +73,6 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
                                                          page: T, testCode: (T) => Any)
                                                         (implicit webDriver: WebDriver): Unit = {
     signIn
-    logger.info(s"Firecloud sign in user: ${user.email}")
-
     await ready page
 
     // Don't try/finally here to prevent sign-out before capturing a failure screenshot.
