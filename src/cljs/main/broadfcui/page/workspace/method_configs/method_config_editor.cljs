@@ -192,10 +192,12 @@
                                                  (js/encodeURIComponent path)
                                                  "/versions")
                                        :method "GET"
-                                       :on-done (fn [{:keys [success? get-parsed-response]}]
-                                                  (swap! state assoc
-                                                         :methods-response nil
-                                                         :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}))})))))))
+                                       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                                                  (if success?
+                                                    (swap! state assoc
+                                                           :methods-response nil
+                                                           :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))})
+                                                    (swap! state assoc :error-message status-text)))})))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
