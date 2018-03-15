@@ -52,7 +52,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     */
   def waitForCreateCompleted(projectName: String): String = {
     billingProjectTable.filter(projectName)
-    retry(10.seconds, 5.minutes)({
+    retry(10.seconds, 10.minutes)({
           readCreationStatusForProject(projectName).filterNot(_ equals "running")
         }) match {
       case None => throw new Exception("Billing project creation did not complete")
