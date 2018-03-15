@@ -20,6 +20,7 @@
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.config :as config]
    ))
 
 (defn- filter-empty [coll]
@@ -79,7 +80,8 @@
                                                                              {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))}))
            "dockstore" (let [path (:methodPath method)
                              version (:methodVersion method)]
-                         (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/%23workflow%2F"
+                         (ajax/call {:url (str (config/dockstore-url-root)
+                                               "/api/ga4gh/v1/tools/%23workflow%2F"
                                                (js/encodeURIComponent path)
                                                "/versions/"
                                                (js/encodeURIComponent version)
@@ -87,7 +89,7 @@
                                      :method "GET"
                                      :on-done (fn [{:keys [success? get-parsed-response]}]
                                                 (if success?
-                                                  (swap! state assoc :loaded-method {:name path
+                                                  (swap! state assoc :loaded-method {:name (js/decodeURIComponent path)
                                                                                      :snapshotId version
                                                                                      :entityType "Workflow"
                                                                                      :payload (:descriptor (get-parsed-response))} :redacted? false)
@@ -178,7 +180,7 @@
                repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
            (case repo
              "agora" (endpoints/call-ajax-orch
-                      {:endpoint (endpoints/list-method-snapshots methodNamespace methodName) ; list versions from dockstore
+                      {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
                        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                                   (let [response (get-parsed-response)]
                                     (if success?
@@ -188,7 +190,8 @@
                                       ;; FIXME: :error-message is unused
                                       (swap! state assoc :error-message status-text))))})
              "dockstore" (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
-                           (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/%23workflow%2F"
+                           (ajax/call {:url (str (config/dockstore-url-root)
+                                                 "/api/ga4gh/v1/tools/%23workflow%2F"
                                                  (js/encodeURIComponent path)
                                                  "/versions")
                                        :method "GET"
@@ -263,7 +266,7 @@
                                    :methodRepoMethod methodRepoMethod
                                    :onSnapshotIdChange #(this :-load-new-method-template %)
                                    :method method
-                                   :snapshots (get (utils/cljslog methods) [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
+                                   :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                   (utils/restructure redacted? config methods editing? wdl-parse-error)))]))
         (create-section-header "Root Entity Type")
         (create-section

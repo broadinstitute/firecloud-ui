@@ -22,7 +22,7 @@
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
                   "forumUrl" :string "authDomainGuideUrl" :string
-                  "googleBucketUrl" :string}
+                  "googleBucketUrl" :string "dockstoreUrlRoot" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         invalid (filter (fn [k]
@@ -54,4 +54,5 @@
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
+(defn dockstore-url-root [] (get @config "dockstoreUrlRoot"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")
