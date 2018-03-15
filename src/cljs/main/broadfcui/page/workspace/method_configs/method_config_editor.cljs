@@ -259,15 +259,12 @@
                        {:name methodName :namespace methodNamespace :entityType "Workflow"}
                        (first methods-response))]
           (create-section [MethodDetailsViewer
-                           (merge {:ref "methodDetailsViewer"
+                           (utils/cljslog (merge {:ref "methodDetailsViewer"
                                    :methodRepoMethod methodRepoMethod
-                                   ;:name methodName
-                                   ;:namespace methodNamespace
-                                   ;:snapshotId methodVersion
                                    :onSnapshotIdChange #(this :-load-new-method-template %)
-                                   ;:method method
-                                   :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
-                                  (utils/restructure redacted? config methods editing? wdl-parse-error))]))
+                                   :method method
+                                   :snapshots (get (utils/cljslog methods) [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
+                                  (utils/restructure redacted? config methods editing? wdl-parse-error)))]))
         (create-section-header "Root Entity Type")
         (create-section
          (if editing?
