@@ -16,7 +16,7 @@ trait Clickable extends LazyLogging { this: Component =>
     await condition {
       isVisible && isEnabled
     }
-    scrollToVisible
+    scrollToVisible()
     click on query
     logger.debug(s"clicked on query:  '$query'") // debugging - remove this once done with all flaky tests
   }
