@@ -61,7 +61,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             withSignIn(user) { listPage =>
               val workspaceName = "AuthDomainSpec_create_" + randomUuid
-              register cleanUp api.workspaces.delete(projectName, workspaceName)
+              register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
               val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName))
 
               workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)
@@ -83,7 +83,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                 val cloneModal = summaryPage.clickCloneButton()
                 cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
 
-                register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authToken)
+                register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
 
                 val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
                 cloneSummaryPage.validateWorkspace shouldEqual true
@@ -197,7 +197,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
-                register cleanUp api.workspaces.delete(projectName, workspaceName)
+                register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                 val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
 
                 workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
@@ -282,7 +282,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
-                register cleanUp api.workspaces.delete(projectName, workspaceName)
+                register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                 val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
 
                 workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
