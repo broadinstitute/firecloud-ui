@@ -6,7 +6,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.gcs-file-preview :refer [FilePreviewLink]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
@@ -27,9 +27,9 @@
 (defn- display-value
   ([gcs-uri] (display-value gcs-uri nil))
   ([gcs-uri link-label]
-   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
-     [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}}
-                                       :link-label link-label)]
+   (if-let [parsed (common/dos-or-gcs-uri? gcs-uri)]
+     [FilePreviewLink (assoc parsed :attributes {:style {:display "inline"}}
+                                    :link-label link-label)]
      (str gcs-uri))))
 
 (defn getTimingDiagramHeight [chartContainer]
