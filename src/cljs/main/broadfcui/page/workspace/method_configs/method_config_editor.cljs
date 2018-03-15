@@ -194,8 +194,8 @@
                                        :method "GET"
                                        :on-done (fn [{:keys [success? get-parsed-response]}]
                                                   (swap! state assoc
-                                                         #_:methods-response #_response
-                                                         :methods (utils/cljslog {[methodNamespace methodName] (mapv :name (get-parsed-response))})))})))))))
+                                                         :methods-response nil
+                                                         :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}))})))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -320,11 +320,7 @@
      (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
-       ((@refs "methodDetailsViewer") :load-method-from-repo {:sourceRepo nil
-                                                              :methodPath nil
-                                                              :namespace (:methodNamespace method-ref)
-                                                              :name (:methodName method-ref)
-                                                              :snapshotId (:methodVersion method-ref)})))
+       ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
@@ -376,7 +372,7 @@
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
      (let [[method-namespace method-name method-path source-repo] (map (fn [key]
-                                                 (get-in (utils/cljslog (:loaded-config @state))
+                                                 (get-in (:loaded-config @state)
                                                          [:methodConfiguration :methodRepoMethod key]))
                                                [:methodNamespace :methodName :methodPath :sourceRepo])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
@@ -385,7 +381,7 @@
                        :methodPath method-path
                        :methodNamespace method-namespace
                        :methodName method-name
-                       :methodVersion (utils/cljslog "SS ID " new-snapshot-id)}]
+                       :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
        ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)
        (endpoints/call-ajax-orch
