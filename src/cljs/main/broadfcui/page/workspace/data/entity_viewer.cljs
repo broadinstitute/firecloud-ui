@@ -4,7 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.entity-table :as entity-table]
-   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.gcs-file-preview :refer [FilePreviewLink]]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -112,11 +112,11 @@
                                                :for-render display})
 
                                             :else
-                                            (if-let [parsed (common/parse-gcs-uri v)]
+                                            (if-let [parsed (common/dos-or-gcs-uri? v)]
                                               {:for-sort (string/lower-case v)
-                                               :for-render [GCSFilePreviewLink (assoc parsed
-                                                                                 :attributes {:style {:display "inline"}}
-                                                                                 :link-label v)]}
+                                               :for-render [FilePreviewLink (assoc parsed
+                                                                              :attributes {:style {:display "inline"}}
+                                                                              :link-label v)]}
                                               {:for-sort (string/lower-case v)
                                                :for-render v})))
                                     :sort-by :for-sort

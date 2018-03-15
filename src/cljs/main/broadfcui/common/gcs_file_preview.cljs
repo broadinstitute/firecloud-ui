@@ -128,7 +128,33 @@
                                  (when-not (string/blank? (@refs "preview"))
                                    (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))})
 
+(react/defc DOSPreviewDialog
+  {:component-will-mount
+   (fn [{:keys [state props]}]
+     (let [{:keys [dos-uri]} props]
+       (swap! state assoc :translating-dos? true)
+       (ajax/call-martha dos-uri
+         {:on-done (fn [{:keys [success? raw-response status-text]}]
+                     (swap! state assoc
+                       :translating-dos? false
+                       :loading? true
+                       :response (if success?
+                                   {:data raw-response}
+                                   {:error status-text})))})))
+   :render
+   (fn [{:keys [state props]}]
+     (let [{:keys [data error]} (:response @state)]
+       (if-let [parsed (common/parse-gcs-uri data)]
+         [PreviewDialog (assoc parsed
+                          :dismiss #(swap! state dissoc :showing-preview?))]
+         [PreviewDialog props])))})
 
+(react/defc FilePreviewLink
+  {:render
+   (fn [{:keys [state props]}]
+     (if (:dos-uri props)
+       [DOSFilePreviewLink props]
+       [GCSFilePreviewLink props]))})
 
 (react/defc GCSFilePreviewLink
   {:render
@@ -149,22 +175,16 @@
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
 
 (react/defc DOSFilePreviewLink
-  {:component-did-mount
+  {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [workspace-bucket dos-uri]} props]
-       (ajax/call-martha dos-uri
-         {:on-done (fn [{:keys [success? status-code raw-response status-text]}]
-                     (if success?
-                       (swap! state assoc :gcs-uri raw-response :error :false)
-                       (swap! state assoc :error :true :error-message status-text)))})))
-   :render
-   (fn [{:keys [state props]}]
-     (case (:error @state)
-       nil (spinner "Translating DOS uri...")
-       :true (str "Error translating DOS uri: " (:error-message @state))
-       :false (let [{:keys [workspace-bucket gcs-uri attributes]} props]
-                (let [parsed (common/parse-gcs-uri gcs-uri)]
-                  [GCSFilePreviewLink
-                   (assoc parsed
-                     :workspace-bucket workspace-bucket
-                     :attributes attributes)]))))})
+     (let [{:keys [dos-uri link-label]} props]
+       [:div (or (:attributes props) {})
+        (when (:showing-preview? @state)
+          [DOSPreviewDialog (assoc props
+                              :dos-uri dos-uri
+                              :dismiss #(swap! state dissoc :showing-preview?))])
+        [:a {:href dos-uri
+             :onClick (fn [e]
+                        (.preventDefault e)
+                        (swap! state assoc :showing-preview? true))}
+         (if link-label (str link-label) dos-uri)]]))})

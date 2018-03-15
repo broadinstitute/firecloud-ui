@@ -110,6 +110,15 @@
 (defn gcs-object->google-url [bucket object]
   (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" (js/encodeURIComponent object) "?alt=media"))
 
+(defn dos-or-gcs-uri? [raw-uri]
+  (when (string? raw-uri)
+    (cond
+      (string/starts-with? "dos://" raw-uri)
+      {:dos-uri raw-uri}
+      (string/starts-with? "gs://" raw-uri)
+      (parse-gcs-uri raw-uri)
+      :else {})))
+
 (defn parse-gcs-uri [gcs-uri]
   (when (string? gcs-uri)
     (let [matcher (re-find #"^gs://([^/]+)/(.+)" gcs-uri)]
