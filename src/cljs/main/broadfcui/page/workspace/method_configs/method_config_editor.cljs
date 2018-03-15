@@ -196,7 +196,7 @@
                                                   (if success?
                                                     (swap! state assoc
                                                            :methods-response nil
-                                                           :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))})
+                                                           :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}) ; TODO: why are we using a map instead of a snapshot list?
                                                     (swap! state assoc :error-message status-text)))})))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
