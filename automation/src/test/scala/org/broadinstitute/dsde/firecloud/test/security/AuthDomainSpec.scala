@@ -11,6 +11,7 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.openqa.selenium.WebDriver
 import org.scalatest._
 
 /*
@@ -58,12 +59,10 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>
           withCleanUp {
-
             withSignIn(user) { listPage =>
               val workspaceName = "AuthDomainSpec_create_" + randomUuid
-              register cleanUp api.workspaces.delete(projectName, workspaceName)
               val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName))
-
+              register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
               workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)
             }
           }
@@ -75,17 +74,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-            withCleanUp {
-              withSignIn(user) { listPage =>
-                val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-
+            withSignIn(user) { listPage =>
+              val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+              val cloneModal = summaryPage.clickCloneButton()
+              cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
+              withCleanUp {
                 val cloneWorkspaceName = workspaceName + "_clone"
-                val cloneModal = summaryPage.clickCloneButton()
-                cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
-
-                register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authToken)
-
                 val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+                register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
                 cloneSummaryPage.validateWorkspace shouldEqual true
                 cloneSummaryPage.readAuthDomainGroups should include(authDomainName)
               }
@@ -197,9 +193,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
-                register cleanUp api.workspaces.delete(projectName, workspaceName)
                 val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
-
+                register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                 workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
                 workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)
               }
@@ -216,14 +211,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               withCleanUp {
                 withSignIn(user) { listPage =>
                   val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                  val cloneWorkspaceName = workspaceName + "_clone"
+
                   val cloneModal = summaryPage.clickCloneButton()
                   cloneModal.readLockedAuthDomainGroups() should contain(groupOneName)
                   cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)
 
-                  register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
-
+                  val cloneWorkspaceName = workspaceName + "_clone"
                   val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+                  register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
                   cloneSummaryPage.validateWorkspace shouldEqual true
                   cloneSummaryPage.readAuthDomainGroups should include(groupOneName)
                   cloneSummaryPage.readAuthDomainGroups should include(groupTwoName)
@@ -246,7 +241,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
                     val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
 
                     summaryPage.cloneWorkspace(projectName, cloneWorkspaceName, Set(groupThreeName))
-
                     register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(user.makeAuthToken())
 
                     summaryPage.readAuthDomainGroups should include(groupOneName)
@@ -282,8 +276,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             withCleanUp {
               withSignIn(user) { workspaceListPage =>
                 val workspaceName = "AuthDomainSpec_create_" + randomUuid
-                register cleanUp api.workspaces.delete(projectName, workspaceName)
                 val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
+                register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
 
                 workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
                 workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)
@@ -605,6 +599,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
               register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
