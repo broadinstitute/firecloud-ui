@@ -149,13 +149,6 @@
                           :dismiss #(swap! state dissoc :showing-preview?))]
          [PreviewDialog props])))})
 
-(react/defc FilePreviewLink
-  {:render
-   (fn [{:keys [state props]}]
-     (if (:dos-uri props)
-       [DOSFilePreviewLink props]
-       [GCSFilePreviewLink props]))})
-
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
@@ -188,3 +181,10 @@
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
          (if link-label (str link-label) dos-uri)]]))})
+
+(react/defc FilePreviewLink
+  {:render
+   (fn [{:keys [state props]}]
+     (if (:dos-uri props)
+       [DOSFilePreviewLink props]
+       [GCSFilePreviewLink props]))})
