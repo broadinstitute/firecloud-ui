@@ -7,11 +7,13 @@ import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
-import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.{AclEntry, RestException, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+
+import scala.util.Try
 
 /*
  * This test SHOULD be able to run with ParallelTestExecution. However, Rawls
@@ -552,7 +554,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-        register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
+          case _: RestException =>
+        }
 
         withGroup("AuthDomain", List(user.email)) { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
@@ -578,7 +582,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           checkVisibleNotAccessible(user, projectName, workspaceName)
 
           api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-          register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+          register cleanUp Try(api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)).recover {
+            case _: RestException =>
+          }
           checkVisibleAndAccessible(user, projectName, workspaceName)
 
           api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -596,7 +602,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       withCleanBillingProject(creator) { projectName =>
         api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-        register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+        register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
+          case _: RestException =>
+        }
 
         withGroup("AuthDomain") { groupName =>
           withCleanUp {
@@ -651,7 +659,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-            register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
+              case _: RestException =>
+            }
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -676,7 +686,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             checkVisibleNotAccessible(user, projectName, workspaceName)
 
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-            register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            register cleanUp Try(api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)).recover {
+              case _: RestException =>
+            }
             checkVisibleAndAccessible(user, projectName, workspaceName)
 
             api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
@@ -698,7 +710,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
               api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-              register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+              register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
+                case _: RestException =>
+              }
               checkVisibleNotAccessible(user, projectName, workspaceName)
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
@@ -724,7 +738,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         withGroup("AuthDomain") { groupName =>
           withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
             api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-            register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            register cleanUp Try(api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)).recover {
+              case _: RestException =>
+            }
             checkNoAccess(user, projectName, workspaceName)
 
             api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -754,7 +770,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               checkNoAccess(user, projectName, workspaceName)
 
               api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-              register cleanUp api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+              register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
+                case _: RestException =>
+              }
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
