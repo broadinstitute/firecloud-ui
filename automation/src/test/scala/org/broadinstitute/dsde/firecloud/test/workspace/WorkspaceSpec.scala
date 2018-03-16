@@ -10,9 +10,11 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.{AclEntry, RestException, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+
+import scala.util.Try
 
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures
   with CleanUp with Matchers {
@@ -86,7 +88,12 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
       "should be able to delete the workspace" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
-        withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
+        withWorkspace(billingProject, "WorkspaceSpec_delete", cleanUp = false) { workspaceName =>
+          // special cleanup because it is expected to fail as it should already be deleted
+          register cleanUp Try(api.workspaces.delete(billingProject, workspaceName)).recover {
+            case _: RestException =>
+          }
+
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             detailPage.deleteWorkspace()
