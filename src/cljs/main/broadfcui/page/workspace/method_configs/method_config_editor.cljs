@@ -80,20 +80,14 @@
                                                                              {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))}))
            "dockstore" (let [path (:methodPath method)
                              version (:methodVersion method)]
-                         (ajax/call {:url (str (config/dockstore-url-root)
-                                               "/api/ga4gh/v1/tools/%23workflow%2F"
-                                               (js/encodeURIComponent path)
-                                               "/versions/"
-                                               (js/encodeURIComponent version)
-                                               "/WDL/descriptor")
-                                     :method "GET"
-                                     :on-done (fn [{:keys [success? get-parsed-response]}]
-                                                (if success?
-                                                  (swap! state assoc :loaded-method {:name (js/decodeURIComponent path)
-                                                                                     :snapshotId version
-                                                                                     :entityType "Workflow"
-                                                                                     :payload (:descriptor (get-parsed-response))} :redacted? false)
-                                                  (swap! state assoc :loaded-method nil :redacted? true)))}))))))})
+                         (endpoints/dockstore-get-wdl path version
+                                                      (fn [{:keys [success? get-parsed-response]}]
+                                                        (if success?
+                                                          (swap! state assoc :loaded-method {:name (js/decodeURIComponent path)
+                                                                                             :snapshotId version
+                                                                                             :entityType "Workflow"
+                                                                                             :payload (:descriptor (get-parsed-response))} :redacted? false)
+                                                          (swap! state assoc :loaded-method nil :redacted? true)))))))))})
 
 
 (react/defc- Sidebar
@@ -190,17 +184,13 @@
                                       ;; FIXME: :error-message is unused
                                       (swap! state assoc :error-message status-text))))})
              "dockstore" (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
-                           (ajax/call {:url (str (config/dockstore-url-root)
-                                                 "/api/ga4gh/v1/tools/%23workflow%2F"
-                                                 (js/encodeURIComponent path)
-                                                 "/versions")
-                                       :method "GET"
-                                       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                                                  (if success?
-                                                    (swap! state assoc
-                                                           :methods-response nil
-                                                           :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}) ; TODO: why are we using a map instead of a snapshot list?
-                                                    (swap! state assoc :error-message status-text)))})))))))
+                           (endpoints/dockstore-get-versions path
+                                                             (fn [{:keys [success? get-parsed-response status-text]}]
+                                                               (if success?
+                                                                 (swap! state assoc
+                                                                        :methods-response nil
+                                                                        :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}) ; TODO: key by method URI?
+                                                                 (swap! state assoc :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])

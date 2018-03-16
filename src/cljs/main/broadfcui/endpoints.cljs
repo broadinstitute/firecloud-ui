@@ -2,6 +2,7 @@
   (:require
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.config :as config]
    ))
 
 
@@ -457,3 +458,20 @@
     :on-done on-done}
    :service-prefix "/version"))
 
+(defn dockstore-get-wdl [method-path method-version on-done]
+  (ajax/call {:url (str (config/dockstore-url-root)
+                        "/api/ga4gh/v1/tools/%23workflow%2F"
+                        (js/encodeURIComponent method-path)
+                        "/versions/"
+                        (js/encodeURIComponent method-version)
+                        "/WDL/descriptor")
+              :method "GET"
+              :on-done on-done}))
+
+(defn dockstore-get-versions [method-path on-done]
+  (ajax/call {:url (str (config/dockstore-url-root)
+                        "/api/ga4gh/v1/tools/%23workflow%2F"
+                        (js/encodeURIComponent method-path)
+                        "/versions")
+              :method "GET"
+              :on-done on-done}))
