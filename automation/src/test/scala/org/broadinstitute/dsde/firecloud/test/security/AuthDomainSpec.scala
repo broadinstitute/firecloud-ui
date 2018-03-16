@@ -616,7 +616,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               checkVisibleNotAccessible(user, projectName, workspaceName)
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-              register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -726,7 +725,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               checkVisibleNotAccessible(user, projectName, workspaceName)
 
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-              register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
               checkVisibleAndAccessible(user, projectName, workspaceName)
 
               api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
@@ -778,7 +776,6 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           withCleanUp {
             withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupName)) { workspaceName =>
               api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-              register cleanUp api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
               checkNoAccess(user, projectName, workspaceName)
 
               api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
