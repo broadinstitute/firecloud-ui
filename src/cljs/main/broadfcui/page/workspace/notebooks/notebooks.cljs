@@ -278,7 +278,8 @@
                                 :content
                                 [:div {:style {:width 700}}
                                  [:span {} (str "Cluster " (:clusterName errored-cluster-to-show) " failed with message:")]
-                                 [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                 [:div {:data-test-id "error-text"
+                                        :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                                 :fontSize "90%" :maxHeight 206
                                                 :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
                                   (:errorMessage (first (:errors errored-cluster-to-show)))]]}])
