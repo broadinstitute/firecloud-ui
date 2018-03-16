@@ -69,6 +69,11 @@
                       :render render-name}
                      {:header "Root Entity Type" :initial-width 140
                       :column-data :rootEntityType}
+                     {:header "Method Source" :initial-width 120
+                      :render (fn [config]
+                                (let [repo (:sourceRepo (:methodRepoMethod config))
+                                      copy (if (= repo "dockstore") "Dockstore" "FireCloud")] ; Agora = "the FireCloud method repo"
+                                  [:span {:style {:fontWeight 200}} copy]))}
                      {:header "Method" :initial-width 800
                       :column-data (comp (juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
