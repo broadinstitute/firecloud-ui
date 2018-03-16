@@ -1,5 +1,6 @@
 (ns broadfcui.common
   (:require
+   [clojure.string :as string]
    [dmohs.react :as react]
    [broadfcui.config :as config]
    ))
@@ -110,6 +111,13 @@
 (defn gcs-object->google-url [bucket object]
   (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" (js/encodeURIComponent object) "?alt=media"))
 
+(defn parse-gcs-uri [gcs-uri]
+  (when (string? gcs-uri)
+    (let [matcher (re-find #"^gs://([^/]+)/(.+)" gcs-uri)]
+      (when (= 3 (count matcher)) ;; first match will be the whole thing
+        {:bucket-name (matcher 1)
+         :object (matcher 2)}))))
+
 (defn dos-or-gcs-uri? [raw-uri]
   (when (string? raw-uri)
     (cond
@@ -118,13 +126,6 @@
       (string/starts-with? "gs://" raw-uri)
       (parse-gcs-uri raw-uri)
       :else {})))
-
-(defn parse-gcs-uri [gcs-uri]
-  (when (string? gcs-uri)
-    (let [matcher (re-find #"^gs://([^/]+)/(.+)" gcs-uri)]
-      (when (= 3 (count matcher)) ;; first match will be the whole thing
-        {:bucket-name (matcher 1)
-         :object (matcher 2)}))))
 
 (defn gcs-uri->download-url [gcs-uri]
   (when-let [parsed (parse-gcs-uri gcs-uri)]
