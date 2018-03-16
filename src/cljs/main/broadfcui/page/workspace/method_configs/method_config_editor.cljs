@@ -64,7 +64,8 @@
    :load-method-from-repo
    (fn [{:keys [props state]} & [method-ref]]
      (let [method (or method-ref (:methodRepoMethod props))]
-       (let [repo (:sourceRepo method)]
+       (let [repo (:sourceRepo method)
+             repo-label (if (= repo "dockstore") "Dockstore" "FireCloud")]
          (assert (some? repo) "Caller must specify source repo for method")
          (case repo
            "agora" (let [namespace (:methodNamespace method)
@@ -75,7 +76,7 @@
                        :headers ajax/content-type=json
                        :on-done (fn [{:keys [success? get-parsed-response]}]
                                   (if success?
-                                    (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
+                                    (swap! state assoc :loaded-method (assoc (get-parsed-response) :sourceRepo repo :repoLabel repo-label) :redacted? false)
                                     (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
                                                                              {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))}))
            "dockstore" (let [path (:methodPath method)
@@ -83,8 +84,10 @@
                          (endpoints/dockstore-get-wdl path version
                                                       (fn [{:keys [success? get-parsed-response]}]
                                                         (if success?
-                                                          (swap! state assoc :loaded-method {:name (js/decodeURIComponent path)
-                                                                                             :snapshotId version
+                                                          (swap! state assoc :loaded-method {:sourceRepo repo
+                                                                                             :repoLabel repo-label
+                                                                                             :methodPath (js/decodeURIComponent path)
+                                                                                             :methodVersion version
                                                                                              :entityType "Workflow"
                                                                                              :payload (:descriptor (get-parsed-response))} :redacted? false)
                                                           (swap! state assoc :loaded-method nil :redacted? true)))))))))})

@@ -45,6 +45,7 @@
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
            {:keys [redacted-snapshot]} @state
+           repo (:sourceRepo entity)
            make-field
            (fn [key label & {:keys [dropdown? wrap? render width]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
@@ -57,7 +58,10 @@
                                                      :style {:width 120}
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                 #(f (common/get-trimmed-text refs "snapshotId")))} ; could be a string now
+                                                                   (case repo
+                                                                     ;; this is silly, but I cannot use let because react prohibits accessing dom nodes in render
+                                                                     "agora" #(f (int (common/get-trimmed-text refs "snapshotId")))
+                                                                     "dockstore" #(f (common/get-trimmed-text refs "snapshotId"))))}
                    (:snapshots props)
                    redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
@@ -68,17 +72,21 @@
           (when redacted?
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
              (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
-          (make-field :namespace "Namespace")
-          (make-field :name "Name")
-          (make-field :snapshotId "Snapshot ID" :dropdown? true)
-          (make-field :entityType "Entity Type")]
-         (when-not redacted?
+          (case repo
+            "agora" [:div {} (make-field :namespace "Namespace")
+                    (make-field :name "Name")
+                    (make-field :snapshotId "Snapshot ID" :dropdown? true)]
+            "dockstore" [:div {} (make-field :methodPath "Path")
+                                             (make-field :methodVersion "Version")])
+          (make-field :entityType "Entity Type")
+          (make-field :repoLabel "Source")]
+         (when-not (or redacted? (= repo "dockstore"))
            [:div {:style {:flex "1 1 60%" :overflow "hidden"}}
             (make-field :createDate "Created" :render common/format-date :width "150px")
             (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true :width "150px")
             (make-field :synopsis "Synopsis" :width "150px")
             (make-field :snapshotComment "Snapshot Comment" :wrap? true :width "150px")])]
-        (when-not redacted?
+        (when-not (or redacted? (= repo "dockstore"))
           [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
            "Documentation:"
            (if (string/blank? (:documentation entity))

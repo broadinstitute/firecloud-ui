@@ -68,7 +68,7 @@
 
 
 (defn list-workspace-method-configs [workspace-id]
-  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs?allRepos=true") ; allRepos should NOT merge with GAWB-3197, but rather GAWB-3106
+  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs?allRepos=true")
    :method :get})
 
 (defn post-workspace-method-config [workspace-id]
