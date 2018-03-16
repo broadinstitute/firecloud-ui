@@ -107,6 +107,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
+          assert(submissionTab.verifyWorkflowSucceeded())
           workspaceDataTab.open
           //there is at least one filter bug - possibly two that was breaking the tests
           //1) Not sure if bug or not: filter from launch analysis modal is still present when data tab revisited
@@ -144,6 +145,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
+          assert(submissionTab.verifyWorkflowSucceeded())
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "output")
@@ -181,6 +183,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
+          assert(submissionTab.verifyWorkflowSucceeded())
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
@@ -219,9 +222,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
           submissionTab.waitUntilSubmissionCompletes()
-          if (submissionTab.readWorkflowStatus() != "Succeeded") {
-            submissionTab.readStatusMessage() shouldEqual ""
-          }
+          assert(submissionTab.verifyWorkflowSucceeded())
           val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           workspaceDataTab.dataTable.clearFilter()
           workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test3", "output")
