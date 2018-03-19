@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.workbench.service.RestException
 
 import scala.util.Try
 
-class AuthDomainRemovePermission extends AuthDomainSpecBase {
+class AuthDomainPermissionSpec extends AuthDomainSpecBase {
 
 
   "removing permissions from billing project owners for workspaces with auth domains" - {
