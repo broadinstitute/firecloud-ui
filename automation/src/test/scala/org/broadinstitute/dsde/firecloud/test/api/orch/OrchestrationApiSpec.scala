@@ -116,7 +116,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
 
       val user: Credentials = UserPool.chooseStudent
 
-      withBillingProject("auto-goog-role") { projectName =>
+      withCleanBillingProject(ownerUser) { projectName =>
         roles foreach { role =>
           val addEx = intercept[RestException] {
             Orchestration.billing.addGoogleRoleToBillingProjectUser(projectName, user.email, role)(ownerToken)
@@ -128,7 +128,7 @@ class OrchestrationApiSpec extends FreeSpec with Matchers with ScalaFutures with
           }
           removeEx.getMessage should include(role)
         }
-      }(ownerToken)
+      }
     }
 
     "should not allow access alteration by non-owners" in {
