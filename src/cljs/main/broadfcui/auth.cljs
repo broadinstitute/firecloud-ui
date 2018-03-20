@@ -214,19 +214,20 @@
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]
-        [:div {:style {:color (:state-exception style/colors)}}
-         "Error loading user information. Please try again later."])])
+        [:div {:style {:color (:state-exception style/colors) :lineHeight "2rem"}}
+         "Error loading user information. Please try again later." [:br]
+         (str "("(:message (:error @state)) ")")])])
    :component-did-mount
    (fn [{:keys [props state]}]
      (ajax/call-orch "/me"
-                     {:on-done (fn [{:keys [success? status-code]}]
+                     {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
                                  (if success?
                                    ((:on-success props))
                                    (case status-code
                                      403 (swap! state assoc :error :not-active)
                                      ;; 404 means "not yet registered"
                                      404 ((:on-success props))
-                                     (swap! state assoc :error true))))}
+                                     (swap! state assoc :error (get-parsed-response)))))}
                      :service-prefix ""))})
 
 (react/defc RefreshCredentials
