@@ -153,15 +153,7 @@
        (if-let [parsed (common/parse-gcs-uri (utils/log data))]
          [PreviewDialog (assoc parsed
                           :dismiss #(swap! state dissoc :showing-preview?))]
-         [PreviewDialog (assoc props :object "")]))))})
-                                   {:error status-text})))})))
-   :render
-   (fn [{:keys [state props]}]
-     (let [{:keys [data error]} (:response @state)]
-       (if-let [parsed (common/parse-gcs-uri data)]
-         [PreviewDialog (assoc parsed
-                          :dismiss #(swap! state dissoc :showing-preview?))]
-         [PreviewDialog props])))})
+         [PreviewDialog (assoc props {:error status-text})]))))})
 
 (react/defc GCSFilePreviewLink
   {:render
