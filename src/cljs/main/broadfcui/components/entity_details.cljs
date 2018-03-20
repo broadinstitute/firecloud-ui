@@ -12,8 +12,11 @@
 
 (react/defc EntityDetails
   {:get-fields
-   (fn [{:keys [refs]}]
-     {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))}) ; TODO?
+   (fn [{:keys [props refs]}]
+     (let [repo (:sourceRepo (:entity props))]
+       (case repo
+         "agora" {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))}
+         "dockstore" {"methodVersion" (common/get-trimmed-text refs "methodVersion")})))
    :clear-redacted-snapshot
    (fn [{:keys [state]}]
      (swap! state dissoc :redacted-snapshot))
