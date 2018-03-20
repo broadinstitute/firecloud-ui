@@ -3,6 +3,7 @@
    [clojure.string :as string]
    [dmohs.react :as react]
    [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -121,11 +122,11 @@
 (defn dos-or-gcs-uri? [raw-uri]
   (when (string? raw-uri)
     (cond
-      (string/starts-with? "dos://" raw-uri)
+      (string/starts-with? raw-uri "dos://")
       {:dos-uri raw-uri}
-      (string/starts-with? "gs://" raw-uri)
+      (string/starts-with? raw-uri "gs://")
       (parse-gcs-uri raw-uri)
-      :else {})))
+      :else false)))
 
 (defn gcs-uri->download-url [gcs-uri]
   (when-let [parsed (parse-gcs-uri gcs-uri)]

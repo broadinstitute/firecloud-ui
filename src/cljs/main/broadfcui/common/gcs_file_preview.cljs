@@ -21,6 +21,7 @@
      (let [{:keys [dismiss object bucket-name]} props]
        [modals/OKCancelForm
         {:header "File Details"
+         :data-test-id "preview-modal"
          :dismiss dismiss
          :content
          (let [{:keys [data error status]} (:response @state)
@@ -28,17 +29,17 @@
                cost (:estimatedCostUSD data)
                labeled (fn [label & contents]
                          [:div {}
-                          [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
-                          contents])
+                          [:div {:style {:display "inline-block" :width 185} :data-test-id (str label)} (str label ": ")]
+                          [:span contents]])
                data-empty (or (= data-size "0") (string/blank? data-size))
-               bam? (re-find #"\.ba[mi]$" object)
+               bam? (re-find #"\.ba[mi]$" (utils/log object))
                img? (re-find #"\.(?:(jpe?g|png|gif|bmp))$" object)
                hide-preview? (or bam? img?)]
            [:div {:style {:width 700 :overflow "auto"}}
             (labeled "Google Bucket" bucket-name)
             (labeled "Object" object)
             [:div {:style {:marginTop "1em"}}
-             [:div {} (if hide-preview?
+             [:div {:data-test-id "preview-message"} (if hide-preview?
                         "Preview is not supported for this filetype."
                         "Previews may not be supported for some filetypes.")]
              (when (and (not hide-preview?) (> data-size preview-byte-count))
@@ -49,7 +50,7 @@
                (react/create-element
                 [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                               :fontSize "90%" :overflowY "auto" :maxHeight 206
-                                              :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+                                              :backgroundColor "#fff" :padding "1em" :borderRadius 8} :data-test-id "preview-pane"}
                  (str (if (> data-size preview-byte-count) "...") (:preview @state))]))]
             (when (:loading? @state)
               (spinner "Getting file info..."))
@@ -89,7 +90,7 @@
                   (links/create-internal {:onClick #(swap! state dissoc :show-details?)} "Collapse")]
                  (links/create-internal {:onClick #(swap! state assoc :show-details? true)} "More info"))])
             (when error
-              [:div {:style {:marginTop "1em"}}
+              [:div {:style {:marginTop "1em"} :data-test-id "error-message"}
                [:span {:style {:color (:state-exception style/colors)}} "Error! "]
                (case status
                  404 "This file was not found."
@@ -133,21 +134,26 @@
    (fn [{:keys [state props]}]
      (let [{:keys [dos-uri]} props]
        (swap! state assoc :translating-dos? true)
-       (ajax/call-martha dos-uri
-         {:on-done (fn [{:keys [success? raw-response status-text]}]
+       (ajax/call-martha (utils/->json-string {:url dos-uri, :pattern "gs://"})
+         {:on-done (fn [{:keys [success? raw-response xhr status-code]}]
                      (swap! state assoc
                        :translating-dos? false
                        :loading? true
                        :response (if success?
                                    {:data raw-response}
-                                   {:error status-text})))})))
+                                   {:error xhr
+                                    :status status-code})))})))
    :render
    (fn [{:keys [state props]}]
      (let [{:keys [data error]} (:response @state)]
-       (if-let [parsed (common/parse-gcs-uri data)]
+       (when (:translating-dos? @state)
+         (spinner "Translating dos uri..."))
+       (when (:response @state)
+       (utils/log (:response @state))
+       (if-let [parsed (common/parse-gcs-uri (utils/log data))]
          [PreviewDialog (assoc parsed
                           :dismiss #(swap! state dissoc :showing-preview?))]
-         [PreviewDialog props])))})
+         [PreviewDialog (assoc props :object "")]))))})
 
 (react/defc GCSFilePreviewLink
   {:render
