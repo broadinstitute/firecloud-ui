@@ -459,7 +459,7 @@
    :service-prefix "/version"))
 
 (defn dockstore-get-wdl [method-path method-version on-done]
-  (ajax/call {:url (str (config/dockstore-url-root)
+  (ajax/call {:url (str (config/dockstore-api-url)
                         "/api/ga4gh/v1/tools/%23workflow%2F"
                         (js/encodeURIComponent method-path)
                         "/versions/"
@@ -469,7 +469,7 @@
               :on-done on-done}))
 
 (defn dockstore-get-versions [method-path on-done]
-  (ajax/call {:url (str (config/dockstore-url-root)
+  (ajax/call {:url (str (config/dockstore-api-url)
                         "/api/ga4gh/v1/tools/%23workflow%2F"
                         (js/encodeURIComponent method-path)
                         "/versions")

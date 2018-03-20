@@ -7,6 +7,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 
@@ -36,7 +37,7 @@
            [:div {:style {:paddingTop "0.5rem"}}
             [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
             (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-              (if (:payload-expanded @state) "Collapse" "Expand"))
+                                   (if (:payload-expanded @state) "Collapse" "Expand"))
             (when (:payload-expanded @state)
               (if config?
                 [:div {:style {:margin "0.5rem 0 0 1rem"}}
@@ -79,7 +80,10 @@
             "agora" [:div {} (make-field :namespace "Namespace")
                      (make-field :name "Name")
                      (make-field :snapshotId "Snapshot ID" :dropdown? true)]
-            "dockstore" [:div {} (make-field :methodPath "Path")
+            "dockstore" [:div {}
+                         (make-field :methodPath "Path"
+                                     :render (fn [path] (links/create-external
+                                                         {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path)))
                          (make-field :methodVersion "Version" :dropdown? true)])
           (make-field :entityType "Entity Type")
           (make-field :repoLabel "Source")]
