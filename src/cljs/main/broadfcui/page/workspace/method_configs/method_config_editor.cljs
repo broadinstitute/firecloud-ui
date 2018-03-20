@@ -192,7 +192,8 @@
                                                                (if success?
                                                                  (swap! state assoc
                                                                         :methods-response nil
-                                                                        :methods {[methodNamespace methodName] (mapv :name (get-parsed-response))}) ; TODO: key by method URI?
+                                                                        ;; vector only used when checking redaction, N/A for Dockstore
+                                                                        :methods {[nil nil] (mapv :name (get-parsed-response))})
                                                                  (swap! state assoc :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]

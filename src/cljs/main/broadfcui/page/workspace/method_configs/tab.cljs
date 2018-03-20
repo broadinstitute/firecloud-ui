@@ -18,7 +18,8 @@
 
 (defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
-        {:keys [methodName methodNamespace methodVersion methodPath sourceRepo]} methodRepoMethod
+        {:keys [methodName methodNamespace methodVersion sourceRepo]} methodRepoMethod
+        ;; TODO: make snapshots a list of method URIs, compare with (:methodUri methodRepoMethod)
         snapshots (set (get methods [methodNamespace methodName]))]
     (assert (some? sourceRepo) "Caller must specify source repo for method")
     (case sourceRepo
