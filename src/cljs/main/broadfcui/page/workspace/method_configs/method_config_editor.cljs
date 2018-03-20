@@ -381,7 +381,7 @@
        ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
-         :payload method-ref ; needs to have sourceRepo, other new fields
+         :payload method-ref
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (let [response (get-parsed-response)]

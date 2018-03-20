@@ -13,7 +13,7 @@
 (react/defc EntityDetails
   {:get-fields
    (fn [{:keys [refs]}]
-     {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))})
+     {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))}) ; TODO?
    :clear-redacted-snapshot
    (fn [{:keys [state]}]
      (swap! state dissoc :redacted-snapshot))
@@ -58,12 +58,12 @@
                                                      :style {:width 120}
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                   (case repo
-                                                                     ;; this is silly, but I cannot use let because react prohibits accessing dom nodes in render
-                                                                     "agora" #(f (int (common/get-trimmed-text refs "snapshotId")))
-                                                                     "dockstore" #(f (common/get-trimmed-text refs "snapshotId"))))}
-                   (:snapshots props)
-                   redacted-snapshot)
+                                                                 (case repo
+                                                                   ;; this is silly, but I cannot use let because react prohibits accessing dom nodes in render
+                                                                   "agora" #(f (int (common/get-trimmed-text refs "snapshotId")))
+                                                                   "dockstore" #(f (common/get-trimmed-text refs "methodVersion"))))}
+                                                    (:snapshots props)
+                                                    redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
                    [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
        [:div {}
@@ -74,10 +74,10 @@
              (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
           (case repo
             "agora" [:div {} (make-field :namespace "Namespace")
-                    (make-field :name "Name")
-                    (make-field :snapshotId "Snapshot ID" :dropdown? true)]
+                     (make-field :name "Name")
+                     (make-field :snapshotId "Snapshot ID" :dropdown? true)]
             "dockstore" [:div {} (make-field :methodPath "Path")
-                                             (make-field :methodVersion "Version")])
+                         (make-field :methodVersion "Version" :dropdown? true)])
           (make-field :entityType "Entity Type")
           (make-field :repoLabel "Source")]
          (when-not (or redacted? (= repo "dockstore"))
