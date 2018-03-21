@@ -80,5 +80,6 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   def abortSubmission(): Unit = {
     submissionAbortButton.doClick()
     submissionAbortModalConfirmButton.doClick()
+    awaitReady()
   }
 }
