@@ -1,12 +1,14 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
+import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.auth.{AuthToken, TrialBillingAccountAuthToken}
-import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Thurloe}
+import org.broadinstitute.dsde.workbench.auth.{AuthToken, ServiceAccountAuthTokenFromPem, TrialBillingAccountAuthToken}
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
+import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Rawls, Thurloe}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
@@ -62,6 +64,10 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
         setUpEnabledUserAndProject(testUser)
+        val trialAuthToken = TrialBillingAccountAuthToken()
+        api.trial.reportTrialProjects().foreach { x =>
+          register cleanUp Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value), WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())
+        }
 
         withSignIn(testUser) { _ =>
           await ready new WorkspaceListPage()
@@ -99,7 +105,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         assert(userHasTheRightBillingProject)
 
         // Verify that the user's project is removed from the account upon termination
-        val trialAuthToken = TrialBillingAccountAuthToken()
         val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
         assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
 

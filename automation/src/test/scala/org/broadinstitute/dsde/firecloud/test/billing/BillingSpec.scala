@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.billing
 
 import java.util.UUID
 
+import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
@@ -9,7 +10,8 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.{Rawls, Google}
+import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
+import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -32,7 +34,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           logger.info(s"Creating billing project: $billingProjectName")
 
           billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
-          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(UserPool.chooseAdmin.makeAuthToken())
+          register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(userOwner.makeAuthToken().value), WorkbenchUserId("0"), WorkbenchEmail(userOwner.email), 3600))(UserPool.chooseAdmin.makeAuthToken())
 
           val status = billingPage.waitForCreateCompleted(billingProjectName)
           withClue(s"Creating billing project: $billingProjectName") { status shouldEqual "success" }
