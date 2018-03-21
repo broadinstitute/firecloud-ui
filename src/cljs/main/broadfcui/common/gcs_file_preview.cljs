@@ -136,6 +136,8 @@
        (swap! state assoc :translating-dos? true)
        (ajax/call-martha (utils/->json-string {:url dos-uri, :pattern "gs://"})
          {:on-done (fn [{:keys [success? raw-response xhr status-code]}]
+                     (utils/log status-code)
+                     (utils/log xhr)
                      (swap! state assoc
                        :translating-dos? false
                        :loading? true
@@ -153,7 +155,7 @@
        (if-let [parsed (common/parse-gcs-uri (utils/log data))]
          [PreviewDialog (assoc parsed
                           :dismiss #(swap! state dissoc :showing-preview?))]
-         [PreviewDialog (assoc props {:error status-text})]))))})
+         [PreviewDialog (assoc props :error error :object "")]))))})
 
 (react/defc GCSFilePreviewLink
   {:render
