@@ -70,10 +70,9 @@
                      {:header "Root Entity Type" :initial-width 140
                       :column-data :rootEntityType}
                      {:header "Method Source" :initial-width 130
-                      :column-data (comp :sourceRepo :methodRepoMethod)
-                      :render (fn [repo]
-                                [:span {:style {:fontWeight 200}}
-                                 (if (= repo "dockstore") "Dockstore" "FireCloud")])}
+                      :column-data #(let [repo (get-in % [:methodRepoMethod :sourceRepo])]
+                                      (if (= repo "dockstore") "Dockstore" "FireCloud"))
+                      :render (fn [repo] [:span {:style {:fontWeight 200}} repo])}
                      {:header "Method" :initial-width 800
                       :column-data (comp (juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
