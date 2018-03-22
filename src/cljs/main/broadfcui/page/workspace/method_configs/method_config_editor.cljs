@@ -79,8 +79,11 @@
                                                     :repoLabel "FireCloud")
                                    :redacted? false)
                             (swap! state assoc
-                                   :loaded-method (assoc (select-keys method [:name :namespace :entityType])
-                                                    :snapshotId (str methodVersion " (redacted)"))
+                                   :loaded-method {:namespace methodNamespace
+                                                   :name methodName
+                                                   :snapshotId (str methodVersion " (redacted)")
+                                                   :sourceRepo repo
+                                                   :repoLabel "FireCloud"}
                                    :redacted? true)))}))
            "dockstore"
            (let [{:keys [methodPath methodVersion]} method]
