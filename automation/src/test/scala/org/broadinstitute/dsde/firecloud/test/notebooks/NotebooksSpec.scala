@@ -79,64 +79,6 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
             checkJupyterPageAndDelete()
           }
         }
-
-//        //dataproc names must be lower case
-//        val clusterName = "notebooksspec-" + UUID.randomUUID()
-//        val notebooksPage = new WorkspaceNotebooksPage(billingProject, workspaceName).open
-//
-//        retry[String](100.milliseconds, 1.minute)({
-//          logger.info("Attempting to create dataproc cluster")
-//          val createModal = notebooksPage.openCreateClusterModal
-//          createModal.createCluster(clusterName)
-//          createModal.awaitDismissed
-//          assert(notebooksPage.getClusterStatus(clusterName) == "Creating")
-//          logger.info("Creating dataproc cluster " + clusterName)
-//          notebooksPage.waitUntilClusterIsDoneCreating(clusterName)
-//          Some(notebooksPage.getClusterStatus(clusterName))
-//        }) match {
-//          case Some("Running") => {
-//
-//          }
-//          case Some("View Error") => {
-//            //open cluster error modal and get error text
-//            logger.info(s"Cluster $clusterName errored with Message $errorMessage")
-//          }
-//          case Some(s) =>
-//        }
-//
-//        // cluster creation
-//        // add a retry in case cluster creation failed for some transient reason
-//          notebooksPage.openDeleteClusterModal(clusterName).deleteCluster
-//          logger.info("Deleting errored dataproc cluster " + clusterName)
-//          notebooksPage.waitUntilClusterIsDeleted(clusterName)
-//          logger.info("Deleted errored dataproc cluster " + clusterName)
-//          await text notebooksPage.noClustersMessage
-//
-//          logger.info(s"Retrying dataproc cluster creation for $clusterName")
-//          val createModal = notebooksPage.openCreateClusterModal
-//          createModal.createCluster(clusterName)
-//          createModal.awaitDismissed
-//          assert(notebooksPage.getClusterStatus(clusterName) == "Creating")
-//          logger.info("Recreating dataproc cluster " + clusterName)
-//          notebooksPage.waitUntilClusterIsDoneCreating(clusterName)
-//
-//
-//
-//        logger.info("Created dataproc cluster " + clusterName)
-//        val jupyterPageResult: Try[WebDriver] = Try {
-//          notebooksPage.openJupyterPage(clusterName).returnToNotebooksList()
-//        }
-//
-//        //Cluster deletion
-//        logger.info("Attempting to delete dataproc cluster")
-//        notebooksPage.openDeleteClusterModal(clusterName).deleteCluster
-//        await condition (notebooksPage.getClusterStatus(clusterName) == "Deleting")
-//        logger.info("Deleting dataproc cluster " + clusterName)
-//        notebooksPage.waitUntilClusterIsDeleted(clusterName)
-//        await text notebooksPage.noClustersMessage
-//        logger.info("Deleted dataproc cluster " + clusterName)
-//
-//        jupyterPageResult.get
       }
     }
   }
