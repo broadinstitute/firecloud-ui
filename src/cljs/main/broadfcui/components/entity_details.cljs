@@ -63,7 +63,6 @@
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
                                                                  (case repo
-                                                                   ;; this is silly, but I cannot use let because react prohibits accessing dom nodes in render
                                                                    "agora" #(f (int (common/get-trimmed-text refs "snapshotId")))
                                                                    "dockstore" #(f (common/get-trimmed-text refs "methodVersion"))))}
                                                     (:snapshots props)
@@ -77,14 +76,16 @@
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
              (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
           (case repo
-            "agora" [:div {} (make-field :namespace "Namespace")
+            "agora" (list
+                     (make-field :namespace "Namespace")
                      (make-field :name "Name")
-                     (make-field :snapshotId "Snapshot ID" :dropdown? true)]
-            "dockstore" [:div {}
+                     (make-field :snapshotId "Snapshot ID" :dropdown? true))
+            "dockstore" (list
                          (make-field :methodPath "Path"
-                                     :render (fn [path] (links/create-external
-                                                         {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path)))
-                         (make-field :methodVersion "Version" :dropdown? true)])
+                                     :render (fn [path]
+                                               (links/create-external
+                                                 {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path)))
+                         (make-field :methodVersion "Version" :dropdown? true)))
           (make-field :entityType "Entity Type")
           (make-field :repoLabel "Source")]
          (when-not (or redacted? (= repo "dockstore"))

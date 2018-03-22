@@ -64,7 +64,7 @@
    (fn [{:keys [props state]} & [method-ref]]
      (let [method (or method-ref (:methodRepoMethod props))]
        (let [repo (:sourceRepo method)]
-         (assert (some? repo) "Caller must specify source repo for method")
+         (assert repo "Caller must specify source repo for method")
          (case repo
            "agora"
            (let [{:keys [methodNamespace methodName methodVersion]} method]
