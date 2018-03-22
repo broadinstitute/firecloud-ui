@@ -180,25 +180,27 @@
          (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])
                repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
            (case repo
-             "agora" (endpoints/call-ajax-orch
-                      {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
-                       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                                  (let [response (get-parsed-response)]
-                                    (if success?
-                                      (swap! state assoc
-                                             :methods-response response
-                                             :methods {[methodNamespace methodName] (mapv :snapshotId response)})
-                                      ;; FIXME: :error-message is unused
-                                      (swap! state assoc :error-message status-text))))})
-             "dockstore" (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
-                           (endpoints/dockstore-get-versions path
-                                                             (fn [{:keys [success? get-parsed-response status-text]}]
-                                                               (if success?
-                                                                 (swap! state assoc
-                                                                        :methods-response nil
-                                                                        ;; vector only used when checking redaction, N/A for Dockstore
-                                                                        :methods {[nil nil] (mapv :name (get-parsed-response))})
-                                                                 (swap! state assoc :error-message status-text))))))))))
+             "agora"
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+               :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                          (let [response (get-parsed-response)]
+                            (if success?
+                              (swap! state assoc
+                                     :methods-response response
+                                     :methods {[methodNamespace methodName] (mapv :snapshotId response)})
+                              ;; FIXME: :error-message is unused
+                              (swap! state assoc :error-message status-text))))})
+             "dockstore"
+             (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
+               (endpoints/dockstore-get-versions
+                path
+                (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc
+                           ;; vector only used when checking redaction, N/A for Dockstore
+                           :methods {[nil nil] (mapv :name (get-parsed-response))})
+                    (swap! state assoc :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -222,7 +224,7 @@
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
-           {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
+           {:keys [methodName methodNamespace]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
            can-compute (get-in props [:workspace :canCompute])]
