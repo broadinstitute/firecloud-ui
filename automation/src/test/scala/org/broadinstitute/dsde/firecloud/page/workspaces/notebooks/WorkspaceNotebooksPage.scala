@@ -40,8 +40,9 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     new JupyterPage().awaitLoaded()
   }
 
-  def waitUntilClusterIsRunning(clusterName: String) = {
-    await condition (getClusterStatus(clusterName) == "Running", 900)
+  def waitUntilClusterIsDoneCreating(clusterName: String) = {
+    //await condition (getClusterStatus(clusterName) == "Running", 900)
+    await condition (getClusterStatus(clusterName) == "Creating", 2000)
   }
 
   def waitUntilClusterIsDeleted(clusterName: String) = {
@@ -58,6 +59,13 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 
     openDeleteClusterModalButton.doClick()
     await ready new DeleteClusterModal(clusterName)
+  }
+
+  def openClusterErrorModal(clusterName: String): ClusterErrorModal = {
+    val viewErrorLink: Link = Link(clusterStatusId(clusterName))
+    await ready viewErrorLink
+    viewErrorLink.doClick()
+    await ready new ClusterErrorModal(clusterName)
   }
 
   def getClusterStatus(clusterName: String): String = {
@@ -153,6 +161,16 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
 class DeleteClusterModal(clusterName: String)(implicit webDriver: WebDriver) extends OKCancelModal("delete-cluster-modal") {
   def deleteCluster() = {
     submit
+  }
+}
+
+class ClusterErrorModal(clusterName: String)(implicit webDriver: WebDriver) extends OKCancelModal("cluster-error-modal") {
+
+  private val errorText = Label("error-text")
+
+  def getErrorText() = {
+    await ready errorText
+    errorText.getText
   }
 }
 
