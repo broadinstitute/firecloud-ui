@@ -89,7 +89,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   /**
     * page class for Submission Abort Confirmation modal
     */
-  class AbortSubmissionConfirmationModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal") {
+  class AbortSubmissionConfirmationModal(implicit webDriver: WebDriver) extends ConfirmModal {
 
     private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
 
