@@ -25,7 +25,6 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   private val workflowStatusLabel = Label("workflow-status")
   private val submissionIdLabel = Label("submission-id")
   private val submissionAbortButton = Button("submission-abort-button")
-  private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
   private val statusMessage = Label("status-message")
 
   private val WAITING_STATES = Array("Queued","Launching")
@@ -77,9 +76,34 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     }
   }
 
-  def abortSubmission(): Unit = {
+  def clickAbortButton(): AbortSubmissionConfirmationModal = {
     submissionAbortButton.doClick()
-    submissionAbortModalConfirmButton.doClick()
-    awaitReady()
+    await ready new AbortSubmissionConfirmationModal()
   }
+
+  def abortSubmission(): Unit = {
+    val confirmModal = clickAbortButton()
+    confirmModal.submit()
+  }
+
+  /**
+    * page class for Submission Abort Confirmation modal
+    */
+  class AbortSubmissionConfirmationModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal") {
+
+    private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
+
+    override def awaitReady(): Unit = {
+      await text "Are you sure you want to abort this submission?"
+    }
+
+    /**
+      * confirms abort submission
+      */
+    override def submit(): Unit = {
+      submissionAbortModalConfirmButton.doClick()
+      awaitDismissed()
+    }
+  }
+
 }
