@@ -30,9 +30,9 @@
                labeled (fn [label & contents]
                          [:div {}
                           [:div {:style {:display "inline-block" :width 185} :data-test-id (str label)} (str label ": ")]
-                          [:span contents]])
+                          contents])
                data-empty (or (= data-size "0") (string/blank? data-size))
-               bam? (re-find #"\.ba[mi]$" (utils/log object))
+               bam? (re-find #"\.ba[mi]$" object)
                img? (re-find #"\.(?:(jpe?g|png|gif|bmp))$" object)
                hide-preview? (or bam? img?)]
            [:div {:style {:width 700 :overflow "auto"}}
@@ -135,27 +135,30 @@
      (let [{:keys [dos-uri]} props]
        (swap! state assoc :translating-dos? true)
        (ajax/call-martha (utils/->json-string {:url dos-uri, :pattern "gs://"})
-         {:on-done (fn [{:keys [success? raw-response xhr status-code]}]
-                     (utils/log status-code)
-                     (utils/log xhr)
+         {:on-done (fn [{:keys [success? raw-response xhr status-code get-parsed-response]}]
                      (swap! state assoc
                        :translating-dos? false
                        :loading? true
+                       :showing-preview? true
                        :response (if success?
                                    {:data raw-response}
                                    {:error xhr
-                                    :status status-code})))})))
+                                    :status status-code
+                                    :raw-response raw-response
+                                    :success success?
+                                    :parse-response get-parsed-response})))})))
    :render
    (fn [{:keys [state props]}]
-     (let [{:keys [data error]} (:response @state)]
-       (when (:translating-dos? @state)
-         (spinner "Translating dos uri..."))
-       (when (:response @state)
-       (utils/log (:response @state))
-       (if-let [parsed (common/parse-gcs-uri (utils/log data))]
-         [PreviewDialog (assoc parsed
-                          :dismiss #(swap! state dissoc :showing-preview?))]
-         [PreviewDialog (assoc props :error error :object "")]))))})
+     (let [{:keys [data error status raw-response success parse-response status-text]} (:response @state)]
+       [:div (or (:attributes props) {})
+        (if (:translating-dos? @state)
+          (spinner "Translating dos uri...")
+          (when (:showing-preview? @state)
+            (if-let [parsed (common/parse-gcs-uri data)]
+              [PreviewDialog (assoc parsed
+                               :dismiss (:dismiss props))]
+              [PreviewDialog (assoc props :error error :object ""
+                               :dismiss (:dismiss props))])))]))})
 
 (react/defc GCSFilePreviewLink
   {:render
