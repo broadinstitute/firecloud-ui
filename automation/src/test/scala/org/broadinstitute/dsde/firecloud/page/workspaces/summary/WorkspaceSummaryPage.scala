@@ -38,6 +38,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val noBucketAccess = testId("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
   private val storageCostEstimate = Label("storage-cost-estimate")
+  private val googleBucket = Label("Google Bucket")
 
   def shouldWaitForBucketAccess : Boolean = {
     val elem = find(noBucketAccess)
@@ -98,6 +99,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       shareWorkspaceButton.doClick()
       await ready new AclEditor()
     }
+
   }
 
   private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
@@ -113,6 +115,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       newButton.doClick()
       awaitReady()
     }
+
+    def clickForPreviewPane(link: String): PreviewModal = {
+      click on LinkTextQuery(link)
+      await ready new PreviewModal("preview-modal")
+    }
+
   })
   import scala.language.reflectiveCalls
 
@@ -255,6 +263,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
 
+  def clickForPreview(link: String): PreviewModal = {
+    workspaceAttributesArea.ensureExpanded()
+    val previewPane = workspaceAttributesArea.getInner.clickForPreviewPane(link)
+    previewPane
+  }
+
   def edit(action: => Unit): Unit = {
     if (!isEditing)
       sidebar.clickEdit()
@@ -274,5 +288,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   def readWorkspaceTable: List[List[String]] = {
     workspaceAttributesArea.getInner.table.getData
+  }
+
+  def readWorkspaceTableLinks: List[String] = {
+    workspaceAttributesArea.getInner.table.getHref
   }
 }
