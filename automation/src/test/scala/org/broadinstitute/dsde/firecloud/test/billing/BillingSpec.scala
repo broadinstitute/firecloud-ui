@@ -90,6 +90,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
                 val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
                 register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
                 val detailPage = listPage.createWorkspace(billingProjectName, workspaceName)
+                detailPage.readWorkspace shouldEqual (billingProjectName, workspaceName)
               }
             }
           }
