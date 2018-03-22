@@ -58,10 +58,10 @@
            :style table-style/table-heavy
            :columns [{:id "redacted" :hidden? true :resizable? false :sortable? false :filterable? false :initial-width 30
                       :as-text (fn [config]
-                                 (when (:redacted config)
+                                 (when (:redacted? config)
                                    "The method snapshot referenced by this config has been redacted."))
                       :render (fn [config]
-                                (when (:redacted config)
+                                (when (:redacted? config)
                                   (icons/render-icon {:style {:alignSelf "center" :color (:state-warning style/colors)}} :warning)))}
                      {:header "Name" :initial-width 240
                       :as-text :name :sort-by :text
@@ -70,10 +70,10 @@
                      {:header "Root Entity Type" :initial-width 140
                       :column-data :rootEntityType}
                      {:header "Method Source" :initial-width 130
-                      :column-data (fn [config] (:sourceRepo (:methodRepoMethod config)))
+                      :column-data (comp :sourceRepo :methodRepoMethod)
                       :render (fn [repo]
-                                (let [copy (if (= repo "dockstore") "Dockstore" "FireCloud")] ; Agora = "the FireCloud method repo"
-                                  [:span {:style {:fontWeight 200}} copy]))}
+                                [:span {:style {:fontWeight 200}}
+                                 (if (= repo "dockstore") "Dockstore" "FireCloud")])}
                      {:header "Method" :initial-width 800
                       :column-data (comp (juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")

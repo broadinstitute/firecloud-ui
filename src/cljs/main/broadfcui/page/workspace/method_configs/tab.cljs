@@ -23,10 +23,8 @@
         snapshots (set (get methods [methodNamespace methodName]))]
     (assert (some? sourceRepo) "Caller must specify source repo for method")
     (case sourceRepo
-      "agora" (if (contains? snapshots methodVersion)
-                (assoc config :redacted false)
-                (assoc config :redacted true))
-      "dockstore" (assoc config :redacted false)))) ; Could get fancy later and call out for the WDL
+      "agora" (assoc config :redacted? (contains? snapshots methodVersion))
+      "dockstore" (assoc config :redacted? false)))) ; Could get fancy later and call out for the WDL
 
 (react/defc- MethodConfigurationsList
   {:reload

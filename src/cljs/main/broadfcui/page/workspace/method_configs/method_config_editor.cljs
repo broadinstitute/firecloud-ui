@@ -20,7 +20,6 @@
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
-   [broadfcui.config :as config]
    ))
 
 (defn- filter-empty [coll]
@@ -64,33 +63,38 @@
    :load-method-from-repo
    (fn [{:keys [props state]} & [method-ref]]
      (let [method (or method-ref (:methodRepoMethod props))]
-       (let [repo (:sourceRepo method)
-             repo-label (if (= repo "dockstore") "Dockstore" "FireCloud")]
+       (let [repo (:sourceRepo method)]
          (assert (some? repo) "Caller must specify source repo for method")
          (case repo
-           "agora" (let [namespace (:methodNamespace method)
-                         name (:methodName method)
-                         snapshotId (:methodVersion method)]
-                     (endpoints/call-ajax-orch
-                      {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-                       :headers ajax/content-type=json
-                       :on-done (fn [{:keys [success? get-parsed-response]}]
-                                  (if success?
-                                    (swap! state assoc :loaded-method (assoc (get-parsed-response) :sourceRepo repo :repoLabel repo-label) :redacted? false)
-                                    (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
-                                                                             {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))}))
-           "dockstore" (let [path (:methodPath method)
-                             version (:methodVersion method)]
-                         (endpoints/dockstore-get-wdl path version
-                                                      (fn [{:keys [success? get-parsed-response]}]
-                                                        (if success?
-                                                          (swap! state assoc :loaded-method {:sourceRepo repo
-                                                                                             :repoLabel repo-label
-                                                                                             :methodPath (js/decodeURIComponent path)
-                                                                                             :methodVersion version
-                                                                                             :entityType "Workflow"
-                                                                                             :payload (:descriptor (get-parsed-response))} :redacted? false)
-                                                          (swap! state assoc :loaded-method nil :redacted? true)))))))))})
+           "agora"
+           (let [{:keys [methodNamespace methodName methodVersion]} method]
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
+               :headers ajax/content-type=json
+               :on-done (fn [{:keys [success? get-parsed-response]}]
+                          (if success?
+                            (swap! state assoc
+                                   :loaded-method (assoc (get-parsed-response)
+                                                    :sourceRepo repo
+                                                    :repoLabel "FireCloud")
+                                   :redacted? false)
+                            (swap! state assoc
+                                   :loaded-method (assoc (select-keys method [:name :namespace :entityType])
+                                                    :snapshotId (str methodVersion " (redacted)"))
+                                   :redacted? true)))}))
+           "dockstore"
+           (let [{:keys [methodPath methodVersion]} method]
+             (endpoints/dockstore-get-wdl
+              methodPath methodVersion
+              (fn [{:keys [success? get-parsed-response]}]
+                (if success?
+                  (swap! state assoc :loaded-method {:sourceRepo repo
+                                                     :repoLabel "Dockstore"
+                                                     :methodPath (js/decodeURIComponent methodPath)
+                                                     :methodVersion methodVersion
+                                                     :entityType "Workflow"
+                                                     :payload (:descriptor (get-parsed-response))} :redacted? false)
+                  (swap! state assoc :loaded-method nil :redacted? true)))))))))})
 
 
 (react/defc- Sidebar
@@ -101,7 +105,7 @@
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
            config-id (ws-common/config->id (:methodConfiguration loaded-config))
-           source-repo (:sourceRepo (:methodRepoMethod (:methodConfiguration loaded-config)))]
+           source-repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:show-delete-dialog? @state)
           [delete/DeleteDialog (merge (utils/restructure config-id workspace-id after-delete)

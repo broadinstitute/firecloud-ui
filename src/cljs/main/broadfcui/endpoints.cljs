@@ -1,8 +1,8 @@
 (ns broadfcui.endpoints
   (:require
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
-   [broadfcui.config :as config]
    ))
 
 
@@ -465,7 +465,6 @@
                         "/versions/"
                         (js/encodeURIComponent method-version)
                         "/WDL/descriptor")
-              :method "GET"
               :on-done on-done}))
 
 (defn dockstore-get-versions [method-path on-done]
@@ -473,5 +472,4 @@
                         "/api/ga4gh/v1/tools/%23workflow%2F"
                         (js/encodeURIComponent method-path)
                         "/versions")
-              :method "GET"
               :on-done on-done}))
