@@ -22,10 +22,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   override val query: Query = testId("summary-tab")
 
   override def awaitReady(): Unit = {
-    sidebar.awaitReady()
-    submissionCounter.awaitReady()
-    if (storageCostEstimate.isVisible) storageCostEstimate.awaitReady()
-    await condition { getState == "ready" || getState == "error" }
+    super.awaitReady()
+    await condition {
+      isError || getState == "error" ||
+        (getState == "ready" && sidebar.getState == "ready" && submissionCounter.getState == "ready"
+          && (if (storageCostEstimate.isVisible) storageCostEstimate.getState == "ready" else true))
+    }
   }
 
   def validateLocation(): Unit = {
@@ -35,7 +37,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   private val submissionStatusLabel = Label("submission-status")
 
   private val authDomainGroups = Label("auth-domain-groups")
-  private val workspaceError = Label("workspace-details-error")
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = Label("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
@@ -132,10 +133,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val Owner: Value = Value("OWNER")
     val Reader: Value = Value("READER")
     val Writer: Value = Value("WRITER")
-  }
-
-  def readError(): String = {
-    workspaceError.getText
   }
 
   def readAccessLevel(): WorkspaceAccessLevel = {

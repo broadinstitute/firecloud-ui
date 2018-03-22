@@ -11,7 +11,7 @@ trait Stateful { this: FireCloudView =>
   }
 
   def stateOf(query: Query)(implicit webDriver: WebDriver): String = {
-    query.element.attribute("data-test-state").get
+    query.element.attribute("data-test-state").getOrElse("")
   }
 
   def awaitState(state: String)(implicit webDriver: WebDriver): Unit = {
