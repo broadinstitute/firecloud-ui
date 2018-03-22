@@ -32,7 +32,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
         val clusterName = "notebooksspec-" + UUID.randomUUID()
         val notebooksPage = new WorkspaceNotebooksPage(billingProject, workspaceName).open
 
-        def createCluster() = {
+        def createCluster(): String = {
           logger.info("Attempting to create dataproc cluster")
           val createModal = notebooksPage.openCreateClusterModal
           createModal.createCluster(clusterName)
@@ -40,6 +40,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
           assert(notebooksPage.getClusterStatus(clusterName) == "Creating")
           logger.info("Creating dataproc cluster " + clusterName)
           notebooksPage.waitUntilClusterIsDoneCreating(clusterName)
+          notebooksPage.getClusterStatus(clusterName)
         }
 
         def deleteCluster() = {
@@ -60,8 +61,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
           jupyterPageResult.get
         }
 
-        createCluster()
-        notebooksPage.getClusterStatus(clusterName) match {
+        createCluster() match {
           case "View Error" => {
             deleteCluster()
             createCluster()

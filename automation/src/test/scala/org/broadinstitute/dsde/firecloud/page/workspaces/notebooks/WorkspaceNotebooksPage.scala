@@ -42,7 +42,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 
   def waitUntilClusterIsDoneCreating(clusterName: String) = {
     //await condition (getClusterStatus(clusterName) == "Running", 900)
-    await condition (getClusterStatus(clusterName) == "Creating", 1000)
+    await condition (getClusterStatus(clusterName) == "Creating", 2000)
   }
 
   def waitUntilClusterIsDeleted(clusterName: String) = {
