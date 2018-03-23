@@ -6,9 +6,10 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.openqa.selenium.WebDriver
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -21,12 +22,13 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
   "User should be able to create and delete a cluster" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
-    val ownerToken: AuthToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
-    withBillingProject("notebooksspec") { projectName =>
+    withCleanBillingProject(ownerUser) { projectName =>
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+
       withWorkspace(projectName, "NotebooksSpec_create_delete_cluster") { workspaceName =>
         withSignIn(user) { _ =>
           //dataproc names must be lower case
@@ -59,17 +61,18 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
           jupyterPageResult.get
         }
       }(userToken)
-    }(ownerToken)
+    }
   }
 
   "Creating 1 worker cluster should return server error" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
-    val ownerToken: AuthToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
-    withBillingProject("notebooksspec") { projectName =>
+    withCleanBillingProject(ownerUser) { projectName =>
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+
       withWorkspace(projectName, "NotebookSpec_1_worker_error") { workspaceName =>
         withSignIn(user) {_ =>
           val clusterName = "notebookspec-1worker-" + UUID.randomUUID()
@@ -81,17 +84,18 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
           await text numberOfWorkersError
         }
       }(userToken)
-    }(ownerToken)
+    }
   }
 
   "Creating cluster without name should fail at input validation" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
-    val ownerToken: AuthToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
-    withBillingProject("notebooksspec") { projectName =>
+    withCleanBillingProject(ownerUser) { projectName =>
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+
       withWorkspace(projectName, "NotebookSpec_no_cluster_name") { workspaceName =>
         withSignIn(user) {_ =>
           val clusterName = "notebookspec-no-cluster-name-" + UUID.randomUUID()
@@ -103,7 +107,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
           await text noNameClusterError
         }
       }(userToken)
-    }(ownerToken)
+    }
   }
 
 }
