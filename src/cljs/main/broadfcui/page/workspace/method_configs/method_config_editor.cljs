@@ -81,7 +81,8 @@
                    redacted? name-validation-errors? snapshots
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
-           config-id (ws-common/config->id (:methodConfiguration loaded-config))]
+           config-id (ws-common/config->id (:methodConfiguration loaded-config))
+           source-repo (:sourceRepo (:methodRepoMethod (:methodConfiguration loaded-config)))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:show-delete-dialog? @state)
           [delete/DeleteDialog (merge (utils/restructure config-id workspace-id after-delete)
@@ -125,7 +126,7 @@
                   :text "Delete" :icon :delete
                   :disabled? (when locked? "The workspace is locked")
                   :onClick #(swap! state assoc :show-delete-dialog? true)}])
-              (when-not redacted?
+              (when (and (not redacted?) (= source-repo "agora"))
                 [buttons/SidebarButton
                  {:style :light :color :button-primary :margin (when can-edit? :top)
                   :text "Publish..." :icon :share
