@@ -65,11 +65,11 @@
 (react/defc Importer
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [source id]} props
+     (let [{:keys [source item]} props
            {:keys [load-status error error-response]} @state]
        [:div {:style style/thin-page-style}
         [:div {:style {:fontWeight 500 :fontSize "125%" :marginBottom "2rem"}}
-         (str "Importing " id " from " source)]
+         (str "Importing " item " from " source)]
         (case load-status
           :workspace-check (spinner "Checking workspace access...")
           :version-check (spinner "Loading available method versions...")
@@ -109,7 +109,7 @@
    :import
    {:component Importer
     :regex #"import/([^/]+)/(.+)"
-    :make-props (fn [source id]
-                  (utils/restructure source id))
-    :make-path (fn [source id]
-                 (str source "/" id))}))
+    :make-props (fn [source item]
+                  (utils/restructure source item))
+    :make-path (fn [source item]
+                 (str source "/" item))}))
