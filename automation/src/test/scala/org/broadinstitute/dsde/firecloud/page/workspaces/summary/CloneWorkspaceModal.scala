@@ -24,6 +24,8 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends OKCancelModal("
 
     submit()
     // FIXME: Clone occasionally takes a long time, fix the root cause and revert this
+    // MattP says (5/23/2018): If clone is taking forever, then that happens during the
+    // submit() above, not on waiting for the new summary page to load below.
     await.ready(new WorkspaceSummaryPage(billingProjectName, workspaceName), 60)
     //await ready new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
