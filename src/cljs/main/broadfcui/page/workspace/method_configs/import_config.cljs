@@ -83,7 +83,7 @@
         {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response))
+                      (swap! state assoc :loaded-method (assoc (get-parsed-response) :sourceRepo "agora"))
                       (swap! state assoc :method-load-error status-text)))})))
    :-import
    (fn [{:keys [props state refs]}]

@@ -69,6 +69,7 @@
                                                     redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
                    [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
+       (assert repo "Caller must specify source repo for method")
        [:div {}
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
