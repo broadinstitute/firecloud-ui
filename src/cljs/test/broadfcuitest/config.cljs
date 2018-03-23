@@ -20,9 +20,6 @@
              (config/check-config (assoc valid-config "apiUrlRoot" 17)))))
     (testing "invalid type in optional key"
       (is (= [false '("value for isDebug must be a boolean")]
-             (config/check-config (assoc valid-config "isDebug" "true")))))
-    (testing "unexpected key"
-      (is (= [false '("unexpected key foo")]
-             (config/check-config (assoc valid-config "foo" true)))))))
+             (config/check-config (assoc valid-config "isDebug" "true")))))))
 
 ;(cljs.test/run-tests)
