@@ -51,7 +51,7 @@
            {:keys [redacted-snapshot]} @state
            repo (:sourceRepo entity)
            make-field
-           (fn [key label & {:keys [dropdown? wrap? render width]}]
+           (fn [key label & {:keys [dropdown? wrap? render width hoverText]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
               [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (or width "100px")) :fontWeight 500}} (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
@@ -68,7 +68,7 @@
                                                     (:snapshots props)
                                                     redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
-                   [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
+                   [:span {:title (or hoverText rendered) :data-test-id (str "method-label-" label)} rendered]))]])]
        (assert repo "Caller must specify source repo for method")
        [:div {}
         [:div {:style {:display "flex"}}
@@ -85,7 +85,8 @@
                          (make-field :methodPath "Path"
                                      :render (fn [path]
                                                (links/create-external
-                                                 {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path)))
+                                                 {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path))
+                                     :hoverText "View workflow in Dockstore")
                          (make-field :methodVersion "Version" :dropdown? true)))
           (make-field :entityType "Entity Type")
           (make-field :repoLabel "Source")]
