@@ -21,7 +21,7 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   private val nameHeader = Label("header-name")
   private val tabs = TabBar()
 
-  override def awaitReady(): Unit = tabs.awaitVisible()
+  override def awaitReady(): Unit = await spinner "Loading workspace..."
 
   def isError: Boolean = workspaceError.isVisible
   def readError(): String = workspaceError.getText
