@@ -22,12 +22,13 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
   "User should be able to create and delete a cluster" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
+    val ownerToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
     withCleanBillingProject(ownerUser) { projectName =>
-      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)(ownerToken)
 
       withWorkspace(projectName, "NotebooksSpec_create_delete_cluster") { workspaceName =>
         withSignIn(user) { _ =>
@@ -66,12 +67,13 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
   "Creating 1 worker cluster should return server error" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
+    val ownerToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
     withCleanBillingProject(ownerUser) { projectName =>
-      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)(ownerToken)
 
       withWorkspace(projectName, "NotebookSpec_1_worker_error") { workspaceName =>
         withSignIn(user) {_ =>
@@ -89,12 +91,13 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
   "Creating cluster without name should fail at input validation" in withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
+    val ownerToken = ownerUser.makeAuthToken()
 
     val user = UserPool.chooseStudent
     val userToken: AuthToken = user.makeAuthToken()
 
     withCleanBillingProject(ownerUser) { projectName =>
-      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+      api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)(ownerToken)
 
       withWorkspace(projectName, "NotebookSpec_no_cluster_name") { workspaceName =>
         withSignIn(user) {_ =>
