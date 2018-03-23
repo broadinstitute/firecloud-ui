@@ -78,13 +78,25 @@
                   (if success?
                     (swap! state assoc :loaded-config (get-parsed-response))
                     (swap! state assoc :config-load-error status-text)))})
-     (let [{:keys [methodNamespace methodName methodVersion]} (:methodRepoMethod (:config props))]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (swap! state assoc :loaded-method (assoc (get-parsed-response) :sourceRepo "agora"))
-                      (swap! state assoc :method-load-error status-text)))})))
+     (let [{:keys [methodNamespace methodName methodVersion methodPath sourceRepo]} (:methodRepoMethod (:config props))]
+       (case sourceRepo
+         "agora" (endpoints/call-ajax-orch
+                  {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
+                   :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                              (if success?
+                                (swap! state assoc :loaded-method (assoc (get-parsed-response) :sourceRepo "agora"))
+                                (swap! state assoc :method-load-error status-text)))})
+         "dockstore" (endpoints/dockstore-get-wdl
+                      methodPath methodVersion
+                      (fn [{:keys [success? get-parsed-response]}]
+                        (if success?
+                          (swap! state assoc :loaded-method {:sourceRepo sourceRepo
+                                                             :repoLabel "Dockstore"
+                                                             :methodPath (js/decodeURIComponent methodPath)
+                                                             :methodVersion methodVersion
+                                                             :entityType "Workflow"
+                                                             :payload (:descriptor (get-parsed-response))} :redacted? false)
+                          (swap! state assoc :loaded-method nil :redacted? true)))))))
    :-import
    (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
