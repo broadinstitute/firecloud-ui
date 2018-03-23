@@ -63,7 +63,9 @@
   {:render
    (fn [{:keys [state props]}]
      (let [{:keys [workspace-id]} props]
-       [:div {:style {:lineHeight "initial"} :data-test-id "storage-cost-estimate"}
+       [:div {:data-test-id "storage-cost-estimate"
+              :data-test-state (if (:response @state) "ready" "loading")
+              :style {:lineHeight "initial"}}
         [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
         [:div {:style {:fontSize "80%"}} "Note: These estimates are at the workspace level." [:br]
          (str "The billing account associated with " (:namespace workspace-id) " will be charged.")]]))
@@ -83,19 +85,18 @@
   {:render
    (fn [{:keys [state]}]
      (let [{:keys [server-error submissions-count]} @state]
-       (cond
-         server-error
-         [:div {} server-error]
-         submissions-count
-         (let [count-all (apply + (vals submissions-count))]
-           [:div {}
-            (str count-all " Submission" (when-not (= 1 count-all) "s"))
-            (when (pos? count-all)
-              [:ul {:style {:marginTop 0}}
-               (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])])
-         :else
-         [:div {} "Loading..."])))
+       [:div {:data-test-id "submission-counter"
+              :data-test-state (if (or server-error submissions-count) "ready" "loading")}
+        (cond server-error server-error
+              submissions-count
+              (let [count-all (apply + (vals submissions-count))]
+                (list
+                 (str count-all " Submission" (when-not (= 1 count-all) "s"))
+                 (when (pos? count-all)
+                   [:ul {:style {:marginTop 0}}
+                    (for [[status subs] (sort submissions-count)]
+                      [:li {} (str subs " " status)])])))
+              :else "Loading...")]))
    :refresh
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -117,10 +118,14 @@
            {:keys [workspace workspace-id request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {:data-test-id "summary-tab"
-              :data-test-state (cond (or (:updating-attrs? @state) (contains? @state :locking?))
-                                     "updating"
-                                     ;; TODO: "loading" state
-                                     :else "ready")}
+              :data-test-state
+              (cond server-error
+                    "error"
+                    (or (:updating-attrs? @state) (contains? @state :locking?))
+                    "updating"
+                    ;; sidebar takes care of checking for billing loaded, library schema, and curator
+                    ;; status, as it's the part that cares about it
+                    :else "ready")}
         (when popup-error
           (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
         (when-let [error-response (:error-response @state)]
