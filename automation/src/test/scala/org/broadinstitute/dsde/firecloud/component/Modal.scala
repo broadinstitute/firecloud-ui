@@ -59,6 +59,8 @@ class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message
   def getMessageText: String = content.getText
 }
 
+class ConfirmModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal")
+
 class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
 
 class SynchronizeMethodAccessModal(id: String)(implicit webDriver: WebDriver) extends OKCancelModal(id) {
