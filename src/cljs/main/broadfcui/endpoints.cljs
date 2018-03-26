@@ -473,3 +473,7 @@
                         (js/encodeURIComponent method-path)
                         "/versions")
               :on-done on-done}))
+
+(def import-status
+  {:path "/profile/importstatus"
+   :method :get})
