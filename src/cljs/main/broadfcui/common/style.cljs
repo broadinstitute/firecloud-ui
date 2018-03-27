@@ -179,14 +179,20 @@
         (map string/capitalize $)
         (string/join $)))
 
-(defn render-name-id [name snapshot-id]
-  [:div {}
-   [:span {:style {:fontWeight 500}} name]
-   [:span {:style {:fontWeight 200 :paddingLeft "1em"}} "Snapshot ID: "]
-   [:span {:style {:fontWeight 500}} snapshot-id]])
+;; Dockstore configs are only in workspaces - never Agora
+(defn render-name-id
+  ([name snapshot-id]
+   (render-name-id name snapshot-id "Snapshot ID"))
+  ([name snapshot-id version-label]
+   [:div {}
+    [:span {:style {:fontWeight 500}} name]
+    [:span {:style {:fontWeight 200 :paddingLeft "1em"}} (str version-label ": ")]
+    [:span {:style {:fontWeight 500}} snapshot-id]]))
 
-(defn render-entity [namespace name snapshot-id]
-  (render-name-id (str namespace "/" name) snapshot-id))
+(defn render-entity [source-repo namespace name method-path method-version]
+  (case source-repo
+    "agora" (render-name-id (str namespace "/" name) method-version)
+    "dockstore" (render-name-id method-path method-version "Version")))
 
 (defn render-count [count]
   [:span {:style {:minWidth "10px" :padding "3px 7px" :borderRadius "3px"

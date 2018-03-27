@@ -10,8 +10,8 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.{AclEntry, RestException, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.{AclEntry, RestException, WorkspaceAccessLevel}
 import org.scalatest._
 
 import scala.util.Try
@@ -141,7 +141,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures 
         withWorkspace(billingProject, "WorkspaceSpec_share") {workspaceName =>
           withSignIn(user1) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            detailPage.share(user2.email, "READER", true)
+            detailPage.share(user2.email, "READER", share = true)
           }
           withSignIn(user2) { listPage2 =>
             val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)

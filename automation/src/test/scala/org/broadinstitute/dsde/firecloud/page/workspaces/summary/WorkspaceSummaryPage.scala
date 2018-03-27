@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.summary
 
-import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspacePage, WorkspaceListPage}
-import org.broadinstitute.dsde.firecloud.page.{PageUtil, _}
-import org.broadinstitute.dsde.firecloud.{Stateful, FireCloudView}
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
+import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
@@ -15,33 +15,35 @@ import org.scalatest.selenium.Page
   * Page class for the Workspace Detail page.
   */
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful { wsSummaryPage: WorkspaceSummaryPage =>
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
   override val query: Query = testId("summary-tab")
 
   override def awaitReady(): Unit = {
+    super.awaitReady()
     await condition {
-      enabled(testId("workspace-details-error")) ||
-      (enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
+      isError || getState == "error" ||
+        (getState == "ready" && sidebar.getState == "ready" && submissionCounter.getState == "ready"
+          /*&& (if (storageCostEstimate.isVisible) storageCostEstimate.getState == "ready" else true)*/)
+          // FIXME: Storage cost estimate hangs when cloning workspaces in AuthDomainSpec
     }
   }
 
   def validateLocation(): Unit = {
-    assert(enabled(testId("submission-status")) && sidebar.getState == "ready" && getState == "ready")
+    assert(submissionStatusLabel.isVisible && sidebar.getState == "ready" && getState == "ready")
   }
 
-  private val authDomainGroups = Label("auth-domain-groups")
-  private val workspaceError = Label("workspace-details-error")
-  private val accessLevel = Label("workspace-access-level")
-  private val noBucketAccess = testId("no-bucket-access")
-  private val googleBillingDetail = Label("google-billing-detail")
-  private val storageCostEstimate = Label("storage-cost-estimate")
+  private val submissionStatusLabel = Label("submission-status")
 
-  def shouldWaitForBucketAccess : Boolean = {
-    val elem = find(noBucketAccess)
-    elem.isDefined && elem.get.text.contains("unavailable")
+  private val authDomainGroups = Label("auth-domain-groups")
+  private val accessLevel = Label("workspace-access-level")
+  private val noBucketAccess = Label("no-bucket-access")
+  private val googleBillingDetail = Label("google-billing-detail")
+
+  def shouldWaitForBucketAccess: Boolean = {
+    noBucketAccess.isVisible && noBucketAccess.getText.contains("unavailable")
   }
 
   private val sidebar = new Component(TestId("sidebar")) with Stateful {
@@ -61,17 +63,17 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickEdit(): Unit = {
       editButton.doClick()
-      wsSummaryPage.awaitReady()
+      WorkspaceSummaryPage.this.awaitReady()
     }
 
     def clickSave(): Unit = {
       saveButton.doClick()
-      wsSummaryPage.awaitReady()
+      WorkspaceSummaryPage.this.awaitReady()
     }
 
     def clickCancel(): Unit = {
       cancelButton.doClick()
-      wsSummaryPage.awaitReady()
+      WorkspaceSummaryPage.this.awaitReady()
     }
 
     def clickClone(): CloneWorkspaceModal = {
@@ -81,17 +83,17 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickDeleteWorkspace(): DeleteWorkspaceModal = {
       deleteWorkspaceButton.doClick()
-      await ready new DeleteWorkspaceModal
+      await ready new DeleteWorkspaceModal()
     }
 
     def clickPublish(): Unit = {
       publishButton.doClick()
-      wsSummaryPage.awaitReady()
+      WorkspaceSummaryPage.this.awaitReady()
     }
 
     def clickUnpublish(): MessageModal = {
       unpublishButton.doClick()
-      await ready new MessageModal
+      await ready new MessageModal()
     }
 
     def clickShareWorkspaceButton(): AclEditor = {
@@ -100,10 +102,17 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
 
+  private val storageCostEstimate = new Label("storage-cost-estimate") with Stateful {
+    override def awaitReady(): Unit = awaitState("ready")
+  }
+
+  private val submissionCounter = new Label("submission-counter") with Stateful {
+    override def awaitReady(): Unit = awaitState("ready")
+  }
+
   private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
     override def awaitReady(): Unit = {
       table.awaitReady()
-      wsSummaryPage.awaitReady()
     }
 
     val newButton = Button("add-new-button")
@@ -121,14 +130,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     */
   object AccessLevel extends Enumeration {
     type AccessLevel = Value
-    val NoAccess = Value("NO ACCESS")
-    val Owner = Value("OWNER")
-    val Reader = Value("READER")
-    val Writer = Value("WRITER")
-  }
-
-  def readError(): String = {
-    workspaceError.getText
+    val NoAccess: Value = Value("NO ACCESS")
+    val Owner: Value = Value("OWNER")
+    val Reader: Value = Value("READER")
+    val Writer: Value = Value("WRITER")
   }
 
   def readAccessLevel(): WorkspaceAccessLevel = {
@@ -166,13 +171,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   /**
     * shares workspace currently being viewed with user email
-    * @param email
-    * @param accessLevel
-    * @param share
-    * @param compute
-    * @return
+    * @param email the email address of the user to add
+    * @param accessLevel the access level to add the user as
+    * @param share share permission
+    * @param compute compute permission
+    * @return the page, once sharing and sync are complete
     */
-
   def share(email: String, accessLevel: String, share: Boolean = false, compute: Boolean = false, grantMethodPermission: Option[Boolean] = None): WorkspaceSummaryPage = {
     val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
@@ -185,7 +189,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
         }
       }
     }
-    await ready new WorkspaceSummaryPage(namespace, name)
+    awaitReady()
+    this
   }
 
   def openShareDialog(email: String, accessLevel: String): AclEditor = {

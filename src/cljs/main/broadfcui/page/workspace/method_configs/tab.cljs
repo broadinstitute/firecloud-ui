@@ -18,11 +18,13 @@
 
 (defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
-        {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
+        {:keys [methodName methodNamespace methodVersion sourceRepo]} methodRepoMethod
+        ;; TODO: make snapshots a list of method URIs, compare with (:methodUri methodRepoMethod)
         snapshots (set (get methods [methodNamespace methodName]))]
-    (if (contains? snapshots methodVersion)
-      (assoc config :redacted false)
-      (assoc config :redacted true))))
+    (assert (some? sourceRepo) "Caller must specify source repo for method")
+    (case sourceRepo
+      "agora" (assoc config :redacted? (not (contains? snapshots methodVersion)))
+      "dockstore" (assoc config :redacted? false)))) ; Could get fancy later and call out for the WDL
 
 (react/defc- MethodConfigurationsList
   {:reload

@@ -22,21 +22,19 @@
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
                   "forumUrl" :string "authDomainGuideUrl" :string
-                  "googleBucketUrl" :string}
+                  "googleBucketUrl" :string "dockstoreApiUrl" :string "dockstoreWebUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
-        extra (set/difference config-keys (set (keys all)))
         invalid (filter (fn [k]
                           (let [validator (get all k)
                                 check (get-in validators [validator :check])]
                             (when-not (check (get config k))
                               k)))
                         (set/intersection config-keys (set (keys all))))]
-    [(not (or (seq missing-required) (seq extra) (seq invalid)))
+    [(not (or (seq missing-required) (seq invalid)))
      (concat
       (map #(str "missing required key " %) missing-required)
-      (map #(str "value for " % " " (:message (get validators (get all %)))) invalid)
-      (map #(str "unexpected key " %) extra))]))
+      (map #(str "value for " % " " (:message (get validators (get all %)))) invalid))]))
 
 (def config (atom nil))
 
@@ -56,4 +54,6 @@
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
+(defn dockstore-api-url [] (get @config "dockstoreApiUrl"))
+(defn dockstore-web-url [] (get @config "dockstoreWebUrl"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")
