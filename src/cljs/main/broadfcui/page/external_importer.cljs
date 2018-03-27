@@ -78,7 +78,8 @@
    :-render-error
    (fn [{:keys [state]}]
      [:div {}
-      [:div {:style {:margin "0.5rem 0"}} "Error loading WDL:"]
+      [:div {:style {:margin "0.5rem 0"}}
+       "Error loading WDL. Please verify the workflow path and version and ensure this workflow supports WDL."]
       [comps/ErrorViewer {:error (:load-error @state)}]])
    :-render-export
    (fn [{:keys [props state locals this]}]
@@ -89,7 +90,7 @@
         [:div {:style {:marginBottom "1rem"}}
          (icons/render-icon {:style {:marginRight "0.5rem" :color (:state-warning style/colors)}}
            :warning)
-         "Please note: Dockstore cannot guarantee that WDL and Docker that is referenced by this Workflow will not change. We advise you to review the WDL before future runs."]
+         "Please note: Dockstore cannot guarantee that the WDL and Docker image referenced by this Workflow will not change. We advise you to review the WDL before future runs."]
         [:div {:style {:display "flex"}}
          [:div {:style {:marginRight "1rem"}}
           [ExportDestinationForm {:ref #(swap! locals assoc :form %)
@@ -170,7 +171,7 @@
            {:keys [load-status error error-response]} @state]
        [:div {:style {:margin "1.5rem 2rem 0"}}
         [:div {:style {:fontWeight 500 :fontSize "125%" :marginBottom "2rem"}}
-         (str "Importing " item " from " source)]
+         (str "Importing " item " from " (string/capitalize source))]
         (case load-status
           :workspace-check (spinner "Checking workspace access...")
           :error (list
