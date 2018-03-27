@@ -78,7 +78,6 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         previewModal.getObject shouldBe "Object: alerts.json"
         // preview pane is only created if there's something to preview so
         // give it .1 sec
-        // refactor this into the Modal?
         retry[Boolean](100.milliseconds, 1.minute)({
           val previewPane = previewModal.findInner("preview-pane")
           if (previewPane.webElement.isDisplayed)
@@ -136,7 +135,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           detailPage.addWorkspaceAttribute("a", dosLink)
         }
         val previewModal = detailPage.clickForPreview(dosLink)
-        previewModal.awaitReady()
+        previewModal.awaitDoneState()
         previewModal.getBucket shouldBe s"Google Bucket: $bucket"
         previewModal.getObject shouldBe s"Object: $gObject"
         previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
