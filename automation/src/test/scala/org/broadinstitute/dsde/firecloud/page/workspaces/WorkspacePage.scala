@@ -15,9 +15,18 @@ A Workspace Page is any page within the workspace (i.e. the Summary tab, Data ta
  */
 abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends BaseFireCloudPage {
 
+  private val workspaceError = Label("workspace-details-error")
+
   private val namespaceHeader = Label("header-namespace")
   private val nameHeader = Label("header-name")
   private val tabs = TabBar()
+
+  override def awaitReady(): Unit = {
+    await spinner "Loading workspace..."
+  }
+
+  def isError: Boolean = workspaceError.isVisible
+  def readError(): String = workspaceError.getText
 
   def readWorkspace: (String, String) = {
     (namespaceHeader.getText, nameHeader.getText)
