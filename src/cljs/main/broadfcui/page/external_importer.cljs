@@ -4,7 +4,6 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -58,69 +57,48 @@
 
 
 (react/defc DockstoreImporter
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:highlighted-version (:defaultVersion props)})
-   :component-will-mount
-   (fn [{:keys [props locals]}]
-     (let [valid-versions (filter :valid (:workflowVersions props))]
-       (swap! locals assoc
-              :workflow-versions valid-versions
-              :wdls-by-reference (->> valid-versions
-                                      (map (fn [{:keys [reference sourceFiles]}]
-                                             [reference
-                                              (->> sourceFiles
-                                                   (keep (fn [{:keys [type content]}]
-                                                           (when (= type "DOCKSTORE_WDL")
-                                                             content)))
-                                                   first)]))
-                                      (into {})))))
-   :render
+  {:render
    (fn [{:keys [state this]}]
-     (let [{:keys [selected-version]} @state]
-       (if selected-version
-         (this :-render-select-workspace)
-         (this :-render-select-version))))
-   :-render-select-version
-   (fn [{:keys [state locals]}]
-     (let [{:keys [highlighted-version]} @state
-           {:keys [workflow-versions wdls-by-reference]} @locals]
-       [:div {}
-        [:div {:style {:fontSize "125%" :margin "0 0 0.5rem 5px"}}
-         "Select Workflow Version"]
-        (flex/box {:style {:maxHeight 500}}
-          [:div {:style {:flex "0 0 340px" :marginRight 5 :overflowY "auto"}}
-           (map-indexed (fn [index {:keys [reference]}]
-                          [:div {:style {:borderTop (when (pos? index) style/standard-line)
-                                         :padding "0.75rem"
-                                         :backgroundColor (when (= reference highlighted-version)
-                                                            (:tag-background style/colors))
-                                         :cursor "pointer"}
-                                 :onClick #(swap! state assoc :highlighted-version reference)}
-                           reference])
-                        workflow-versions)]
-          [:div {:style {:flex "1 1 auto"}}
-           [WDLViewer {:wdl (wdls-by-reference highlighted-version)}]])
-        (flex/box {:style {:marginTop "1rem"}}
-          flex/spring
-          [buttons/Button
-           {:text "Use Selected Version"
-            :onClick #(swap! state assoc :selected-version highlighted-version)}])]))
-   :-render-select-workspace
+     (let [{:keys [wdl load-error]} @state]
+       (cond load-error (this :-render-error)
+             wdl (this :-render-export)
+             :else (spinner "Loading WDL..."))))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (let [{:keys [id version]} props]
+       (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/"
+                             (js/encodeURIComponent (str "#workflow/" id))
+                             "/versions/"
+                             (js/encodeURIComponent version)
+                             "/WDL/descriptor")
+                   :on-done (fn [{:keys [success? get-parsed-response]}]
+                              (if success?
+                                (swap! state assoc :wdl (:descriptor (get-parsed-response)))
+                                (swap! state assoc :load-error (get-parsed-response false))))})))
+   :-render-error
+   (fn [{:keys [state]}]
+     [:div {}
+      [:div {:style {:margin "0.5rem 0"}} "Error loading WDL:"]
+      [comps/ErrorViewer {:error (:load-error @state)}]])
+   :-render-export
    (fn [{:keys [props state locals this]}]
-     [:div {:style {:width 550 :margin "0 auto"}}
-      (blocker (:banner @state))
-      [ExportDestinationForm {:ref #(swap! locals assoc :form %)
-                              :initial-name (:method-name props)}]
-      [comps/ErrorViewer {:error (:server-error @state)}]
-      (flex/box {:style {:alignItems "center"}}
-        (links/create-internal {:onClick #(swap! state dissoc :selected-version :server-error)}
-          (flex/box {:style {:alignItems "center"}}
-            (icons/render-icon {:style {:fontSize "150%" :margin "-3px 0.5rem 0 0"}} :angle-left)
-            "Choose Another Version"))
-        flex/spring
-        [buttons/Button {:text "Export to Workspace"
-                         :onClick #(this :-export)}])])
+     (let [{:keys [id]} props
+           {:keys [banner server-error wdl]} @state]
+       [:div {}
+        (blocker banner)
+        [:div {:style {:marginBottom "1rem"}}
+         (icons/render-icon {:style {:marginRight "0.5rem" :color (:state-warning style/colors)}}
+           :warning)
+         "Please note: Dockstore cannot guarantee that WDL and Docker that is referenced by this Workflow will not change. We advise you to review the WDL before future runs."]
+        [:div {:style {:display "flex"}}
+         [:div {:style {:marginRight "1rem"}}
+          [ExportDestinationForm {:ref #(swap! locals assoc :form %)
+                                  :initial-name (-> id (string/split #"/") last)}]
+          [buttons/Button {:text "Export" :onClick #(this :-export)}]
+          [:div {:style {:marginTop "1rem"}}
+           [comps/ErrorViewer {:error server-error}]]]
+         [:div {:style {:flex "1 1 auto"}}
+          [WDLViewer {:wdl wdl}]]]]))
    :-export
    (fn [{:keys [locals this]}]
      (let [{:keys [form]} @locals]
@@ -178,60 +156,38 @@
       "Learn how to create a billing project.")]))
 
 (react/defc Importer
-  {:render
+  {:get-initial-state
+   (fn []
+     {:load-status :workspace-check})
+   :render
    (fn [{:keys [props state]}]
      (let [{:keys [source item]} props
-           {:keys [load-status error error-response error-message docker-payload]} @state]
+           {:keys [load-status error error-response]} @state]
        [:div {:style {:margin "1.5rem 2rem 0"}}
         [:div {:style {:fontWeight 500 :fontSize "125%" :marginBottom "2rem"}}
          (str "Importing " item " from " source)]
         (case load-status
           :workspace-check (spinner "Checking workspace access...")
-          :version-check (spinner "Loading available method versions...")
+          :error (list
+                  [:div {:style {:marginBottom "1rem" :fontSize "125%"}}
+                   error]
+                  [comps/ErrorViewer {:error error-response}])
           :no-destination (nowhere-to-save-message)
-          :done nil)
-        (when docker-payload
-          [DockstoreImporter (assoc docker-payload :method-name (last (string/split id "/")))])
-        (when error
-          (list
-           [:div {:style {:marginBottom "1rem" :fontSize "125%"}}
-            error]
-           (when error-message
-             [:div {} error-message])
-           [comps/ErrorViewer {:error error-response}]))]))
+          :done (case source
+                  "dockstore" (let [[version id] (string/split item #":" 2)]
+                                [DockstoreImporter (utils/restructure id version)])))]))
    :component-will-mount
-   (fn [{:keys [this]}]
-     (this :-check-workspace-access))
-   :-check-workspace-access
-   (fn [{:keys [state this]}]
-     (swap! state assoc :load-status :workspace-check)
+   (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
       {:endpoint endpoints/import-status
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if-not success?
                     (swap! state assoc
-                           :load-status :done
+                           :load-status :error
                            :error "Error checking import status"
                            :error-response (get-parsed-response false))
                     (let [{:keys [billingProject writableWorkspace]} (get-parsed-response)]
-                      (if (or billingProject writableWorkspace)
-                        (this :-load-method-versions)
-                        (swap! state assoc :load-status :no-destination)))))}))
-   :-load-method-versions
-   (fn [{:keys [props state]}]
-     (let [{:keys [id]} props]
-       (swap! state assoc :load-status :version-check)
-       (ajax/call
-        {:url (str "https://dockstore.org:8443/workflows/path/workflow/" (js/encodeURIComponent id) "/published")
-         :on-done (fn [{:keys [success? get-parsed-response raw-response]}]
-                    (if-not success?
-                      (swap! state assoc
-                             :load-status :done
-                             :error "Error loading method versions"
-                             :error-message raw-response)
-                      (swap! state assoc
-                             :load-status :done
-                             :docker-payload (get-parsed-response))))})))})
+                      (swap! state assoc :load-status (if (or billingProject writableWorkspace) :done :no-destination)))))}))})
 
 (defn add-nav-paths []
   (nav/defpath
