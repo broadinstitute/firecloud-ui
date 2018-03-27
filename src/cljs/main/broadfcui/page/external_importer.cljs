@@ -66,15 +66,12 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (let [{:keys [id version]} props]
-       (ajax/call {:url (str "https://staging.dockstore.org:8443/api/ga4gh/v1/tools/"
-                             (js/encodeURIComponent (str "#workflow/" id))
-                             "/versions/"
-                             (js/encodeURIComponent version)
-                             "/WDL/descriptor")
-                   :on-done (fn [{:keys [success? get-parsed-response]}]
-                              (if success?
-                                (swap! state assoc :wdl (:descriptor (get-parsed-response)))
-                                (swap! state assoc :load-error (get-parsed-response false))))})))
+       (endpoints/dockstore-get-wdl
+        id version
+        (fn [{:keys [success? get-parsed-response]}]
+          (if success?
+            (swap! state assoc :wdl (:descriptor (get-parsed-response)))
+            (swap! state assoc :load-error (get-parsed-response false)))))))
    :-render-error
    (fn [{:keys [state]}]
      [:div {}
