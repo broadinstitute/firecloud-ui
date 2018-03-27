@@ -1,5 +1,6 @@
 (ns broadfcui.endpoints
   (:require
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    ))
@@ -67,7 +68,7 @@
 
 
 (defn list-workspace-method-configs [workspace-id]
-  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
+  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs?allRepos=true")
    :method :get})
 
 (defn post-workspace-method-config [workspace-id]
@@ -456,6 +457,22 @@
    {:method :get
     :on-done on-done}
    :service-prefix "/version"))
+
+(defn dockstore-get-wdl [method-path method-version on-done]
+  (ajax/call {:url (str (config/dockstore-api-url)
+                        "/api/ga4gh/v1/tools/%23workflow%2F"
+                        (js/encodeURIComponent method-path)
+                        "/versions/"
+                        (js/encodeURIComponent method-version)
+                        "/WDL/descriptor")
+              :on-done on-done}))
+
+(defn dockstore-get-versions [method-path on-done]
+  (ajax/call {:url (str (config/dockstore-api-url)
+                        "/api/ga4gh/v1/tools/%23workflow%2F"
+                        (js/encodeURIComponent method-path)
+                        "/versions")
+              :on-done on-done}))
 
 (def import-status
   {:path "/profile/importstatus"

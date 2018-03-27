@@ -7,12 +7,17 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
    ))
 
 (react/defc EntityDetails
   {:get-fields
-   (fn [{:keys [refs]}]
-     {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))})
+   (fn [{:keys [props refs]}]
+     (let [repo (:sourceRepo (:entity props))]
+       (case repo
+         "agora" {"methodVersion" (int (common/get-trimmed-text refs "snapshotId"))}
+         "dockstore" {"methodVersion" (common/get-trimmed-text refs "methodVersion")})))
    :clear-redacted-snapshot
    (fn [{:keys [state]}]
      (swap! state dissoc :redacted-snapshot))
@@ -44,8 +49,9 @@
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props
            {:keys [redacted-snapshot]} @state
+           repo (:sourceRepo entity)
            make-field
-           (fn [key label & {:keys [dropdown? wrap? render width]}]
+           (fn [key label & {:keys [dropdown? wrap? render width hoverText]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
               [:div {:style {:paddingRight "0.5rem" :text-align "right" :flex (str "0 0 " (or width "100px")) :fontWeight 500}} (str label ":")]
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
@@ -56,28 +62,41 @@
                                                      :style {:width 120}
                                                      :defaultValue (if redacted-snapshot -1 (key entity))
                                                      :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                                 #(f (int (common/get-trimmed-text refs "snapshotId"))))}
-                   (:snapshots props)
-                   redacted-snapshot)
+                                                                 (case repo
+                                                                   "agora" #(f (int (common/get-trimmed-text refs "snapshotId")))
+                                                                   "dockstore" #(f (common/get-trimmed-text refs "methodVersion"))))}
+                                                    (:snapshots props)
+                                                    redacted-snapshot)
                  (let [rendered ((or render identity) (key entity))]
-                   [:span {:title rendered :data-test-id (str "method-label-" label)} rendered]))]])]
+                   [:span {:title (or hoverText rendered) :data-test-id (str "method-label-" label)} rendered]))]])]
+       (assert repo "Caller must specify source repo for method")
        [:div {}
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 40%" :paddingRight "0.5rem"}}
           (when redacted?
             [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"} :data-test-id "snapshot-redacted-title"}
              (icons/render-icon {:style {:color (:state-warning style/colors)}} :warning) " Snapshot Redacted"])
-          (make-field :namespace "Namespace")
-          (make-field :name "Name")
-          (make-field :snapshotId "Snapshot ID" :dropdown? true)
-          (make-field :entityType "Entity Type")]
-         (when-not redacted?
+          (case repo
+            "agora" (list
+                     (make-field :namespace "Namespace")
+                     (make-field :name "Name")
+                     (make-field :snapshotId "Snapshot ID" :dropdown? true))
+            "dockstore" (list
+                         (make-field :methodPath "Path"
+                                     :render (fn [path]
+                                               (links/create-external
+                                                 {:href (str (config/dockstore-web-url) "/workflows/" (js/encodeURIComponent path))} path))
+                                     :hoverText "View workflow in Dockstore")
+                         (make-field :methodVersion "Version" :dropdown? true)))
+          (make-field :entityType "Entity Type")
+          (make-field :repoLabel "Source")]
+         (when-not (or redacted? (= repo "dockstore"))
            [:div {:style {:flex "1 1 60%" :overflow "hidden"}}
             (make-field :createDate "Created" :render common/format-date :width "150px")
             (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true :width "150px")
             (make-field :synopsis "Synopsis" :width "150px")
             (make-field :snapshotComment "Snapshot Comment" :wrap? true :width "150px")])]
-        (when-not redacted?
+        (when-not (or redacted? (= repo "dockstore"))
           [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
            "Documentation:"
            (if (string/blank? (:documentation entity))
