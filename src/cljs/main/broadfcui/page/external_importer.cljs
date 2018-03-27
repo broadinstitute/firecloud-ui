@@ -179,7 +179,7 @@
                   [comps/ErrorViewer {:error error-response}])
           :no-destination (nowhere-to-save-message)
           :done (case source
-                  "dockstore" (let [[version id] (string/split item #":" 2)]
+                  "dockstore" (let [[id version] (string/split item #":" 2)]
                                 [DockstoreImporter (utils/restructure id version)])))]))
    :component-will-mount
    (fn [{:keys [state]}]
