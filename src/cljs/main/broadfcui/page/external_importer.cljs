@@ -124,7 +124,7 @@
                         (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
                                                  (dissoc :banner))))}))))
    :-export-method
-   (fn [{:keys [state]} {:keys [namespace] :as workspace-id} {:keys [name]}]
+   (fn [{:keys [props state]} {:keys [namespace] :as workspace-id} {:keys [name]}]
      (swap! state assoc :banner "Exporting method...")
      (let [config-id (utils/restructure namespace name)]
        (endpoints/call-ajax-orch
@@ -132,7 +132,12 @@
          :payload {:namespace namespace
                    :name name
                    :rootEntityType (first common/root-entity-types)
-                   :inputs {} :outputs {} :prerequisites {}}
+                   :inputs {} :outputs {} :prerequisites {}
+                   :methodRepoMethod {:sourceRepo "dockstore"
+                                      :methodPath (:id props)
+                                      :methodVersion (:version props)}
+                   :methodConfigVersion 1
+                   :deleted false}
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
