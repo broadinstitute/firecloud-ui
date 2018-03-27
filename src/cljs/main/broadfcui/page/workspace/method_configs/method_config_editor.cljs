@@ -59,19 +59,45 @@
              :else (spinner "Loading details..."))))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load-agora-method))
-   :load-agora-method
+     (this :load-method-from-repo))
+   :load-method-from-repo
    (fn [{:keys [props state]} & [method-ref]]
-     (let [{:keys [namespace name snapshotId]} (or method-ref props)
-           method (:method props)]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response) :redacted? false)
-                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType])
-                                                               {:snapshotId (str snapshotId " (redacted)")}) :redacted? true)))})))})
+     (let [method (or method-ref (:methodRepoMethod props))]
+       (let [repo (:sourceRepo method)]
+         (assert repo "Caller must specify source repo for method")
+         (case repo
+           "agora"
+           (let [{:keys [methodNamespace methodName methodVersion]} method]
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
+               :headers ajax/content-type=json
+               :on-done (fn [{:keys [success? get-parsed-response]}]
+                          (if success?
+                            (swap! state assoc
+                                   :loaded-method (assoc (get-parsed-response)
+                                                    :sourceRepo repo
+                                                    :repoLabel "FireCloud")
+                                   :redacted? false)
+                            (swap! state assoc
+                                   :loaded-method {:namespace methodNamespace
+                                                   :name methodName
+                                                   :snapshotId (str methodVersion " (redacted)")
+                                                   :sourceRepo repo
+                                                   :repoLabel "FireCloud"}
+                                   :redacted? true)))}))
+           "dockstore"
+           (let [{:keys [methodPath methodVersion]} method]
+             (endpoints/dockstore-get-wdl
+              methodPath methodVersion
+              (fn [{:keys [success? get-parsed-response]}]
+                (if success?
+                  (swap! state assoc :loaded-method {:sourceRepo repo
+                                                     :repoLabel "Dockstore"
+                                                     :methodPath (js/decodeURIComponent methodPath)
+                                                     :methodVersion methodVersion
+                                                     :entityType "Workflow"
+                                                     :payload (:descriptor (get-parsed-response))} :redacted? false)
+                  (swap! state assoc :loaded-method nil :redacted? true)))))))))})
 
 
 (react/defc- Sidebar
@@ -82,7 +108,7 @@
                    editing? locked? loaded-config body-id parent]} props
            can-edit? (common/access-greater-than? access-level "READER")
            config-id (ws-common/config->id (:methodConfiguration loaded-config))
-           source-repo (:sourceRepo (:methodRepoMethod (:methodConfiguration loaded-config)))]
+           source-repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:show-delete-dialog? @state)
           [delete/DeleteDialog (merge (utils/restructure config-id workspace-id after-delete)
@@ -154,17 +180,30 @@
    (fn [{:keys [state]}]
      (let [{:keys [methods loaded-config]} @state]
        (when (and (not methods) loaded-config)
-         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])]
-           (endpoints/call-ajax-orch
-            {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
-             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                        (let [response (get-parsed-response)]
-                          (if success?
-                            (swap! state assoc
-                                   :methods-response response
-                                   :methods {[methodNamespace methodName] (mapv :snapshotId response)})
-                            ;; FIXME: :error-message is unused
-                            (swap! state assoc :error-message status-text))))})))))
+         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])
+               repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
+           (case repo
+             "agora"
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+               :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                          (let [response (get-parsed-response)]
+                            (if success?
+                              (swap! state assoc
+                                     :methods-response response
+                                     :methods {[methodNamespace methodName] (mapv :snapshotId response)})
+                              ;; FIXME: :error-message is unused
+                              (swap! state assoc :methods {} :error-message status-text))))})
+             "dockstore"
+             (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
+               (endpoints/dockstore-get-versions
+                path
+                (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc
+                           ;; vector only used when checking redaction, N/A for Dockstore
+                           :methods {[nil nil] (mapv :name (get-parsed-response))})
+                    (swap! state assoc :methods {} :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -176,7 +215,8 @@
           (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
         (when-let [error-response (:error-response @state)]
           (modals/render-error-response {:error error-response :dismiss #(swap! state dissoc :error-response)}))
-        [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
+        (if (= (:sourceRepo methodRepoMethod) "agora")
+          [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])])
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
                          (select-keys @state [:editing? :loaded-config :redacted? :name-validation-errors?])
@@ -188,7 +228,7 @@
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
-           {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
+           {:keys [methodName methodNamespace]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
            can-compute (get-in props [:workspace :canCompute])]
@@ -227,9 +267,7 @@
                        (first methods-response))]
           (create-section [MethodDetailsViewer
                            (merge {:ref "methodDetailsViewer"
-                                   :name methodName
-                                   :namespace methodNamespace
-                                   :snapshotId methodVersion
+                                   :methodRepoMethod methodRepoMethod
                                    :onSnapshotIdChange #(this :-load-new-method-template %)
                                    :method method
                                    :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
@@ -288,9 +326,7 @@
      (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
-                                                          :name (:methodName method-ref)
-                                                          :snapshotId (:methodVersion method-ref)})))
+       ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
@@ -341,19 +377,19 @@
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
-     (let [[method-namespace method-name] (map (fn [key]
+     (let [[method-namespace method-name method-path source-repo] (map (fn [key]
                                                  (get-in (:loaded-config @state)
                                                          [:methodConfiguration :methodRepoMethod key]))
-                                               [:methodNamespace :methodName])
+                                               [:methodNamespace :methodName :methodPath :sourceRepo])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
                                               [:namespace :name])
-           method-ref {:methodNamespace method-namespace
+           method-ref {:sourceRepo source-repo
+                       :methodPath method-path
+                       :methodNamespace method-namespace
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace method-namespace
-                                                          :name method-name
-                                                          :snapshotId new-snapshot-id})
+       ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
          :payload method-ref
