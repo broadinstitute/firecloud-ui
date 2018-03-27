@@ -18,6 +18,7 @@
    [broadfcui.components.workspace-selector :refer [WorkspaceSelector]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method.common :as method-common]
+   [broadfcui.page.method-repo.method.export-destination-form :refer [ExportDestinationForm]]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -126,56 +127,41 @@
    (fn [{:keys [props state locals]}]
      (let [{:keys [method-name workspace-id]} props
            {:keys [selected-config]} @state]
-       [:div {:style {:width 550}}
-        (style/create-form-label "Name")
-        [input/TextField {:ref "name-field"
-                          :style {:width "100%"}
-                          :defaultValue (if (= selected-config :blank)
-                                          method-name
-                                          (:name selected-config))
-                          :predicates [(input/nonempty-alphanumeric_-period "Name")]}]
-        (when (= selected-config :blank)
-          (list
-           (style/create-form-label "Root Entity Type")
-           (style/create-identity-select {:ref "root-entity-type"}
-             common/root-entity-types)))
-        (when-not workspace-id
-          (list
-           (style/create-form-label "Destination Workspace")
-           [WorkspaceSelector {:ref #(swap! locals assoc :workspace-selector %)
-                               :style {:width "100%"}
-                               :filter #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}]))
-        [:div {:style {:padding "0.5rem"}}] ;; select2 is eating any padding/margin I give to WorkspaceSelector
-        (style/create-validation-error-message (:validation-errors @state))
-        [comps/ErrorViewer {:error (:server-error @state)}]]))
+       (list
+        [ExportDestinationForm {:ref #(swap! locals assoc :export-form %)
+                                :initial-name (if (= selected-config :blank)
+                                                method-name
+                                                (:name selected-config))
+                                :workspace-id workspace-id
+                                :select-root-entity-type? (= selected-config :blank)}]
+        [comps/ErrorViewer {:error (:server-error @state)}])))
    :-render-export-page-buttons
    (fn [{:keys [props state this]}]
      (flex/box {:style {:alignItems "center"}}
        (links/create-internal {:onClick #(swap! state dissoc :selected-config)}
          (flex/box {:style {:alignItems "center"}}
-           (icons/render-icon {:style {:fontSize "150%" :marginRight "0.5rem"}} :angle-left)
+           (icons/render-icon {:style {:fontSize "150%" :margin "-3px 0.5rem 0 0"}} :angle-left)
            "Choose Another Configuration"))
        flex/spring
        [buttons/Button {:data-test-id "import-export-confirm-button"
                         :text (if (:workspace-id props) "Import Method" "Export to Workspace")
                         :onClick #(this :-export)}]))
    :-export
-   (fn [{:keys [props state refs locals this]}]
-     (let [{:keys [workspace-id method-id]} props
-           [name & name-errors] (input/get-and-validate refs "name-field")
-           new-workspace-errors (when-not workspace-id ((:workspace-selector @locals) :validate))
-           errors (not-empty (concat name-errors new-workspace-errors))
-           new-id (assoc (select-keys method-id [:namespace])
-                    :name name)
-           {:keys [selected-config]} @state]
-       (cond errors (swap! state assoc :validation-errors errors)
-             (= :blank selected-config) (this :-create-template new-id)
-             :else (this :-resolve-workspace (merge (:payloadObject selected-config) new-id)))))
+   (fn [{:keys [props state locals this]}]
+     (let [{:keys [method-id]} props
+           {:keys [selected-config]} @state
+           {:keys [export-form]} @locals]
+       (when (export-form :valid?)
+         (let [form-fields (export-form :get-field-values)
+               new-id (assoc (select-keys method-id [:namespace])
+                        :name (:name form-fields))]
+           (if (= selected-config :blank)
+             (this :-create-template new-id form-fields)
+             (this :-resolve-workspace (merge (:payloadObject selected-config) new-id) form-fields))))))
    :-create-template
-   (fn [{:keys [props state refs this]} new-id]
+   (fn [{:keys [props state this]} new-id form-fields]
      (swap! state assoc :banner "Creating template...")
-     (let [{:keys [method-id selected-snapshot-id]} props
-           dest-ret (.-value (@refs "root-entity-type"))]
+     (let [{:keys [method-id selected-snapshot-id]} props]
        (endpoints/call-ajax-orch
         {:endpoint endpoints/create-template
          :payload {:methodNamespace (:namespace method-id)
@@ -184,13 +170,18 @@
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
-                      (this :-resolve-workspace (merge (get-parsed-response) new-id {:rootEntityType dest-ret}))
-                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))})))
+                      (this :-resolve-workspace
+                            (merge (get-parsed-response)
+                                   new-id
+                                   {:rootEntityType (:root-entity-type form-fields)})
+                            form-fields)
+                      (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
+                                               (dissoc :banner))))})))
    :-resolve-workspace
-   (fn [{:keys [props state locals this]} config]
+   (fn [{:keys [props state this]} config form-fields]
      (if-let [workspace-id (:workspace-id props)]
        (this :-export-loaded-config workspace-id config)
-       (let [{:keys [existing-workspace new-workspace]} ((:workspace-selector @locals) :get-selected-workspace)
+       (let [{:keys [existing-workspace new-workspace]} (:workspace form-fields)
              {:keys [project name description auth-domain]} new-workspace]
          (if existing-workspace
            (this :-export-loaded-config (ws-common/workspace->id existing-workspace) config)
@@ -205,7 +196,8 @@
                  :on-done (fn [{:keys [success? get-parsed-response]}]
                             (if success?
                               (this :-export-loaded-config {:namespace project :name name} config)
-                              (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))))))
+                              (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
+                                                       (dissoc :banner))))}))))))
    :-export-loaded-config
    (fn [{:keys [props state]} workspace-id config]
      (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
@@ -217,4 +209,5 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:on-export props) workspace-id (ws-common/config->id config))
-                    (utils/multi-swap! state (assoc :server-error (get-parsed-response false)) (dissoc :banner))))}))})
+                    (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
+                                             (dissoc :banner))))}))})
