@@ -66,7 +66,7 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (let [{:keys [id version]} props]
-       (ajax/call {:url (str "https://dockstore.org:8443/api/ga4gh/v1/tools/"
+       (ajax/call {:url (str "https://staging.dockstore.org:8443/api/ga4gh/v1/tools/"
                              (js/encodeURIComponent (str "#workflow/" id))
                              "/versions/"
                              (js/encodeURIComponent version)
