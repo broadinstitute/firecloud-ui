@@ -2,6 +2,8 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{FlatSpec, Matchers, ParallelTestExecution}
 import org.scalatest.selenium.WebBrowser
 
+
+
 /**
   * Example test for running with Selenium Grid until we work out docker
   * networking to be able to access FiaBitC.

@@ -28,7 +28,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     */
   def withSignInReal(user: Credentials)
                     (testCode: (WorkspaceListPage) => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignInReal(user, new WorkspaceListPage)(testCode)
+    withSignIn(user, new WorkspaceListPage)(testCode)
   }
 
   /**
@@ -36,7 +36,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     */
   def withSignInNewUserReal(user: Credentials)
                            (testCode: (RegistrationPage) => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignInReal(user, new RegistrationPage)(testCode)
+    withSignIn(user, new RegistrationPage)(testCode)
   }
 
 

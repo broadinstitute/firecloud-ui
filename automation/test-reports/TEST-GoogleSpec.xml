@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite 
+errors="0" failures="0" hostname="gmf2d-456" name="GoogleSpec" tests="2" time="2.256" timestamp="2018-03-28T14:41:05">
+  <properties>
+    <property name="jline.esc.timeout" value="0"> </property>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment">
+    </property>
+    <property 
+    name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib">
+</property>
+    <property name="java.vm.version" value="25.161-b12"> </property>
+    <property name="gopherProxySet" value="false"> </property>
+    <property name="java.vm.vendor" value="Oracle Corporation"> </property>
+    <property name="java.vendor.url" value="http://java.oracle.com/">
+    </property>
+    <property name="path.separator" value=":"> </property>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM">
+    </property>
+    <property name="file.encoding.pkg" value="sun.io"> </property>
+    <property name="user.country" value="US"> </property>
+    <property name="sun.java.launcher" value="SUN_STANDARD"> </property>
+    <property name="sun.os.patch.level" value="unknown"> </property>
+    <property 
+    name="java.vm.specification.name" value="Java Virtual Machine Specification">
+</property>
+    <property 
+    name="user.dir" value="/Users/adrazhi/IdeaProjects/firecloud-ui/automation">
+</property>
+    <property name="java.runtime.version" value="1.8.0_161-b12"> </property>
+    <property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment">
+    </property>
+    <property name="jsse.enableSNIExtension" value="false"> </property>
+    <property 
+    name="java.endorsed.dirs" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/endorsed">
+</property>
+    <property name="os.arch" value="x86_64"> </property>
+    <property 
+    name="java.io.tmpdir" value="/var/folders/cj/t34c3x3j0cq2yfx3vnxwdd9sk78cjh/T/">
+</property>
+    <property name="line.separator" value=" "> </property>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation">
+    </property>
+    <property name="os.name" value="Mac OS X"> </property>
+    <property name="sun.jnu.encoding" value="UTF-8"> </property>
+    <property 
+    name="java.library.path" value="/Users/adrazhi/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.">
+</property>
+    <property 
+    name="java.specification.name" value="Java Platform API Specification">
+</property>
+    <property name="java.class.version" value="52.0"> </property>
+    <property 
+    name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers">
+</property>
+    <property name="os.version" value="10.12.6"> </property>
+    <property 
+    name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16">
+</property>
+    <property name="user.home" value="/Users/adrazhi"> </property>
+    <property name="user.timezone" value="America/New_York"> </property>
+    <property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob">
+    </property>
+    <property name="java.specification.version" value="1.8"> </property>
+    <property name="file.encoding" value="UTF-8"> </property>
+    <property name="user.name" value="adrazhi"> </property>
+    <property 
+    name="java.class.path" value="/usr/local/Cellar/sbt/1.1.1/libexec/bin/sbt-launch.jar">
+</property>
+    <property name="jline.shutdownhook" value="false"> </property>
+    <property name="java.vm.specification.version" value="1.8"> </property>
+    <property name="sun.arch.data.model" value="64"> </property>
+    <property 
+    name="java.home" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre">
+</property>
+    <property 
+    name="sun.java.command" value="/usr/local/Cellar/sbt/1.1.1/libexec/bin/sbt-launch.jar -Djsse.enableSNIExtension=false -Dheadless=false testOnly *GoogleSpec">
+</property>
+    <property name="java.specification.vendor" value="Oracle Corporation">
+    </property>
+    <property name="user.language" value="en"> </property>
+    <property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit">
+    </property>
+    <property name="java.vm.info" value="mixed mode"> </property>
+    <property name="java.version" value="1.8.0_161"> </property>
+    <property 
+    name="java.ext.dirs" value="/Users/adrazhi/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java">
+</property>
+    <property 
+    name="sun.boot.class.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/sunrsasign.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/jre/classes">
+</property>
+    <property name="java.vendor" value="Oracle Corporation"> </property>
+    <property name="file.separator" value="/"> </property>
+    <property 
+    name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/">
+</property>
+    <property name="sun.cpu.endian" value="little"> </property>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"> </property>
+    <property 
+    name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16">
+</property>
+    <property 
+    name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16">
+</property>
+    <property name="headless" value="false"> </property>
+    <property name="sun.cpu.isalist" value=""> </property>
+  </properties>
+  <testcase 
+  name="Google should have a search field" classname="GoogleSpec" time="2.022">
+</testcase>
+  <testcase 
+  name="Google should have a 'Google Search' button" classname="GoogleSpec" time="2.221">
+</testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
