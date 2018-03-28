@@ -63,6 +63,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickEdit(): Unit = {
       editButton.doClick()
+      saveButton.awaitEnabledState()
       WorkspaceSummaryPage.this.awaitReady()
     }
 
