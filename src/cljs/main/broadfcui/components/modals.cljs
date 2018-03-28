@@ -44,12 +44,12 @@
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
-     (let [{:keys [data-test-id header content dismiss button-bar ok-button show-cancel? cancel-text show-close?]} props
+     (let [{:keys [data-test-id data-test-state header content dismiss button-bar ok-button show-cancel? cancel-text show-close?]} props
            data-test-id (or data-test-id (when (string? header) (text->test-id header "modal")))
            make-test-id (fn [text] (when data-test-id (str data-test-id "-" text)))]
        (modal/render
         {:content
-         [:div {:data-test-id data-test-id}
+         [:div {:data-test-id data-test-id :data-test-state data-test-state}
           (flex/box {:style {:alignItems "flex-start"
                              :borderBottom style/standard-line
                              :padding "1rem 3rem 1rem"

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import org.openqa.selenium.WebDriver
+import org.broadinstitute.dsde.firecloud.Stateful
+import org.openqa.selenium.{By, WebDriver}
 
 abstract class Modal(id: String)(implicit webDriver: WebDriver) extends Component(TestId(id)) {
   protected val xButton = Button("x-button" inside this)
@@ -74,6 +75,20 @@ class SynchronizeMethodAccessModal(id: String)(implicit webDriver: WebDriver) ex
   }
 
   override def awaitReady(): Unit = grantButton.awaitReady()
+
+}
+
+class PreviewModal(id: String)(implicit webDriver: WebDriver) extends OKCancelModal(id) with Stateful {
+  private val loadingState = "loading"
+  private val doneLoading = "done"
+
+  def getBucket = testId("Google Bucket").webElement.findElement(By.xpath("..")).getText()
+  def getObject = testId("Object").webElement.findElement(By.xpath("..")).getText()
+  def getPreviewMessage = testId("preview-message").webElement.getText()
+  def getErrorMessage = testId("error-message").webElement.getText
+  def awaitDoneState(): Unit = awaitState(doneLoading)
+
+  override def awaitReady(): Unit = okButton.awaitReady()
 
 }
 

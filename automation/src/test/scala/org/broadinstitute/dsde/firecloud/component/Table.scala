@@ -67,6 +67,11 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
   }
 
+  def getHref: List[String] = {
+    import scala.collection.JavaConversions._
+    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).toList.map(_.getAttribute("href"))
+  }
+
   def readColumnHeaders: List[String] = {
     readAllText(columnHeaders)
   }

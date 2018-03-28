@@ -100,6 +100,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       shareWorkspaceButton.doClick()
       await ready new AclEditor()
     }
+
   }
 
   private val storageCostEstimate = new Label("storage-cost-estimate") with Stateful {
@@ -122,6 +123,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       newButton.doClick()
       awaitReady()
     }
+
+    def clickForPreviewPane(link: String): PreviewModal = {
+      click on LinkTextQuery(link)
+      await ready new PreviewModal("preview-modal")
+    }
+
   })
   import scala.language.reflectiveCalls
 
@@ -260,6 +267,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
 
+  def clickForPreview(link: String): PreviewModal = {
+    workspaceAttributesArea.ensureExpanded()
+    val previewPane = workspaceAttributesArea.getInner.clickForPreviewPane(link)
+    previewPane
+  }
+
   def edit(action: => Unit): Unit = {
     if (!isEditing)
       sidebar.clickEdit()
@@ -279,5 +292,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   def readWorkspaceTable: List[List[String]] = {
     workspaceAttributesArea.getInner.table.getData
+  }
+
+  def readWorkspaceTableLinks: List[String] = {
+    workspaceAttributesArea.getInner.table.getHref
   }
 }

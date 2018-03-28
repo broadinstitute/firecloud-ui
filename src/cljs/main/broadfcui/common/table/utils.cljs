@@ -2,7 +2,7 @@
   (:require
    [clojure.string :as string]
    [broadfcui.common :as common]
-   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.gcs-file-preview :refer [FilePreviewLink]]
    [broadfcui.utils :as utils]
    ))
 
@@ -131,13 +131,13 @@
 
 (defn render-gcs-links [workspace-bucket]
   (fn [maybe-uri]
-    (if (string? maybe-uri)
-      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-        [GCSFilePreviewLink
-         (assoc parsed
-           :workspace-bucket workspace-bucket
-           :attributes {:style {:direction "rtl" :marginRight "0.5em"
-                                :overflow "hidden" :textOverflow "ellipsis"
-                                :textAlign "left"}})]
-        maybe-uri)
-      (default-render maybe-uri))))
+    (if-let [parsed (common/dos-or-gcs-uri? maybe-uri)]
+      [FilePreviewLink
+       (assoc parsed
+         :workspace-bucket workspace-bucket
+         :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                              :overflow "hidden" :textOverflow "ellipsis"
+                              :textAlign "left"}})]
+      (if (not (string? maybe-uri))
+        (default-render maybe-uri)
+        maybe-uri))))

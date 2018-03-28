@@ -19,7 +19,6 @@
   (let [method (if method (string/upper-case (name method)) "GET")]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
-
     (when (config/debug?)
       (let [request (utils/restructure method url data)]
         (when (contains? @recent-ajax-calls request)
@@ -107,4 +106,13 @@
                          (cond
                            (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
                            (check-server-down status-code) (reset! server-down? true)))
+                       (on-done m))))))
+
+(defn call-martha [data arg-map]
+  (let [on-done (:on-done arg-map)]
+    (call (assoc arg-map
+            :url (config/martha-url)
+            :method "POST"
+            :data data
+            :on-done (fn [{:keys [status-code status-text] :as m}]
                        (on-done m))))))
