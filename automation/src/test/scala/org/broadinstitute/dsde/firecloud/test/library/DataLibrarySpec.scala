@@ -13,13 +13,13 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "For a dataset with consent codes" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withCleanBillingProject(curatorUser) { namespace =>
-      withWorkspace(namespace, "DataLibrarySpec_consentcodes") { wsName =>
+    withCleanBillingProject(curatorUser) { billingProject =>
+      withWorkspace(billingProject, "DataLibrarySpec_consentcodes") { wsName =>
         withCleanUp {
           val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName) ++ LibraryData.consentCodes
-          api.library.setLibraryAttributes(namespace, wsName, data)
-          register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-          api.library.publishWorkspace(namespace, wsName)
+          api.library.setLibraryAttributes(billingProject, wsName, data)
+          register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
+          api.library.publishWorkspace(billingProject, wsName)
           withSignIn(curatorUser) { _ =>
             val page = new DataLibraryPage().waitForDataset(wsName)
             if (page.isDefined) {
@@ -35,13 +35,13 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "For a dataset with tags" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withCleanBillingProject(curatorUser) { namespace =>
-      withWorkspace(namespace, "DataLibrarySpec_tags", attributes = Some(WorkspaceData.tags)) { wsName =>
+    withCleanBillingProject(curatorUser) { billingProject =>
+      withWorkspace(billingProject, "DataLibrarySpec_tags", attributes = Some(WorkspaceData.tags)) { wsName =>
         withCleanUp {
           val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
-          api.library.setLibraryAttributes(namespace, wsName, data)
-          register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-          api.library.publishWorkspace(namespace, wsName)
+          api.library.setLibraryAttributes(billingProject, wsName, data)
+          register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
+          api.library.publishWorkspace(billingProject, wsName)
           withSignIn(curatorUser) { _ =>
             val page = new DataLibraryPage().waitForDataset(wsName)
             if (page.isDefined) {
@@ -58,8 +58,8 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   "Dataset to test facets values" in withWebDriver { implicit driver =>
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
-    withCleanBillingProject(curatorUser) { namespace =>
-      withWorkspace(namespace, "Facets", attributes = Some(WorkspaceData.tags)) { wsName =>
+    withCleanBillingProject(curatorUser) { billingProject =>
+      withWorkspace(billingProject, "Facets", attributes = Some(WorkspaceData.tags)) { wsName =>
         withCleanUp {
 
           //replacing values in the basic library dataset
@@ -70,9 +70,9 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             "library:primaryDiseaseSite" -> s"$wsName+4",
             "library:dataUseRestriction" -> s"$wsName+5")
 
-          api.library.setLibraryAttributes(namespace, wsName, data)
-          register cleanUp api.library.unpublishWorkspace(namespace, wsName)
-          api.library.publishWorkspace(namespace, wsName)
+          api.library.setLibraryAttributes(billingProject, wsName, data)
+          register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
+          api.library.publishWorkspace(billingProject, wsName)
 
           withSignIn(curatorUser) { _ =>
             val pageOption = new DataLibraryPage().waitForDataset(wsName)
@@ -106,22 +106,22 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
 
-    withCleanBillingProject(curatorUser) { namespace =>
-      withWorkspace(namespace, "DataLibrarySpec") { wsName =>
-        withWorkspace(namespace, "DataLibrarySpec_notags") { wsNameNoTag =>
+    withCleanBillingProject(curatorUser) { billingProject =>
+      withWorkspace(billingProject, "DataLibrarySpec") { wsName =>
+        withWorkspace(billingProject, "DataLibrarySpec_notags") { wsNameNoTag =>
           withCleanUp {
 
             val dataset = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
             val attrTag = Map("tag:tags" -> Seq(s"aaaTag$wsName", s"cccTag$wsName"))
-            api.library.setLibraryAttributes(namespace, wsName, dataset)
-            api.library.setLibraryAttributes(namespace, wsNameNoTag, dataset)
-            api.workspaces.setAttributes(namespace, wsName, attrTag)
+            api.library.setLibraryAttributes(billingProject, wsName, dataset)
+            api.library.setLibraryAttributes(billingProject, wsNameNoTag, dataset)
+            api.workspaces.setAttributes(billingProject, wsName, attrTag)
             register cleanUp {
-              api.library.unpublishWorkspace(namespace, wsName)(authToken)
-              api.library.unpublishWorkspace(namespace, wsNameNoTag)(authToken)
+              api.library.unpublishWorkspace(billingProject, wsName)(authToken)
+              api.library.unpublishWorkspace(billingProject, wsNameNoTag)(authToken)
             }
-            api.library.publishWorkspace(namespace, wsNameNoTag)
-            api.library.publishWorkspace(namespace, wsName)
+            api.library.publishWorkspace(billingProject, wsNameNoTag)
+            api.library.publishWorkspace(billingProject, wsName)
 
             withSignIn(curatorUser) { _ =>
               val page = new DataLibraryPage().open
