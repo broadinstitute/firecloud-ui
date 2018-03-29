@@ -573,13 +573,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      val projectName: String = Config.Projects.default
-      withGroup("AuthDomain", List(user.email)) { groupName =>
-        withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
-          checkVisibleAndAccessible(user, projectName, workspaceName)
+      withCleanBillingProject(owner, List(creator.email)) { projectName =>
+        withGroup("AuthDomain", List(user.email)) { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkVisibleAndAccessible(user, projectName, workspaceName)
 
-          api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
-          checkVisibleNotAccessible(user, projectName, workspaceName)
+            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+            checkVisibleNotAccessible(user, projectName, workspaceName)
+          }
         }
       }
     }
@@ -617,20 +618,21 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      val projectName: String = Config.Projects.default
-      withGroup("AuthDomain") { groupName =>
-        withCleanUp {
-          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
-            checkVisibleNotAccessible(user, projectName, workspaceName)
+      withCleanBillingProject(owner, List(creator.email)) { projectName =>
+        withGroup("AuthDomain") { groupName =>
+          withCleanUp {
+            withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+              checkVisibleNotAccessible(user, projectName, workspaceName)
 
-            api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
-            register cleanUp Try(api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)).recover {
-              case _: RestException =>
+              api.groups.addUserToGroup(groupName, user.email, GroupRole.Member)
+              register cleanUp Try(api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)).recover {
+                case _: RestException =>
+              }
+              checkVisibleAndAccessible(user, projectName, workspaceName)
+
+              api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
+              checkVisibleNotAccessible(user, projectName, workspaceName)
             }
-            checkVisibleAndAccessible(user, projectName, workspaceName)
-
-            api.groups.removeUserFromGroup(groupName, user.email, GroupRole.Member)
-            checkVisibleNotAccessible(user, projectName, workspaceName)
           }
         }
       }
