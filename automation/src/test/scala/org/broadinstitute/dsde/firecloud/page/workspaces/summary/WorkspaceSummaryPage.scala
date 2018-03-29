@@ -38,19 +38,19 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
 
   private val submissionStatusLabel = Label("submission-status")
 
+  private val sidebar = new Sidebar(this)
+
   private val authDomainGroups = Label("auth-domain-groups")
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = Label("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
+  private val storageCostEstimate = new StorageCostEstimate()
+  private val submissionCounter = new SubmissionCounter()
+  private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea())
 
   def shouldWaitForBucketAccess: Boolean = {
     noBucketAccess.isVisible && noBucketAccess.getText.contains("unavailable")
   }
-
-  private val sidebar = new Sidebar(this)
-  private val storageCostEstimate = new StorageCostEstimate()
-  private val submissionCounter = new SubmissionCounter()
-  private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea())
 
   /**
     * Dictionary of access level labels displayed in the web UI.
