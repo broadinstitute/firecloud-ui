@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud
 
+import org.broadinstitute.dsde.workbench.service.test.Awaiter
 import org.openqa.selenium.WebDriver
 import org.scalatest.exceptions.TestFailedException
 
@@ -23,4 +24,20 @@ trait Stateful { this: FireCloudView =>
       }
     }
   }
+}
+
+trait SignalsReadiness extends Stateful { this: FireCloudView =>
+  implicit val webDriver: WebDriver
+
+  def isReady(implicit webDriver: WebDriver): Boolean = getState == "ready"
+
+  override def awaitReady(): Unit = await condition isReady
+}
+
+trait ReadyComponent { this: FireCloudView =>
+  implicit val webDriver: WebDriver
+
+  val readyComponent: Awaiter
+
+  override def awaitReady(): Unit = readyComponent.awaitReady()
 }
