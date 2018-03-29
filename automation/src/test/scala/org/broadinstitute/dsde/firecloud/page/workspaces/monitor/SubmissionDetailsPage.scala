@@ -7,7 +7,8 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
-import scala.concurrent.duration.DurationLong
+
+import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 
 class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
@@ -71,11 +72,12 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   }
 
   /**
-    * Wait maximum 5 minutes for Submission to complete.
-    * Polling 10 seconds interval
+    * Wait for Submission to complete. 10 seconds polling.
+    *
+    * @param timeOut: Time out. Default set 10.minutes
     */
-  def waitUntilSubmissionCompletes(): Unit = {
-    retry[Boolean](10.seconds, 5.minutes)({
+  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 10.minutes): Unit = {
+    retry[Boolean](10.seconds, timeOut)({
       if (isError) None // found error stops retry
       val monitorPage = goToMonitorTab()
       monitorPage.openSubmission(submissionId)
