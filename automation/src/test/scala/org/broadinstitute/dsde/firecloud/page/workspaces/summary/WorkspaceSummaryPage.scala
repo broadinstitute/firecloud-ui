@@ -108,7 +108,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
-      val syncModal = new SynchronizeMethodAccessModal("method-access")
+      val syncModal = new SynchronizeMethodAccessModal()
       if (syncModal.validateLocation) {
         grantMethodPermission match {
           case Some(true) => syncModal.clickOk()
@@ -187,10 +187,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     }
   }
 
-  def clickForPreview(link: String): PreviewModal = {
+  def clickForPreview(link: String): GCSFilePreviewModal = {
     workspaceAttributesArea.ensureExpanded()
-    val previewPane = workspaceAttributesArea.getInner.clickForPreviewPane(link)
-    previewPane
+    workspaceAttributesArea.getInner.clickForPreviewPane(link)
   }
 
   def edit(action: => Unit): Unit = {
@@ -286,8 +285,18 @@ class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireClo
     awaitReady()
   }
 
-  def clickForPreviewPane(link: String): PreviewModal = {
+  def clickForPreviewPane(link: String): GCSFilePreviewModal = {
     click on LinkTextQuery(link)
-    await ready new PreviewModal("preview-modal")
+    val previewModal = new GCSFilePreviewModal()
+    // dos links take a sec to pop up
+    previewModal.awaitVisible()
+    await ready previewModal
+  }
+}
+
+class SynchronizeMethodAccessModal(override implicit val webDriver: WebDriver) extends OKCancelModal("method-access") {
+  def validateLocation: Boolean = {
+    awaitReady()
+    content != null
   }
 }
