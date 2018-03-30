@@ -214,10 +214,13 @@
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]
-        [:div {:style {:lineHeight "2rem"}}
-         [:div {:style {:color (:state-exception style/colors)}}
+        [:div {}
+         [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
           "Error loading user information. Please try again later."]
-         [:div {:style {:color (:text-lighter style/colors)}} (str "What went wrong: " (:message (:error @state)))]])])
+         [:table {:style {:color (:text-lighter style/colors)}}
+          [:tbody {:style {}}
+           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
+           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
    :component-did-mount
    (fn [{:keys [props state]}]
      (ajax/call-orch "/me"
@@ -230,10 +233,11 @@
                                      404 ((:on-success props))
                                      ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
                                      ;; exceptions because they are useless ("Unexpected token T in JSON...")
-                                     (let [[parsed-error parsing-error] (get-parsed-response false false)]
-                                       (swap! state assoc :error (if (some? parsing-error)
-                                                                   {:message (str "The FireCloud server returned a status code of " status-code ".")}
-                                                                   parsed-error))))))}
+                                     (let [[error-json parsing-error] (get-parsed-response true false)]
+                                       (swap! state assoc :error (if parsing-error
+                                                                   {:message (str "The FireCloud server is temporarily unavailable.")
+                                                                    :statusCode status-code}
+                                                                   error-json))))))}
                      :service-prefix ""))})
 
 (react/defc RefreshCredentials
