@@ -36,10 +36,11 @@
                                      :status-text (.-statusText xhr)
                                      :raw-response (.-responseText xhr)
                                      :get-parsed-response
-                                     (fn [& [keywordize-keys?]]
+                                     (fn [& [keywordize-keys? throw-on-error?]]
                                        (utils/parse-json-string
                                         (.-responseText xhr)
-                                        (if (some? keywordize-keys?) keywordize-keys? true)))})))]
+                                        (if (some? keywordize-keys?) keywordize-keys? true)
+                                        (if (some? throw-on-error?) throw-on-error? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (.addEventListener xhr "loadend" call-on-done)

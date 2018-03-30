@@ -214,20 +214,26 @@
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]
-        [:div {:style {:color (:state-exception style/colors) :lineHeight "2rem"}}
-         "Error loading user information. Please try again later." [:br]
-         (str "("(:message (:error @state)) ")")])])
+        [:div {:style {:lineHeight "2rem"}}
+         [:div {:style {:color (:state-exception style/colors)}}
+          "Error loading user information. Please try again later."]
+         [:div {:style {:color (:text-lighter style/colors)}} (str "What went wrong: " (:message (:error @state)))]])])
    :component-did-mount
    (fn [{:keys [props state]}]
      (ajax/call-orch "/me"
-                     {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
+                     {:on-done (fn [{:keys [success? status-code get-parsed-response raw-response]}]
                                  (if success?
                                    ((:on-success props))
                                    (case status-code
                                      403 (swap! state assoc :error :not-active)
                                      ;; 404 means "not yet registered"
                                      404 ((:on-success props))
-                                     (swap! state assoc :error (get-parsed-response)))))}
+                                     ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
+                                     ;; exceptions because they are useless ("Unexpected token T in JSON...")
+                                     (let [[parsed-error parsing-error] (get-parsed-response false false)]
+                                       (swap! state assoc :error (if (some? parsing-error)
+                                                                   {:message (str "The FireCloud server returned a status code of " status-code ".")}
+                                                                   parsed-error))))))}
                      :service-prefix ""))})
 
 (react/defc RefreshCredentials
