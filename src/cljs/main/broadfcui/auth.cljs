@@ -235,7 +235,7 @@
                                      ;; exceptions because they are useless ("Unexpected token T in JSON...")
                                      (let [[error-json parsing-error] (get-parsed-response true false)]
                                        (swap! state assoc :error (if parsing-error
-                                                                   {:message (str "The FireCloud server is temporarily unavailable.")
+                                                                   {:message (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
                                                                     :statusCode status-code}
                                                                    error-json))))))}
                      :service-prefix ""))})
