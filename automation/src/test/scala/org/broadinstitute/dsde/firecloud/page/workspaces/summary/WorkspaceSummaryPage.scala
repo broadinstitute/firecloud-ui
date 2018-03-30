@@ -153,7 +153,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     await ready new CloneWorkspaceModal
   }
 
-  private def isEditing: Boolean = {
+  private[summary] def isEditing: Boolean = {
     !sidebar.editButton.isVisible
   }
 
@@ -231,17 +231,19 @@ class Sidebar(parent: WorkspaceSummaryPage)(implicit val webDriver: WebDriver) e
 
   def clickEdit(): Unit = {
     editButton.doClick()
-    saveButton.awaitEnabledState()
+    await condition parent.isEditing
     parent.awaitReady()
   }
 
   def clickSave(): Unit = {
     saveButton.doClick()
+    await condition !parent.isEditing
     parent.awaitReady()
   }
 
   def clickCancel(): Unit = {
     cancelButton.doClick()
+    await condition !parent.isEditing
     parent.awaitReady()
   }
 
