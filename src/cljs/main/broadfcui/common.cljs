@@ -1,7 +1,9 @@
 (ns broadfcui.common
   (:require
+   [clojure.string :as string]
    [dmohs.react :as react]
    [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -116,6 +118,15 @@
       (when (= 3 (count matcher)) ;; first match will be the whole thing
         {:bucket-name (matcher 1)
          :object (matcher 2)}))))
+
+(defn dos-or-gcs-uri? [raw-uri]
+  (when (string? raw-uri)
+    (cond
+      (string/starts-with? raw-uri "dos://")
+      {:dos-uri raw-uri}
+      (string/starts-with? raw-uri "gs://")
+      (parse-gcs-uri raw-uri)
+      :else false)))
 
 (defn gcs-uri->download-url [gcs-uri]
   (when-let [parsed (parse-gcs-uri gcs-uri)]

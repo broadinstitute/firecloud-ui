@@ -50,14 +50,11 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     * @param projectName the billing project name
     * @return a status of "success", "failure", or "unknown"
     */
-  def waitForCreateCompleted(projectName: String): String = {
+  def waitForCreateDone(projectName: String): Option[String] = {
     billingProjectTable.filter(projectName)
     retry(10.seconds, 10.minutes)({
-          readCreationStatusForProject(projectName).filterNot(_ equals "running")
-        }) match {
-      case None => throw new Exception("Billing project creation did not complete")
-      case Some(s) => s
-    }
+      readCreationStatusForProject(projectName).filterNot(_ equals "running")
+    })
   }
 
   private def readCreationStatusForProject(projectName: String): Option[String] = {

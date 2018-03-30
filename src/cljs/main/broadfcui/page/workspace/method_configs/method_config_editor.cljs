@@ -193,7 +193,7 @@
                                      :methods-response response
                                      :methods {[methodNamespace methodName] (mapv :snapshotId response)})
                               ;; FIXME: :error-message is unused
-                              (swap! state assoc :error-message status-text))))})
+                              (swap! state assoc :methods {} :error-message status-text))))})
              "dockstore"
              (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
                (endpoints/dockstore-get-versions
@@ -203,7 +203,7 @@
                     (swap! state assoc
                            ;; vector only used when checking redaction, N/A for Dockstore
                            :methods {[nil nil] (mapv :name (get-parsed-response))})
-                    (swap! state assoc :error-message status-text))))))))))
+                    (swap! state assoc :methods {} :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])

@@ -130,7 +130,8 @@
    message])
 
 (defn create-validation-error-message [fails]
-  [:div {:style {:color (:exception-state colors)}}
+  [:div {:style {:color (:state-exception colors)
+                 :marginBottom "0.5rem"}}
    (common/mapwrap :div fails)])
 
 (defn create-message-well [message]
