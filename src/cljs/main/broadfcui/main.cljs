@@ -135,22 +135,6 @@
               (set! (.-errorMessage this) status-text)
               (swap! state assoc :registration-status :error)))))))})
 
-(defn- render-system-status-dialog [maintenance-mode? dismiss]
-  [modals/OKCancelForm
-   {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
-    :show-cancel? false
-    :dismiss dismiss
-    :content (if maintenance-mode?
-               [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
-                   We should be back online shortly. For more information, please see "
-                [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                 "http://status.firecloud.org/"] "."]
-               [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
-                [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                 "http://status.firecloud.org/"]
-                " for more information."])}])
-
-
 (defn- render-js-exception [e dismiss]
   [modals/OKCancelForm
    {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
@@ -249,9 +233,14 @@
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          (when (:showing-system-down-dialog? @state)
-           (render-system-status-dialog
-            (:maintenance-mode? @state)
-            #(swap! state dissoc :showing-system-down-dialog? :maintenance-mode?)))
+           (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
+                                                       "Server Unavailable")
+                 msg (if (:maintenance-mode? @state) "FireCloud is currently undergoing planned maintenance. We should be back online shortly."
+                                                     "FireCloud service is temporarily unavailable.")]
+             (notifications/render-alert {:title title
+                                          :message msg
+                                          :link "http://status.firecloud.org/"
+                                          :cleared? false} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
             (:js-error @state)
