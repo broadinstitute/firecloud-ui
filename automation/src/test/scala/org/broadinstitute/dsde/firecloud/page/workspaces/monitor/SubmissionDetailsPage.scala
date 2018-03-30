@@ -77,14 +77,17 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     * @param timeOut: Time out. Default set 10.minutes
     */
   def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 10.minutes): Unit = {
-    retry[Boolean](10.seconds, timeOut)({
-      if (isError) None // found error stops retry
-      val monitorPage = goToMonitorTab()
-      monitorPage.openSubmission(submissionId)
-      if (isSubmissionDone) Some(true) else None
+    retry[Boolean](10.seconds, timeOut) ({
+      goToMonitorTab().openSubmission(submissionId)
+      if (isError) {
+        Some(false)
+      } else {
+        if (isSubmissionDone) Some(true) else None
+      }
     }) match {
-      case None => throw new Exception("Workflow Submission failed to complete")
-      case Some(s) =>
+      case None => throw new Exception(s"Workflow Submission $submissionId failed")
+      case Some(false) => throw new Exception("Error on Submission page")
+      case Some(true) =>
     }
   }
 
