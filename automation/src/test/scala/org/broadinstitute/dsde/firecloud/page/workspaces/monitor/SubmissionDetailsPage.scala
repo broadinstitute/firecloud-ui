@@ -8,6 +8,9 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
+import scala.concurrent.duration.{DurationLong, FiniteDuration}
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+
 class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
@@ -68,12 +71,23 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     ABORTED_STATUS.contains(readWorkflowStatus())
   }
 
-  def waitUntilSubmissionCompletes(): Unit = {
-    while (!isSubmissionDone) {
-      // No need to be too impatient... let's catch our breath before we check again.
-      Thread sleep 10000
-      val monitorPage = goToMonitorTab()
-      monitorPage.openSubmission(submissionId)
+  /**
+    * Wait for Submission to complete. 10 seconds polling.
+    *
+    * @param timeOut: Time out. Default set 10.minutes
+    */
+  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 10.minutes): Unit = {
+    retry[Boolean](10.seconds, timeOut) ({
+      goToMonitorTab().openSubmission(submissionId)
+      if (isError) {
+        Some(false)
+      } else {
+        if (isSubmissionDone) Some(true) else None
+      }
+    }) match {
+      case None => throw new Exception(s"Workflow Submission $submissionId failed")
+      case Some(false) => throw new Exception("Error on Submission page")
+      case Some(true) =>
     }
   }
 
