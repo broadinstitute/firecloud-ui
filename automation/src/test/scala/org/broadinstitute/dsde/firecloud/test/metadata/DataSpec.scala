@@ -10,7 +10,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.{AclEntry, Orchestration, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.WebBrowser
@@ -107,7 +107,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
             api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             workspaceDataTab.open
@@ -147,7 +147,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -172,11 +172,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
+          api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}"))
           withSignIn(owner) { _ =>
-            val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-            workspaceSummaryTab.edit {
-              workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\"]}}")
-            }
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
           }
@@ -187,7 +184,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -210,12 +207,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           api.importMetaData(billingProject, workspaceName, "entities", "entity:participant_id\ttest1\ttest2\ttest3\nparticipant1\t1\t2\t3")
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-
+          api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}"))
           withSignIn(owner) { _ =>
-            val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-            workspaceSummaryTab.edit {
-              workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}")
-            }
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test3")
             workspaceDataTab.dataTable.hideColumn("test1")
@@ -228,7 +221,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", false)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -314,12 +307,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
             val headers1 = List("participant_id", "test1", "test2", "test3")
             val headers2 = headers1 :+ "test4"
+            api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}"))
 
             withSignIn(owner) { _ =>
-              val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-              workspaceSummaryTab.edit {
-                workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\"], \"hidden\": [\"test2\", \"test3\"]}}")
-              }
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers1, workspaceDataTab)
               workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
@@ -350,12 +340,9 @@ class DataSpec extends FreeSpec with WebBrowserSpec
 
           val headers1 = List("participant_id", "test1", "test2", "test3", "test4")
           val headers2 = headers1 :+ "test5"
+          api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}"))
 
           withSignIn(owner) { _ =>
-            val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-            workspaceSummaryTab.edit {
-              workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test4\"], \"hidden\": [\"test2\", \"test3\"]}}")
-            }
             val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
             createAndImportMetadataFile(headers1, workspaceDataTab)
             workspaceDataTab.dataTable.hideColumn("test1")
@@ -520,11 +507,7 @@ class DataSpec extends FreeSpec with WebBrowserSpec
   }
 
   def setColumnDefaults(billingProject: String, workspaceName: String, shown: List[String], hidden: List[String])
-                       (implicit webDriver: WebDriver): Unit = {
-    val workspaceSummaryTab = new WorkspaceSummaryPage(billingProject, workspaceName).open
-    workspaceSummaryTab.edit {
-      workspaceSummaryTab.addWorkspaceAttribute("workspace-column-defaults", buildColumnDefaults)
-    }
+                       (implicit authToken: AuthToken): Unit = {
 
     def buildColumnDefaults: String = {
       def join(columns: List[String]) = columns match {
@@ -533,6 +516,8 @@ class DataSpec extends FreeSpec with WebBrowserSpec
       }
       s"""{"participant": {"shown": [${join(shown)}], "hidden": [${join(hidden)}]}}"""
     }
+
+    api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> buildColumnDefaults))
   }
   def readHeadersFromTSV(fileName: String): List[String] = {
     Source.fromFile(fileName).getLines().next().split('\t').toList
