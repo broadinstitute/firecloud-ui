@@ -279,7 +279,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     else
       throw new IllegalStateException("Already editing")
 
-    await condition (isEditing, 2)
+    await condition (isEditing, 10)
     action
 
     if (isEditing) {
