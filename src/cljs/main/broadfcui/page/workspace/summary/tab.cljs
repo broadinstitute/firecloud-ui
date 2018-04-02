@@ -186,7 +186,7 @@
      (this :refresh))
    :component-will-receive-props
    (fn [{:keys [props next-props this]}]
-     (when-not (= (:workspace-id props) (:workspace-id next-props))
+     (when (utils/any-change [:workspace :workspace-id] props next-props)
        (this :refresh)))
    :component-will-unmount
    (fn []
