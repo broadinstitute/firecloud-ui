@@ -232,7 +232,7 @@
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
-         (when (:showing-system-down-dialog? @state)
+         (when (:showing-system-down-banner? @state)
            (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
                                                        "Server Unavailable")
                  msg (if (:maintenance-mode? @state) "FireCloud is currently undergoing planned maintenance. We should be back online shortly."
@@ -254,12 +254,12 @@
       ajax/server-down? :server-watcher
       (fn [_ _ _ down-now?]
         (when down-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
+          (swap! state assoc :showing-system-down-banner? true :maintenance-mode? false))))
      (add-watch
       ajax/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
+          (swap! state assoc :showing-system-down-banner? true :maintenance-mode? true))))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
