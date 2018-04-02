@@ -77,6 +77,16 @@
   (or (= 501 status-code)
       (<= 503 status-code 599)))
 
+(defn- update-health [status-code status-text]
+  (let [maintenance (check-maintenance-mode status-code status-text)
+        down (check-server-down status-code)]
+    (cond
+      maintenance (reset! maintenance-mode? true)
+      down (reset! server-down? true)
+      :else (do
+              (reset! maintenance-mode? false)
+              (reset! server-down? false)))))
+
 (defn get-exponential-backoff-interval [attempt]
   (* (.pow js/Math 2 attempt) 1000)) ;; backoff interval in millis
 
@@ -89,10 +99,7 @@
             :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (when (and (not @server-down?) (not @maintenance-mode?))
-                         (cond
-                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
-                           (check-server-down status-code) (reset! server-down? true)))
+                       (update-health status-code status-text)
                        (on-done m))))))
 
 (defn call-leo [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
@@ -103,10 +110,7 @@
             :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (when (and (not @server-down?) (not @maintenance-mode?))
-                         (cond
-                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
-                           (check-server-down status-code) (reset! server-down? true)))
+                       (update-health status-code status-text)
                        (on-done m))))))
 
 (defn call-martha [data arg-map]

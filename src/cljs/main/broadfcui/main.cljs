@@ -253,13 +253,11 @@
      (add-watch
       ajax/server-down? :server-watcher
       (fn [_ _ _ down-now?]
-        (when down-now?
-          (swap! state assoc :showing-system-down-banner? true :maintenance-mode? false))))
+        (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
      (add-watch
       ajax/maintenance-mode? :server-watcher
       (fn [_ _ _ maintenance-now?]
-        (when maintenance-now?
-          (swap! state assoc :showing-system-down-banner? true :maintenance-mode? true))))
+        (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
