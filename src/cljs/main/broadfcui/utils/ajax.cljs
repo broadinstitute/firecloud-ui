@@ -78,11 +78,11 @@
       (<= 503 status-code 599)))
 
 (defn- update-health [status-code status-text]
-  (let [maintenance (check-maintenance-mode status-code status-text)
-        down (check-server-down status-code)]
+  (let [maintenance? (check-maintenance-mode status-code status-text)
+        down? (check-server-down status-code)]
     (cond
-      maintenance (reset! maintenance-mode? true)
-      down (reset! server-down? true)
+      maintenance? (reset! maintenance-mode? true)
+      down? (reset! server-down? true)
       :else (do
               (reset! maintenance-mode? false)
               (reset! server-down? false)))))
