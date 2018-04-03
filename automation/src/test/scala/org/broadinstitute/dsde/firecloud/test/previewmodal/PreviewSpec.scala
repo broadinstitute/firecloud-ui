@@ -67,13 +67,13 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "WorkspaceSpec_gcs_link_preview") { workspaceName =>
         //this is a known file in our bucket
-        api.workspaces.setAttributes(billingProject, workspaceName, Map("a"-> "gs://firecloud-alerts-dev/alerts.json"))
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> "gs://firecloud-alerts-dev/alerts.json"))
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview("gs://firecloud-alerts-dev/alerts.json")
 
-          previewModal.getBucket shouldBe " firecloud-alerts-dev"
-          previewModal.getObject shouldBe " alerts.json"
+          previewModal.getBucket shouldBe "firecloud-alerts-dev"
+          previewModal.getObject shouldBe "alerts.json"
 
           val filePreview = previewModal.getFilePreview
           //file sometimes changes but is always a JSON array, so easy test...
@@ -92,7 +92,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "WorkspaceSpec_gcs_file_not_previewable") { workspaceName =>
         //this is a known file in our bucket
-        api.workspaces.setAttributes(billingProject, workspaceName, Map("a"-> s"gs://$bucket/$gObject"))
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> s"gs://$bucket/$gObject"))
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(s"gs://$bucket/$gObject")
@@ -117,7 +117,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "WorkspaceSpec_dos_file_not_previewable") { workspaceName =>
         //this is a known file in our bucket
-        api.workspaces.setAttributes(billingProject, workspaceName, Map("a"-> dosLink))
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> dosLink))
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(dosLink)

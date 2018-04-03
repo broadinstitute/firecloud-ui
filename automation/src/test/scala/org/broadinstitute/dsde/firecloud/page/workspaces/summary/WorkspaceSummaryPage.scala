@@ -44,8 +44,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = Label("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
-  private val storageCostEstimate = StorageCostEstimate()
-  private val submissionCounter = SubmissionCounter()
+  private val storageCostEstimate = new StorageCostEstimate()
+  private val submissionCounter = new SubmissionCounter()
   private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea())
 
   def shouldWaitForBucketAccess: Boolean = {
@@ -271,8 +271,8 @@ class Sidebar(parent: WorkspaceSummaryPage)(implicit val webDriver: WebDriver) e
   }
 }
 
-case class StorageCostEstimate(implicit val webDriver: WebDriver) extends Label("storage-cost-estimate") with SignalsReadiness
-case class SubmissionCounter(implicit val webDriver: WebDriver) extends Label("submission-counter") with SignalsReadiness
+class StorageCostEstimate(implicit val webDriver: WebDriver) extends Label("storage-cost-estimate") with SignalsReadiness
+class SubmissionCounter(implicit val webDriver: WebDriver) extends Label("submission-counter") with SignalsReadiness
 
 class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireCloudView with ReadyComponent {
   val newButton = Button("add-new-button")
