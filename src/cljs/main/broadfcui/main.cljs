@@ -240,7 +240,8 @@
              (notifications/render-alert {:title title
                                           :message msg
                                           :link "http://status.firecloud.org/"
-                                          :cleared? false} nil)))
+                                          :cleared? false
+                                          :link-title "System Status"} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
             (:js-error @state)

@@ -17,7 +17,7 @@
    [broadfcui.utils.user :as user]
    ))
 
-(defn render-alert [{:keys [cleared? link message title]} dismiss]
+(defn render-alert [{:keys [cleared? link message title link-title]} dismiss]
   (let [text-color "#eee"]
     (top-banner/render
      [:div {:style {:color text-color
@@ -39,7 +39,7 @@
         (when link
           (links/create-external {:href link
                                   :style {:color text-color :margin-left "1rem"}}
-            "Read more..."))]]])))
+                                 (if (some? link-title) link-title "Read more...")))]]])))
 
 (defn- status-alert-interval [attempt]
   (cond
