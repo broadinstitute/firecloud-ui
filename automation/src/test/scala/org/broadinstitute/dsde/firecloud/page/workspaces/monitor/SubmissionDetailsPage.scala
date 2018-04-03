@@ -74,9 +74,9 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   /**
     * Wait for Submission to complete. 10 seconds polling.
     *
-    * @param timeOut: Time out. Default set 10.minutes
+    * @param timeOut: Time out. Default set 20.minutes
     */
-  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 10.minutes): Unit = {
+  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 20.minutes): Unit = {
     retry[Boolean](10.seconds, timeOut) ({
       goToMonitorTab().openSubmission(submissionId)
       if (isError) {
