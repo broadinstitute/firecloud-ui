@@ -44,8 +44,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = Label("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
-  private val storageCostEstimate = new StorageCostEstimate()
-  private val submissionCounter = new SubmissionCounter()
+  private val storageCostEstimate = StorageCostEstimate()
+  private val submissionCounter = SubmissionCounter()
   private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea())
 
   def shouldWaitForBucketAccess: Boolean = {
@@ -93,7 +93,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
   def deleteWorkspace(): WorkspaceListPage = {
     val workspaceDeleteModal = sidebar.clickDeleteWorkspace()
     workspaceDeleteModal.confirmDelete()
-    await ready new WorkspaceListPage
+    await ready new WorkspaceListPage()
   }
 
   /**
@@ -108,7 +108,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
-      val syncModal = new SynchronizeMethodAccessModal()
+      val syncModal = await ready new SynchronizeMethodAccessModal()
       if (syncModal.validateLocation) {
         grantMethodPermission match {
           case Some(true) => syncModal.clickOk()
@@ -154,7 +154,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
   }
 
   private[summary] def isEditing: Boolean = {
-    !sidebar.editButton.isVisible
+    sidebar.saveButton.isVisible
   }
 
   def hasGoogleBillingLink: Boolean = {
@@ -201,9 +201,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     action
 
     if (isEditing) {
-      sidebar.saveButton.scrollToVisible()
       sidebar.clickSave()
-      awaitReady()
     }
     else
       throw new IllegalStateException("Tried to click on 'save' while not editing")
@@ -273,8 +271,8 @@ class Sidebar(parent: WorkspaceSummaryPage)(implicit val webDriver: WebDriver) e
   }
 }
 
-class StorageCostEstimate(implicit val webDriver: WebDriver) extends Label("storage-cost-estimate") with SignalsReadiness
-class SubmissionCounter(implicit val webDriver: WebDriver) extends Label("submission-counter") with SignalsReadiness
+case class StorageCostEstimate(implicit val webDriver: WebDriver) extends Label("storage-cost-estimate") with SignalsReadiness
+case class SubmissionCounter(implicit val webDriver: WebDriver) extends Label("submission-counter") with SignalsReadiness
 
 class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireCloudView with ReadyComponent {
   val newButton = Button("add-new-button")
@@ -298,7 +296,6 @@ class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireClo
 
 class SynchronizeMethodAccessModal(override implicit val webDriver: WebDriver) extends OKCancelModal("method-access") {
   def validateLocation: Boolean = {
-    awaitReady()
     content != null
   }
 }
