@@ -198,11 +198,6 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     else
       throw new IllegalStateException("Already editing")
 
-    val start = System.currentTimeMillis()
-    while(!isEditing && System.currentTimeMillis() < start + 10000) {
-      sidebar.clickEdit()
-    }
-
     action
 
     if (isEditing) {
