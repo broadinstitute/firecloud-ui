@@ -241,7 +241,8 @@
                                           :message msg
                                           :link "http://status.firecloud.org/"
                                           :cleared? false
-                                          :link-title "System Status"} nil)))
+                                          :link-title "System Status"
+                                          :severity :info} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
              (:js-error @state)

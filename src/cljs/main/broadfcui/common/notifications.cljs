@@ -17,13 +17,18 @@
    [broadfcui.utils.user :as user]
    ))
 
-(defn render-alert [{:keys [cleared? link message title link-title]} dismiss]
-  (let [text-color "#eee"]
+(defn render-alert [{:keys [cleared? link message title link-title severity]} dismiss]
+  (let [text-color (case severity
+                     :info (:text-light style/colors)
+                     "#eee")
+        background-color (case severity
+                           :info (:background-light style/colors)
+                           (if cleared?
+                             (:state-success style/colors)
+                             (:state-exception style/colors)))]
     (top-banner/render
       [:div {:style {:color text-color
-                     :background-color (if cleared?
-                                         (:state-success style/colors)
-                                         (:state-exception style/colors))
+                     :background-color background-color
                      :padding "1rem"}}
        (when cleared?
          [:div {:style {:float "right"}}
