@@ -250,7 +250,7 @@
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [state this refs locals]}]
-     ;; pop up the message only when we start getting 503s, not on every 503
+     ;; Show system status banner at the first 503, hide it at the first success
      (add-watch
        ajax/server-down? :server-watcher
        (fn [_ _ _ down-now?]
