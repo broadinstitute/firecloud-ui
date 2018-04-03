@@ -116,7 +116,7 @@ class WorkspaceSpec extends FreeSpec with Matchers
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = authTokenOwner
           val testName = "WorkspaceSpec_projectOwnerAccess_projectCost"
-          withCleanBillingProject(user) { billingProject =>
+          withCleanBillingProject(user, List(projectOwner.email)) { billingProject =>
             withWorkspace(billingProject, testName, Set.empty, List.empty) { workspaceName =>
               withSignIn(user) { listPage =>
                 val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
