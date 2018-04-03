@@ -114,6 +114,9 @@
 (defn changes [keys coll1 coll2]
   (map (fn [key] (not= (key coll1) (key coll2))) keys))
 
+(defn any-change [keys coll1 coll2]
+  (some identity (changes keys coll1 coll2)))
+
 (defn replace-top [coll x]
   (conj (pop coll) x))
 
