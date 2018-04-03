@@ -138,7 +138,7 @@
 (defn- render-js-exception [e dismiss]
   [modals/OKCancelForm
    {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
-                                           :marginRight "1rem"}}
+                                                  :marginRight "1rem"}}
                                          :warning)
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
@@ -206,9 +206,9 @@
                                          (swap! state update :user-status
                                                 #(-> %
                                                      ((if signed-in? conj disj)
-                                                      :signed-in)
+                                                       :signed-in)
                                                      ((if token-saved? conj disj)
-                                                      :refresh-token-saved))))}]
+                                                       :refresh-token-saved))))}]
            (when (and config-loaded? (not auth2))
              [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
@@ -219,9 +219,9 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                js/window "error"
-                                (fn [e]
-                                  (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
+                                 js/window "error"
+                                 (fn [e]
+                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -244,21 +244,21 @@
                                           :link-title "System Status"} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
-            (:js-error @state)
-            #(swap! state dissoc :showing-js-error-dialog? :js-error)))
+             (:js-error @state)
+             #(swap! state dissoc :showing-js-error-dialog? :js-error)))
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [state this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-      ajax/server-down? :server-watcher
-      (fn [_ _ _ down-now?]
-        (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
+       ajax/server-down? :server-watcher
+       (fn [_ _ _ down-now?]
+         (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
      (add-watch
-      ajax/maintenance-mode? :server-watcher
-      (fn [_ _ _ maintenance-now?]
-        (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
+       ajax/maintenance-mode? :server-watcher
+       (fn [_ _ _ maintenance-now?]
+         (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
