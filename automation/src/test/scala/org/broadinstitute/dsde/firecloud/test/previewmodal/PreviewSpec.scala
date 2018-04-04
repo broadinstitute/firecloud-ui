@@ -71,26 +71,15 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview("gs://firecloud-alerts-dev/alerts.json")
-          previewModal.awaitReady()
-          previewModal.getBucket shouldBe "Google Bucket: firecloud-alerts-dev"
-          previewModal.getObject shouldBe "Object: alerts.json"
-          // preview pane is only created if there's something to preview so
-          // give it .1 sec
-          retry[Boolean](100.milliseconds, 1.minute)({
-            val previewPane = previewModal.findInner("preview-pane")
-            if (previewPane.webElement.isDisplayed)
-              Some(true)
-            else None
-          }) match {
-            case None => fail()
-            case Some(s) => s shouldBe true
-          }
-          val previewPane = previewModal.findInner("preview-pane")
+
+          previewModal.getBucket shouldBe "firecloud-alerts-dev"
+          previewModal.getObject shouldBe "alerts.json"
+
+          val filePreview = previewModal.getFilePreview
           //file sometimes changes but is always a JSON array, so easy test...
-          previewPane.webElement.getText should startWith("[")
-          previewPane.webElement.getText should endWith("]")
-          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
-        }
+          filePreview should startWith("[")
+          filePreview should endWith("]")
+          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."}
       }
     }
   }
@@ -107,11 +96,10 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(s"gs://$bucket/$gObject")
-          previewModal.awaitReady()
-          previewModal.getBucket shouldBe s"Google Bucket: $bucket"
-          previewModal.getObject shouldBe s"Object: $gObject"
-          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
-        }
+
+          previewModal.getBucket shouldBe bucket
+          previewModal.getObject shouldBe gObject
+          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."}
       }
     }
   }
@@ -133,9 +121,9 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(dosLink)
-          previewModal.awaitDoneState()
-          previewModal.getBucket shouldBe s"Google Bucket: $bucket"
-          previewModal.getObject shouldBe s"Object: $gObject"
+
+          previewModal.getBucket shouldBe bucket
+          previewModal.getObject shouldBe gObject
           previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
           previewModal.getErrorMessage shouldBe "Error! You do not have access to this file.\nShow full error response"
         }

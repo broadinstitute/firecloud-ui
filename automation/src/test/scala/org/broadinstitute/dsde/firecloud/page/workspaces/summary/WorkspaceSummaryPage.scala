@@ -4,17 +4,18 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
-import org.broadinstitute.dsde.firecloud.{FireCloudView, Stateful}
+import org.broadinstitute.dsde.firecloud.{FireCloudView, ReadyComponent, SignalsReadiness, Stateful}
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
+import org.broadinstitute.dsde.workbench.service.test.Awaiter
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 /**
   * Page class for the Workspace Detail page.
   */
-class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: WebDriver)
+class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
@@ -25,8 +26,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     super.awaitReady()
     await condition {
       isError || getState == "error" ||
-        (getState == "ready" && sidebar.getState == "ready" && submissionCounter.getState == "ready"
-          /*&& (if (storageCostEstimate.isVisible) storageCostEstimate.getState == "ready" else true)*/)
+        (getState == "ready" && sidebar.isReady && submissionCounter.isReady
+          /*&& (if (storageCostEstimate.isVisible) storageCostEstimate.isReady else true)*/)
           // FIXME: Storage cost estimate hangs when cloning workspaces in AuthDomainSpec
     }
   }
@@ -37,110 +38,29 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   private val submissionStatusLabel = Label("submission-status")
 
+  private val sidebar = new Sidebar(this)
+
   private val authDomainGroups = Label("auth-domain-groups")
   private val accessLevel = Label("workspace-access-level")
   private val noBucketAccess = Label("no-bucket-access")
   private val googleBillingDetail = Label("google-billing-detail")
+  private val storageCostEstimate = new StorageCostEstimate()
+  private val submissionCounter = new SubmissionCounter()
+  private val workspaceAttributesArea = Collapse("attribute-editor", new WorkspaceAttributesArea())
 
   def shouldWaitForBucketAccess: Boolean = {
     noBucketAccess.isVisible && noBucketAccess.getText.contains("unavailable")
   }
-
-  private val sidebar = new Component(TestId("sidebar")) with Stateful {
-    override def awaitReady(): Unit = {
-      awaitState("ready")
-    }
-
-    val editButton = Button("edit-button" inside this)
-    val saveButton = Button("save-button" inside this)
-    val cancelButton = Button("cancel-editing-button" inside this)
-
-    val cloneButton = Button("open-clone-workspace-modal-button" inside this)
-    val deleteWorkspaceButton = Button("delete-workspace-button" inside this)
-    val publishButton = Button("publish-button" inside this)
-    val unpublishButton = Button("unpublish-button" inside this)
-    val shareWorkspaceButton = Button("share-workspace-button" inside this)
-
-    def clickEdit(): Unit = {
-      editButton.doClick()
-      WorkspaceSummaryPage.this.awaitReady()
-    }
-
-    def clickSave(): Unit = {
-      saveButton.doClick()
-      WorkspaceSummaryPage.this.awaitReady()
-    }
-
-    def clickCancel(): Unit = {
-      cancelButton.doClick()
-      WorkspaceSummaryPage.this.awaitReady()
-    }
-
-    def clickClone(): CloneWorkspaceModal = {
-      cloneButton.doClick()
-      await ready new CloneWorkspaceModal()
-    }
-
-    def clickDeleteWorkspace(): DeleteWorkspaceModal = {
-      deleteWorkspaceButton.doClick()
-      await ready new DeleteWorkspaceModal()
-    }
-
-    def clickPublish(): Unit = {
-      publishButton.doClick()
-      WorkspaceSummaryPage.this.awaitReady()
-    }
-
-    def clickUnpublish(): MessageModal = {
-      unpublishButton.doClick()
-      await ready new MessageModal()
-    }
-
-    def clickShareWorkspaceButton(): AclEditor = {
-      shareWorkspaceButton.doClick()
-      await ready new AclEditor()
-    }
-
-  }
-
-  private val storageCostEstimate = new Label("storage-cost-estimate") with Stateful {
-    override def awaitReady(): Unit = awaitState("ready")
-  }
-
-  private val submissionCounter = new Label("submission-counter") with Stateful {
-    override def awaitReady(): Unit = awaitState("ready")
-  }
-
-  private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
-    override def awaitReady(): Unit = {
-      table.awaitReady()
-    }
-
-    val newButton = Button("add-new-button")
-    val table = Table("workspace-attributes")
-
-    def clickNewButton(): Unit = {
-      newButton.doClick()
-      awaitReady()
-    }
-
-    def clickForPreviewPane(link: String): PreviewModal = {
-      click on LinkTextQuery(link)
-      await ready new PreviewModal("preview-modal")
-    }
-
-  })
-  import scala.language.reflectiveCalls
 
   /**
     * Dictionary of access level labels displayed in the web UI.
     */
   object AccessLevel extends Enumeration {
     type AccessLevel = Value
-    val NoAccess: Value = Value("NO ACCESS")
-    val Owner: Value = Value("OWNER")
-    val Reader: Value = Value("READER")
-    val Writer: Value = Value("WRITER")
+    val NoAccess: AccessLevel = Value("NO ACCESS")
+    val Owner: AccessLevel = Value("OWNER")
+    val Reader: AccessLevel = Value("READER")
+    val Writer: AccessLevel = Value("WRITER")
   }
 
   def readAccessLevel(): WorkspaceAccessLevel = {
@@ -173,7 +93,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
   def deleteWorkspace(): WorkspaceListPage = {
     val workspaceDeleteModal = sidebar.clickDeleteWorkspace()
     workspaceDeleteModal.confirmDelete()
-    await ready new WorkspaceListPage
+    await ready new WorkspaceListPage()
   }
 
   /**
@@ -188,7 +108,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val aclEditor = sidebar.clickShareWorkspaceButton()
     aclEditor.shareWorkspace(email, WorkspaceAccessLevel.withName(accessLevel), share, compute)
     if (grantMethodPermission.isDefined) {
-      val syncModal = new SynchronizeMethodAccessModal("method-access")
+      val syncModal = await ready new SynchronizeMethodAccessModal()
       if (syncModal.validateLocation) {
         grantMethodPermission match {
           case Some(true) => syncModal.clickOk()
@@ -233,8 +153,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     await ready new CloneWorkspaceModal
   }
 
-  private def isEditing: Boolean = {
-    !sidebar.editButton.isVisible
+  private[summary] def isEditing: Boolean = {
+    sidebar.saveButton.isVisible
   }
 
   def hasGoogleBillingLink: Boolean = {
@@ -267,10 +187,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     }
   }
 
-  def clickForPreview(link: String): PreviewModal = {
+  def clickForPreview(link: String): GCSFilePreviewModal = {
     workspaceAttributesArea.ensureExpanded()
-    val previewPane = workspaceAttributesArea.getInner.clickForPreviewPane(link)
-    previewPane
+    workspaceAttributesArea.getInner.clickForPreviewPane(link)
   }
 
   def edit(action: => Unit): Unit = {
@@ -282,9 +201,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     action
 
     if (isEditing) {
-      sidebar.saveButton.scrollToVisible()
       sidebar.clickSave()
-      awaitReady()
     }
     else
       throw new IllegalStateException("Tried to click on 'save' while not editing")
@@ -296,5 +213,89 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
   def readWorkspaceTableLinks: List[String] = {
     workspaceAttributesArea.getInner.table.getHref
+  }
+}
+
+class Sidebar(parent: WorkspaceSummaryPage)(implicit val webDriver: WebDriver) extends Component("sidebar") with SignalsReadiness {
+  val editButton = Button("edit-button" inside this)
+  val saveButton = Button("save-button" inside this)
+  val cancelButton = Button("cancel-editing-button" inside this)
+
+  val cloneButton = Button("open-clone-workspace-modal-button" inside this)
+  val deleteWorkspaceButton = Button("delete-workspace-button" inside this)
+  val publishButton = Button("publish-button" inside this)
+  val unpublishButton = Button("unpublish-button" inside this)
+  val shareWorkspaceButton = Button("share-workspace-button" inside this)
+
+  def clickEdit(): Unit = {
+    editButton.doClick()
+    await condition parent.isEditing
+    parent.awaitReady()
+  }
+
+  def clickSave(): Unit = {
+    saveButton.doClick()
+    await condition !parent.isEditing
+    parent.awaitReady()
+  }
+
+  def clickCancel(): Unit = {
+    cancelButton.doClick()
+    await condition !parent.isEditing
+    parent.awaitReady()
+  }
+
+  def clickClone(): CloneWorkspaceModal = {
+    cloneButton.doClick()
+    await ready new CloneWorkspaceModal()
+  }
+
+  def clickDeleteWorkspace(): DeleteWorkspaceModal = {
+    deleteWorkspaceButton.doClick()
+    await ready new DeleteWorkspaceModal()
+  }
+
+  def clickPublish(): Unit = {
+    publishButton.doClick()
+    parent.awaitReady()
+  }
+
+  def clickUnpublish(): MessageModal = {
+    unpublishButton.doClick()
+    await ready new MessageModal()
+  }
+
+  def clickShareWorkspaceButton(): AclEditor = {
+    shareWorkspaceButton.doClick()
+    await ready new AclEditor()
+  }
+}
+
+class StorageCostEstimate(implicit val webDriver: WebDriver) extends Label("storage-cost-estimate") with SignalsReadiness
+class SubmissionCounter(implicit val webDriver: WebDriver) extends Label("submission-counter") with SignalsReadiness
+
+class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireCloudView with ReadyComponent {
+  val newButton = Button("add-new-button")
+  val table = Table("workspace-attributes")
+
+  override val readyComponent: Awaiter = table
+
+  def clickNewButton(): Unit = {
+    newButton.doClick()
+    awaitReady()
+  }
+
+  def clickForPreviewPane(link: String): GCSFilePreviewModal = {
+    click on LinkTextQuery(link)
+    val previewModal = new GCSFilePreviewModal()
+    // dos links take a sec to pop up
+    previewModal.awaitVisible()
+    await ready previewModal
+  }
+}
+
+class SynchronizeMethodAccessModal(override implicit val webDriver: WebDriver) extends OKCancelModal("method-access") {
+  def validateLocation: Boolean = {
+    content != null
   }
 }
