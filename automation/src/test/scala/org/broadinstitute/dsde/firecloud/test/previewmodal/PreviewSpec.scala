@@ -116,7 +116,6 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(dosLink)
-          previewModal.awaitDoneState()
           previewModal.getBucket shouldBe s"Google Bucket: $bucket"
           previewModal.getObject shouldBe s"Object: $gObject"
           // preview pane is only created if there's something to preview so
@@ -139,7 +138,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     }
   }
 
-  "Preview Modal should display correct message when file not accessible for dos:// link" in withWebDriver { implicit driver =>
+  "Preview Modal should display correct message when file not previewable for dos:// link" in withWebDriver { implicit driver =>
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
     val bucket = "broad-public-datasets"
@@ -151,11 +150,9 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withSignIn(user) { listPage =>
           val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
           val previewModal = detailPage.clickForPreview(dosLink)
-
-          previewModal.getBucket shouldBe bucket
-          previewModal.getObject shouldBe gObject
-          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
-          previewModal.getErrorMessage shouldBe "Error! You do not have access to this file.\nShow full error response"
+          previewModal.getBucket shouldBe s"Google Bucket: $bucket"
+          previewModal.getObject shouldBe s"Object: $gObject"
+          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
         }
       }
     }
