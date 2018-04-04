@@ -3,16 +3,15 @@ package org.broadinstitute.dsde.firecloud.test.previewmodal
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{MethodFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest.{FreeSpec, Matchers}
+
 import scala.concurrent.duration.DurationLong
 
-class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures
+class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures
   with CleanUp with Matchers {
-
-  val billingProject: String = Config.Projects.default
 
   val gsLink = "gs://commons-dss-commons/blobs/64573c6a0c75993c16e313f819fa71b8571b86de75b7523ae8677a92172ea2ba.9976538e92c4f12aebfea277ecaef9fc5b54c732.594f5f1a316e9ccfb38d02a345c86597-293.41a4b033"
   val dosLink = "dos://spbnq0bc10.execute-api.us-west-2.amazonaws.com/ed703a5d-4705-49a8-9429-5169d9225bbd"
@@ -23,13 +22,13 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
   "UI should correctly render gcs links" in withWebDriver { implicit driver =>
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "WorkspaceSpec_gs_link_ws_attrs") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          detailPage.addWorkspaceAttribute("a", gsLink)
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_gs_link_ws_attrs") { workspaceName =>
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> gsLink))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          detailPage.readWorkspaceTableLinks shouldBe List(gsLink)
         }
-        detailPage.readWorkspaceTableLinks shouldBe List(gsLink)
       }
     }
   }
@@ -37,13 +36,13 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
   "UI should correctly render dos links" in withWebDriver { implicit driver =>
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "WorkspaceSpec_dos_link_ws_attrs") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          detailPage.addWorkspaceAttribute("a", dosLink)
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_dos_link_ws_attrs") { workspaceName =>
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> dosLink))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          detailPage.readWorkspaceTableLinks shouldBe List(dosLink)
         }
-        detailPage.readWorkspaceTableLinks shouldBe List(dosLink)
       }
     }
   }
@@ -51,13 +50,13 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
   "UI should not link if its not a gcs or dos link" in withWebDriver { implicit driver =>
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "WorkspaceSpec_no_link_ws_attrs") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          detailPage.addWorkspaceAttribute("a", "X")
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_no_link_ws_attrs") { workspaceName =>
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> "X"))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          detailPage.readWorkspaceTableLinks shouldBe List()
         }
-        detailPage.readWorkspaceTableLinks shouldBe List()
       }
     }
   }
@@ -65,33 +64,22 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
   "Preview Modal should work correctly for gcs link" in withWebDriver { implicit driver =>
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
-    withWorkspace(billingProject, "WorkspaceSpec_gcs_link_preview") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          //this is a known file in our bucket
-          detailPage.addWorkspaceAttribute("a", "gs://firecloud-alerts-dev/alerts.json")
-        }
-        val previewModal = detailPage.clickForPreview("gs://firecloud-alerts-dev/alerts.json")
-        previewModal.awaitReady()
-        previewModal.getBucket shouldBe "Google Bucket: firecloud-alerts-dev"
-        previewModal.getObject shouldBe "Object: alerts.json"
-        // preview pane is only created if there's something to preview so
-        // give it .1 sec
-        retry[Boolean](100.milliseconds, 1.minute)({
-          val previewPane = previewModal.findInner("preview-pane")
-          if (previewPane.webElement.isDisplayed)
-            Some(true)
-          else None
-        }) match {
-          case None => fail()
-          case Some(s) => s shouldBe true
-        }
-        val previewPane = previewModal.findInner("preview-pane")
-        //file sometimes changes but is always a JSON array, so easy test...
-        previewPane.webElement.getText should startWith("[")
-        previewPane.webElement.getText should endWith("]")
-        previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_gcs_link_preview") { workspaceName =>
+        //this is a known file in our bucket
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> "gs://firecloud-alerts-dev/alerts.json"))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          val previewModal = detailPage.clickForPreview("gs://firecloud-alerts-dev/alerts.json")
+
+          previewModal.getBucket shouldBe "firecloud-alerts-dev"
+          previewModal.getObject shouldBe "alerts.json"
+
+          val filePreview = previewModal.getFilePreview
+          //file sometimes changes but is always a JSON array, so easy test...
+          filePreview should startWith("[")
+          filePreview should endWith("]")
+          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."}
       }
     }
   }
@@ -101,18 +89,17 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     implicit val authToken: AuthToken = user.makeAuthToken()
     val bucket = "firecloud-tcga-protected-dummy-dev"
     val gObject = "HCC1143.100_gene_250bp_pad.bam"
-    withWorkspace(billingProject, "WorkspaceSpec_gcs_file_not_previewable") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          //this is a known file in our bucket
-          detailPage.addWorkspaceAttribute("a", s"gs://$bucket/$gObject")
-        }
-        val previewModal = detailPage.clickForPreview(s"gs://$bucket/$gObject")
-        previewModal.awaitReady()
-        previewModal.getBucket shouldBe s"Google Bucket: $bucket"
-        previewModal.getObject shouldBe s"Object: $gObject"
-        previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_gcs_file_not_previewable") { workspaceName =>
+        //this is a known file in our bucket
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> s"gs://$bucket/$gObject"))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          val previewModal = detailPage.clickForPreview(s"gs://$bucket/$gObject")
+
+          previewModal.getBucket shouldBe bucket
+          previewModal.getObject shouldBe gObject
+          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."}
       }
     }
   }
@@ -127,19 +114,19 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
     val dosLink = "dos://spbnq0bc10.execute-api.us-west-2.amazonaws.com/ed703a5d-4705-49a8-9429-5169d9225bbd"
     val bucket = "commons-dss-commons"
     val gObject = "blobs/64573c6a0c75993c16e313f819fa71b8571b86de75b7523ae8677a92172ea2ba.9976538e92c4f12aebfea277ecaef9fc5b54c732.594f5f1a316e9ccfb38d02a345c86597-293.41a4b033"
-    withWorkspace(billingProject, "WorkspaceSpec_dos_file_not_previewable") { workspaceName =>
-      withSignIn(user) { listPage =>
-        val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-        detailPage.edit {
-          //this is a known file in our bucket
-          detailPage.addWorkspaceAttribute("a", dosLink)
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "WorkspaceSpec_dos_file_not_previewable") { workspaceName =>
+        //this is a known file in our bucket
+        api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> dosLink))
+        withSignIn(user) { listPage =>
+          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+          val previewModal = detailPage.clickForPreview(dosLink)
+
+          previewModal.getBucket shouldBe bucket
+          previewModal.getObject shouldBe gObject
+          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+          previewModal.getErrorMessage shouldBe "Error! You do not have access to this file.\nShow full error response"
         }
-        val previewModal = detailPage.clickForPreview(dosLink)
-        previewModal.awaitDoneState()
-        previewModal.getBucket shouldBe s"Google Bucket: $bucket"
-        previewModal.getObject shouldBe s"Object: $gObject"
-        previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
-        previewModal.getErrorMessage shouldBe "Error! You do not have access to this file.\nShow full error response"
       }
     }
   }
