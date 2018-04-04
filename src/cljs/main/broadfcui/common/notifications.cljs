@@ -19,7 +19,7 @@
 
 (defn render-alert [{:keys [cleared? link message title link-title severity]} dismiss]
   (let [text-color (case severity
-                     :info (:text-light style/colors)
+                     :info (:text-lighter style/colors)
                      "#eee")
         background-color (case severity
                            :info (:background-light style/colors)
