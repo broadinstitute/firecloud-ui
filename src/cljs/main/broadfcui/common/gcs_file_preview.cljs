@@ -12,6 +12,7 @@
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.test :as test-utils]
    [broadfcui.utils.user :as user]
+   [goog.string :as gstring]
    ))
 
 (def ^:private preview-byte-count 20000)
@@ -181,7 +182,8 @@
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
          (if (= bucket-name workspace-bucket)
-           object
+           ;; Sometimes we apply a RTL rule to make ellipses work. Go LTR again here so the object name displays right. (GAWB-2495)
+           (str (gstring/unescapeEntities "&lrm;") object)
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
 
 (react/defc DOSFilePreviewLink
