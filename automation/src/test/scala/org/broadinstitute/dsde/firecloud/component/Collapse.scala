@@ -15,7 +15,7 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
   }
 
   def toggle(): Unit = {
-    awaitVisible()
+    await visible toggleComponent
     click on toggleComponent
     awaitReady()
   }
