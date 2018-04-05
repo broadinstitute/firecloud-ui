@@ -20,7 +20,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
   val numberOfWorkersError = "Error: Google Dataproc does not support clusters with 1 non-preemptible worker. Must be 0, 2 or more."
   val noNameClusterError = "Cluster name cannot be empty"
 
-  "User should be able to create and delete a cluster" in withWebDriver { implicit driver =>
+  "User should be able to create and delete a cluster" ignore withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
     val ownerToken = ownerUser.makeAuthToken()
 
@@ -65,7 +65,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
     }
   }
 
-  "Creating 1 worker cluster should return server error" in withWebDriver { implicit driver =>
+  "Creating 1 worker cluster should return server error" ignore withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
     val ownerToken = ownerUser.makeAuthToken()
 
@@ -89,7 +89,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
     }
   }
 
-  "Creating cluster without name should fail at input validation" in withWebDriver { implicit driver =>
+  "Creating cluster without name should fail at input validation" ignore withWebDriver { implicit driver =>
     val ownerUser: Credentials = UserPool.chooseProjectOwner
     val ownerToken = ownerUser.makeAuthToken()
 
