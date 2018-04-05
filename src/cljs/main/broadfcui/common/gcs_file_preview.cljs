@@ -182,7 +182,8 @@
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
          (if (= bucket-name workspace-bucket)
-           ;; Sometimes we apply a RTL rule to make ellipses work. Go LTR again here so the object name displays right. (GAWB-2495)
+           ;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
+           ;; Go back to LTR here so we do not reorder the object name. (GAWB-2495)
            (str (gstring/unescapeEntities "&lrm;") object)
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
 
