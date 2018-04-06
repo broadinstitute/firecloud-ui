@@ -140,7 +140,7 @@
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response popup-error]} @state
-           {:keys [workspace workspace-id request-refresh]} props
+           {:keys [workspace workspace-id bucket-access? request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {:data-test-id "summary-tab"
               :data-test-state
@@ -150,7 +150,10 @@
                     "updating"
                     ;; sidebar takes care of checking for billing loaded, library schema, and curator
                     ;; status, as it's the part that cares about it
-                    :else "ready")}
+                    (some? bucket-access?)
+                    "ready"
+                    :else
+                    "loading")}
         (when popup-error
           (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
         (when-let [error-response (:error-response @state)]

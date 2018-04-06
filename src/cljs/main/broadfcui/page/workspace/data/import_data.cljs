@@ -51,7 +51,7 @@
            (str "Previewing '" (.. (:file @state) -name) "':")
            [:div {:style {:overflow "auto" :maxHeight 200
                           :paddingBottom "0.5em" :textAlign "left"}}
-            [:pre {} file-contents]
+            [:pre {} (clojure.string/replace file-contents #"\r(?!\n)" "\r\n")] ; negative lookahead - match any \r except \r\n
             (when (> (.-size file) preview-limit)
               [:em {} "(file truncated for preview)"])]])
         (when (and file (not upload-result))
