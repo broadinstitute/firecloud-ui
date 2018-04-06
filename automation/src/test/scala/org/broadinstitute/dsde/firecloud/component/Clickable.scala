@@ -18,6 +18,5 @@ trait Clickable extends LazyLogging { this: Component =>
     }
     scrollToVisible()
     click on query
-    logger.debug(s"clicked on query:  '$query'") // debugging - remove this once done with all flaky tests
   }
 }

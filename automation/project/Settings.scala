@@ -26,8 +26,14 @@ object Settings {
     "-Xmax-classfile-name", "100"
   )
 
+  // test parameters explanation:
+  // `-o` - causes test results to be written to the standard output
+  //     `F` - Display full stack traces
+  //     `D` - Display test duration after test name
+  //     `G` - show reminder of failed and canceled tests with full stack traces at the end of log file
+  // `-fW` - causes test results to be written to the summary.log without colored text
   val testSettings = List(
-    testOptions in Test += Tests.Argument("-oF", "-u", "test-reports")
+    testOptions in Test += Tests.Argument("-oFDG", "-u", "test-reports", "-fW", "test-reports/summary.log")
   )
 
   //common settings for all sbt subprojects
