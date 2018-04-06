@@ -49,27 +49,32 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   }
 
   def goToSummaryTab(): WorkspaceSummaryPage = {
-    clickTab("Summary", new WorkspaceSummaryPage(namespace, name).url)
-    await ready new WorkspaceSummaryPage(namespace, name)
+    val page = new WorkspaceSummaryPage(namespace, name)
+    clickTab("Summary", page.url)
+    await ready page
   }
 
   def goToDataTab(): WorkspaceDataPage = {
-    clickTab("Data", new WorkspaceDataPage(namespace, name).url)
-    await ready new WorkspaceDataPage(namespace, name)
+    val page = new WorkspaceDataPage(namespace, name)
+    clickTab("Data", page.url)
+    await ready page
   }
 
   def goToMethodConfigTab(): WorkspaceMethodConfigListPage = {
-    clickTab("Method Configurations", new WorkspaceMethodConfigListPage(namespace, name).url)
-    await ready new WorkspaceMethodConfigListPage(namespace, name)
+    val page = new WorkspaceMethodConfigListPage(namespace, name)
+    clickTab("Method Configurations", page.url)
+    await ready page
   }
 
   def goToMonitorTab(): WorkspaceMonitorPage = {
-    clickTab("Monitor", new WorkspaceMonitorPage(namespace, name).url)
-    await ready new WorkspaceMonitorPage(namespace, name)
+    val page = new WorkspaceMonitorPage(namespace, name)
+    clickTab("Monitor", page.url)
+    await ready page
   }
 
   def goToNotebooksTab(): WorkspaceNotebooksPage = {
-    clickTab("Notebooks", new WorkspaceNotebooksPage(namespace, name).url)
-    await ready new WorkspaceNotebooksPage(namespace, name)
+    val page = new WorkspaceNotebooksPage(namespace, name)
+    clickTab("Notebooks", page.url)
+    await ready page
   }
 }
