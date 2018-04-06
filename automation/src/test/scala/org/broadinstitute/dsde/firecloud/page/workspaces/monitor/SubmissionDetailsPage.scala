@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
+import java.util.concurrent.TimeoutException
+
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
@@ -85,7 +87,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
         if (isSubmissionDone) Some(true) else None
       }
     }) match {
-      case None => throw new Exception(s"Workflow Submission $submissionId failed")
+      case None => throw new TimeoutException(s"Timed out ($timeOut) waiting for submission $submissionId to complete")
       case Some(false) => throw new Exception("Error on Submission page")
       case Some(true) =>
     }

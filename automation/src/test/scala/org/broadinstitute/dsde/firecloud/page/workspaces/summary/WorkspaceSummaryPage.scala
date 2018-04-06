@@ -30,6 +30,17 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
           /*&& (if (storageCostEstimate.isVisible) storageCostEstimate.isReady else true)*/)
           // FIXME: Storage cost estimate hangs when cloning workspaces in AuthDomainSpec
     }
+    /* The workspace summary tab aggressively refreshes after it appears to be ready. Therefore,
+     * it's possible for tests to start interacting with the page in ways that change state and for
+     * that state to be reset when the refresh happens. When looking at test failures, this has the
+     * appearance of selenium click actions being completely missed.
+     *
+     * Users typically won't be interacting with the page in this narrow window because of the time
+     * it takes to locate the element they want to click and moving the pointer and clicking. While
+     * not ideal for test code, sleeping briefly here is an acceptable work-around until we can fix
+     * the tab to not refresh so aggressively.
+     */
+    Thread.sleep(1000)
   }
 
   def validateLocation(): Unit = {
