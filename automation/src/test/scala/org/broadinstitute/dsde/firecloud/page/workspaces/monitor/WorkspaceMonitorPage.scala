@@ -27,7 +27,11 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def openSubmission(submissionId: String): Unit = {
-    submissionLink(submissionId).doClick()
+    val url = webDriver.getCurrentUrl
+    println("url: " + url)
+    // don't click if already on Submission Detail page
+    // if (url != new SubmissionDetailsPage(namespace, name, submissionId).url)
+      submissionLink(submissionId).doClick()
     await ready new SubmissionDetailsPage(namespace, name, submissionId)
   }
 }

@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{WebDriver, WebDriverException}
 
 
 /*
@@ -36,28 +36,40 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
     (namespace, name) == readWorkspace
   }
 
+  def clickTab(tabName: String, pageUrl: String): Unit = {
+    try {
+      tabs.goToTab(tabName)
+    } catch {
+      case e: WebDriverException =>
+    }
+    // determine whether to retry click by comparing url
+    if (pageUrl != webDriver.getCurrentUrl) {
+      tabs.goToTab(tabName)
+    }
+  }
+
   def goToSummaryTab(): WorkspaceSummaryPage = {
-    tabs.goToTab("Summary")
+    clickTab("Summary", new WorkspaceSummaryPage(namespace, name).url)
     await ready new WorkspaceSummaryPage(namespace, name)
   }
 
   def goToDataTab(): WorkspaceDataPage = {
-    tabs.goToTab("Data")
+    clickTab("Data", new WorkspaceDataPage(namespace, name).url)
     await ready new WorkspaceDataPage(namespace, name)
   }
 
   def goToMethodConfigTab(): WorkspaceMethodConfigListPage = {
-    tabs.goToTab("Method Configurations")
+    clickTab("Method Configurations", new WorkspaceMethodConfigListPage(namespace, name).url)
     await ready new WorkspaceMethodConfigListPage(namespace, name)
   }
 
   def goToMonitorTab(): WorkspaceMonitorPage = {
-    tabs.goToTab("Monitor")
+    clickTab("Monitor", new WorkspaceMonitorPage(namespace, name).url)
     await ready new WorkspaceMonitorPage(namespace, name)
   }
 
   def goToNotebooksTab(): WorkspaceNotebooksPage = {
-    tabs.goToTab("Notebooks")
+    clickTab("Notebooks", new WorkspaceNotebooksPage(namespace, name).url)
     await ready new WorkspaceNotebooksPage(namespace, name)
   }
 }

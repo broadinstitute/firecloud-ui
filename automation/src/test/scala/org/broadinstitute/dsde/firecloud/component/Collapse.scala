@@ -6,7 +6,7 @@ import org.openqa.selenium.{WebDriver, WebDriverException}
 
 case class Collapse[A <: FireCloudView](queryString: QueryString, private val inner: A)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful {
-  private val toggleComponent = findInner("toggle")
+  private val toggleComponent: CssSelectorQuery = findInner("toggle")
 
   override def awaitReady(): Unit = inner.awaitReady()
 
@@ -19,11 +19,10 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
     await visible toggleComponent
     val origState = stateOf(toggleComponent)
     try {
-      // click on toggleComponent
-      new Actions(webDriver).moveToElement(toggleComponent.element.underlying).click().build.perform()
+      click on toggleComponent
     } catch {
-      // retry click alternative: https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/2766
-      // this probably should be used in doClick
+      // retry click alternative. probably should be used in doClick
+      // https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/2766
       case e: WebDriverException => new Actions(webDriver).moveToElement(toggleComponent.element.underlying).click().build.perform()
     }
     // data-test-state should change after click
