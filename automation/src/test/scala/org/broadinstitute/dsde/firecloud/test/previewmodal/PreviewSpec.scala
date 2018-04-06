@@ -79,7 +79,10 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           //file sometimes changes but is always a JSON array, so easy test...
           filePreview should startWith("[")
           filePreview should endWith("]")
-          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."}
+          previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+
+          previewModal.xOut()
+        }
       }
     }
   }
@@ -99,7 +102,10 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
 
           previewModal.getBucket shouldBe bucket
           previewModal.getObject shouldBe gObject
-          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."}
+          previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
+
+          previewModal.xOut()
+        }
       }
     }
   }
@@ -133,6 +139,8 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           //file sometimes changes but is always a JSON array, so easy test...
           previewPane.webElement.getText shouldBe "This file is for test purposes."
           previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+
+          previewModal.xOut()
         }
       }
     }
@@ -153,6 +161,8 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           previewModal.getBucket shouldBe s"$bucket"
           previewModal.getObject shouldBe s"$gObject"
           previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
+
+          previewModal.xOut()
         }
       }
     }
