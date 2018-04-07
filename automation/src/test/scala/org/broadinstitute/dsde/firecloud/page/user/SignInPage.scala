@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
 /**
@@ -65,7 +65,11 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 
   def awaitLoaded(): GoogleSignInPopup = {
-    await text "to continue to"
+    try {
+      await text "to continue to"
+    } catch {
+      case e: TimeoutException => // ignore because text may or may not appears
+    }
     this
   }
 
