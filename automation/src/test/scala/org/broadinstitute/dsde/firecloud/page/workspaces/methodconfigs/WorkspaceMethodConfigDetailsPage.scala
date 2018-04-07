@@ -140,7 +140,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
 
   def searchAndSelectEntity(entityId: String): Unit = {
     entityTable.filter(entityId)
-    click on testId(entityId + "-link")
+    Link(entityId + "-link").doClick()
   }
 
   def fillExpressionField(expression: String): Unit = {

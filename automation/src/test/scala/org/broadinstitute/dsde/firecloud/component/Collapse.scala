@@ -12,17 +12,15 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
   override def awaitReady(): Unit = inner.awaitReady()
 
   def isExpanded: Boolean = {
-    awaitVisible() // Check Collapse div visibility
-    await visible toggleCssQuery // Check toggle link visibility
+    await condition { toggleLink.isVisible && toggleLink.isEnabled }
     stateOf(toggleCssQuery) == "expanded"
   }
 
   def toggle(): Unit = {
-    await visible toggleCssQuery
-    val origState = stateOf(toggleCssQuery)
+    val state = isExpanded
     toggleLink.doClick()
-    // data-test-state should change after click
-    await condition(origState != stateOf(toggleCssQuery), 15)
+    // compare data-test-state after click
+    await condition(state != isExpanded, 15)
   }
 
   def ensureCollapsed(): Unit = {
@@ -41,6 +39,7 @@ case class Collapse[A <: FireCloudView](queryString: QueryString, private val in
 
   def getInner: A = {
     ensureExpanded()
+    awaitReady()
     inner
   }
 }

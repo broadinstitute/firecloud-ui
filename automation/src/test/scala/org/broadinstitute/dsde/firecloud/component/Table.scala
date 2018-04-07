@@ -33,7 +33,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def goToTab(tabName: String): Unit = {
-    click on tab(tabName)
+    new TabBar(queryString).goToTab(tabName)
     awaitReady()
   }
 
