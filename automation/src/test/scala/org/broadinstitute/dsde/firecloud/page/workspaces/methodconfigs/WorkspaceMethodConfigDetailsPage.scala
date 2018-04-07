@@ -9,6 +9,8 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
+import scala.util.{Failure, Success, Try}
+
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
 
@@ -29,7 +31,15 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
-  def clickLaunchAnalysis(): Unit = openLaunchAnalysisModalButton.doClick()
+  def clickLaunchAnalysis(): Unit = {
+    openLaunchAnalysisModalButton.doClick()
+    // retry click button if no Modal found
+    val clicked: Try[Element] = Try(find(CssSelectorQuery("body.broadinstitute-modal-open")).get)
+    clicked match {
+      case Failure(e) => openLaunchAnalysisModalButton.doClick()
+      case Success(some) =>
+    }
+  }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
     val launchModal = openLaunchAnalysisModal()
