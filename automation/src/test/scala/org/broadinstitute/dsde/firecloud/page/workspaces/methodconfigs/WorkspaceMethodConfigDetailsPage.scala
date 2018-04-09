@@ -32,20 +32,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
-  def clickLaunchAnalysis(): Unit = {
-    // retry click if no Modal found. click sometimes weirdly doesn't work
-    val clickAgain: Try[Element] = Try{
-      openLaunchAnalysisModalButton.doClick()
-      // after click, expect to find either a Message or Analysis Modal
-      find(CssSelectorQuery("body.broadinstitute-modal-open")).get
-    }
-    clickAgain match {
-      case Failure(e) =>
-        logger.warn("Attempting to re-click button \"Launch Analysis...\"")
-        openLaunchAnalysisModalButton.doClick()
-      case Success(some) =>
-    }
-  }
+  def clickLaunchAnalysis(): Unit = openLaunchAnalysisModalButton.doClick()
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
     val launchModal = openLaunchAnalysisModal()
@@ -107,6 +94,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
   }
 
+  // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
     openLaunchAnalysisModalButton.isVisible
   }

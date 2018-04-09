@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
+import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
@@ -23,7 +24,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  "launch a simple workflow" in withWebDriver { implicit driver =>
+  "launch a simple workflow" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>

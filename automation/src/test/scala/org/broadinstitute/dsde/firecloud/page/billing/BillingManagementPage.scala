@@ -67,8 +67,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
 
   def openBillingProject(projectName: String): Unit = {
     billingProjectTable.filter(projectName)
-    val billingProjectLink = Link(projectName + "-link")
-    billingProjectLink.doClick()
+    Link(projectName + "-link").doClick()
     addUserButton.awaitEnabledState()
   }
 
