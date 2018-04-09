@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.BaseFireCloudPage
@@ -13,7 +14,8 @@ import org.openqa.selenium.{WebDriver, WebDriverException}
 /*
 A Workspace Page is any page within the workspace (i.e. the Summary tab, Data tab)
  */
-abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver) extends BaseFireCloudPage {
+abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends BaseFireCloudPage with LazyLogging{
 
   private val workspaceError = Label("workspace-details-error")
 
@@ -37,14 +39,9 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   }
 
   def clickTab(tabName: String, pageUrl: String): Unit = {
-    try {
-      tabs.goToTab(tabName)
-    } catch {
-      case e: WebDriverException =>
-    }
-    // determine whether to retry click by comparing url
+    tabs.goToTab(tabName)
     if (pageUrl != webDriver.getCurrentUrl) {
-      tabs.goToTab(tabName)
+      logger.warn(s"Actual page url is not $pageUrl. Action of clicking Tab($tabName) possibily failed")
     }
   }
 
