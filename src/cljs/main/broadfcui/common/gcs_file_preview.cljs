@@ -182,11 +182,11 @@
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
          ;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
-         ;; Go back to LTR here so we do not reorder the object name. (GAWB-2495)
+         ;; Go back to LTR here so we do not reorder the object name. (GAWB-2495, GAWB-1912)
          (str (gstring/unescapeEntities "&lrm;")
               (if (= bucket-name workspace-bucket)
                 object
-                (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
+                (if link-label (str link-label) (str "gs://" bucket-name "/" object))) (gstring/unescapeEntities "&lrm;"))]]))})
 
 (react/defc DOSFilePreviewLink
   {:render
@@ -201,7 +201,7 @@
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (str (gstring/unescapeEntities "&lrm;") (if link-label (str link-label) dos-uri))]]))})
+         (str (gstring/unescapeEntities "&lrm;") (if link-label (str link-label) dos-uri) (gstring/unescapeEntities "&lrm;"))]]))})
 
 (react/defc FilePreviewLink
   {:render
