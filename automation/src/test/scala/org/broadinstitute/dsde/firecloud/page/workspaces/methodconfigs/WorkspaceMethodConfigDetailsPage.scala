@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
@@ -12,7 +13,7 @@ import org.scalatest.selenium.Page
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
@@ -32,11 +33,16 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
   def clickLaunchAnalysis(): Unit = {
-    openLaunchAnalysisModalButton.doClick()
-    // retry click button if no Modal found
-    val clicked: Try[Element] = Try(find(CssSelectorQuery("body.broadinstitute-modal-open")).get)
-    clicked match {
-      case Failure(e) => openLaunchAnalysisModalButton.doClick()
+    // retry click if no Modal found. click sometimes weirdly doesn't work
+    val clickAgain: Try[Element] = Try{
+      openLaunchAnalysisModalButton.doClick()
+      // after click, expect to find either a Message or Analysis Modal
+      find(CssSelectorQuery("body.broadinstitute-modal-open")).get
+    }
+    clickAgain match {
+      case Failure(e) =>
+        logger.warn("Attempting to re-click button \"Launch Analysis...\"")
+        openLaunchAnalysisModalButton.doClick()
       case Success(some) =>
     }
   }
