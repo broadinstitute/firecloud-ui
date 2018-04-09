@@ -167,6 +167,12 @@
               [PreviewDialog (assoc props :error error :object ""
                                :dismiss (:dismiss props))])))]))})
 
+;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
+;; Go back to LTR here so we do not reorder the object name. Both the leading and trailing instances
+;; are necessary to cover all cases. (GAWB-2495, GAWB-1912)
+(defn- lrm-pad [string]
+  (str (gstring/unescapeEntities "&lrm;") string (gstring/unescapeEntities "&lrm;")))
+
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
@@ -181,12 +187,10 @@
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         ;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
-         ;; Go back to LTR here so we do not reorder the object name. (GAWB-2495, GAWB-1912)
-         (str (gstring/unescapeEntities "&lrm;")
-              (if (= bucket-name workspace-bucket)
-                object
-                (if link-label (str link-label) (str "gs://" bucket-name "/" object))) (gstring/unescapeEntities "&lrm;"))]]))})
+         (lrm-pad
+           (if (= bucket-name workspace-bucket)
+             object
+             (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
 
 (react/defc DOSFilePreviewLink
   {:render
@@ -201,7 +205,7 @@
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (str (gstring/unescapeEntities "&lrm;") (if link-label (str link-label) dos-uri) (gstring/unescapeEntities "&lrm;"))]]))})
+         (lrm-pad (if link-label (str link-label) dos-uri))]]))})
 
 (react/defc FilePreviewLink
   {:render
