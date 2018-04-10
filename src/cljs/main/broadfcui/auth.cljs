@@ -110,10 +110,8 @@
          [:h4 {} "Contacting the FireCloud team"]
          [:p {}
           "If you have any questions about this privacy statement, the practices of this site, or
-          your dealings with this site, you can contact us through "
-          (links/create-external {:href "mailto:help@firecloud.org"} "help@firecloud.org")
-          " or our "
-          (links/create-external {:href (config/forum-url)} "User Forum")
+          your dealings with this site, you can contact us through our "
+          (links/create-external {:href (config/forum-url)} "help forum")
           "."]
          [:hr]))
       [:h4 {} "WARNING NOTICE"]

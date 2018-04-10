@@ -327,10 +327,11 @@
                                   {:type :error :header "Alert" :icon-color :state-warning
                                    :text [:div {}
                                           [:p {:style {:margin 0}}
-                                           "This workspace is published in the Data Library and cannot be deleted. "
-                                           "Contact a library curator to ask them to first unpublish the workspace."]
+                                           "This workspace is published in the Data Library and cannot be deleted."
+                                           " Contact a library curator to ask them to first unpublish the workspace."]
                                           [:p {}
-                                           "If you are unable to contact a curator, contact help@firecloud.org."]]})
+                                           "If you are unable to contact a curator, please write our help forum"
+                                           " for assistance https://gatkforums.broadinstitute.org/firecloud ."]]})
                  :onClick #(swap! state assoc :deleting? true)}])])}]]))
    :-render-main
    (fn [{:keys [props state locals]}

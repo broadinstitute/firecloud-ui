@@ -45,10 +45,12 @@
             :data-test-id "no-bucket-access"}
       (cond (= 404 bucket-status-code)
             (str "The Google bucket associated with this workspace"
-                 " does not exist. Please contact help@firecloud.org.")
+                 " does not exist. Please write our help forum for assistance"
+                 " https://gatkforums.broadinstitute.org/firecloud .")
             :else (str "The Google bucket associated with this workspace is currently"
                        " unavailable. This should be resolved shortly. If this persists for"
-                       " more than an hour, please contact help@firecloud.org."))]
+                       " more than an hour, please write our help forum"
+                        " https://gatkforums.broadinstitute.org/firecloud ."))]
      [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))
 
 
