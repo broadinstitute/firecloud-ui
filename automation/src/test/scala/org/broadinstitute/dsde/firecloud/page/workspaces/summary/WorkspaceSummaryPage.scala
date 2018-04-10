@@ -297,7 +297,7 @@ class WorkspaceAttributesArea(implicit val webDriver: WebDriver) extends FireClo
   }
 
   def clickForPreviewPane(link: String): GCSFilePreviewModal = {
-    click on LinkTextQuery(link)
+    click on LinkTextQuery(s"&lrm;$link&lrm;")
     val previewModal = new GCSFilePreviewModal()
     // dos links take a sec to pop up
     previewModal.awaitVisible()
