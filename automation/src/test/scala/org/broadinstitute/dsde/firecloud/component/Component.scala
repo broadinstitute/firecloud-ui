@@ -88,14 +88,14 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
 
     val js = webDriver.asInstanceOf[JavascriptExecutor]
     val hasVerticalScroll = js.executeScript(verticalScrollScript).asInstanceOf[Boolean]
-    logger.debug(s"execute vertical scrollbar Javascript: $hasVerticalScroll")
+    logger.debug(s"execute vertical scrollbar Javascript returns $hasVerticalScroll")
     // no scroll when vertical scrollbar not found
     if (hasVerticalScroll) {
-      val inViewport = js.executeScript(viewportScript, find(query).get).asInstanceOf[Boolean]
+      val inViewport = js.executeScript(viewportScript, find(query).get.underlying).asInstanceOf[Boolean]
       if (!inViewport) {
         // if vertical scroll exist and WebElement is outside of viewport, then scroll into viewport
-        logger.debug(s"execute scrollIntoView Javascript on ${find(query).get}")
-        webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(query).get)
+        logger.debug(s"execute scrollIntoView Javascript on ${find(query).get.underlying}")
+        webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(query).get.underlying)
         Thread.sleep(250) // hack to wait page stop "moving" after scrollToVisible
       }
     }
