@@ -14,6 +14,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.create :as create]
@@ -330,8 +331,9 @@
                                            "This workspace is published in the Data Library and cannot be deleted."
                                            " Contact a library curator to ask them to first unpublish the workspace."]
                                           [:p {}
-                                           "If you are unable to contact a curator, please write our help forum"
-                                           " for assistance https://gatkforums.broadinstitute.org/firecloud ."]]})
+                                           "If you are unable to contact a curator, please write our "
+                                           (links/create-external {:href (config/forum-url)} "help forum")
+                                           " for assistance."]]})
                  :onClick #(swap! state assoc :deleting? true)}])])}]]))
    :-render-main
    (fn [{:keys [props state locals]}
