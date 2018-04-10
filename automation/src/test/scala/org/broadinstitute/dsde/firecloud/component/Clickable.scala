@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 
 /**
@@ -14,8 +14,13 @@ trait Clickable extends LazyLogging { this: Component =>
     * Click on the element modeled by this Component
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
-    // not using await condition (isVisible && isEnabled) because want to see WebElement query string in log
-    new WebDriverWait(webDriver, 30).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
+    try {
+      await condition (isVisible && isEnabled)
+    } catch {
+      case e: TimeoutException =>
+        // show me query string on failed WebElement
+        new WebDriverWait(webDriver, 5).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
+    }
     scrollToVisible()
     click on query
   }
