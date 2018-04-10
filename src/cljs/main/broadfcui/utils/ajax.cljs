@@ -1,9 +1,9 @@
 (ns broadfcui.utils.ajax
   (:require
-   [clojure.string :as string]
-   [broadfcui.config :as config]
-   [broadfcui.utils :as utils]
-   ))
+    [clojure.string :as string]
+    [broadfcui.config :as config]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (defonce get-bearer-token-header (atom nil))
@@ -36,10 +36,11 @@
                                      :status-text (.-statusText xhr)
                                      :raw-response (.-responseText xhr)
                                      :get-parsed-response
-                                     (fn [& [keywordize-keys?]]
+                                     (fn [& [keywordize-keys? throw-on-error?]]
                                        (utils/parse-json-string
-                                        (.-responseText xhr)
-                                        (if (some? keywordize-keys?) keywordize-keys? true)))})))]
+                                         (.-responseText xhr)
+                                         (if (some? keywordize-keys?) keywordize-keys? true)
+                                         (if (some? throw-on-error?) throw-on-error? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (.addEventListener xhr "loadend" call-on-done)
@@ -53,12 +54,12 @@
 
 (defn get-google-bucket-file [filename on-done]
   (call
-   {:url (config/google-bucket-url filename)
-    :on-done (fn [{:keys [raw-response]}]
-               ;; Fails gracefully if file is missing or malformed
-               (some->> (utils/parse-json-string raw-response true false)
-                        first
-                        on-done))}))
+    {:url (config/google-bucket-url filename)
+     :on-done (fn [{:keys [raw-response]}]
+                ;; Fails gracefully if file is missing or malformed
+                (some->> (utils/parse-json-string raw-response true false)
+                         first
+                         on-done))}))
 
 
 (defonce server-down? (atom false))
@@ -76,6 +77,16 @@
   (or (= 501 status-code)
       (<= 503 status-code 599)))
 
+(defn- update-health [status-code status-text]
+  (let [maintenance? (check-maintenance-mode status-code status-text)
+        down? (check-server-down status-code)]
+    (cond
+      maintenance? (reset! maintenance-mode? true)
+      down? (reset! server-down? true)
+      :else (do
+              (reset! maintenance-mode? false)
+              (reset! server-down? false)))))
+
 (defn get-exponential-backoff-interval [attempt]
   (* (.pow js/Math 2 attempt) 1000)) ;; backoff interval in millis
 
@@ -88,10 +99,7 @@
             :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (when (and (not @server-down?) (not @maintenance-mode?))
-                         (cond
-                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
-                           (check-server-down status-code) (reset! server-down? true)))
+                       (update-health status-code status-text)
                        (on-done m))))))
 
 (defn call-leo [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
@@ -102,10 +110,7 @@
             :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (when (and (not @server-down?) (not @maintenance-mode?))
-                         (cond
-                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
-                           (check-server-down status-code) (reset! server-down? true)))
+                       (update-health status-code status-text)
                        (on-done m))))))
 
 (defn call-martha [data arg-map]

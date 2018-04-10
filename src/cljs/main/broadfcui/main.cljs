@@ -135,26 +135,10 @@
               (set! (.-errorMessage this) status-text)
               (swap! state assoc :registration-status :error)))))))})
 
-(defn- render-system-status-dialog [maintenance-mode? dismiss]
-  [modals/OKCancelForm
-   {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
-    :show-cancel? false
-    :dismiss dismiss
-    :content (if maintenance-mode?
-               [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
-                   We should be back online shortly. For more information, please see "
-                [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                 "http://status.firecloud.org/"] "."]
-               [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
-                [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                 "http://status.firecloud.org/"]
-                " for more information."])}])
-
-
 (defn- render-js-exception [e dismiss]
   [modals/OKCancelForm
    {:header [:span {} (icons/render-icon {:style {:color (:warning-state style/colors)
-                                           :marginRight "1rem"}}
+                                                  :marginRight "1rem"}}
                                          :warning)
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
@@ -222,9 +206,9 @@
                                          (swap! state update :user-status
                                                 #(-> %
                                                      ((if signed-in? conj disj)
-                                                      :signed-in)
+                                                       :signed-in)
                                                      ((if token-saved? conj disj)
-                                                      :refresh-token-saved))))}]
+                                                       :refresh-token-saved))))}]
            (when (and config-loaded? (not auth2))
              [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
@@ -235,9 +219,9 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                js/window "error"
-                                (fn [e]
-                                  (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
+                                 js/window "error"
+                                 (fn [e]
+                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -248,29 +232,34 @@
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
-         (when (:showing-system-down-dialog? @state)
-           (render-system-status-dialog
-            (:maintenance-mode? @state)
-            #(swap! state dissoc :showing-system-down-dialog? :maintenance-mode?)))
+         (when (:showing-system-down-banner? @state)
+           (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
+                                                       "Server Unavailable")
+                 msg (if (:maintenance-mode? @state) "FireCloud is currently undergoing planned maintenance. We should be back online shortly."
+                                                     "FireCloud service is temporarily unavailable.")]
+             (notifications/render-alert {:title title
+                                          :message msg
+                                          :link "http://status.firecloud.org/"
+                                          :cleared? false
+                                          :link-title "System Status"
+                                          :severity :info} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
-            (:js-error @state)
-            #(swap! state dissoc :showing-js-error-dialog? :js-error)))
+             (:js-error @state)
+             #(swap! state dissoc :showing-js-error-dialog? :js-error)))
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [state this refs locals]}]
-     ;; pop up the message only when we start getting 503s, not on every 503
+     ;; Show system status banner at the first 503, hide it at the first success
      (add-watch
-      ajax/server-down? :server-watcher
-      (fn [_ _ _ down-now?]
-        (when down-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? false))))
+       ajax/server-down? :server-watcher
+       (fn [_ _ _ down-now?]
+         (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
      (add-watch
-      ajax/maintenance-mode? :server-watcher
-      (fn [_ _ _ maintenance-now?]
-        (when maintenance-now?
-          (swap! state assoc :showing-system-down-dialog? true :maintenance-mode? true))))
+       ajax/maintenance-mode? :server-watcher
+       (fn [_ _ _ maintenance-now?]
+         (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
