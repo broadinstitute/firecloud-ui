@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.component
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.openqa.selenium.{WebDriver, JavascriptExecutor}
+import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 
 /**
   * Components can be specified either by an arbitrary CSS selector query, or by the data-test-id directly
@@ -21,7 +22,7 @@ case class CSSQuery(text: String) extends QueryString
   * @param queryString the QueryString object representing the root element of the component
   * @param webDriver webdriver
   */
-abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver) extends FireCloudView {
+abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver) extends FireCloudView  with LazyLogging {
 
   val query: CssSelectorQuery = queryString match {
     case TestId(id) => testId(id)
@@ -63,8 +64,35 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
 
   override def awaitReady(): Unit = awaitVisible()
 
+  /**
+    * References:
+    *  .getBoundingClient browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+    *  viewport script source: https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+    *
+    *  When there is a vertical scroll on page and WebElement is outside of view, scroll WebElement into view
+    */
   def scrollToVisible(): Unit = {
-    webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(query).get.underlying)
+    val viewportScript =
+    "if (arguments[0].getBoundingClientRect) {\n" +
+      "  var rect = arguments[0].getBoundingClientRect();\n" +
+      "  var x = (rect.left + rect.right)/2;\n" +
+      "  var y = (rect.top + rect.bottom)/2;\n" +
+      "  return document.elementFromPoint(x,y);\n" +
+      "} else { return false; }";
+
+    val inViewport: Boolean = webDriver.asInstanceOf[JavascriptExecutor].executeScript(viewportScript, find(query).get.underlying).asInstanceOf[Boolean]
+    if (!inViewport) {
+      // does page has a vertical scrollbar?
+      val scrollbarScript = "return document.documentElement.scrollHeight > document.documentElement.clientHeight;"
+      val verticalScroll = webDriver.asInstanceOf[JavascriptExecutor].executeScript(scrollbarScript).asInstanceOf[Boolean]
+      logger.debug(s"vertical scroll on page check: $verticalScroll")
+      if (verticalScroll) {
+        // if vertical scroll exist and WebElement is outside of viewport, then scroll into viewport
+        logger.debug(s"executed scrllIntoView Javascript on ${query.element.underlying}")
+        webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView(true)", find(query).get.underlying)
+        Thread.sleep(250) // hack to wait page stop "moving" after scrollToVisible
+      }
+    }
   }
 }
 
