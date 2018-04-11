@@ -135,8 +135,7 @@
       [FilePreviewLink
        (assoc parsed
          :workspace-bucket workspace-bucket
-         :attributes {:dir "rtl"
-                      :style {:marginRight "0.5em"
+         :attributes {:style {:direction "rtl" :marginRight "0.5em"
                               :overflow "hidden" :textOverflow "ellipsis"
                               :textAlign "left"}})]
       (if (not (string? maybe-uri))
