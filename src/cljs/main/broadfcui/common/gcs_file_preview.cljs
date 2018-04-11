@@ -171,7 +171,7 @@
 ;; Go back to LTR here so we do not reorder the object name. Both the leading and trailing instances
 ;; are necessary to cover all cases. (GAWB-2495, GAWB-1912)
 (defn- lrm-pad [string]
-  (str (gstring/unescapeEntities "&lrm;") string (gstring/unescapeEntities "&lrm;")))
+  (str (gstring/unescapeEntities "&#8206;") string (gstring/unescapeEntities "&#8206;")))
 
 (react/defc GCSFilePreviewLink
   {:render
