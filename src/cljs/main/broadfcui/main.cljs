@@ -65,6 +65,7 @@
      (let [{:keys [component make-props]} props
            path (subs (aget js/window "location" "hash") 1)]
        [:div {}
+        (.helloJoel js/window "Test")
         [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
          (when (= :registered (:registration-status @state))
            [header/TopNavBar

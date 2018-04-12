@@ -11,6 +11,7 @@ window.jQuery = require('jquery');
 window.$ = window.jQuery;
 
 require('./timingDiagram'); // loaded here because it's small and is the only non-google-loader timeline dep
+require('./helloJoel');
 
 require('any-resize-event');
 
