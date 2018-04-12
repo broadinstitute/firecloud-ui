@@ -12,6 +12,7 @@
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.test :as test-utils]
    [broadfcui.utils.user :as user]
+   [goog.string :as gstring]
    ))
 
 (def ^:private preview-byte-count 20000)
@@ -166,6 +167,12 @@
               [PreviewDialog (assoc props :error error :object ""
                                :dismiss (:dismiss props))])))]))})
 
+;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
+;; Go back to LTR here so we do not reorder the object name. Both the leading and trailing instances
+;; are necessary to cover all cases. (GAWB-2495, GAWB-1912)
+(defn- lrm-pad [string]
+  (str (gstring/unescapeEntities "&#8206;") string (gstring/unescapeEntities "&#8206;")))
+
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
@@ -180,9 +187,10 @@
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (if (= bucket-name workspace-bucket)
-           object
-           (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
+         (lrm-pad
+           (if (= bucket-name workspace-bucket)
+             object
+             (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
 
 (react/defc DOSFilePreviewLink
   {:render
@@ -197,7 +205,7 @@
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (if link-label (str link-label) dos-uri)]]))})
+         (lrm-pad (if link-label (str link-label) dos-uri))]]))})
 
 (react/defc FilePreviewLink
   {:render
