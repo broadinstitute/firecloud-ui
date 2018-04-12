@@ -6,17 +6,15 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component.MessageModal
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, _}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage, WorkspaceMethodConfigListPage}
-import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
 
 class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
-  with WebBrowserSpec with CleanUp
-  with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
@@ -24,7 +22,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  "launch a simple workflow" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
+  "launch and delete a simple workflow" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -39,29 +37,13 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
 
           val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
-          submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
+          submissionDetailsPage.waitUntilSubmissionCompletes()
           submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
-        }
-      }
-    }
-  }
 
-  "launch modal with no default entities" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = user.makeAuthToken()
-    withCleanBillingProject(user) { billingProject =>
-      withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_no_default_entities") { workspaceName =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
-        val methodConfigName = workspaceName + "MethodConfig"
-        api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-        api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod, billingProject,
-          methodConfigName, SimpleMethodConfig.snapshotId, Map.empty, Map.empty, "participant_set")
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, billingProject, methodConfigName).open
-          val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-          launchModal.verifyNoRowsMessage() shouldBe true
-          launchModal.xOut()
+          // should be able to delete workflow
+          methodConfigDetailsPage.open
+          val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
+          workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
         }
       }
     }
@@ -196,6 +178,11 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
 
             methodConfigDetailsPage.isLoaded shouldBe true
             methodConfigDetailsPage.methodConfigName shouldBe method.methodName
+
+            // launch modal shows no default entities
+            val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+            launchModal.verifyNoRowsMessage() shouldBe true
+            launchModal.xOut()
           }
         }
       }
@@ -241,28 +228,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
           methodConfigDetailsPage.editMethodConfig(inputs = Some(SimpleMethodConfig.inputs))
 
           methodConfigDetailsPage.isLoaded shouldBe true
-        }
-      }
-    }
-  }
-
-  "launch a method config from the method repo" in withWebDriver { implicit driver =>
-    val user = Config.Users.owner
-    implicit val authToken: AuthToken = user.makeAuthToken()
-    withCleanBillingProject(user) { billingProject =>
-      withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_config_from_workspace") { workspaceName =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
-        api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-          val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
-
-          submissionDetailsPage.waitUntilSubmissionCompletes()
-          submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
         }
       }
     }
@@ -316,24 +281,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
     }
   }
 
-
-  "delete a method config from a workspace" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseProjectOwner
-    implicit val authToken: AuthToken = user.makeAuthToken()
-    withCleanBillingProject(user) { billingProject =>
-      withWorkspace(billingProject, "TestSpec_FireCloud_delete_method_from_workspace") { workspaceName =>
-        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-          val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
-          workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
-        }
-      }
-    }
-  }
-
   "For a method config that references a redacted method" - {
     "should be able to choose new method snapshot" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
@@ -364,28 +311,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
       }
     }
 
-    "should have warning icon in config list" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseProjectOwner
-      implicit val authToken: AuthToken = user.makeAuthToken()
-      withCleanBillingProject(user) { billingProject =>
-        withWorkspace(billingProject, "MethodConfigTabSpec_redacted_launch_analysis_error") { workspaceName =>
-          withMethod("MethodConfigTabSpec_redacted_has_warning_icon", MethodData.SimpleMethod) { methodName =>
-            val configName = methodName + "Config"
-            api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
-              SimpleMethodConfig.configNamespace, configName, 1, SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-
-            api.methods.redact(MethodData.SimpleMethod.copy(methodName = methodName))
-
-            withSignIn(user) { _ =>
-              val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-              workspaceMethodConfigPage.hasRedactedIcon(configName) shouldBe true
-            }
-          }
-        }
-      }
-    }
-
-    "launch analysis button should be disabled and show error if clicked" in withWebDriver { implicit driver =>
+    "launch analysis error" in withWebDriver { implicit driver =>
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withCleanBillingProject(user) { billingProject =>
@@ -399,8 +325,12 @@ class MethodConfigSpec extends FreeSpec with Matchers with LazyLogging
             api.methods.redact(MethodData.SimpleMethod.copy(methodName = methodName))
 
             withSignIn(user) { _ =>
-              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
+              // should have warning icon in config list
+              val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
+              workspaceMethodConfigPage.hasRedactedIcon(configName) shouldBe true
 
+              // should be disabled and show error if clicked
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, configName).open
               val modal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
               modal.isVisible shouldBe true
               modal.clickOk()
