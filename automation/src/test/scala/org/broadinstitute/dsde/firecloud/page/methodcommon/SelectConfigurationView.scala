@@ -22,7 +22,9 @@ class SelectConfigurationView(importing: Boolean)(implicit webDriver: WebDriver)
   def selectConfiguration(namespace: String, name: String, snapshotId: Int): ConfirmMethodImportExportView = {
     configTable.filter(name)
     configLink(namespace, name, snapshotId).doClick()
-    await condition(findAll(css).length == 3) // after select, expect 3 tables with ready state
+    // Size of modal changes while loading configuration details. Details section (right side) displays 2 expandable tables: "Inputs" and "Outputs"
+    // wait until all 3 tables exist and ready in Modal to determine readiness
+    await condition(findAll(css).length == 3)
     useSelectedButton.awaitEnabledState()
     useSelectedButton.doClick()
     await ready new ConfirmMethodImportExportView(importing)
