@@ -65,11 +65,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 
   def awaitLoaded(): GoogleSignInPopup = {
-    try {
-      await text "to continue to"
-    } catch {
-      case e: TimeoutException => // ignore because text may or may not appears
-    }
+    await condition (text("to continue to").findElement.isDefined || text("...").findElement.isDefined)
     this
   }
 

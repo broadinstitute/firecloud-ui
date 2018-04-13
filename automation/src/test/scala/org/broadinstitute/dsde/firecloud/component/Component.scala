@@ -74,6 +74,9 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     *  When there is a vertical scroll on page and WebElement is outside of view, scroll WebElement into view
     */
   def scrollToVisible(): Unit = {
+    // explanation: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+    webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView({behavior: \"instant\"});", find(query).get.underlying)
+    /*
     if (scrollbar && !inViewport) {
       // Only scroll if needed
       val script = "arguments[0].scrollIntoView(true)"
@@ -81,6 +84,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
       js.executeScript(script, find(query).get.underlying)
       Thread.sleep(250) // hack to wait page stop "moving"
     }
+    */
   }
 
   /**
