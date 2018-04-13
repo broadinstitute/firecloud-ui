@@ -124,7 +124,7 @@
                 :paginator :none}]]))
    :-handle-props
    (fn [{:keys [this]} next-props props]
-     (when (not (and (= (:entity-type props) (:entity-type next-props)) (= (:entity-name props) (:entity-name next-props))))
+     (when (utils/any-change [:entity-type :entity-name] props next-props)
        (let [{:keys [entity-type entity-name]} next-props]
          (this :-update-and-load entity-type entity-name))))
    :-update-and-load
