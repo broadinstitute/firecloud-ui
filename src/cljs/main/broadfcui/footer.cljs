@@ -51,5 +51,7 @@
       [Link {:href (config/user-guide-url) :text "User Guide" :target "_blank"}]
       spacer
       [Link {:href (config/forum-url) :text "FireCloud Forum" :target "_blank"}]
-      spacer
-      [Link {:href (config/status-url) :text "FireCloud Status" :target "_blank"}]]]))
+      (when-some [status-url (config/status-url)]
+        (list
+         spacer
+         [Link {:href status-url :text "Firecloud Status" :target "_blank"}]))]]))
