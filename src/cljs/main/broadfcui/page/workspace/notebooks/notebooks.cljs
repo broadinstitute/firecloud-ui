@@ -61,9 +61,10 @@
 (defn icon-for-cluster-status [status]
   (case status
     ("Deleted" "Error") (moncommon/render-failure-icon)
-    ("Creating" "Updating" "Deleting") spinner-icon
+    ("Creating" "Updating" "Deleting" "Stopping" "Starting") spinner-icon
     "Running" (moncommon/render-success-icon)
-    "Unknown" (moncommon/render-unknown-icon)))
+    "Stopped" nil  ;todo: add icon for Stopped status
+    (moncommon/render-unknown-icon)))
 
 (defn create-inline-form-label [text]
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
@@ -444,7 +445,7 @@
                         (when-not (= (:clusters @state) filtered-clusters)
                           (swap! state assoc :server-response {:clusters filtered-clusters}))
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting"])
+                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
                           (js/setTimeout #(this :-get-clusters-list) 10000))
                         ; If there are running clusters, call the /setCookie endpoint immediately.
                         (when (contains-statuses filtered-clusters ["Running"])
