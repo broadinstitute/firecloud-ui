@@ -7,6 +7,7 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
+import org.broadinstitute.dsde.workbench.service.test.Awaiter
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -30,7 +31,6 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   private val workflowStatusLabel = Label("workflow-status")
   private val submissionIdLabel = Label("submission-id")
   private val submissionAbortButton = Button("submission-abort-button")
-  private val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button")
   private val statusMessage = Label("status-message")
 
   private val WAITING_STATES = Array("Queued","Launching")
@@ -95,6 +95,19 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
 
   def abortSubmission(): Unit = {
     submissionAbortButton.doClick()
+    val modal = await ready new ConfirmAbortModal()
+    modal.clickAbortSubmissionButton
+  }
+
+}
+
+class ConfirmAbortModal(implicit webDriver: WebDriver) extends ConfirmModal {
+
+  val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button" inside this)
+  override val readyComponent: Awaiter = submissionAbortModalConfirmButton
+
+  def clickAbortSubmissionButton: Unit = {
     submissionAbortModalConfirmButton.doClick()
+    awaitDismissed()
   }
 }

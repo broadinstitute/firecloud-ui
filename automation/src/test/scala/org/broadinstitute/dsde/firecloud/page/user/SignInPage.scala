@@ -104,7 +104,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * such as findElement to fail with NullPointerException. Therefore, the
      * only safe check we can make is on the number of windows.
      */
-    await condition (windowHandles.size == 1, 30)
+    await condition (windowHandles.size == 1, 60)
 
     /*
      * If there is still more than 1 window after 30 seconds, we most likely

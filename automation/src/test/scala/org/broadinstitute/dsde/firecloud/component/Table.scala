@@ -4,6 +4,8 @@ import org.broadinstitute.dsde.firecloud.{Persists, Stateful}
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.{By, Keys, WebDriver}
 
+import scala.util.Try
+
 case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful with Persists {
 
@@ -82,8 +84,8 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
 
   def hideColumn(header: String): Unit = {
     if (readAllText(columnHeaders).contains(header)) {
-      columnEditorButton.doClick()
-      val colToBeHidden = Checkbox(TestId(s"$header-column-toggle"))
+      val dropdownCssQuery = clickColumnEditorButton()
+      val colToBeHidden = Checkbox(CSSQuery(s"${dropdownCssQuery.queryString} [data-test-id=$header-column-toggle]"))
       colToBeHidden.ensureUnchecked()
       val action = new Actions(webDriver)
       action.sendKeys(Keys.ESCAPE).perform()
@@ -93,9 +95,9 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   def moveColumn(header: String, otherHeader: String): Unit = {
     val allHeaders = readAllText(columnHeaders)
     if (allHeaders.contains(header) && allHeaders.contains(otherHeader)) {
-      columnEditorButton.doClick()
-      val colToBeMoved = testId(s"$header-grab-icon").element.underlying
-      val placeToMoveCol = testId(s"$otherHeader-grab-icon").element.underlying
+      val dropdownCssQuery = clickColumnEditorButton()
+      val colToBeMoved = CssSelectorQuery(s"${dropdownCssQuery.queryString} [data-test-id=$header-grab-icon]").element.underlying
+      val placeToMoveCol = CssSelectorQuery(s"${dropdownCssQuery.queryString} [data-test-id=$otherHeader-grab-icon]").element.underlying
       val action = new Actions(webDriver)
       action.clickAndHold(colToBeMoved).moveToElement(placeToMoveCol).release().build().perform()
     }
@@ -110,4 +112,26 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     }
     map
   }
+
+  /**
+    * click button "Column Editor" invokes dropdown
+    *
+    * @return Css selector string that finds dropdown WebElement
+    */
+  private def clickColumnEditorButton(): CssSelectorQuery = {
+    // find dynamic dropdown id
+    val dropdownId = columnEditorButton.query.element.underlying.findElement(By.xpath("./..")).getAttribute("data-toggle")
+    val css = CssSelectorQuery(s"#${dropdownId}")
+    columnEditorButton.doClick()
+    Try(
+      await condition {
+        val dropdown: Option[Element] = find(css)
+        dropdown.get.underlying.getAttribute("class").contains("is-open")
+      }
+    ).recover {
+      case _ => columnEditorButton.doClick() // retry click when dropdown is not found or open
+    }
+    css
+  }
+
 }

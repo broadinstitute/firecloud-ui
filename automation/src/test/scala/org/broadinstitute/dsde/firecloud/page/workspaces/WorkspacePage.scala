@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 
 /*
 A Workspace Page is any page within the workspace (i.e. the Summary tab, Data tab)
@@ -39,8 +39,11 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
 
   private def clickTab(tabName: String, pageUrl: String): Unit = {
     tabs.goToTab(tabName)
-    if (pageUrl != webDriver.getCurrentUrl) {
-      logger.warn(s"Actual page url is not $pageUrl. Action of clicking Tab($tabName) possibily failed")
+    try {
+      await condition (pageUrl == webDriver.getCurrentUrl)
+    } catch {
+      case e: TimeoutException =>
+        logger.warn(s"Actual url: ${webDriver.getCurrentUrl}, Expect url: $pageUrl. Action of clicking Tab($tabName) possibily failed")
     }
   }
 
