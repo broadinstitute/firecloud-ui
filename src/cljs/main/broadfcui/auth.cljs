@@ -110,10 +110,8 @@
          [:h4 {} "Contacting the FireCloud team"]
          [:p {}
           "If you have any questions about this privacy statement, the practices of this site, or
-          your dealings with this site, you can contact us through "
-          (links/create-external {:href "mailto:help@firecloud.org"} "help@firecloud.org")
-          " or our "
-          (links/create-external {:href (config/forum-url)} "User Forum")
+          your dealings with this site, you can contact us through our "
+          (links/create-external {:href (config/forum-url)} "help forum")
           "."]
          [:hr]))
       [:h4 {} "WARNING NOTICE"]
@@ -214,19 +212,30 @@
         :not-active [:div {:style {:color (:exception-reds style/colors)}}
                      "Thank you for registering. Your account is currently inactive."
                      " You will be contacted via email when your account is activated."]
-        [:div {:style {:color (:state-exception style/colors)}}
-         "Error loading user information. Please try again later."])])
+        [:div {}
+         [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
+          "Error loading user information. Please try again later."]
+         [:table {:style {:color (:text-lighter style/colors)}}
+          [:tbody {:style {}}
+           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
+           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
    :component-did-mount
    (fn [{:keys [props state]}]
      (ajax/call-orch "/me"
-                     {:on-done (fn [{:keys [success? status-code]}]
+                     {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
                                  (if success?
                                    ((:on-success props))
                                    (case status-code
                                      403 (swap! state assoc :error :not-active)
                                      ;; 404 means "not yet registered"
                                      404 ((:on-success props))
-                                     (swap! state assoc :error true))))}
+                                     ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
+                                     ;; exceptions because they are useless ("Unexpected token T in JSON...")
+                                     (let [[error-json parsing-error] (get-parsed-response true false)]
+                                       (swap! state assoc :error (if parsing-error
+                                                                   {:message (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
+                                                                    :statusCode status-code}
+                                                                   error-json))))))}
                      :service-prefix ""))})
 
 (react/defc RefreshCredentials

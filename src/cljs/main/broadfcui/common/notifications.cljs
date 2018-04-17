@@ -17,29 +17,34 @@
    [broadfcui.utils.user :as user]
    ))
 
-(defn render-alert [{:keys [cleared? link message title]} dismiss]
-  (let [text-color "#eee"]
+(defn render-alert [{:keys [cleared? link message title link-title severity]} dismiss]
+  (let [text-color (case severity
+                     :info (:text-lighter style/colors)
+                     "#eee")
+        background-color (case severity
+                           :info (:background-light style/colors)
+                           (if cleared?
+                             (:state-success style/colors)
+                             (:state-exception style/colors)))]
     (top-banner/render
-     [:div {:style {:color text-color
-                    :background-color (if cleared?
-                                        (:state-success style/colors)
-                                        (:state-exception style/colors))
-                    :padding "1rem"}}
-      (when cleared?
-        [:div {:style {:float "right"}}
-         (icons/render-icon {:style {:fontSize "80%" :cursor "pointer"} :on-click dismiss} :close)])
-      [:div {:style {:display "flex" :align-items "baseline"}}
-       [icons/ExceptionIcon {:size 18 :color text-color}]
-       [:span {:style {:margin-left "0.5rem" :font-weight "bold" :vertical-align "middle"}}
-        (or title "Service Alert")
-        (when cleared?
-          " (resolved)")]
-       [:span {:style {:color text-color :fontSize "90%" :margin-left "1rem"}}
-        message
-        (when link
-          (links/create-external {:href link
-                                  :style {:color text-color :margin-left "1rem"}}
-            "Read more..."))]]])))
+      [:div {:style {:color text-color
+                     :background-color background-color
+                     :padding "1rem"}}
+       (when cleared?
+         [:div {:style {:float "right"}}
+          (icons/render-icon {:style {:fontSize "80%" :cursor "pointer"} :on-click dismiss} :close)])
+       [:div {:style {:display "flex" :align-items "baseline"}}
+        [icons/ExceptionIcon {:size 18 :color text-color}]
+        [:span {:style {:margin-left "0.5rem" :font-weight "bold" :vertical-align "middle"}}
+         (or title "Service Alert")
+         (when cleared?
+           " (resolved)")]
+        [:span {:style {:color text-color :fontSize "90%" :margin-left "1rem"}}
+         message
+         (when link
+           (links/create-external {:href link
+                                   :style {:color text-color :margin-left "1rem"}}
+                                  (or link-title "Read more...")))]]])))
 
 (defn- status-alert-interval [attempt]
   (cond

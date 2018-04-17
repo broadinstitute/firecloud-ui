@@ -94,7 +94,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     libraryTable.getRows
   }
 
-  case class RequestAccessModal(implicit webDriver: WebDriver) extends MessageModal {
+  case class RequestAccessModal(override implicit val webDriver: WebDriver) extends MessageModal {
     val tcgaAccessText = "For access to TCGA controlled data please apply for access via dbGaP"
     val nonTcgaAccessText = "Please contact dbGAP and request access for workspace"
   }

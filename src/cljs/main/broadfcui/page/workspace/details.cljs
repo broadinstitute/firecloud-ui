@@ -1,11 +1,13 @@
 (ns broadfcui.page.workspace.details
   (:require
    [dmohs.react :as react]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.tab-bar :as tab-bar]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
@@ -44,11 +46,15 @@
                     :textAlign "center"}
             :data-test-id "no-bucket-access"}
       (cond (= 404 bucket-status-code)
-            (str "The Google bucket associated with this workspace"
-                 " does not exist. Please contact help@firecloud.org.")
-            :else (str "The Google bucket associated with this workspace is currently"
+            (list "The Google bucket associated with this workspace"
+                 " does not exist. Please write our "
+                (links/create-external {:href (config/forum-url)} "help forum")
+                 " for assistance.")
+            :else (list "The Google bucket associated with this workspace is currently"
                        " unavailable. This should be resolved shortly. If this persists for"
-                       " more than an hour, please contact help@firecloud.org."))]
+                       " more than an hour, please write our "
+                       (links/create-external {:href (config/forum-url)} "help forum")
+                       " for assistance."))]
      [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))
 
 
@@ -158,7 +164,7 @@
      (this :-refresh-workspace))
    :component-will-receive-props
    (fn [{:keys [props next-props this after-update]}]
-     (when (some identity (utils/changes [:tab-name :workspace-id] props next-props))
+     (when (utils/any-change [:tab-name :workspace-id] props next-props)
        (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]

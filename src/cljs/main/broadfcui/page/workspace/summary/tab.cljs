@@ -14,6 +14,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.create :as create]
@@ -47,8 +48,8 @@
                     ".")]
         [comps/ErrorViewer {:error (:server-error @state)}]]
        :dismiss (:dismiss props)
-       :ok-button {:text "Delete" :onClick #(this :delete)}}])
-   :delete
+       :ok-button {:text "Delete" :onClick #(this :-delete)}}])
+   :-delete
    (fn [{:keys [props state]}]
      (utils/multi-swap! state (assoc :deleting? true) (dissoc :server-error))
      (endpoints/call-ajax-orch
@@ -60,16 +61,7 @@
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 (react/defc- StorageCostEstimate
-  {:render
-   (fn [{:keys [state props]}]
-     (let [{:keys [workspace-id]} props]
-       [:div {:data-test-id "storage-cost-estimate"
-              :data-test-state (if (:response @state) "ready" "loading")
-              :style {:lineHeight "initial"}}
-        [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
-        [:div {:style {:fontSize "80%"}} "Note: These estimates are at the workspace level." [:br]
-         (str "The billing account associated with " (:namespace workspace-id) " will be charged.")]]))
-   :refresh
+  {:refresh
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
@@ -79,10 +71,27 @@
                            (if parse-error?
                              (str "Error parsing JSON response with status: " status-text)
                              (let [key (if success? "estimate" "message")]
-                               (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))}))})
+                               (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))}))
+   :render
+   (fn [{:keys [state props]}]
+     (let [{:keys [workspace-id]} props]
+       [:div {:data-test-id "storage-cost-estimate"
+              :data-test-state (if (:response @state) "ready" "loading")
+              :style {:lineHeight "initial"}}
+        [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
+        [:div {:style {:fontSize "80%"}} "Note: These estimates are at the workspace level." [:br]
+         (str "The billing account associated with " (:namespace workspace-id) " will be charged.")]]))})
 
 (react/defc- SubmissionCounter
-  {:render
+  {:refresh
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/count-submissions (:workspace-id props))
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :submissions-count (get-parsed-response false))
+                    (swap! state assoc :server-error status-text)))}))
+   :render
    (fn [{:keys [state]}]
      (let [{:keys [server-error submissions-count]} @state]
        [:div {:data-test-id "submission-counter"
@@ -96,26 +105,43 @@
                    [:ul {:style {:marginTop 0}}
                     (for [[status subs] (sort submissions-count)]
                       [:li {} (str subs " " status)])])))
-              :else "Loading...")]))
-   :refresh
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/count-submissions (:workspace-id props))
-       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                  (if success?
-                    (swap! state assoc :submissions-count (get-parsed-response false))
-                    (swap! state assoc :server-error status-text)))}))})
+              :else "Loading...")]))})
 
 
 (react/defc Summary
-  {:component-will-mount
+  {:refresh
+   (fn [{:keys [state refs]}]
+     (swap! state dissoc :server-response :updating-attrs? :editing?)
+     (when-let [component (@refs "storage-estimate")] (component :refresh))
+     ((@refs "submission-count") :refresh)
+     (user/reload-billing-projects
+      (fn [err-text]
+        (if err-text
+          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
+          (swap! state assoc :billing-loaded? true))))
+     (endpoints/get-library-attributes
+      (fn [{:keys [success? get-parsed-response]}]
+        (if success?
+          (let [response (get-parsed-response)]
+            (swap! state update :server-response assoc :library-schema
+                   (-> response
+                       (update-in [:display :primary] (partial map keyword))
+                       (update-in [:display :secondary] (partial map keyword)))))
+          (swap! state update :server-response assoc :server-error "Unable to load library schema"))))
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-library-curator-status
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
+                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))}))
+   :component-will-mount
    (fn [{:keys [this locals]}]
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary"))
      (add-watch user/saved-ready-billing-project-names :ws-summary #(.forceUpdate this)))
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response popup-error]} @state
-           {:keys [workspace workspace-id request-refresh]} props
+           {:keys [workspace workspace-id bucket-access? request-refresh]} props
            {:keys [server-error]} server-response]
        [:div {:data-test-id "summary-tab"
               :data-test-state
@@ -125,7 +151,10 @@
                     "updating"
                     ;; sidebar takes care of checking for billing loaded, library schema, and curator
                     ;; status, as it's the part that cares about it
-                    :else "ready")}
+                    (some? bucket-access?)
+                    "ready"
+                    :else
+                    "loading")}
         (when popup-error
           (modals/render-error {:text popup-error :dismiss #(swap! state dissoc :popup-error)}))
         (when-let [error-response (:error-response @state)]
@@ -160,9 +189,8 @@
    (fn [{:keys [this]}]
      (this :refresh))
    :component-will-receive-props
-   (fn [{:keys [props next-props state this]}]
-     (swap! state dissoc :updating-attrs? :editing?)
-     (when-not (= (:workspace-id props) (:workspace-id next-props))
+   (fn [{:keys [props next-props this]}]
+     (when (utils/any-change [:workspace :workspace-id] props next-props)
        (this :refresh)))
    :component-will-unmount
    (fn []
@@ -300,10 +328,12 @@
                                   {:type :error :header "Alert" :icon-color :state-warning
                                    :text [:div {}
                                           [:p {:style {:margin 0}}
-                                           "This workspace is published in the Data Library and cannot be deleted. "
-                                           "Contact a library curator to ask them to first unpublish the workspace."]
+                                           "This workspace is published in the Data Library and cannot be deleted."
+                                           " Contact a library curator to ask them to first unpublish the workspace."]
                                           [:p {}
-                                           "If you are unable to contact a curator, contact help@firecloud.org."]]})
+                                           "If you are unable to contact a curator, please write our "
+                                           (links/create-external {:href (config/forum-url)} "help forum")
+                                           " for assistance."]]})
                  :onClick #(swap! state assoc :deleting? true)}])])}]]))
    :-render-main
    (fn [{:keys [props state locals]}
@@ -418,7 +448,8 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:request-refresh props))
-                    (swap! state assoc :updating-attrs? nil :error-response (get-parsed-response false))))}))
+                    (utils/multi-swap! state (dissoc :updating-attrs?)
+                                             (assoc :error-response (get-parsed-response false)))))}))
    :-lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? (not locked-now?))
@@ -430,29 +461,4 @@
                       (swap! state assoc :popup-error "Could not lock workspace, one or more analyses are currently running")
                       (swap! state assoc :popup-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
-                  ((:request-refresh props)))}))
-   :refresh
-   (fn [{:keys [state refs]}]
-     (swap! state dissoc :server-response)
-     (when-let [component (@refs "storage-estimate")] (component :refresh))
-     ((@refs "submission-count") :refresh)
-     (user/reload-billing-projects
-      (fn [err-text]
-        (if err-text
-          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
-          (swap! state assoc :billing-loaded? true))))
-     (endpoints/get-library-attributes
-      (fn [{:keys [success? get-parsed-response]}]
-        (if success?
-          (let [response (get-parsed-response)]
-            (swap! state update :server-response assoc :library-schema
-                   (-> response
-                       (update-in [:display :primary] (partial map keyword))
-                       (update-in [:display :secondary] (partial map keyword)))))
-          (swap! state update :server-response assoc :server-error "Unable to load library schema"))))
-     (endpoints/call-ajax-orch
-      {:endpoint endpoints/get-library-curator-status
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
-                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))}))})
+                  ((:request-refresh props)))}))})

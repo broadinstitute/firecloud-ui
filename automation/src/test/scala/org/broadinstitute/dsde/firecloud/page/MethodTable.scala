@@ -12,6 +12,7 @@ abstract class MethodTable[T](implicit webDriver: WebDriver) extends Table("meth
   }
 
   def enterMethod(namespace: String, name: String): T = {
+    filter(name)
     methodLink(namespace, name).doClick()
     awaitInnerPage(namespace, name)
   }
