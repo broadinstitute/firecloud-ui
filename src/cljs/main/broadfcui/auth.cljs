@@ -25,8 +25,7 @@
            scopes (string/join
                    " "
                    ["email" "profile"
-                    "https://www.googleapis.com/auth/devstorage.full_control"
-                    "https://www.googleapis.com/auth/compute"])
+                    "https://www.googleapis.com/auth/devstorage.full_control"])
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js/gapi.auth2.init init-options)]
        (gapi.signin2.render "sign-in-button" #js{:width 180 :height 40 :longtitle true :theme "dark"})
