@@ -57,9 +57,6 @@ class DataSpec extends FreeSpec with WebBrowserSpec
     }
   }
 
-  val configNs = SimpleMethodConfig.configNamespace
-  val configName = SimpleMethodConfig.configName
-  val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 
   def makeMetadataFile(filePrefix: String, headers: List[String], rows: List[List[String]]): File = {
