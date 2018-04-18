@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Make sure config.json is in the right spot
-cp -f /config/config.json /var/www/html
+# Make sure config.json and newrelic.js are in the right spot
+CONFIG_FILES="/config/config.json /config/newrelic.js"
+cp -f ${CONFIG_FILES} /var/www/html
 
 if [ "${HTTPS_ONLY}" = 'true' ]; then
     a2dissite site
