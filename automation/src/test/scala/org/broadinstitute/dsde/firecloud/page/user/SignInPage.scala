@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
 /**
@@ -65,7 +65,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 
   def awaitLoaded(): GoogleSignInPopup = {
-    await text "to continue to"
+    await condition (text("to continue to").findElement.isDefined || text("...").findElement.isDefined)
     this
   }
 
@@ -104,7 +104,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * such as findElement to fail with NullPointerException. Therefore, the
      * only safe check we can make is on the number of windows.
      */
-    await condition (windowHandles.size == 1, 30)
+    await condition (windowHandles.size == 1, 60)
 
     /*
      * If there is still more than 1 window after 30 seconds, we most likely

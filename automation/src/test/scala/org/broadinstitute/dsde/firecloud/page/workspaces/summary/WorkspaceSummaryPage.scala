@@ -192,7 +192,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     if (isEditing) {
       // TODO: should do through table
       workspaceAttributesArea.ensureExpanded()
-      click on testId(s"$key-delete")
+      Link(s"$key-delete").doClick()
     } else {
       throw new IllegalArgumentException("Tried to delete a row while not editing")
     }

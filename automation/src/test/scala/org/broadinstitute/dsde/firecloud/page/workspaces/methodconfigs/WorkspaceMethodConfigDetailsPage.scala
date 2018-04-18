@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
@@ -9,8 +10,10 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
+import scala.util.{Failure, Success, Try}
+
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
@@ -29,7 +32,15 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
-  def clickLaunchAnalysis(): Unit = openLaunchAnalysisModalButton.doClick()
+  def clickLaunchAnalysis(): Unit = {
+    openLaunchAnalysisModalButton.doClick()
+    // after click, expect to find either a Message or Analysis Modal
+    val clicked: Try[Element] = Try(find(CssSelectorQuery("body.broadinstitute-modal-open")).get)
+    clicked match {
+      case Failure(e) => openLaunchAnalysisModalButton.doClick() // retry click button if Modal not found
+      case Success(some) =>
+    }
+  }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
     val launchModal = openLaunchAnalysisModal()
@@ -91,6 +102,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     }
   }
 
+  // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
     openLaunchAnalysisModalButton.isVisible
   }
@@ -140,7 +152,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
 
   def searchAndSelectEntity(entityId: String): Unit = {
     entityTable.filter(entityId)
-    click on testId(entityId + "-link")
+    Link(entityId + "-link").doClick()
   }
 
   def fillExpressionField(expression: String): Unit = {

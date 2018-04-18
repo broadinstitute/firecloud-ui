@@ -5,37 +5,40 @@ import org.openqa.selenium.WebDriver
 
 case class Collapse[A <: FireCloudView](queryString: QueryString, private val inner: A)(implicit webDriver: WebDriver)
   extends Component(queryString) with Stateful {
-  private val toggleComponent = findInner("toggle")
+
+  private val toggleComponent = new Link("toggle" inside this) with Stateful
 
   override def awaitReady(): Unit = inner.awaitReady()
 
   def isExpanded: Boolean = {
-    awaitVisible()
-    stateOf(toggleComponent) == "expanded"
+    await condition(toggleComponent.isVisible && toggleComponent.isEnabled)
+    toggleComponent.getState == "expanded"
   }
 
   def toggle(): Unit = {
-    await visible toggleComponent
-    click on toggleComponent
-    awaitReady()
+    val state = isExpanded
+    toggleComponent.doClick()
+    // compare data-test-state after click
+    await condition(state != isExpanded, 15)
   }
 
   def ensureCollapsed(): Unit = {
-    await condition {
-      if (isExpanded) toggle()
-      stateOf(toggleComponent) == "collapsed"
+    if (isExpanded) {
+      toggle()
+      await condition(toggleComponent.getState == "collapsed", 15)
     }
   }
 
   def ensureExpanded(): Unit = {
-    await condition {
-      if (!isExpanded) toggle()
-      stateOf(toggleComponent) == "expanded"
+    if (!isExpanded) {
+      toggle()
+      await condition(toggleComponent.getState == "expanded", 15)
     }
   }
 
   def getInner: A = {
     ensureExpanded()
+    awaitReady()
     inner
   }
 }
