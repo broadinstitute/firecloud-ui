@@ -27,6 +27,7 @@ trait Clickable extends LazyLogging { this: Component =>
     } catch {
       case e: WebDriverException =>
         logger.warn("doClick: " + e.getMessage)
+        // attempt to recover when this exact error occurred
         if (e.getMessage.contains("Other element would receive the click")) {
           logger.warn("retrying \"click on query\" after sleep 5 seconds")
           Thread.sleep(5000)
