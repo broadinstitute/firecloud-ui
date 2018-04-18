@@ -40,7 +40,7 @@
               [:div {:style {:width 750}
                      :data-test-id "create-billing-project-form"}
                (when (:creating? @state)
-                 (blocker "Creating billing account..."))
+                 (blocker "Creating billing project..."))
                [:div {:style {:fontSize "120%"}}
                 "1. Enter a unique name:"]
                [input/TextField {:ref "name-field" :autoFocus true
