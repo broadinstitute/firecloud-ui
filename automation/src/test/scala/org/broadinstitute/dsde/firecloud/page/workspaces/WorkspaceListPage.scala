@@ -28,6 +28,14 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   private def restrictedWorkspaceLabel(ns: String, n: String) = Label(s"restricted-$ns-$n")
 
   def clickCreateWorkspaceButton(expectDisabled: Boolean = false): Option[CreateWorkspaceModal] = {
+    /* wait for the create-workspace button to have loaded its billing project info. When expectDisabled=false,
+        this should be a noop, because the button text is "Create New Workspace" when enabled.
+        When expectDisabled=true, we need this wait. The button is disabled while loading billing info,
+        then remains disabled if billing info is loaded but has no valid projects. This method can't distinguish
+        between those two modes of disabled without looking at the text.
+     */
+    await text "Create New Workspace"
+
     if(expectDisabled) assert(createWorkspaceButton.isStateDisabled)
     createWorkspaceButton.doClick()
     if(!expectDisabled) Option(await ready new CreateWorkspaceModal) else None
