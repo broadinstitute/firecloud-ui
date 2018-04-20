@@ -44,11 +44,11 @@ launchSubmission() {
     fi
 }
 
-launchSubmission dominique.testerson@gmail.com perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k false "this.samples"
-launchSubmission gary.testerson1@gmail.com perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k false "this.samples"
-launchSubmission felicity.testerson@gmail.com perf-test-d Perf-Test-D-W_copy alex_methods sleep_echo_strings sample_set sample_set6k false "this.samples"
-launchSubmission frida.testerson@gmail.com perf-test-e Perf-Test_E_W qamethods sleep1hr_echo_strings sample_set sample_set6k false "this.samples"
-launchSubmission elvin.testerson@gmail.com aa-test041417 Perf-Test-G-W alex_methods sleep_echo_strings sample_set sample_set6k false "this.samples"
+launchSubmission dominique.testerson@gmail.com perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
+launchSubmission gary.testerson1@gmail.com perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
+launchSubmission felicity.testerson@gmail.com perf-test-d Perf-Test-D-W_copy alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
+launchSubmission frida.testerson@gmail.com perf-test-e Perf-Test_E_W qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
+launchSubmission elvin.testerson@gmail.com aa-test041417 Perf-Test-G-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
 launchSubmission test.firec@gmail.com aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
 
 printf "\nDone"
