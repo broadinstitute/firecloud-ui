@@ -27,6 +27,11 @@ testForkedParallel in Test := true
 parallelExecution in Test := true
 
 /**
+  * disable sbt's log buffering
+  */
+logBuffered in Test := false
+
+/**
   * Control the number of forked JVMs allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   */
