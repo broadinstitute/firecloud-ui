@@ -239,7 +239,7 @@
                                                      "FireCloud service is temporarily unavailable.")]
              (notifications/render-alert {:title title
                                           :message msg
-                                          :link "http://status.firecloud.org/"
+                                          :link (config/status-url)
                                           :cleared? false
                                           :link-title "System Status"
                                           :severity :info} nil)))

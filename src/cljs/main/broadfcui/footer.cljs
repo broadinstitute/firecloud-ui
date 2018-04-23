@@ -48,8 +48,10 @@
       [Link {:href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"
              :text "Terms of Service" :target "_blank"}]
       spacer
-      [Link {:href (config/user-guide-url) :text "User Guide"
-             :target "_blank"}]
+      [Link {:href (config/user-guide-url) :text "User Guide" :target "_blank"}]
       spacer
-      [Link {:href (config/forum-url) :text "FireCloud Forum"
-             :target "_blank"}]]]))
+      [Link {:href (config/forum-url) :text "FireCloud Forum" :target "_blank"}]
+      (when-some [status-url (config/status-url)]
+        (list
+         spacer
+         [Link {:href status-url :text "Firecloud Status" :target "_blank"}]))]]))

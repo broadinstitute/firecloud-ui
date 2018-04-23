@@ -21,7 +21,7 @@
                   "submissionStatusRefresh" :integer "userGuideUrl" :string "userNotebooksGuideUrl" :string
                   "workflowCountWarningThreshold" :integer "billingProjectGuideUrl" :string "billingAccountGuideUrl" :string
                   "dbGapAuthorizationDomain" :string "callCachingGuideUrl" :string "alertsPollInterval" :integer
-                  "forumUrl" :string "authDomainGuideUrl" :string
+                  "forumUrl" :string "statusUrl" :string "authDomainGuideUrl" :string
                   "googleBucketUrl" :string "marthaUrl" :string "dockstoreApiUrl" :string "dockstoreWebUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
@@ -50,6 +50,7 @@
 (defn user-guide-url [] (get @config "userGuideUrl"))
 (defn user-notebooks-guide-url [] (get @config "userNotebooksGuideUrl"))
 (defn forum-url [] (get @config "forumUrl"))
+(defn status-url [] (get @config "statusUrl"))
 (defn billing-project-guide-url [] (get @config "billingProjectGuideUrl"))
 (defn billing-account-guide-url [] (get @config "billingAccountGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
