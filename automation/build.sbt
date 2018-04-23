@@ -9,6 +9,14 @@ lazy val firecloudUiTests = project.in(file("."))
 
 version := "1.0"
 
+/**
+  * sbt forking jvm -- sbt provides 2 testing modes: forked vs not forked.
+  * -- forked: each task (test class) is executed sequentially in a forked JVM.
+  *    Test results are segregated, easy to read.
+  * -- not forked: all tasks (test classes) are executed in same sbt JVM.
+  *    Test results are not segregated, hard to read.
+  *
+  */
 
 /**
   * Specify that all tests will be executed in a single external JVM.
@@ -17,12 +25,14 @@ version := "1.0"
 fork in Test := true
 
 /**
-  * forked tests can optionally be run in parallel. This feature is still considered experimental.
+  * forked tests can optionally be run in parallel.
   */
 testForkedParallel in Test := true
 
 /*
- * Enables (true) or disables (false) parallel execution of tasks
+ * Enables (true) or disables (false) parallel execution of tasks.
+ * In not-forked mode: test classes are run in parallel in different threads, in same sbt jvm.
+ * In forked mode: each test class runs tests in sequential order, in a separated jvm.
  */
 parallelExecution in Test := true
 
