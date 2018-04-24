@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
-class MethodConfigRedactedSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodRedactedSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 
@@ -105,6 +105,60 @@ class MethodConfigRedactedSpec extends FreeSpec with Matchers with WebBrowserSpe
             submissionDetailsPage.abortSubmission()
             submissionDetailsPage.waitUntilSubmissionCompletes()
             submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
+          }
+        }
+      }
+    }
+  }
+
+  "import method config" - {
+    "copy from a workspace" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseProjectOwner
+      implicit val authToken: AuthToken = user.makeAuthToken()
+      withCleanBillingProject(user) { billingProject =>
+        withWorkspace(billingProject, "Test_copy_method_config_from_workspace_src") { sourceWorkspaceName =>
+          withWorkspace(billingProject, "Test_copy_method_config_from_workspace_dest") { destWorkspaceName =>
+            val method = MethodData.SimpleMethod
+            withMethod("MethodRedactedSpec_import_from_workspace", method, 1) { methodName =>
+              api.methodConfigurations.createMethodConfigInWorkspace(billingProject, sourceWorkspaceName,
+                method.copy(methodName = methodName), method.methodNamespace, method.methodName, 1, Map.empty, Map.empty, method.rootEntityType)
+
+              withSignIn(user) { listPage =>
+                val methodConfigTab = listPage.enterWorkspace(billingProject, destWorkspaceName).goToMethodConfigTab()
+
+                val methodConfigDetailsPage = methodConfigTab.copyMethodConfigFromWorkspace(
+                  billingProject, sourceWorkspaceName, method.methodNamespace, method.methodName)
+
+                methodConfigDetailsPage.isLoaded shouldBe true
+                methodConfigDetailsPage.methodConfigName shouldBe method.methodName
+
+                // launch modal shows no default entities
+                val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+                launchModal.verifyNoRowsMessage() shouldBe true
+                launchModal.xOut()
+              }
+            }
+          }
+        }
+      }
+    }
+
+    "import from method repo" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseProjectOwner
+      implicit val authToken: AuthToken = user.makeAuthToken()
+      withCleanBillingProject(user) { billingProject =>
+        withWorkspace(billingProject, "MethodRedactedSpec_import_from_methodrepo") { workspaceName =>
+          withSignIn(user) { workspaceListPage =>
+            val methodConfigPage = workspaceListPage.enterWorkspace(billingProject, workspaceName).goToMethodConfigTab()
+
+            val methodConfigDetailsPage = methodConfigPage.importMethodConfigFromRepo(
+              MethodData.SimpleMethod.methodNamespace,
+              MethodData.SimpleMethod.methodName,
+              MethodData.SimpleMethod.snapshotId,
+              SimpleMethodConfig.configName)
+
+            methodConfigDetailsPage.isLoaded shouldBe true
+            methodConfigDetailsPage.editMethodConfig(inputs = Some(SimpleMethodConfig.inputs))
           }
         }
       }

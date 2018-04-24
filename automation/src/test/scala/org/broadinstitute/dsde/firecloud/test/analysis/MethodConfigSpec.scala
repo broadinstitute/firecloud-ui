@@ -11,21 +11,19 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
 
-class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
-  val methodName: String = MethodData.SimpleMethod.methodName + "_" + UUID.randomUUID().toString
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  "launch and delete a simple workflow" in withWebDriver { implicit driver =>
+  "launch workflow and delete a workflow" in withWebDriver { implicit driver =>
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_a_simple_workflow") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
@@ -46,13 +44,12 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
     }
   }
 
-  "launch modal with workflows warning" in withWebDriver { implicit driver =>
+  "launch workflow with warning" in withWebDriver { implicit driver =>
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_modal_with_workflows_warning") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.sampleSetCreation)
@@ -80,7 +77,6 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
@@ -107,7 +103,6 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_workflow_on_set_without_expression") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.samples)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.HundredAndOneSampleSet.sampleSetCreation)
@@ -118,7 +113,6 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
         withSignIn(user) { _ =>
           val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
           methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
-
           val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
           launchModal.filterRootEntityType("sample_set")
           launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
@@ -146,7 +140,6 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
 
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
-
             val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
             launchModal.filterRootEntityType(method.rootEntityType)
             launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
@@ -166,7 +159,6 @@ class MethodConfigLaunchWorkflowSpec extends FreeSpec with Matchers with WebBrow
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
         withMethod("MethodConfigSpec_methodrepo", MethodData.SimpleMethod, 1) { methodName =>
           api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
           api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
             MethodData.SimpleMethod.copy(methodName = methodName), SimpleMethodConfig.configNamespace, methodConfigName, 1,
