@@ -4,8 +4,6 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.openqa.selenium.{JavascriptExecutor, WebDriver}
 
-import scala.util.Try
-
 /**
   * Components can be specified either by an arbitrary CSS selector query, or by the data-test-id directly
   *
