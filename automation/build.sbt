@@ -69,6 +69,8 @@ testGrouping in Test := (definedTests in Test).value.map { test =>
   println("outputStrategy.value: " + Some(StdoutOutput).getOrElse(""))
   println("javaHome.value: " + javaHome.value)
   println("envVars.value: " + envVars.value.toString())
+  println("baseDirectory.value: " + baseDirectory.value.toString())
+  println("target.value: " + target.value.toString())
   println("************")
   println("************")
 
@@ -81,7 +83,7 @@ testGrouping in Test := (definedTests in Test).value.map { test =>
         javaHome = javaHome.value,
         connectInput = connectInput.value,
         outputStrategy = Some(StdoutOutput), // outputStrategy.value,
-        runJVMOptions = (javaOptions in Test).value ++ Seq("-Dtest.name=" + test.name),
+        runJVMOptions = (javaOptions in Test).value ++ Seq(s"-Dtest.name=${test.name}", s"-Ddir.name=${baseDirectory.value}"),
         workingDirectory = Some(baseDirectory.value),
         envVars = envVars.value ++ Map("test.name" -> test.name)
       )
