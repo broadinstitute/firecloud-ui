@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodData, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
@@ -87,20 +87,22 @@ class MethodRepoSpec extends FreeSpec
       "to a new workspace" in withWebDriver { implicit driver =>
         withMethod("TEST-EXPORT") { case (methodName, methodNamespace) =>
           withCleanBillingProject(ownerUser) { billingProject =>
-            withSignIn(ownerUser) { workspaceListPage =>
-              val methodRepoPage = workspaceListPage.goToMethodRepository()
+            withCleanUp {
+              withSignIn(ownerUser) { workspaceListPage =>
+                val methodRepoPage = workspaceListPage.goToMethodRepository()
 
-              methodRepoPage.methodRepoTable.goToTab("My Methods")
-              val exportModal = methodRepoPage.methodRepoTable.enterMethod(methodNamespace, methodName).startExport()
-              val finalPage = exportModal.firstPage.useBlankConfiguration()
+                methodRepoPage.methodRepoTable.goToTab("My Methods")
+                val exportModal = methodRepoPage.methodRepoTable.enterMethod(methodNamespace, methodName).startExport()
+                val finalPage = exportModal.firstPage.useBlankConfiguration()
 
-              val workspaceName = "test_create_on_export_" + randomUuid
-              finalPage.workspaceSelector.selectNew(billingProject, workspaceName)
-              register cleanUp api.workspaces.delete(billingProject, workspaceName)
-              finalPage.confirm()
+                val workspaceName = "test_create_on_export_" + randomUuid
+                finalPage.workspaceSelector.selectNew(billingProject, workspaceName)
+                register cleanUp api.workspaces.delete(billingProject, workspaceName)
+                finalPage.confirm()
 
-              val detailsPage = exportModal.getPostExportModal.goToWorkspace(billingProject, workspaceName)
-              detailsPage.isLoaded shouldBe true
+                val detailsPage = exportModal.getPostExportModal.goToWorkspace(billingProject, workspaceName)
+                detailsPage.isLoaded shouldBe true
+              }
             }
           }
         }
