@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver, WebDriverException}
+import org.openqa.selenium.{TimeoutException, WebDriver, WebDriverException}
 import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 
 /**
