@@ -7,7 +7,7 @@ case class TabBar(private val queryString: QueryString = TestId("tabs"))(implici
   def goToTab(name: String): Unit = {
     awaitReady()
     Link(s"$name-tab" inside this).doClick()
-    await notVisible (cssSelector("[data-test-id=spinner]"), 60)
+    await notVisible cssSelector("[data-test-id=spinner]")
   }
 
 }

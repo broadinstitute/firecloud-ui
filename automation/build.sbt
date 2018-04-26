@@ -78,4 +78,5 @@ testGrouping in Test := (definedTests in Test).value.map { test =>
       )
     )
   )
-}
+}.sortWith(_.name < _.name)
+// sort tests in alphabetical order so that AuthDomainSpec can always run at the start of execution
