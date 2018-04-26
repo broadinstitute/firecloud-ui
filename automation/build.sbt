@@ -52,7 +52,7 @@ concurrentRestrictions in Global := Seq(
 
 javaOptions in Test ++= Seq(s"-Dlogback.configurationFile=${baseDirectory.value}/logback-test.xml")
 javaOptions in Test ++= Seq(s"-Djava.util.logging.config.file=${baseDirectory.value}/logback-test.xml")
-javaOptions in Test ++= Seq("-Xms2G", "-Xmx2G") //  prevents heap resizing during the test
+javaOptions in Test ++= Seq("-Xms3G", "-Xmx3G") //  prevents heap resizing during the test
 javaOptions in Test ++= Seq(s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}")
 javaOptions in Test ++= Seq(s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}")
 
