@@ -34,7 +34,7 @@ testForkedParallel in Test := true
  * In not-forked mode: test classes are run in parallel in different threads, in same sbt jvm.
  * In forked mode: each test class runs tests in sequential order, in a separated jvm.
  */
-// parallelExecution in Test := true
+parallelExecution in Test := true
 
 /**
   * disable sbt's log buffering
@@ -45,7 +45,7 @@ logBuffered in Test := false
   * Control the number of forked JVMs allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   */
-concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 6)) //, Tags.limit(Tags.Test, 5))
+concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 5)) //, Tags.limit(Tags.Test, 5))
 
 javaOptions in Test ++= Seq(s"-Dlogback.configurationFile=${baseDirectory.value}/logback-test.xml")
 javaOptions in Test ++= Seq(s"-Djava.util.logging.config.file=${baseDirectory.value}/logback-test.xml")
@@ -60,7 +60,7 @@ javaOptions in Test ++= Seq({
 
 
 testGrouping in Test := (definedTests in Test).value.map { test =>
-  Tests.Group(
+  new Tests.Group(
     name = test.name,
     tests = Seq(test),
     runPolicy = Tests.SubProcess(
