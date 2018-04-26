@@ -45,14 +45,11 @@ logBuffered in Test := false
   * Control the number of forked JVMs allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   */
-concurrentRestrictions in Global := Seq(
-  Tags.limit(Tags.ForkedTestGroup, 5),
-  Tags.limit(Tags.Test, 5)
-)
+concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 6)) //, Tags.limit(Tags.Test, 5))
 
 javaOptions in Test ++= Seq(s"-Dlogback.configurationFile=${baseDirectory.value}/logback-test.xml")
 javaOptions in Test ++= Seq(s"-Djava.util.logging.config.file=${baseDirectory.value}/logback-test.xml")
-javaOptions in Test ++= Seq("-Xms3G", "-Xmx3G") //  prevents heap resizing during the test
+javaOptions in Test ++= Seq("-Xms2G", "-Xmx2G") //  prevents heap resizing during the test
 javaOptions in Test ++= Seq(s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}")
 javaOptions in Test ++= Seq(s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}")
 
@@ -78,5 +75,4 @@ testGrouping in Test := (definedTests in Test).value.map { test =>
       )
     )
   )
-}.sortWith(_.name < _.name)
-// sort tests in alphabetical order so that AuthDomainSpec can always run at the start of execution
+}
