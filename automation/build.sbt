@@ -50,12 +50,11 @@ concurrentRestrictions in Global := Seq(
   Tags.limit(Tags.Test, 5)
 )
 
-javaOptions := Seq(s"-Dlogback.configurationFile=${Option(System.getProperty("user.dir")).get}/logback-test.xml")
-
-javaOptions in Test ++= Seq(s"-Djava.util.logging.config.file=${Option(System.getProperty("user.dir")).get}/logback-test.xml")
-javaOptions in Test ++= Seq("-Xms512M", "-Xmx2G", "-Djsse.enableSNIExtension=false", "-Dheadless=false")
-javaOptions in Test ++= Seq(s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}")
-javaOptions in Test ++= Seq(s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}")
+javaOptions in Test += s"-Dlogback.configurationFile=${baseDirectory.value}/logback-test.xml"
+javaOptions in Test += s"-Djava.util.logging.config.file=${baseDirectory.value}/logback-test.xml"
+javaOptions in Test ++= Seq("-Xms2G", "-Xmx2G") //  prevents heap resizing during the test
+javaOptions in Test += s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}"
+javaOptions in Test += s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}"
 
 javaOptions in Test ++= Seq({
   val props = System.getProperties
@@ -64,16 +63,6 @@ javaOptions in Test ++= Seq({
 
 
 testGrouping in Test := (definedTests in Test).value.map { test =>
-  println("test.name: " + test.name)
-  println("javaOptions in Test: " + (javaOptions in Test).value.mkString)
-  println("outputStrategy.value: " + Some(StdoutOutput).getOrElse(""))
-  println("javaHome.value: " + javaHome.value)
-  println("envVars.value: " + envVars.value.toString())
-  println("baseDirectory.value: " + baseDirectory.value.toString())
-  println("target.value: " + target.value.toString())
-  println("************")
-  println("************")
-
   Tests.Group(
     name = test.name,
     tests = Seq(test),
