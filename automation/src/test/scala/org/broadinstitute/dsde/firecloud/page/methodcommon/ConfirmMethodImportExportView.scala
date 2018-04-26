@@ -6,8 +6,8 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.openqa.selenium.WebDriver
 
 // https://youtu.be/LnIKiNAupRs?t=49s
-class ConfirmMethodImportExportView(importing: Boolean)(implicit webDriver: WebDriver) extends Modal("import-method-configuration-modal") {
-  private val importExportButton = Button("import-export-confirm-button" inside this)
+class ConfirmMethodImportExportView(importing: Boolean)(implicit webDriver: WebDriver) extends FireCloudView {
+  private val importExportButton = Button("import-export-confirm-button")
 
   // only exists for export:
   val workspaceSelector = WorkspaceSelector()
@@ -21,6 +21,5 @@ class ConfirmMethodImportExportView(importing: Boolean)(implicit webDriver: WebD
 
   def confirm(): Unit = {
     importExportButton.doClick()
-    awaitDismissed()
   }
 }

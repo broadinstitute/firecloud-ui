@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
@@ -131,12 +131,10 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
       withWorkspace(billingProject, "MethodConfigSpec_launch_workflow_input_not_defined") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-
-        val method = MethodData.InputRequiredMethod
-        withMethod("MethodConfigSpec_input_undefined", method, 1) { methodName =>
-          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method.copy(methodName = methodName),
-            method.methodNamespace, methodConfigName, 1,
-            Map.empty, Map.empty, method.rootEntityType)
+        withMethod("MethodLaunchSpec_input_undefined", MethodData.InputRequiredMethod, 1) { methodName =>
+          val method = MethodData.InputRequiredMethod.copy(methodName = methodName)
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method,
+            method.methodNamespace, methodConfigName, 1, Map.empty, Map.empty, method.rootEntityType)
 
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
@@ -157,11 +155,12 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
-        withMethod("MethodConfigSpec_methodrepo", MethodData.SimpleMethod, 1) { methodName =>
+        withMethod("MethodLaunchSpec_methodrepo", MethodData.SimpleMethod, 1) { methodName =>
+          val method = MethodData.SimpleMethod.copy(methodName = methodName)
           api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
           api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
-            MethodData.SimpleMethod.copy(methodName = methodName), SimpleMethodConfig.configNamespace, methodConfigName, 1,
+            method, SimpleMethodConfig.configNamespace, methodConfigName, 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
           withSignIn(user) { _ =>
@@ -170,6 +169,35 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
             submissionDetailsPage.waitUntilSubmissionCompletes()
             submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
+          }
+        }
+      }
+    }
+  }
+
+  "owner can abort a launched submission" in withWebDriver { implicit driver =>
+    val user = Config.Users.owner
+    implicit val authToken: AuthToken = user.makeAuthToken()
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "MethodLaunchSpec_abort_submission") { workspaceName =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
+        val shouldUseCallCaching = false
+        api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+
+        withMethod("MethodLaunchSpec_abort", MethodData.SimpleMethod) { methodName =>
+          val method = MethodData.SimpleMethod.copy(methodName = methodName)
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
+            method, SimpleMethodConfig.configNamespace, methodName, 1,
+            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
+
+          withSignIn(user) { _ =>
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
+            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
+
+            submissionDetailsPage.abortSubmission()
+            submissionDetailsPage.waitUntilSubmissionCompletes()
+            submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
           }
         }
       }
