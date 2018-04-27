@@ -2,6 +2,7 @@
 # Simple script to start perf test in alpha
 echo "Starting Perf test in alpha"
 
+set -e
 
 VAULT_TOKEN=${1:-$(cat $HOME/.vault-token)}
 WORKING_DIR=${2:-$PWD}
