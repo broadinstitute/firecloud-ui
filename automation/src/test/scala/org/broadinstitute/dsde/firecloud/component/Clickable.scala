@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.{TimeoutException, WebDriver, WebDriverException}
+import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver, WebDriverException}
 import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 
 /**
@@ -10,12 +10,15 @@ import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
   * checkboxes that represent their own state
   */
 trait Clickable extends LazyLogging { this: Component =>
+
+  val spinner = cssSelector("[data-test-id=spinner]")
+
   /**
     * Click on the element modeled by this Component
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
     try {
-      await condition (isVisible && isEnabled)
+      await condition ( isVisible && isEnabled && !(find(spinner).exists(_.isDisplayed)) )
     } catch {
       case e: TimeoutException =>
         // show me query string on failed WebElement
@@ -25,14 +28,19 @@ trait Clickable extends LazyLogging { this: Component =>
     try {
       click on query
     } catch {
+      // on rare occasion, stale exception happens when click here
+      case e: StaleElementReferenceException => click on query
       case e: WebDriverException =>
         logger.warn("doClick: " + e.getMessage)
-        // attempt to recover when this exact error occurred
+        // make an attempt to recover when this exact error occurred
         if (e.getMessage.contains("Other element would receive the click")) {
           logger.warn("retrying \"click on query\" after sleep 5 seconds")
           Thread.sleep(5000)
           click on query
         }
+    } finally {
+      Thread sleep 100
+      await notVisible (spinner, 60)
     }
   }
 

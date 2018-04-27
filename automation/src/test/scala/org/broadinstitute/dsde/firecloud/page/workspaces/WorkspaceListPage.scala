@@ -16,6 +16,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces"
 
   override def awaitReady(): Unit = {
+    await notVisible (cssSelector("[data-test-id=spinner]"), 60)
     workspacesTable.awaitReady()
   }
 

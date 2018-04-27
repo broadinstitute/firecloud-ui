@@ -89,10 +89,10 @@ private class ChooseConfigView(implicit webDriver: WebDriver) extends FireCloudV
   }
 }
 
-private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends FireCloudView {
-  private val namespaceField = TextField("namespace-field")
-  private val nameField = TextField("name-field")
-  private val importButton = Button("import-button")
+private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends Modal("import-method-configuration-modal") {
+  private val namespaceField = TextField("namespace-field" inside this)
+  private val nameField = TextField("name-field" inside this)
+  private val importButton = Button("import-button" inside this)
 
   override def awaitReady(): Unit = importButton.awaitEnabledState()
 
@@ -105,5 +105,6 @@ private class ConfirmConfigCopyView(implicit webDriver: WebDriver) extends FireC
       nameField.setText(name.get)
 
     importButton.doClick()
+    awaitDismissed()
   }
 }

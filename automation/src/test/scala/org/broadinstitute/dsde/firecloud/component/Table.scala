@@ -22,16 +22,33 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   private def pageButton(page: Int) = Button(s"page-$page" inside this)
   private val perPageSelector = Select("per-page" inside this)
   private val columnEditorButton = Button("columns-button" inside this)
+  private val tableMessage = Label("message-well" inside this)
 
   override def awaitReady(): Unit = {
     awaitVisible()
     await condition { getState == "ready" }
   }
 
+  /**
+    * Determine whether this table is empty, without any table row.
+    * If any exception is thrown, this method returns false.
+    * @return True if table is empty (no rows)
+    */
+  def isEmpty(): Boolean = {
+    try {
+      tableMessage.isVisible || tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).isEmpty
+    } catch {
+      case e: Exception => false // not able to determine table is empty
+    }
+  }
+
   def filter(text: String): Unit = {
-    filterField.setText(text)
-    filterButton.doClick()
-    awaitReady()
+    // filtering doesn't make sense when table is empty
+    if (!isEmpty()) {
+      filterField.setText(text)
+      filterButton.doClick()
+      awaitReady()
+    }
   }
 
   def goToTab(tabName: String): Unit = {

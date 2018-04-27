@@ -18,6 +18,8 @@ trait PageUtil[P <: Page] extends FireCloudView { self: P =>
     */
   def open(implicit webDriver: WebDriver): P = {
     go to this
+    await condition webDriver.getCurrentUrl == this.url
+    await notVisible (cssSelector("[data-test-id=spinner]"), 60)
     awaitReady()
     this
   }

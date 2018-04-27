@@ -80,9 +80,11 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     */
   def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 20.minutes): Unit = {
     retry[Boolean](5.seconds, timeOut) ({
+      // sometimes page auto reloads, displaying table "Workflow Detail". link submissionId is not in table "Workflow Detail".
+      // click tab "Monitor" loads from table "Workflow Details" to table "Analysis Detail" or vice versa.
       if (workflowStatusLabel.isVisible) {
         val monitorTab = goToMonitorTab()
-        monitorTab.openSubmission(submissionId)
+        monitorTab.openSubmission(submissionId) // this link exists only in "Analysis Detail" table
       }
       if (isError) {
         Some(false)

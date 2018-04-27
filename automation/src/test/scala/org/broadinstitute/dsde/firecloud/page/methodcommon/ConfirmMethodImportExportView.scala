@@ -21,5 +21,6 @@ class ConfirmMethodImportExportView(importing: Boolean)(implicit webDriver: WebD
 
   def confirm(): Unit = {
     importExportButton.doClick()
+    importExportButton.awaitNotVisible() // another way to wait for modal to dismiss
   }
 }
