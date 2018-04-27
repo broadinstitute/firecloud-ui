@@ -1,5 +1,4 @@
 package org.broadinstitute.dsde.firecloud.test.workspace
-// checkme
 
 import java.util.UUID
 
@@ -30,7 +29,7 @@ class WorkspaceSpec extends FreeSpec with Matchers
   val noAccessText = "You do not have access to run analysis."
 
   "Persisted workspace table handles extra columns in storage gracefully" in withWebDriver { implicit driver =>
-    val user = UserPool.chooseAnyUser
+    val user = UserPool.chooseStudent
     implicit val authToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "Dummy_workspace") { _ =>
