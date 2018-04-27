@@ -35,4 +35,5 @@ trait Clickable extends LazyLogging { this: Component =>
         }
     }
   }
+
 }

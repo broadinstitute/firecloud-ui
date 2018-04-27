@@ -80,7 +80,10 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     */
   def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 20.minutes): Unit = {
     retry[Boolean](5.seconds, timeOut) ({
-      goToMonitorTab().openSubmission(submissionId)
+      if (workflowStatusLabel.isVisible) {
+        val monitorTab = goToMonitorTab()
+        monitorTab.openSubmission(submissionId)
+      }
       if (isError) {
         Some(false)
       } else {
