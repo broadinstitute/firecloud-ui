@@ -1,4 +1,5 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
+// checkme
 
 import org.broadinstitute.dsde.workbench.config.UserPool
 import java.io.{File, PrintWriter}

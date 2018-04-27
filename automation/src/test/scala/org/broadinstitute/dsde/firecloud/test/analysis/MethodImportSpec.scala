@@ -1,5 +1,5 @@
 package org.broadinstitute.dsde.firecloud.test.analysis
-
+// checkme
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
