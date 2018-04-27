@@ -111,22 +111,21 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
 
   def enterOntologySearchText(text: String): Unit = {
     ontologySearch.setText(text)
+    await spinner "Loading..."
   }
 
   def isSuggestionVisible(suggestionTestId: String): Boolean = {
-    await enabled testId(suggestionTestId) // has a timeout so test will not hang if suggestion never shows
-    val ffiSuggestion = Button(suggestionTestId)
-    ffiSuggestion.isVisible
+    Link(suggestionTestId inside this).isVisible
   }
 
-  def selectSuggestion(suggestionTestId: String, tagTestId: String): Unit = {
-    val ffiSuggestion = Button(suggestionTestId)
-    ffiSuggestion.doClick()
+  def selectSuggestion(suggestionTestId: String): Unit = {
+    Link(suggestionTestId inside this).doClick()
+    // selecting something should clear out the search field:
+    await condition { ontologySearch.getText == "" }
   }
 
   def isTagSelected(tagTestId: String): Boolean = {
-    await enabled testId(tagTestId)
-    Label(tagTestId).isVisible
+    Label(tagTestId inside this).isVisible
   }
 
 }

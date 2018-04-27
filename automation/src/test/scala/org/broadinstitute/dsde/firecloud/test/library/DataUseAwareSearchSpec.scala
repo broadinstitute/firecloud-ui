@@ -54,7 +54,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.isSuggestionVisible(ffiSuggestionId) shouldBe true
 
-        researchPurposeModal.selectSuggestion(ffiSuggestionId, ffiTagId)
+        researchPurposeModal.selectSuggestion(ffiSuggestionId)
 
         researchPurposeModal.isTagSelected(ffiTagId) shouldBe true
 
@@ -66,7 +66,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.isSuggestionVisible(brxSuggestionId) shouldBe true
 
-        researchPurposeModal.selectSuggestion(brxSuggestionId, brxTagId)
+        researchPurposeModal.selectSuggestion(brxSuggestionId)
 
         researchPurposeModal.isTagSelected(brxTagId) shouldBe true
         researchPurposeModal.isTagSelected(ffiTagId) shouldBe true // previously-selected tag still there
