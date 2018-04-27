@@ -45,11 +45,13 @@ logBuffered in Test := false
   * Control the number of forked JVMs allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   */
-concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 5)) //, Tags.limit(Tags.Test, 5))
+// concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 5)) //, Tags.limit(Tags.Test, 5))
+concurrentRestrictions in Global := Seq(Tags.limit(Tags.Test, 7))
+
 
 javaOptions in Test ++= Seq(s"-Dlogback.configurationFile=${baseDirectory.value}/logback-test.xml")
 javaOptions in Test ++= Seq(s"-Djava.util.logging.config.file=${baseDirectory.value}/logback-test.xml")
-javaOptions in Test ++= Seq("-Xms1G", "-Xmx2G")
+// javaOptions in Test ++= Seq("-Xms1G", "-Xmx2G")
 javaOptions in Test ++= Seq(s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}")
 javaOptions in Test ++= Seq(s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}")
 

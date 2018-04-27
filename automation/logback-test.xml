@@ -34,8 +34,8 @@
     </appender>
 
     <root level="DEBUG">
-        <appender-ref ref="ASYNCCONSOLE"/>
-        <appender-ref ref="ASYNCFILE" />
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE" />
     </root>
 
 </configuration>
