@@ -43,8 +43,9 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def filter(text: String): Unit = {
-    // filtering doesn't make sense when table is empty
-    if (!isEmpty()) {
+    // filtering on a empty table doesn't make sense, unless text string is empty.
+    // if text is empty, user is using this method to clear filtered results.
+    if (text.isEmpty || !isEmpty()) {
       filterField.setText(text)
       filterButton.doClick()
       awaitReady()
