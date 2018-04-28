@@ -84,7 +84,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
       // click tab "Monitor" loads from table "Workflow Details" to table "Analysis Detail" or vice versa.
       if (workflowStatusLabel.isVisible) {
         val monitorTab = goToMonitorTab()
-        monitorTab.openSubmission(submissionId) // this link exists only in "Analysis Detail" table
+        monitorTab.openSubmission(submissionId) // link exists in "Analysis Detail" table
       }
       if (isError) {
         Some(false)

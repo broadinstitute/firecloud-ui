@@ -18,7 +18,7 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
-  "launch workflow and delete a workflow" in withWebDriver { implicit driver =>
+  "launch workflow and delete a workflow" in {
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -27,24 +27,27 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
 
-          val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
+        withWebDriver { implicit driver =>
+          withSignIn(user) { _ =>
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
 
-          submissionDetailsPage.waitUntilSubmissionCompletes()
-          submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
+            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
 
-          // should be able to delete workflow
-          methodConfigDetailsPage.open
-          val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
-          workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
+            submissionDetailsPage.waitUntilSubmissionCompletes()
+            submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
+
+            // should be able to delete workflow
+            methodConfigDetailsPage.open
+            val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
+            workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
+          }
         }
       }
     }
   }
 
-  "launch workflow with warning" in withWebDriver { implicit driver =>
+  "launch workflow with warning" in {
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -57,21 +60,23 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-          methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
+        withWebDriver { implicit driver =>
+          withSignIn(user) { _ =>
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+            methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
-          val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-          launchModal.filterRootEntityType("sample_set")
-          launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
-          launchModal.verifyWorkflowsWarning() shouldBe true
-          launchModal.xOut()
+            val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+            launchModal.filterRootEntityType("sample_set")
+            launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
+            launchModal.verifyWorkflowsWarning() shouldBe true
+            launchModal.xOut()
+          }
         }
       }
     }
   }
 
-  "launch workflow with wrong root entity" in withWebDriver { implicit driver =>
+  "launch workflow with wrong root entity" in {
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -82,22 +87,24 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-          methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
+        withWebDriver { implicit driver =>
+          withSignIn(user) { _ =>
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+            methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
 
-          val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-          launchModal.filterRootEntityType("participant")
-          launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
-          launchModal.clickLaunchButton()
-          launchModal.verifyErrorText(wrongRootEntityErrorText) shouldBe true
-          launchModal.xOut()
+            val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+            launchModal.filterRootEntityType("participant")
+            launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
+            launchModal.clickLaunchButton()
+            launchModal.verifyErrorText(wrongRootEntityErrorText) shouldBe true
+            launchModal.xOut()
+          }
         }
       }
     }
   }
 
-  "launch workflow on set without expression" in withWebDriver { implicit driver =>
+  "launch workflow on set without expression" in {
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -110,21 +117,23 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
-        withSignIn(user) { _ =>
-          val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-          methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
-          val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-          launchModal.filterRootEntityType("sample_set")
-          launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
-          launchModal.clickLaunchButton()
-          launchModal.verifyErrorText(noExpressionErrorText) shouldBe true
-          launchModal.xOut()
+        withWebDriver { implicit driver =>
+          withSignIn(user) { _ =>
+            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+            methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
+            val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+            launchModal.filterRootEntityType("sample_set")
+            launchModal.searchAndSelectEntity(TestData.HundredAndOneSampleSet.entityId)
+            launchModal.clickLaunchButton()
+            launchModal.verifyErrorText(noExpressionErrorText) shouldBe true
+            launchModal.xOut()
+          }
         }
       }
     }
   }
 
-  "launch workflow with input not defined" in withWebDriver { implicit driver =>
+  "launch workflow with input not defined" in {
     val user = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -136,21 +145,23 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
           api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, method,
             method.methodNamespace, methodConfigName, 1, Map.empty, Map.empty, method.rootEntityType)
 
-          withSignIn(user) { _ =>
-            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
-            val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-            launchModal.filterRootEntityType(method.rootEntityType)
-            launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
-            launchModal.clickLaunchButton()
-            launchModal.verifyErrorText(missingInputsErrorText) shouldBe true
-            launchModal.xOut()
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
+              val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+              launchModal.filterRootEntityType(method.rootEntityType)
+              launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
+              launchModal.clickLaunchButton()
+              launchModal.verifyErrorText(missingInputsErrorText) shouldBe true
+              launchModal.xOut()
+            }
           }
         }
       }
     }
   }
 
-  "launch a method from the method repo" in withWebDriver { implicit driver =>
+  "launch a method from the method repo" in {
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -163,19 +174,21 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             method, SimpleMethodConfig.configNamespace, methodConfigName, 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
-          withSignIn(user) { _ =>
-            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
-            submissionDetailsPage.waitUntilSubmissionCompletes()
-            submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
+              submissionDetailsPage.waitUntilSubmissionCompletes()
+              submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
+            }
           }
         }
       }
     }
   }
 
-  "owner can abort a launched submission" in withWebDriver { implicit driver =>
+  "owner can abort a launched submission" in {
     val user = Config.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -191,14 +204,16 @@ class MethodLaunchSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             method, SimpleMethodConfig.configNamespace, methodName, 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
-          withSignIn(user) { _ =>
-            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
-            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
 
-            //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
-            submissionDetailsPage.abortSubmission()
-            submissionDetailsPage.waitUntilSubmissionCompletes()
-            submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
+              //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
+              submissionDetailsPage.abortSubmission()
+              submissionDetailsPage.waitUntilSubmissionCompletes()
+              submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
+            }
           }
         }
       }
