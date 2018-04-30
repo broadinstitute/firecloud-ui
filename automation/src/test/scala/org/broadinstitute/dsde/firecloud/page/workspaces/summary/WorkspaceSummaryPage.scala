@@ -211,9 +211,8 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
 
     action
 
-    if (isEditing) {
+    if (isEditing)
       sidebar.clickSave()
-    }
     else
       throw new IllegalStateException("Tried to click on 'save' while not editing")
   }

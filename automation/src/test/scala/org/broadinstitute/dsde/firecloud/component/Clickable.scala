@@ -18,7 +18,7 @@ trait Clickable extends LazyLogging { this: Component =>
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
     try {
-      await condition ( isVisible && isEnabled && findAll(spinner).size == 0 )
+      await condition ( isVisible && isEnabled && findAll(spinner).isEmpty )
     } catch {
       case e: TimeoutException =>
         // show me query string on failed WebElement
@@ -31,16 +31,13 @@ trait Clickable extends LazyLogging { this: Component =>
       // on rare occasion, encounters stale exception
       case e: StaleElementReferenceException => click on query
       case e: WebDriverException =>
-        logger.warn("doClick: " + e.getMessage)
-        // make an attempt to recover when this exact error occurred
+        logger.debug(e.getMessage)
+        // make an attempt to recover for this exact error
         if (e.getMessage.contains("Other element would receive the click")) {
-          logger.warn("retrying \"click on query\" after sleep 5 seconds")
           Thread.sleep(5000)
+          logger.debug(s"retrying click on query: ${query}")
           click on query
         }
-    } finally {
-      Thread sleep 100
-      await notVisible (spinner, 60)
     }
   }
 
