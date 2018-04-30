@@ -46,9 +46,8 @@ object Dependencies {
     "org.specs2"          %%  "specs2-core"   % "3.7"  % "test",
     "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
     "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
-
     "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
-    "ch.qos.logback" % "logback-classic" % "1.2.3", // logging backend for scala-logging
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
 
     workbenchModel,
     workbenchMetrics,

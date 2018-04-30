@@ -56,10 +56,9 @@ Test / logBuffered := false
 /**
   * Control the number of forked JVMs allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
-  *
-  * Alternative: concurrentRestrictions in Global := Seq(Tags.limit(Tags.ForkedTestGroup, 5))
+  *  Warning: can't set too high (set at 10 would crashes OS)
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.Test, 5))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 4))
 
 /**
   * Forked JVM options
@@ -96,38 +95,40 @@ Test / javaOptions ++= Seq({
 }  */
 
 
-testGrouping in Test := (definedTests in Test).value.map { test =>
-  /**
-    * debugging print out:
-    *
-    * println("test.name: " + test.name)
-    * println("(Test/baseDirectory).value: " + (Test / baseDirectory).value)
-    * println("(baseDirectory in ThisBuild).value: " + (baseDirectory in ThisBuild).value)
-    *
-    * val envirn = System.getenv()
-    *   envirn.keySet.forEach {
-    * key => s"-D$key=${envirn.get(key)}"
-    * println(s"-D$key=${envirn.get(key)}")
-    * }
-    */
 
-  val options = ForkOptions()
-    .withConnectInput(true)
-    .withWorkingDirectory(Some((Test / baseDirectory).value))
-    .withOutputStrategy(Some(sbt.StdoutOutput))
-    .withRunJVMOptions(
-      Vector(
-      s"-Dlogback.configurationFile=${(Test / baseDirectory).value.getAbsolutePath}/logback-test.xml",
-      s"-Djava.util.logging.config.file=${(Test / baseDirectory).value.getAbsolutePath}/logback-test.xml",
-      s"-Dtest.name=${test.name}",
-      s"-Ddir.name=${(Test / baseDirectory).value}",
-      s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}",
-      s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}"))
-  new Tests.Group(
-    name = test.name,
-    tests = Seq(test),
-    runPolicy = Tests.SubProcess(options)
-  )
+testGrouping in Test := {
+  (definedTests in Test).value.map { test =>
+
+    /**
+      * debugging print out:
+      *
+      * println("test.name: " + test.name)
+      * println("(Test/baseDirectory).value: " + (Test / baseDirectory).value)
+      * println("(baseDirectory in ThisBuild).value: " + (baseDirectory in ThisBuild).value)
+      *
+      * val envirn = System.getenv()
+      *   envirn.keySet.forEach {
+      * key => s"-D$key=${envirn.get(key)}"
+      * println(s"-D$key=${envirn.get(key)}")
+      * }
+      */
+
+    val options = ForkOptions()
+      .withConnectInput(true)
+      .withWorkingDirectory(Some((Test / baseDirectory).value))
+      .withOutputStrategy(Some(sbt.StdoutOutput))
+      .withRunJVMOptions(
+        Vector(
+          s"-Dlogback.configurationFile=${(Test / baseDirectory).value.getAbsolutePath}/logback-test.xml",
+          s"-Djava.util.logging.config.file=${(Test / baseDirectory).value.getAbsolutePath}/logback-test.xml",
+          s"-Dtest.name=${test.name}",
+          s"-Ddir.name=${(Test / baseDirectory).value}",
+          s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}",
+          s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}"))
+    new Tests.Group(
+      name = test.name,
+      tests = Seq(test),
+      runPolicy = Tests.SubProcess(options)
+    )
+  }
 }
-
-
