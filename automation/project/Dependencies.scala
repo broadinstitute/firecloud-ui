@@ -29,7 +29,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
     "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % jacksonV,
-    "ch.qos.logback" % "logback-classic" % "1.2.3",
+
     "com.google.apis" % "google-api-services-oauth2" % "v1-rev112-1.20.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
       ExclusionRule("org.apache.httpcomponents", "httpclient")
@@ -44,9 +44,10 @@ object Dependencies {
     "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,
     "org.specs2"          %%  "specs2-core"   % "3.7"  % "test",
-    "org.scalatest"       %%  "scalatest"     % "3.0.1"   % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "3.8.1" % "test",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+    "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
 
     workbenchModel,
     workbenchMetrics,
