@@ -35,7 +35,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def clickLaunchAnalysis(): Unit = {
     openLaunchAnalysisModalButton.doClick()
     // after click, expect to find either a Message or Analysis Modal
-    val clicked: Try[Element] = Try( await enabled (CssSelectorQuery("body.broadinstitute-modal-open")) )
+    val clicked: Try[Unit] = Try( await visible (CssSelectorQuery("body.broadinstitute-modal-open")) )
     clicked match {
       case Failure(e) =>
         // retry click button if Modal not found
