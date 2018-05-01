@@ -10,9 +10,8 @@
 
 (react/defc WDLViewer
   {:render
-   (fn [{:keys [props #_state]}] ; TODO: uncomment state when re-enabling
-     [CodeMirror {:text (:wdl props) :read-only? true}] ; TODO: remove this line when re-enabling
-     #_(let [{:keys [mode]} @state ; TODO: un-comment this when re-enabling
+   (fn [{:keys [props state]}]
+     (let [{:keys [mode]} @state
            {:keys [wdl]} props
            mode (or mode :code)
            tab (fn [mode-key label]
