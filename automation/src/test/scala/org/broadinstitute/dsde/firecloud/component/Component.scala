@@ -73,16 +73,17 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     */
   def scrollToVisible(): Unit = {
     // explanation: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-    webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView({behavior: \"instant\"});", find(query).get.underlying)
-    /*
+    // Not working every time
+    // webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView({behavior: \"instant\"});", find(query).get.underlying)
+
     if (scrollbar && !inViewport) {
       // Only scroll if needed
       val script = "arguments[0].scrollIntoView(true)"
       val js = webDriver.asInstanceOf[JavascriptExecutor]
       js.executeScript(script, find(query).get.underlying)
-      Thread.sleep(250) // hack to wait page stop "moving"
+      Thread.sleep(1000) // hack to wait page stop "moving"
+      logger.debug("executed javaScript scrollIntoView ")
     }
-    */
   }
 
   /**
