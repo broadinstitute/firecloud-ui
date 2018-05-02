@@ -10,7 +10,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with Matchers {
 
-  "For a dataset with consent codes" in withWebDriver { implicit driver =>
+  "For a dataset with consent codes" in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withCleanBillingProject(curatorUser) { billingProject =>
@@ -20,11 +20,14 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           api.library.setLibraryAttributes(billingProject, wsName, data)
           register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
           api.library.publishWorkspace(billingProject, wsName)
-          withSignIn(curatorUser) { _ =>
-            val page = new DataLibraryPage().waitForDataset(wsName)
-            if (page.isDefined) {
-              val codes: Seq[String] = page.get.getConsentCodes
-              Seq("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
+
+          withWebDriver { implicit driver =>
+            withSignIn(curatorUser) { _ =>
+              val page = new DataLibraryPage().waitForDataset(wsName)
+              if (page.isDefined) {
+                val codes: Seq[String] = page.get.getConsentCodes
+                Seq("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
+              }
             }
           }
         }
@@ -32,7 +35,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
     }
   }
 
-  "For a dataset with tags" in withWebDriver { implicit driver =>
+  "For a dataset with tags" in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withCleanBillingProject(curatorUser) { billingProject =>
@@ -42,11 +45,14 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           api.library.setLibraryAttributes(billingProject, wsName, data)
           register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
           api.library.publishWorkspace(billingProject, wsName)
-          withSignIn(curatorUser) { _ =>
-            val page = new DataLibraryPage().waitForDataset(wsName)
-            if (page.isDefined) {
-              val codes: Seq[String] = page.get.getTags
-              Seq("testing", "diabetes") should contain allElementsOf codes
+
+          withWebDriver { implicit driver =>
+            withSignIn(curatorUser) { _ =>
+              val page = new DataLibraryPage().waitForDataset(wsName)
+              if (page.isDefined) {
+                val codes: Seq[String] = page.get.getTags
+                Seq("testing", "diabetes") should contain allElementsOf codes
+              }
             }
           }
         }
@@ -55,7 +61,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   }
 
 
-  "Dataset to test facets values" in withWebDriver { implicit driver =>
+  "Dataset to test facets values" in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withCleanBillingProject(curatorUser) { billingProject =>
@@ -74,24 +80,26 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
           register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
           api.library.publishWorkspace(billingProject, wsName)
 
-          withSignIn(curatorUser) { _ =>
-            val pageOption = new DataLibraryPage().waitForDataset(wsName)
+          withWebDriver { implicit driver =>
+            withSignIn(curatorUser) { _ =>
+              val pageOption = new DataLibraryPage().waitForDataset(wsName)
 
-            pageOption should not be None
+              pageOption should not be None
 
-            val page = pageOption.get
+              val page = pageOption.get
 
-            //Verifying results
-            val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",
-              page.experimentalStrategySection -> s"$wsName+2",
-              page.projectNameSection -> s"$wsName+3",
-              page.primaryDiseaseSiteSection -> s"$wsName+4",
-              page.dataUseLimitationSection -> s"$wsName+5")
+              //Verifying results
+              val expected = Map(page.cohortPhenotypeIndicationSection -> s"$wsName+1",
+                page.experimentalStrategySection -> s"$wsName+2",
+                page.projectNameSection -> s"$wsName+3",
+                page.primaryDiseaseSiteSection -> s"$wsName+4",
+                page.dataUseLimitationSection -> s"$wsName+5")
 
-            expected.foreach { case (title, item) =>
-              val childElement = cssSelector(s"[data-test-id='$title-facet-section'] [data-test-id='$item-item']").findElement
-              childElement should not be None
-              childElement.get.underlying.getText shouldBe item
+              expected.foreach { case (title, item) =>
+                val childElement = cssSelector(s"[data-test-id='$title-facet-section'] [data-test-id='$item-item']").findElement
+                childElement should not be None
+                childElement.get.underlying.getText shouldBe item
+              }
             }
           }
         }
@@ -102,7 +110,7 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
   /**
     * Test creates two workspaces. Only one workspace has tags
     */
-  "Input multiple tags in filter field" in withWebDriver { implicit driver =>
+  "Input multiple tags in filter field" in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
 
@@ -123,23 +131,26 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
             api.library.publishWorkspace(billingProject, wsNameNoTag)
             api.library.publishWorkspace(billingProject, wsName)
 
-            withSignIn(curatorUser) { _ =>
-              val page = new DataLibraryPage().open
+            withWebDriver { implicit driver =>
+              withSignIn(curatorUser) { _ =>
+                val page = new DataLibraryPage().open
 
-              // entering multiple tags in Tags input-field
-              val expectedTags = attrTag.get("tag:tags").get
-              page.doTagSearch(expectedTags)
-              val rows: List[Map[String, String]] = page.getRows
-              val codes: Seq[String] = page.getTags
+                // entering multiple tags in Tags input-field
+                val expectedTags = attrTag.get("tag:tags").get
+                page.doTagSearch(expectedTags)
+                val rows: List[Map[String, String]] = page.getRows
+                val codes: Seq[String] = page.getTags
 
-              page.hasDataset(wsName) shouldBe true
-              page.hasDataset(wsNameNoTag) shouldBe false
-              codes should contain allElementsOf expectedTags
+                page.hasDataset(wsName) shouldBe true
+                page.hasDataset(wsNameNoTag) shouldBe false
+                codes should contain allElementsOf expectedTags
+              }
             }
           }
         }
       }
     }
   }
+
 }
 

@@ -35,16 +35,19 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
 
   private val downloadPath = makeTempDownloadDirectory()
 
-  "import a participants file" in withWebDriver { implicit driver =>
+  "import a participants file" in {
     val owner = UserPool.chooseProjectOwner
     implicit val authToken: AuthToken = owner.makeAuthToken()
     withCleanBillingProject(owner) { billingProject =>
       withWorkspace(billingProject, "TestSpec_FireCloud_import_participants_file_") { workspaceName =>
-        withSignIn(owner) { _ =>
-          val filename = "src/test/resources/participants.txt"
-          val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          workspaceDataTab.importFile(filename)
-          workspaceDataTab.getNumberOfParticipants shouldBe 1
+
+        withWebDriver { implicit driver =>
+          withSignIn(owner) { _ =>
+            val filename = "src/test/resources/participants.txt"
+            val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+            workspaceDataTab.importFile(filename)
+            workspaceDataTab.getNumberOfParticipants shouldBe 1
+          }
         }
       }
     }

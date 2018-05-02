@@ -10,6 +10,7 @@ abstract class Modal(id: String)(implicit val webDriver: WebDriver) extends Comp
   override val readyComponent: Awaiter = xButton
 
   def awaitDismissed(): Unit = {
+    await condition invisibleSpinner
     xButton.awaitNotVisible()
   }
 

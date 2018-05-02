@@ -52,7 +52,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
         if (counter > 0) logger.warn(s"Retried forceSignedIn. $counter") // how many times has retried. log to be removed
         counter +=1
         try {
-          await.ready(page, 30) // workspace list page could be taking up to 30 sec to load
+          page.awaitReady() // page could be take a short while to load
           Some(page)
         } catch {
           case _: Throwable => None

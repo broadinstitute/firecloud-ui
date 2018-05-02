@@ -12,7 +12,9 @@ import org.scalatest.selenium.Page
 class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMonitorPage] {
 
-  override def awaitReady(): Unit = filterInput.awaitVisible()
+  override def awaitReady(): Unit = {
+    if (!isError) filterInput.awaitVisible()
+  }
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
 
@@ -27,6 +29,8 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def openSubmission(submissionId: String): Unit = {
+    if (Link("submission-id").isVisible)
+      goToMonitorTab()
     submissionLink(submissionId).doClick()
     await ready new SubmissionDetailsPage(namespace, name, submissionId)
   }

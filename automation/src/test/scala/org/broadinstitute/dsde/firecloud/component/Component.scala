@@ -56,7 +56,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   }
 
   def awaitVisible(): Unit = await visible query
-  def awaitNotVisible(): Unit = await notVisible query
+  def awaitNotVisible(timeout: Long = defaultTimeOutInSeconds): Unit = await notVisible (query, timeout)
   def awaitEnabled(): Unit = await enabled query
 
   def isVisible: Boolean = find(query).exists(_.isDisplayed)
@@ -73,16 +73,17 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     */
   def scrollToVisible(): Unit = {
     // explanation: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-    webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView({behavior: \"instant\"});", find(query).get.underlying)
-    /*
+    // Not working every time
+    // webDriver.asInstanceOf[JavascriptExecutor].executeScript("arguments[0].scrollIntoView({behavior: \"instant\"});", find(query).get.underlying)
+
     if (scrollbar && !inViewport) {
       // Only scroll if needed
       val script = "arguments[0].scrollIntoView(true)"
       val js = webDriver.asInstanceOf[JavascriptExecutor]
       js.executeScript(script, find(query).get.underlying)
-      Thread.sleep(250) // hack to wait page stop "moving"
+      Thread.sleep(1000) // hack to wait page stop "moving"
+      logger.debug("executed javaScript scrollIntoView ")
     }
-    */
   }
 
   /**
@@ -112,6 +113,16 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     js.executeScript(script, find(query).get.underlying).asInstanceOf[Boolean]
   }
 
+  val spinner = cssSelector("[data-test-id=spinner]")
+
+  /**
+    * Determine whether spinner is visible on page
+    *
+    * @return True if spinner is invisible or not exist
+    */
+  def invisibleSpinner(): Boolean = {
+    findAll(spinner).isEmpty
+  }
 }
 
 /**

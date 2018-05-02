@@ -25,31 +25,37 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   "For a user with publish permissions" - {
     "an unpublished workspace" - {
       "without required library attributes" - {
-        "publish button should be visible but should open error modal when clicked" in withWebDriver { implicit driver =>
+        "publish button should be visible but should open error modal when clicked" in {
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
           withCleanBillingProject(curatorUser) { billingProject =>
             withWorkspace(billingProject, "PublishSpec_curator_unpub_") { wsName =>
-              withSignIn(curatorUser) { _ =>
-                val page = new WorkspaceSummaryPage(billingProject, wsName).open
-                val messageModal = page.clickPublishButton(expectSuccess = false)
-                messageModal.isVisible shouldBe true
-                messageModal.clickOk()
+
+              withWebDriver { implicit driver =>
+                withSignIn(curatorUser) { _ =>
+                  val page = new WorkspaceSummaryPage(billingProject, wsName).open
+                  val messageModal = page.clickPublishButton(expectSuccess = false)
+                  messageModal.isVisible shouldBe true
+                  messageModal.clickOk()
+                }
               }
             }
           }
         }
       }
       "with required library attributes" - {
-        "publish button should be visible " in withWebDriver { implicit driver =>
+        "publish button should be visible " in {
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
           withCleanBillingProject(curatorUser) { billingProject =>
             withWorkspace(billingProject, "PublishSpec_curator_unpub_withAttributes_") { wsName =>
               api.library.setLibraryAttributes(billingProject, wsName, LibraryData.metadataBasic)
-              withSignIn(curatorUser) { wsList =>
-                val page = new WorkspaceSummaryPage(billingProject, wsName).open
-                page.hasPublishButton shouldBe true
+
+              withWebDriver { implicit driver =>
+                withSignIn(curatorUser) { wsList =>
+                  val page = new WorkspaceSummaryPage(billingProject, wsName).open
+                  page.hasPublishButton shouldBe true
+                }
               }
             }
           }
@@ -57,7 +63,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
     }
     "a published workspace" - {
-      "should be visible in the library table" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
+      "should be visible in the library table" taggedAs Tags.SmokeTest in {
         val curatorUser = UserPool.chooseCurator
         implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
         withCleanBillingProject(curatorUser) { billingProject =>
@@ -67,16 +73,19 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               api.library.setLibraryAttributes(billingProject, wsName, data)
               register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
               api.library.publishWorkspace(billingProject, wsName)
-              withSignIn(curatorUser) { _ =>
-                val page = new DataLibraryPage().open
-                page.doSearch(wsName)
-                page.hasDataset(wsName) shouldBe true
+
+              withWebDriver { implicit driver =>
+                withSignIn(curatorUser) { _ =>
+                  val page = new DataLibraryPage().open
+                  page.doSearch(wsName)
+                  page.hasDataset(wsName) shouldBe true
+                }
               }
             }
           }
         }
       }
-      "should be able to be unpublished" in withWebDriver { implicit driver =>
+      "should be able to be unpublished" in {
         val curatorUser = UserPool.chooseCurator
         implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
         withCleanBillingProject(curatorUser) { billingProject =>
@@ -86,32 +95,34 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               api.library.setLibraryAttributes(billingProject, wsName, data)
               register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
               api.library.publishWorkspace(billingProject, wsName)
-              withSignIn(curatorUser) { _ =>
-                val wspage = new WorkspaceSummaryPage(billingProject, wsName).open
-                wspage.unpublishWorkspace()
 
-                // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
-                //            Thread sleep 500
+              withWebDriver { implicit driver =>
+                withSignIn(curatorUser) { _ =>
+                  val wspage = new WorkspaceSummaryPage(billingProject, wsName).open
+                  wspage.unpublishWorkspace()
 
-                retry[Boolean](100.milliseconds, 1.minute)({
-                  val libraryPage = wspage.goToDataLibrary()
-                  libraryPage.doSearch(wsName)
-                  if (libraryPage.hasDataset(wsName))
-                    None
-                  else Some(false)
-                }) match {
-                  case None => fail()
-                  case Some(s) => s shouldBe false
+                  // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
+                  //            Thread sleep 500
+
+                  retry[Boolean](100.milliseconds, 1.minute)({
+                    val libraryPage = wspage.goToDataLibrary()
+                    libraryPage.doSearch(wsName)
+                    if (libraryPage.hasDataset(wsName))
+                      None
+                    else Some(false)
+                  }) match {
+                    case None => fail()
+                    case Some(s) => s shouldBe false
+                  }
                 }
               }
-
             }
           }
         }
       }
 
       "when cloned" - {
-        "should be cloned without copying the published status" in withWebDriver { implicit driver =>
+        "should be cloned without copying the published status" in {
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
           withCleanBillingProject(curatorUser) { billingProject =>
@@ -121,15 +132,18 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 api.library.setLibraryAttributes(billingProject, wsName, data)
                 register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
                 api.library.publishWorkspace(billingProject, wsName)
-                withSignIn(curatorUser) { _ =>
-                  val wspage = new WorkspaceSummaryPage(billingProject, wsName).open
-                  val clonedWsName = wsName + "_clone"
-                  register cleanUp api.workspaces.delete(billingProject, clonedWsName)
-                  wspage.cloneWorkspace(billingProject, clonedWsName)
-                  wspage.hasPublishButton shouldBe true // this will fail if the Unpublish button is displayed.
-                val page = new DataLibraryPage().open
-                  page.doSearch(wsName)
-                  page.hasDataset(clonedWsName) shouldBe false
+
+                withWebDriver { implicit driver =>
+                  withSignIn(curatorUser) { _ =>
+                    val wspage = new WorkspaceSummaryPage(billingProject, wsName).open
+                    val clonedWsName = wsName + "_clone"
+                    register cleanUp api.workspaces.delete(billingProject, clonedWsName)
+                    wspage.cloneWorkspace(billingProject, clonedWsName)
+                    wspage.hasPublishButton shouldBe true // this will fail if the Unpublish button is displayed.
+                  val page = new DataLibraryPage().open
+                    page.doSearch(wsName)
+                    page.hasDataset(clonedWsName) shouldBe false
+                  }
                 }
               }
             }
@@ -138,7 +152,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       }
 
       "a cloned workspace" - {
-        "should default to visible to 'all users' in Library Attributes" in withWebDriver { implicit driver =>
+        "should default to visible to 'all users' in Library Attributes" in {
           //create/publish a workspace
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
@@ -149,18 +163,21 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 api.library.setLibraryAttributes(billingProject, wsName, data)
                 register cleanUp api.library.unpublishWorkspace(billingProject, wsName)
                 api.library.publishWorkspace(billingProject, wsName)
+
                 //clone workspace
-                withSignIn(curatorUser) { listPage =>
-                  val workspaceNameCloned = "PublishSpec_curator_publish_cloned" + randomUuid
-                  val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
-                  register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)
-                  workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned)
-                  //Verify default group "All users".
-                  // In UI this is done by opening Dataset of the cloned WS and
-                  //navigating to the 3rd page and making sure that value displayed is "All users".
-                  //In swagger you make sure that getDiscoverableGroup endpoint shows []
-                  val accessGroup = Orchestration.library.getDiscoverableGroups(billingProject, workspaceNameCloned)
-                  accessGroup.size shouldBe 0
+                withWebDriver { implicit driver =>
+                  withSignIn(curatorUser) { listPage =>
+                    val workspaceNameCloned = "PublishSpec_curator_publish_cloned" + randomUuid
+                    val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
+                    register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)
+                    workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned)
+                    //Verify default group "All users".
+                    // In UI this is done by opening Dataset of the cloned WS and
+                    //navigating to the 3rd page and making sure that value displayed is "All users".
+                    //In swagger you make sure that getDiscoverableGroup endpoint shows []
+                    val accessGroup = Orchestration.library.getDiscoverableGroups(billingProject, workspaceNameCloned)
+                    accessGroup.size shouldBe 0
+                  }
                 }
               }
             }
@@ -172,15 +189,18 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   "As a non-curator" - {
     "an unpublished workspace" - {
       "with required library attributes" - {
-        "should not see publish button" in withWebDriver { implicit driver =>
+        "should not see publish button" in {
           val studentUser = UserPool.chooseStudent
           implicit val studentAuthToken: AuthToken = studentUser.makeAuthToken()
           withCleanBillingProject(studentUser) { billingProject =>
             withWorkspace(billingProject, "PublishSpec_unpub_withAttributes_") { wsName =>
               api.library.setLibraryAttributes(billingProject, wsName, LibraryData.metadataBasic)
-              withSignIn(studentUser) { _ =>
-                val page = new WorkspaceSummaryPage(billingProject, wsName).open
-                page.hasPublishButton shouldBe false
+
+              withWebDriver { implicit driver =>
+                withSignIn(studentUser) { _ =>
+                  val page = new WorkspaceSummaryPage(billingProject, wsName).open
+                  page.hasPublishButton shouldBe false
+                }
               }
             }
           }
@@ -193,7 +213,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   "As a user with no TCGA permissions" - {
     "a published workspace" - {
       "with TCGA control access" - {
-        "should see a information message about getting TCGA access" in withWebDriver { implicit driver =>
+        "should see a information message about getting TCGA access" in {
           //log in as a Curator and create/publish TCGA workspace
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
@@ -209,17 +229,20 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
                 //log in as a user with no TCGA access to make sure TCGA info message is displayed to you in Library
                 val studentUser = UserPool.chooseStudent
-                withSignIn(studentUser) { _ =>
-                  val page = new DataLibraryPage().open
-                  page.doSearch(wsName)
-                  page.hasDataset(wsName) shouldBe true
-                  page.openDataset(wsName)
-                  //verify that Request Access modal is shown
-                  val requestAccessModal = page.RequestAccessModal()
-                  requestAccessModal.isVisible shouldBe true
-                  //verify that 'access to TCGA' text is being displayed
-                  requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText)
-                  requestAccessModal.clickOk()
+
+                withWebDriver { implicit driver =>
+                  withSignIn(studentUser) { _ =>
+                    val page = new DataLibraryPage().open
+                    page.doSearch(wsName)
+                    page.hasDataset(wsName) shouldBe true
+                    page.openDataset(wsName)
+                    //verify that Request Access modal is shown
+                    val requestAccessModal = page.RequestAccessModal()
+                    requestAccessModal.isVisible shouldBe true
+                    //verify that 'access to TCGA' text is being displayed
+                    requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText)
+                    requestAccessModal.clickOk()
+                  }
                 }
               }
             }
@@ -230,7 +253,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
   }
 
   "DUOS autocomplete" - {
-    "should give multiple results for a partial word" in withWebDriver { implicit driver =>
+    "should give multiple results for a partial word" in {
       val user = UserPool.chooseAnyUser
       // there is no need for an auth token for this test, except that the api wrapper expects one
       implicit val authToken: AuthToken = user.makeAuthToken()

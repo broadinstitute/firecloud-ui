@@ -65,7 +65,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
      * Downloading a file will open another window while the download is in progress and
      * automatically close it when the download is complete.
      */
-    await condition { windowHandles.size == 1 }
+    await condition (windowHandles.size == 1, 60)
 
     for {
       path <- downloadPath
@@ -97,7 +97,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("
   def importFile(file: String): Unit = {
     importFromFileButton.doClick()
     fileUploadInput.selectFile(file)
-    confirmUploadMetadataButton.awaitVisible()
+    confirmUploadMetadataButton.awaitEnabledState()
     confirmUploadMetadataButton.doClick()
     uploadSuccessMessage.awaitVisible()
     xOut()
