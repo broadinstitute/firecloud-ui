@@ -11,14 +11,12 @@ import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
   */
 trait Clickable extends LazyLogging { this: Component =>
 
-  val spinner = cssSelector("[data-test-id=spinner]")
-
   /**
     * Click on the element modeled by this Component
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
     try {
-      await condition ( isVisible && isEnabled && findAll(spinner).isEmpty )
+      await condition ( isVisible && isEnabled && invisibleSpinner, 60 )
     } catch {
       case e: TimeoutException =>
         // show me query string on failed WebElement

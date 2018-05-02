@@ -17,7 +17,7 @@ case class FileSelector(queryString: QueryString)(implicit webDriver: WebDriver)
     * Keep it for now until for sure don't need
     * @param filename
     */
-  @deprecated
+  @deprecated("","")
   def selectFileJs(filename: String): Unit = {
     executeScript("var field = document.getElementsByName('entities'); field[0].style.display = '';")
     val webElement = find(query).get.underlying

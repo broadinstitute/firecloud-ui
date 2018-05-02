@@ -56,7 +56,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   }
 
   def awaitVisible(): Unit = await visible query
-  def awaitNotVisible(): Unit = await notVisible query
+  def awaitNotVisible(timeout: Long = defaultTimeOutInSeconds): Unit = await notVisible (query, timeout)
   def awaitEnabled(): Unit = await enabled query
 
   def isVisible: Boolean = find(query).exists(_.isDisplayed)
@@ -113,6 +113,16 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     js.executeScript(script, find(query).get.underlying).asInstanceOf[Boolean]
   }
 
+  val spinner = cssSelector("[data-test-id=spinner]")
+
+  /**
+    * Determine whether spinner is visible on page
+    *
+    * @return True if spinner is invisible or not exist
+    */
+  def invisibleSpinner(): Boolean = {
+    findAll(spinner).isEmpty
+  }
 }
 
 /**

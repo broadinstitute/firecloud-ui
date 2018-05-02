@@ -29,6 +29,8 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
   }
 
   def openSubmission(submissionId: String): Unit = {
+    if (Link("submission-id").isVisible)
+      goToMonitorTab()
     submissionLink(submissionId).doClick()
     await ready new SubmissionDetailsPage(namespace, name, submissionId)
   }

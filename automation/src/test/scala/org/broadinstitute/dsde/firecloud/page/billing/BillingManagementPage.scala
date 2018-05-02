@@ -99,8 +99,8 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends OKCancelM
   def createBillingProject(projectName: String, billingAccountName: String): Unit = {
     projectNameInput.setText(projectName)
     billingAccountButton(billingAccountName).doClick()
-    clickOk()
-    projectNameInput.awaitNotVisible()
+    submit()
+    projectNameInput.awaitNotVisible(60)
   }
 }
 
