@@ -94,7 +94,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
 
   def unpublishWorkspace(): Unit = {
     val msgModal = sidebar.clickUnpublish()
-    msgModal.clickOk()
+    msgModal.submit()
   }
 
   /**
