@@ -2,16 +2,20 @@ package org.broadinstitute.dsde.firecloud.test.previewmodal
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.duration.DurationLong
 
 class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures
   with CleanUp with Matchers {
+
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val gsLink = "gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam"
   val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/dos.json"
@@ -28,7 +32,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withWebDriver { implicit driver =>
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            detailPage.readWorkspaceTableLinks shouldBe List(gsLink)
+            eventually { detailPage.readWorkspaceTableLinks shouldBe List(gsLink) }
           }
         }
       }
@@ -44,7 +48,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withWebDriver { implicit driver =>
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            detailPage.readWorkspaceTableLinks shouldBe List(dosLink)
+            eventually { detailPage.readWorkspaceTableLinks shouldBe List(dosLink) }
           }
         }
       }
@@ -60,7 +64,7 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
         withWebDriver { implicit driver =>
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-            detailPage.readWorkspaceTableLinks shouldBe List()
+            eventually { detailPage.readWorkspaceTableLinks shouldBe List() }
           }
         }
       }
@@ -79,14 +83,14 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val previewModal = detailPage.clickForPreview("gs://firecloud-alerts-dev/alerts.json")
 
-            previewModal.getBucket shouldBe "firecloud-alerts-dev"
-            previewModal.getObject shouldBe "alerts.json"
+            eventually { previewModal.getBucket shouldBe "firecloud-alerts-dev" }
+            eventually { previewModal.getObject shouldBe "alerts.json" }
 
             val filePreview = previewModal.getFilePreview
             //file sometimes changes but is always a JSON array, so easy test...
             filePreview should startWith("[")
             filePreview should endWith("]")
-            previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+            eventually { previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes." }
 
             previewModal.xOut()
           }
@@ -109,9 +113,9 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val previewModal = detailPage.clickForPreview(s"gs://$bucket/$gObject")
 
-            previewModal.getBucket shouldBe bucket
-            previewModal.getObject shouldBe gObject
-            previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
+            eventually { previewModal.getBucket shouldBe bucket }
+            eventually { previewModal.getObject shouldBe gObject }
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype." }
 
             previewModal.xOut()
           }
@@ -133,8 +137,8 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val previewModal = detailPage.clickForPreview(dosLink)
-            previewModal.getBucket shouldBe s"$bucket"
-            previewModal.getObject shouldBe s"$gObject"
+            eventually { previewModal.getBucket shouldBe s"$bucket" }
+            eventually { previewModal.getObject shouldBe s"$gObject" }
             // preview pane is only created if there's something to preview so
             // give it .1 sec
             retry[Boolean](100.milliseconds, 1.minute)({
@@ -148,8 +152,8 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             }
             val previewPane = previewModal.findInner("preview-pane")
             //file sometimes changes but is always a JSON array, so easy test...
-            previewPane.webElement.getText shouldBe "This file is for test purposes."
-            previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes."
+            eventually { previewPane.webElement.getText shouldBe "This file is for test purposes." }
+            eventually { previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes." }
 
             previewModal.xOut()
           }
@@ -171,9 +175,9 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
           withSignIn(user) { listPage =>
             val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
             val previewModal = detailPage.clickForPreview(dosLink)
-            previewModal.getBucket shouldBe s"$bucket"
-            previewModal.getObject shouldBe s"$gObject"
-            previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype."
+            eventually { previewModal.getBucket shouldBe s"$bucket" }
+            eventually { previewModal.getObject shouldBe s"$gObject" }
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype." }
 
             previewModal.xOut()
           }
