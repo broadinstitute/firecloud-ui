@@ -117,7 +117,7 @@
                                                :for-render [FilePreviewLink (assoc parsed
                                                                               :attributes {:style {:display "inline"}}
                                                                               :link-label v)]}
-                                              {:for-sort (string/lower-case v)
+                                              {:for-sort (string/lower-case (str v))
                                                :for-render v})))
                                     :sort-by :for-sort
                                     :render :for-render}])}
