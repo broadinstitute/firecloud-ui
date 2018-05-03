@@ -7,7 +7,8 @@ import scala.collection.JavaConverters._
 
 lazy val firecloudUiTests = project.in(file("."))
   .settings(rootSettings:_*)
-        version := "1.0"
+
+version := "1.0"
 
 // clean the Console at the the start of each run
 triggeredMessage in ThisBuild := Watched.clearWhenTriggered
@@ -58,7 +59,7 @@ Test / logBuffered := false
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   *  Warning: can't set too high (set at 10 would crashes OS)
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 4))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 2))
 
 /**
   * Forked JVM options
