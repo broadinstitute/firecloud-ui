@@ -70,7 +70,8 @@
                             {:data (data source?)
                              :body {:empty-message ((if source? :left-empty-text :right-empty-text) props)
                                     :style table-style/table-heavy
-                                    :columns (columns source?)}
+                                    :columns (columns source?)
+                                    :behavior {:fixed-column-count 1}}
                              :toolbar
                              {:style {:flexWrap "wrap"}
                               :get-items
