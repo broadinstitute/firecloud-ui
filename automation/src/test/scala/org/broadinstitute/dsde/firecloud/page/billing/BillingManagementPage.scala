@@ -1,10 +1,12 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -14,7 +16,8 @@ import scala.concurrent.duration.DurationLong
   * Page class for managing billing projects.
   */
 class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[BillingManagementPage] {
+  with Page with PageUtil[BillingManagementPage] with LazyLogging {
+
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
   override def awaitReady: Unit = {
@@ -83,6 +86,30 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     await enabled emailQuery
     val userEmailElement = find(emailQuery)
     userEmail == userEmailElement.get.text
+  }
+
+  /**
+    *
+    * @param billingProjectName
+    * @param user
+    * @return Status of "success", "failure", or "unknown"
+    */
+  def newBillingProject(billingProjectName: String, user: Credentials): Option[String] = {
+    val billingProjectName = "billing-" + Util.makeRandomId(8)
+
+    logger.info(s"Creating billing project: $billingProjectName")
+
+    createBillingProject(billingProjectName, Config.Projects.billingAccount)
+    val statusOption: Option[String] = waitForCreateDone(billingProjectName)
+
+    statusOption match {
+      case None | Some("failure") | Some("unknown") =>
+        logger.info(s"Failure or timeout creating billing project: $billingProjectName")
+        statusOption
+      case Some("success") =>
+        logger.info(s"Created billing project: $billingProjectName")
+    }
+    statusOption
   }
 }
 
