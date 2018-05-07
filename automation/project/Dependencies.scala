@@ -1,9 +1,9 @@
 import sbt._
 
 object Dependencies {
-  val jacksonV = "2.8.4"
+  val jacksonV = "2.9.5"
   val akkaV = "2.5.7"
-  val akkaHttpV = "10.0.10"
+  val akkaHttpV = "10.1.1"
 
   val serviceTestV = "0.8-0164483-SNAP"
   val workbenchModelV  = "0.10-6800f3a"
@@ -30,7 +30,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
     "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % jacksonV,
 
-    "com.google.apis" % "google-api-services-oauth2" % "v1-rev112-1.20.0" excludeAll (
+    "com.google.apis" % "google-api-services-oauth2" % "v1-rev127-1.22.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
       ExclusionRule("org.apache.httpcomponents", "httpclient")
     ),
@@ -46,6 +46,7 @@ object Dependencies {
     "org.specs2"          %%  "specs2-core"   % "3.7"  % "test",
     "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
     "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
+    "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
 
