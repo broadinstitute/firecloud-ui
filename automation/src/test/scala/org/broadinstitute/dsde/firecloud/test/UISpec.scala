@@ -1,14 +1,17 @@
-package org.broadinstitute.dsde.firecloud.test.metadata
+package org.broadinstitute.dsde.firecloud.test
 
+import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.UserPool
-import org.scalatest.{BeforeAndAfterAll, Outcome, fixture}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.scalatest.{BeforeAndAfterAll, Matchers, Outcome, fixture}
 
 
-abstract class UnitSpec extends fixture.FreeSpec with BeforeAndAfterAll with BillingFixtures {
+abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with BillingFixtures with Matchers
+  with WebBrowserSpec with UserFixtures with WorkspaceFixtures with GroupFixtures {
 
-  val owner = UserPool.chooseProjectOwner
+  val owner: Credentials = UserPool.chooseProjectOwner
   implicit val ownerAuthToken: AuthToken = owner.makeAuthToken()
   var claimedBillingProject: ClaimedProject = _
 

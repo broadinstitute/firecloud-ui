@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.{AuthToken, ServiceAccountAuthTokenFromPem, TrialBillingAccountAuthToken}
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
-import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Rawls, Thurloe}
+import org.broadinstitute.dsde.workbench.service._
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
 
@@ -66,7 +66,10 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         setUpEnabledUserAndProject(testUser)
         val trialAuthToken = TrialBillingAccountAuthToken()
         api.trial.reportTrialProjects().foreach { x =>
-          register cleanUp Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value), WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())
+          register cleanUp Try(Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value),
+            WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())).recover {
+              case _: RestException => logger.warn(s"Error occurred in Rawls.admin.deleteBillingProject(${x.name})")
+          }
         }
 
         withSignIn(testUser) { _ =>

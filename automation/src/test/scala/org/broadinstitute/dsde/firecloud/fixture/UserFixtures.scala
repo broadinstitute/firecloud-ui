@@ -47,7 +47,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
       val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
       // One way to workaround flaky SignIn issue
       var counter = 0
-      retry(Seq.fill(2)(5.seconds)) ({
+      retry(Seq.fill(2)(5.seconds), 10.seconds) ({
         executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
         if (counter > 0) logger.warn(s"Retried forceSignedIn. $counter") // how many times has retried. log to be removed
         counter +=1
