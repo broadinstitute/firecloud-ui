@@ -8,12 +8,14 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
+import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
+import org.scalatest.time.{Seconds, Span}
 
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
@@ -33,10 +35,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
   def clickLaunchAnalysis(): Unit = {
-    // after click, expect to find either a Message or Analysis Modal
-    val modalOpen = findAll(CssSelectorQuery("body.broadinstitute-modal-open"))
     openLaunchAnalysisModalButton.doClick()
-    Try( await condition modalOpen.nonEmpty) match {
+    // defensive code to prevents test from failing. after click, expect to find either a Message or Analysis Modal
+    implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(3, Seconds)))
+    Try[String](eventually[String] {
+      find(CssSelectorQuery("body.broadinstitute-modal-open")).get.underlying.getTagName
+    }) match {
       case Failure(e) =>
         logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
         openLaunchAnalysisModalButton.doClick()
