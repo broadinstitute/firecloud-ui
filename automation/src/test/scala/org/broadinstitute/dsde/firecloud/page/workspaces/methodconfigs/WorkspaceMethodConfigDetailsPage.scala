@@ -34,9 +34,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysis(): Unit = {
     // after click, expect to find either a Message or Analysis Modal
-    val modalOpen = findAll(CssSelectorQuery("body.broadinstitute-modal-open")).nonEmpty
+    val modalOpen = findAll(CssSelectorQuery("body.broadinstitute-modal-open"))
     openLaunchAnalysisModalButton.doClick()
-    Try( await condition modalOpen) match {
+    Try( await condition modalOpen.nonEmpty) match {
       case Failure(e) =>
         logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
         openLaunchAnalysisModalButton.doClick()
