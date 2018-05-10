@@ -22,12 +22,12 @@ abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with Billi
     *
     * @param billingProject
     */
-  case class billingFixture(billingProject: String)
+  case class projectOwnerFixture(billingProject: String)
 
-  type FixtureParam = billingFixture
+  type FixtureParam = projectOwnerFixture
 
   override def withFixture(test: OneArgTest): Outcome = {
-    withFixture(test.toNoArgTest(billingFixture(claimedBillingProject.projectName)))
+    withFixture(test.toNoArgTest(projectOwnerFixture(claimedBillingProject.projectName)))
   }
 
   override def beforeAll(): Unit = {
