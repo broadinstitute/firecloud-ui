@@ -5,8 +5,8 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
+import org.broadinstitute.dsde.workbench.service.test.RandomUtil
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
-import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -16,7 +16,7 @@ import scala.concurrent.duration.DurationLong
   * Page class for managing billing projects.
   */
 class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[BillingManagementPage] with LazyLogging {
+  with Page with PageUtil[BillingManagementPage] with LazyLogging with RandomUtil {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
@@ -95,7 +95,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     * @return Status of "success", "failure", or "unknown"
     */
   def newBillingProject(billingProjectName: String, user: Credentials): Option[String] = {
-    val billingProjectName = "billing-" + Util.makeRandomId(8)
+    val billingProjectName = randomIdWithPrefix("billing")
 
     logger.info(s"Creating billing project: $billingProjectName")
 

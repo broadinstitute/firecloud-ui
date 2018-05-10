@@ -33,13 +33,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
   def clickLaunchAnalysis(): Unit = {
-    openLaunchAnalysisModalButton.doClick()
     // after click, expect to find either a Message or Analysis Modal
-    val clicked: Try[Unit] = Try( await visible (CssSelectorQuery("body.broadinstitute-modal-open")) )
-    clicked match {
+    val modalOpen = findAll(CssSelectorQuery("body.broadinstitute-modal-open")).nonEmpty
+    openLaunchAnalysisModalButton.doClick()
+    Try( await condition modalOpen) match {
       case Failure(e) =>
-        // retry click button if Modal not found
-        logger.debug(s"retrying click [button:${openLaunchAnalysisModalButton.query}]")
+        logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
         openLaunchAnalysisModalButton.doClick()
       case Success(some) =>
     }
