@@ -16,7 +16,7 @@ import org.scalatest._
 
 import scala.util.Try
 
-class WorkspaceSpec extends FreeSpec with Matchers
+class WorkspaceReaderSpec extends FreeSpec with Matchers
   with WebBrowserSpec with CleanUp
   with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
@@ -110,3 +110,4 @@ class WorkspaceSpec extends FreeSpec with Matchers
       }
     }
   }
+}
