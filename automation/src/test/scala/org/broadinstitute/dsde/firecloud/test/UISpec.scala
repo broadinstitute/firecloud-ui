@@ -7,6 +7,8 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{BeforeAndAfterAll, Matchers, Outcome, fixture}
 
+import scala.util.Try
+
 
 abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with BillingFixtures with Matchers
   with WebBrowserSpec with UserFixtures with WorkspaceFixtures with GroupFixtures {
@@ -31,9 +33,15 @@ abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with Billi
   }
 
   override def beforeAll(): Unit = {
-    claimedBillingProject = claimGPAllocProject(owner)
-    logger.info(s"beforeAll(): billing project created - ${claimedBillingProject.projectName}" )
-    super.beforeAll()
+    Try {
+      claimedBillingProject = claimGPAllocProject(owner)
+      logger.info(s"beforeAll(): billing project created - ${claimedBillingProject.projectName}")
+      super.beforeAll()
+    }.recover {
+      case ex: Exception =>
+        logger.error("Error occurred in billing project create", ex)
+        throw ex // ends test
+    }
   }
 
   override def afterAll(): Unit = {
@@ -41,8 +49,15 @@ abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with Billi
       super.afterAll()
     } finally {
       val name = claimedBillingProject.projectName
-      claimedBillingProject.cleanup(owner, List())
-      logger.info(s"afterAll: billing project cleaned - ${name}" )
+      Try {
+        claimedBillingProject.cleanup(owner, List())
+        logger.info(s"afterAll(): billing project cleaned - $name")
+      }.recover{
+        case ex: Exception =>
+          logger.error(s"Error occurred in billing project clean - $name", ex)
+          throw ex
+      }
+
     }
   }
 }
