@@ -3,14 +3,14 @@ package org.broadinstitute.dsde.firecloud.fixture
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.test.{RandomUtil, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Outcome, fixture}
 
 import scala.util.Try
 
 
 abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with BillingFixtures with Matchers
-  with WebBrowserSpec with UserFixtures with WorkspaceFixtures with GroupFixtures {
+  with WebBrowserSpec with UserFixtures with WorkspaceFixtures with GroupFixtures with RandomUtil {
 
   val owner: Credentials = UserPool.chooseProjectOwner
   implicit val ownerAuthToken: AuthToken = owner.makeAuthToken()

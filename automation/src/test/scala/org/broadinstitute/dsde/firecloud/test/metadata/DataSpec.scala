@@ -9,7 +9,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.fixture.UISpec
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, RandomUtil}
+import org.broadinstitute.dsde.workbench.service.test.CleanUp
 
 class DataSpec extends UISpec with CleanUp {
 
