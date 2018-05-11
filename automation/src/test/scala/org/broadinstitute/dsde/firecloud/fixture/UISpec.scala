@@ -47,13 +47,13 @@ abstract class UISpec extends fixture.FreeSpec with BeforeAndAfterAll with Billi
     try {
       super.afterAll()
     } finally {
-      val name = claimedBillingProject
+      val projectName = claimedBillingProject.projectName
       Try {
         claimedBillingProject.cleanup(owner, List())
-        logger.info(s"afterAll(): billing project cleaned: $name")
+        logger.info(s"afterAll(): billing project cleaned: $projectName")
       }.recover{
         case ex: Exception =>
-          logger.error(s"Error occurred in billing project clean - $name", ex)
+          logger.error(s"Error occurred in billing project clean - $projectName", ex)
           throw ex
       }
 
