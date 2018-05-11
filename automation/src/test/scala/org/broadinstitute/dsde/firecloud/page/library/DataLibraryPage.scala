@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.library
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
@@ -7,13 +8,14 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
+
 import scala.concurrent.duration.DurationLong
 
 /**
   * Page class for the Data Library page.
   */
 class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[DataLibraryPage] {
+  with Page with PageUtil[DataLibraryPage] with LazyLogging {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
@@ -48,6 +50,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   def waitForDataset(name: String): Option[DataLibraryPage] = {
     val libraryPage = open
+    logger.info(s"Waiting for UI to show dataset: $name")
     retry[DataLibraryPage](10.seconds, 5.minutes)({
       doSearch(name)
       if (hasDataset(name))

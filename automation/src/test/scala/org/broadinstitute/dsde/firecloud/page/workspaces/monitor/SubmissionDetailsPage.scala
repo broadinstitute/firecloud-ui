@@ -79,7 +79,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     * @param timeOut: Time out. Default set 20.minutes
     */
   def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 20.minutes): Unit = {
-    logger.info("Waiting for Submission to complete")
+    logger.info(s"Waiting for Workflow Submission to complete in $timeOut with 10 seconds polling interval")
     Thread.sleep(10000) // 10 seconds pause before checking
     retry[Boolean](10.seconds, timeOut) ({
       // sometimes page auto reloads, displaying table "Workflow Detail". link submissionId is not in table "Workflow Detail".
