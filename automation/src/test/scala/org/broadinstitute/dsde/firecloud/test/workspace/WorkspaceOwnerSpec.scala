@@ -28,6 +28,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
   val noAccessText = "You do not have access to run analysis."
 
+
   "A user" - {
     "with a billing project" - {
       "should be able to create a workspace" taggedAs Tags.SmokeTest in {

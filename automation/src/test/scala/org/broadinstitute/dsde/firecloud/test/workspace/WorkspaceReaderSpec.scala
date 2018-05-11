@@ -76,7 +76,6 @@ class WorkspaceReaderSpec extends FreeSpec with Matchers
             }
           }
         }
-
       }
       "should see import config button disabled" in {
         val user = UserPool.chooseStudent
