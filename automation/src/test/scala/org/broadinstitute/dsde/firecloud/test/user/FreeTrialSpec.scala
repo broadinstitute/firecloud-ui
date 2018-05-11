@@ -52,49 +52,52 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
   "A user whose free trial status is" - {
 
     "Blank" - {
-      "should not see the free trial banner" in withWebDriver { implicit driver =>
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
-          bannerTitleElement.isVisible shouldBe false
+      "should not see the free trial banner" in {
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
+            bannerTitleElement.isVisible shouldBe false
+          }
         }
       }
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in withWebDriver { implicit driver =>
+      "should be able to see the free trial banner, enroll and get terminated" in {
         setUpEnabledUserAndProject(testUser)
         val trialAuthToken = TrialBillingAccountAuthToken()
         api.trial.reportTrialProjects().foreach { x =>
           register cleanUp Try(Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value),
             WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())).recover {
-              case _: RestException => logger.warn(s"Error occurred in Rawls.admin.deleteBillingProject(${x.name})")
+              case ex: RestException => logger.warn(s"RestException occurred in Rawls.admin.deleteBillingProject(${x.name})", ex)
           }
         }
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title"))
+            bannerTitleElement.isVisible shouldBe true
+            bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
 
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe true
-          bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
+            val bannerButton = await ready Button(TestId("trial-banner-button"))
+            bannerButton.doClick()
 
-          val bannerButton = await ready Button(TestId("trial-banner-button"))
-          bannerButton.doClick()
+            val reviewButton = await ready Button(TestId("review-terms-of-service"))
+            reviewButton.doClick()
 
-          val reviewButton = await ready Button(TestId("review-terms-of-service"))
-          reviewButton.doClick()
+            val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
+            agreeTermsCheckbox.ensureChecked()
 
-          val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
-          agreeTermsCheckbox.ensureChecked()
+            val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
+            agreeCloudTermsCheckbox.ensureChecked()
 
-          val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
-          agreeCloudTermsCheckbox.ensureChecked()
+            val acceptButton = await ready Button(TestId("accept-terms-of-service"))
+            acceptButton.doClick()
 
-          val acceptButton = await ready Button(TestId("accept-terms-of-service"))
-          acceptButton.doClick()
-
-          await condition bannerButton.getState == "ready"
-          bannerTitleElement.getText shouldBe "Access Free Credits"
+            await condition bannerButton.getState == "ready"
+            bannerTitleElement.getText shouldBe "Access Free Credits"
+          }
         }
 
         // Verify that the user has been added to the corresponding billing project
@@ -122,43 +125,47 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Terminated" - {
-      "should see that they are inactive" in withWebDriver { implicit driver =>
+      "should see that they are inactive" in {
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
-
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe true
-          bannerTitleElement.getText shouldBe "Your free credits have expired"
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title"))
+            bannerTitleElement.isVisible shouldBe true
+            bannerTitleElement.getText shouldBe "Your free credits have expired"
+          }
         }
       }
     }
 
     "Disabled" - {
-      "should not see the free trial banner" in withWebDriver { implicit driver =>
+      "should not see the free trial banner" in {
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
-
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe false
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title"))
+            bannerTitleElement.isVisible shouldBe false
+          }
         }
       }
     }
    
    "Finalized" - {
-      "should not see the free trial banner" in withWebDriver { implicit driver =>
+      "should not see the free trial banner" in {
         registerCleanUpForDeleteTrialState()
         Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
-
-        withSignIn(testUser) { _ =>
-          await ready new WorkspaceListPage()
-          val bannerTitleElement = Label(TestId("trial-banner-title"))
-          bannerTitleElement.isVisible shouldBe false
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title"))
+            bannerTitleElement.isVisible shouldBe false
+          }
         }
       }
     }
   }
+
 }
