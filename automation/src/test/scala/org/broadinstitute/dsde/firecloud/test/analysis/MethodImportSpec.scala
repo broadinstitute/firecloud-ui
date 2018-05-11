@@ -14,8 +14,8 @@ class MethodImportSpec extends FreeSpec with Matchers with WebBrowserSpec with W
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withCleanBillingProject(user) { billingProject =>
-        withWorkspace(billingProject, "Copy_method_config_from_workspace_src") { sourceWorkspaceName =>
-          withWorkspace(billingProject, "Copy_method_config_from_workspace_dest") { destWorkspaceName =>
+        withWorkspace(billingProject, "MethodImportSpec_workspace_src") { sourceWorkspaceName =>
+          withWorkspace(billingProject, "MethodImportSpec_workspace_dest") { destWorkspaceName =>
             withMethod("MethodImportSpec_import_from_workspace", MethodData.SimpleMethod, 1) { methodName =>
               val method = MethodData.SimpleMethod.copy(methodName = methodName)
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, sourceWorkspaceName,
@@ -23,6 +23,7 @@ class MethodImportSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
+                  api.workspaces.waitForBucketReadAccess(billingProject, destWorkspaceName)
                   val methodConfigTab = listPage.enterWorkspace(billingProject, destWorkspaceName).goToMethodConfigTab()
 
                   val methodConfigDetailsPage = methodConfigTab.copyMethodConfigFromWorkspace(
