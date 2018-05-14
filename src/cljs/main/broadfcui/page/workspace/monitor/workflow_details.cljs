@@ -177,92 +177,112 @@
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
+;; recursive partner of SubworkflowDetail
+(declare WorkflowDetails)
+
+(react/defc- SubworkflowDetail
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     (let [subWorkflowId (:subWorkflowId props)]
+       [:span {}
+        (links/create-internal {:onClick #(swap! state update :expanded not)}
+                               (if (:expanded @state) "Hide" "Show"))
+        [:div {}
+         (when (:expanded @state)
+           [WorkflowDetails (merge props {:workflow-id subWorkflowId})])]]))})
+
+(defn- render-gcs-path [components]
+  (str moncommon/google-storage-context (string/join "/" components) "/"))
+
 (react/defc- CallDetail
   {:get-initial-state
    (fn []
      {:expanded false})
    :render
    (fn [{:keys [props state]}]
-     [:div {:style {:marginTop "1em"}}
-      (when (:show-operation-dialog? @state)
-        [OperationDialog (:operation-dialog-props @state)])
-      [:div {:style {:display "inline-block" :marginRight "1em"}}
-       (let [workflow-name (workflow-name (:label props))
-             call-name (call-name (:label props))]
-         (links/create-external {:href (str moncommon/google-storage-context (:bucketName props) "/" (:submission-id props)
-                                            "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}
-           (:label props)))]
-      (links/create-internal {:onClick #(swap! state update :expanded not)}
-        (if (:expanded @state) "Hide" "Show"))
-      (when (:expanded @state)
-        (map-indexed
-         (fn [index data]
-           [:div {:style {:padding "0.5em 0 0 0.5em"}}
-            [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
-            [:div {:style {:paddingLeft "0.5em"}}
-             (create-field "Operation"
-                           ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
-                           [:a {:href "javascript:;"
-                                :onClick (fn [_]
-                                           (swap! state assoc
-                                                  :show-operation-dialog? true
-                                                  :operation-dialog-props {:workspace-id (:workspace-id props)
-                                                                           :job-id (data "jobId")
-                                                                           :dismiss #(swap! state dissoc :show-operation-dialog?)}))}
-                            (data "jobId")])
-             (let [status (data "executionStatus")]
-               (create-field "Status" (moncommon/icon-for-call-status status) status))
-             (when (= (get-in data ["callCaching" "effectiveCallCachingMode"]) "ReadAndWriteCache")
-               (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
-             (create-field "Started" (moncommon/render-date (data "start")))
-             ;(utils/cljslog data)
-             (create-field "Ended" (moncommon/render-date (data "end")))
-             [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
-             [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
-             (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
-             (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
-             (backend-logs data)
-             (when-let [failures (data "failures")]
-               [Failures {:data failures}])]])
-         (:data props)))])})
+     (let [call-name (call-name (:label props))
+           call-path-components (conj (:gcs-path-prefix props) (str "call-" call-name))]
+       [:div {:style {:marginTop "1em"}}
+        (when (:show-operation-dialog? @state)
+          [OperationDialog (:operation-dialog-props @state)])
+        [:div {:style {:display "inline-block" :marginRight "1em"}}
+         (links/create-external {:href (render-gcs-path call-path-components)} (:label props))]
+        (links/create-internal {:onClick #(swap! state update :expanded not)}
+                               (if (:expanded @state) "Hide" "Show"))
+        (when (:expanded @state)
+          (map-indexed
+            (fn [index data]
+              [:div {:style {:padding "0.5em 0 0 0.5em"}}
+               [:div {:style {:paddingBottom "0.25em"}}
+                (if-let [subWorkflowId (data "subWorkflowId")]
+                  [:span {}
+                   (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
+                   (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
+                    [SubworkflowDetail (merge (select-keys props [:workspace-id :bucketName :submission-id :workflow-name])
+                                              {:subWorkflowId subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
+                  (str "Call #" (inc index) ":"))]
+               [:div {:style {:paddingLeft "0.5em"}}
+                (create-field "Operation"
+                              ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
+                              [:a {:href    "javascript:;"
+                                   :onClick (fn [_]
+                                              (swap! state assoc
+                                                     :show-operation-dialog? true
+                                                     :operation-dialog-props {:workspace-id (:workspace-id props)
+                                                                              :job-id       (data "jobId")
+                                                                              :dismiss      #(swap! state dissoc :show-operation-dialog?)}))}
+                               (data "jobId")])
+                (let [status (data "executionStatus")]
+                  (create-field "Status" (moncommon/icon-for-call-status status) status))
+                (when (= (get-in data ["callCaching" "effectiveCallCachingMode"]) "ReadAndWriteCache")
+                  (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
+                (create-field "Started" (moncommon/render-date (data "start")))
+                ;(utils/cljslog data)
+                (create-field "Ended" (moncommon/render-date (data "end")))
+                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
+                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
+                (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
+                (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
+                (backend-logs data)
+                (when-let [failures (data "failures")]
+                  [Failures {:data failures}])]])
+            (:data props)))]))})
 
-
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id]
-  [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
-                 :backgroundColor (:background-light style/colors)}}
-   [:div {}
-    (let [inputs (ffirst (workflow "calls"))
-          input-names (string/split inputs ".")
-          workflow-name (first input-names)]
-      (create-field "Workflow ID"
-                    (links/create-external {:href (str moncommon/google-storage-context
-                                                       bucketName "/" submission-id "/"
-                                                       workflow-name "/" (workflow "id") "/")}
-                      (workflow "id"))))
-    (let [status (workflow "status")]
-      (create-field "Status" (moncommon/icon-for-wf-status status)))
-    (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
-      (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
-    (when-let [submission (workflow "submission")]
-      (create-field "Submitted" (moncommon/render-date submission)))
-    (when-let [start (workflow "start")]
-      (create-field "Started" (moncommon/render-date start)))
-    (when-let [end (workflow "end")]
-      (create-field "Ended" (moncommon/render-date end)))
-    [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
-    [IODetail {:label "Outputs" :data (workflow "outputs")}]
-    (when-let [workflowLog (workflow "workflowLog")]
-      (create-field "Workflow Log" (display-value workflowLog (str "workflow." (workflow "id") ".log"))))
-    (when (seq (workflow "calls"))
-      [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
-    (when-let [failures (workflow "failures")]
-      [Failures {:data failures}])]
-   (when (seq (workflow "calls"))
-     [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
-   (for [[call data] (workflow "calls")]
-     [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
-                  :workspace-id workspace-id}])])
-
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id gcs-path-prefix]
+  (let [inputs (ffirst (workflow "calls"))
+        input-names (string/split inputs ".")
+        workflow-name-for-path (first input-names)
+        workflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))]
+    [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
+                   :backgroundColor (:background-light style/colors)}}
+     (create-field "Workflow ID" (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
+     (let [status (workflow "status")]
+       (create-field "Status" (moncommon/icon-for-wf-status status)))
+     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
+       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
+     (when-let [submission (workflow "submission")]
+       (create-field "Submitted" (moncommon/render-date submission)))
+     (when-let [start (workflow "start")]
+       (create-field "Started" (moncommon/render-date start)))
+     (when-let [end (workflow "end")]
+       (create-field "Ended" (moncommon/render-date end)))
+     [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
+     [IODetail {:label "Outputs" :data (workflow "outputs")}]
+     (when-let [workflowLog (workflow "workflowLog")]
+       (create-field "Workflow Log" (display-value workflowLog (str "workflow." (workflow "id") ".log"))))
+     (when (seq (workflow "calls"))
+       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
+     (when-let [failures (workflow "failures")]
+       [Failures {:data failures}])
+     [:div {}
+      (when (seq (workflow "calls"))
+        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
+      (for [[call data] (workflow "calls")]
+        [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+                     :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]]))
 
 (react/defc- WorkflowDetails
   {:render
@@ -274,9 +294,14 @@
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
          :else
-         (render-workflow-detail (:response server-response) (:raw-response server-response)
-                                 (:workflow-name props) (:submission-id props) (:bucketName props)
-                                 (:workspace-id props)))))
+         ;; generate this workflow's GCS path prefix
+         ;; if parent workflow path components already exist, use those
+         ;; else use workspace-bucket-name/submission-id
+         (let [workflow-path-prefix (get props :gcs-path-prefix
+                                    [(:bucketName props) (:submission-id props)])]
+           (render-workflow-detail (:response server-response) (:raw-response server-response)
+                                   (:workflow-name props) (:submission-id props) (:bucketName props)
+                                   (:workspace-id props) workflow-path-prefix)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
