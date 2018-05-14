@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.notebooks.tab
   (:require
    [dmohs.react :as react]
+   [broadfcui.page.workspace.notebooks.clusters :refer [ClustersContainer]]
    [broadfcui.page.workspace.notebooks.notebooks :refer [NotebooksContainer]]
    [broadfcui.utils :as utils]
    ))
@@ -12,4 +13,6 @@
      ((@refs "container") :refresh))
    :render
    (fn [{:keys [props]}]
-     [NotebooksContainer (assoc props :ref "container")])})
+     [:div {:style {:padding "1rem 1.5rem"}}
+      [ClustersContainer (assoc props :ref "container")]
+      [NotebooksContainer props]])})
