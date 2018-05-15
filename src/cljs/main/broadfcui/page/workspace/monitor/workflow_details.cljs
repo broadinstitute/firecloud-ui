@@ -202,8 +202,7 @@
      {:expanded false})
    :render
    (fn [{:keys [props state]}]
-     (let [call-name (call-name (:label props))
-           call-path-components (conj (:gcs-path-prefix props) (str "call-" call-name))]
+     (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))]
        [:div {:style {:marginTop "1em"}}
         (when (:show-operation-dialog? @state)
           [OperationDialog (:operation-dialog-props @state)])
