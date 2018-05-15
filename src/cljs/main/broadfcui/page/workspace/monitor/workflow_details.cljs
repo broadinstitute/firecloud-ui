@@ -275,12 +275,11 @@
        [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
      (when-let [failures (workflow "failures")]
        [Failures {:data failures}])
-     [:div {}
-      (when (seq (workflow "calls"))
-        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
-      (for [[call data] (workflow "calls")]
-        [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
-                     :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]]))
+     (when (seq (workflow "calls"))
+       [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
+     (for [[call data] (workflow "calls")]
+       [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+                    :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]))
 
 (react/defc- WorkflowDetails
   {:render
