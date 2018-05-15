@@ -187,6 +187,14 @@
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :get})
 
+(defn localize-notebook [google-project cluster-name payload on-done]
+  (ajax/call-leo
+   (str "/" google-project "/" cluster-name "/api/localize")
+   {:method :post
+    :data (utils/->json-string payload)
+    :on-done on-done}
+   :service-prefix "/notebooks"))
+
 (defn create-submission [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions")
    :method :post})
