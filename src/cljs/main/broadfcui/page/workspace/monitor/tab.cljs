@@ -55,7 +55,7 @@
       {:header "Submitted By" :initial-width 220 :column-data :submitter}
       {:header "Submission ID" :initial-width 235 :column-data :submissionId
        :render (fn [submission-id]
-                 (links/create-external {:href (str moncommon/google-cloud-context
+                 (links/create-external {:href (str moncommon/google-storage-context
                                                     bucketName "/" submission-id "/")}
                    submission-id))}]}
     :toolbar

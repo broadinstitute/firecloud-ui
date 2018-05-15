@@ -189,7 +189,7 @@
       [:div {:style {:display "inline-block" :marginRight "1em"}}
        (let [workflow-name (workflow-name (:label props))
              call-name (call-name (:label props))]
-         (links/create-external {:href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
+         (links/create-external {:href (str moncommon/google-storage-context (:bucketName props) "/" (:submission-id props)
                                             "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}
            (:label props)))]
       (links/create-internal {:onClick #(swap! state update :expanded not)}
@@ -235,7 +235,7 @@
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
       (create-field "Workflow ID"
-                    (links/create-external {:href (str moncommon/google-cloud-context
+                    (links/create-external {:href (str moncommon/google-storage-context
                                                        bucketName "/" submission-id "/"
                                                        workflow-name "/" (workflow "id") "/")}
                       (workflow "id"))))
