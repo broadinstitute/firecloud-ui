@@ -243,18 +243,16 @@
       (create-field "Status" (moncommon/icon-for-wf-status status)))
     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
-    (when (workflow "submission")
-      (create-field "Submitted" (moncommon/render-date (workflow "submission"))))
-    (when (workflow "start")
-      (create-field "Started" (moncommon/render-date (workflow "start"))))
-    (when (workflow "end")
-      (create-field "Ended" (moncommon/render-date (workflow "end"))))
+    (when-let [submission (workflow "submission")]
+      (create-field "Submitted" (moncommon/render-date submission)))
+    (when-let [start (workflow "start")]
+      (create-field "Started" (moncommon/render-date start)))
+    (when-let [end (workflow "end")]
+      (create-field "Ended" (moncommon/render-date end)))
     [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]
-    [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
-     (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
-                        (workflow "id") ".log")]
-       (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
+    (when-let [workflowLog (workflow "workflowLog")]
+      (create-field "Workflow Log" (display-value workflowLog (str "workflow." (workflow "id") ".log"))))
     (when (seq (workflow "calls"))
       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
     (when-let [failures (workflow "failures")]
