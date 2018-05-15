@@ -6,12 +6,13 @@ import java.io.{File, PrintWriter}
 import org.broadinstitute.dsde.firecloud.fixture.TestData
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
-import org.broadinstitute.dsde.firecloud.fixture.UISpec
+import org.broadinstitute.dsde.firecloud.fixture.BillingFixtureSpec
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.CleanUp
+import org.scalatest.BeforeAndAfterAll
 
-class DataSpec extends UISpec with CleanUp {
+class DataSpec extends BillingFixtureSpec with CleanUp with BeforeAndAfterAll {
 
   val methodConfigName: String = randomIdWithPrefix(SimpleMethodConfig.configName)
 
@@ -41,6 +42,22 @@ class DataSpec extends UISpec with CleanUp {
       }
     }
     makeMetadataFile("DataSpec_column_display", headers, List(data))
+  }
+
+  override def beforeAll(): Unit = {
+    try {
+      claimBillingProject()
+    } finally {
+      super.beforeAll()
+    }
+  }
+
+  override def afterAll(): Unit = {
+    try {
+      super.afterAll()
+    } finally {
+      unclaimBillingProject()
+    }
   }
 
   "Writer and reader should see new columns" - {
