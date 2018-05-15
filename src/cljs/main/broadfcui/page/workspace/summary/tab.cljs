@@ -401,7 +401,7 @@
            [:div {}
             (case bucket-access?
               nil [:div {:style {:position "absolute" :marginTop "-1.5em"}} (spinner)]
-              true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+              true (links/create-external {:href (str moncommon/google-storage-context bucketName "/")
                                            :title "Click to open the Google Cloud Storage browser for this bucket"}
                      bucketName)
               false bucketName)]

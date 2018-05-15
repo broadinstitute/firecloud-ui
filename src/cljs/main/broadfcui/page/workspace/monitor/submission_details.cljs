@@ -95,7 +95,7 @@
                              input-names (string/split inputs ".")
                              workflow-name (first input-names)]
                          (links/create-external
-                           {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                           {:href (str moncommon/google-storage-context bucketName "/" submission-id "/"
                                        workflow-name "/" workflowId "/")}
                            workflowId))))}]}}])
    :render-workflow-details
@@ -197,7 +197,7 @@
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
            (links/create-external {:data-test-id "submission-id"
-                                   :href (str moncommon/google-cloud-context
+                                   :href (str moncommon/google-storage-context
                                               (:bucketName props) "/" (:submissionId submission) "/")}
              (style/create-paragraph (:submissionId submission)))]
           (common/clear-both)

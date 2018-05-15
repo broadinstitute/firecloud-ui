@@ -28,7 +28,7 @@
 (def call-failure-statuses #{"Failed" "Aborted"})
 
 (defn google-account-chooser-prefix [destination] (str "https://accounts.google.com/AccountChooser?continue=" destination))
-(def google-cloud-context (google-account-chooser-prefix "https://console.cloud.google.com/storage/browser/"))
+(def google-storage-context (google-account-chooser-prefix "https://console.cloud.google.com/storage/browser/"))
 (defn google-billing-context [project-name] (google-account-chooser-prefix (str "https://console.cloud.google.com/home/dashboard?project=" project-name)))
 
 (defn all-success? [submission]
