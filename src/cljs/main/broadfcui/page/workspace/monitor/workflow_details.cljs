@@ -186,13 +186,12 @@
      {:expanded false})
    :render
    (fn [{:keys [props state]}]
-     (let [subWorkflowId (:subWorkflowId props)]
        [:span {}
         (links/create-internal {:onClick #(swap! state update :expanded not)}
                                (if (:expanded @state) "Hide" "Show"))
         [:div {}
          (when (:expanded @state)
-           [WorkflowDetails (merge props {:workflow-id subWorkflowId})])]]))})
+           [WorkflowDetails props])]])})
 
 (defn- render-gcs-path [components]
   (str moncommon/google-storage-context (string/join "/" components) "/"))
@@ -222,7 +221,7 @@
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
                    (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
                     [SubworkflowDetail (merge (select-keys props [:workspace-id :bucketName :submission-id :workflow-name])
-                                              {:subWorkflowId subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
+                                              {:workflow-id subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
                 (create-field "Operation"
