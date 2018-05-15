@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.previewmodal
 
-import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
+import org.broadinstitute.dsde.firecloud.fixture.{TestSuiteLogger, UserFixtures}
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
@@ -12,7 +12,7 @@ import org.scalatest.{FreeSpec, Matchers}
 import scala.concurrent.duration.DurationLong
 
 class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures
-  with CleanUp with Matchers {
+  with CleanUp with Matchers with TestSuiteLogger {
 
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
