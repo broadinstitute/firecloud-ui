@@ -192,7 +192,7 @@
         subworkflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))]
     [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                    :backgroundColor (:background-light style/colors)}}
-     (create-field "Workflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
+     (create-field "Subworkflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
      (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
        (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
      (when (seq (workflow "calls"))
@@ -226,8 +226,9 @@
              (render-subworkflow-detail (:response server-response) (:raw-response server-response)
                                         (:workflow-name props) (:submission-id props) (:bucketName props)
                                         (:workspace-id props) (:gcs-path-prefix props)))))]])
-   :component-did-mount
+   :component-did-update
    (fn [{:keys [props state]}]
+     (when (and (:expanded @state) (nil? (:server-response @state)))
      (endpoints/call-ajax-orch
        {:endpoint
                  (endpoints/get-workflow-details
@@ -236,7 +237,7 @@
                    (swap! state assoc :server-response
                           {:success?     success?
                            :response     (if success? (get-parsed-response false) status-text)
-                           :raw-response raw-response}))}))})
+                           :raw-response raw-response}))})))})
 
 (react/defc- CallDetail
   {:get-initial-state
