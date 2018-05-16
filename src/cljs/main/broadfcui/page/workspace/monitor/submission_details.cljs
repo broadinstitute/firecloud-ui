@@ -12,6 +12,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -97,7 +98,15 @@
                          (links/create-external
                            {:href (str moncommon/google-storage-context bucketName "/" submission-id "/"
                                        workflow-name "/" workflowId "/")}
-                           workflowId))))}]}}])
+                           workflowId))))}
+                  {:header
+                   "Run Cost"
+                   ; TODO add a tooltip here
+                   ;[FoundationTooltip {:text "Run Cost" :tooltip "Run costs may take up to 14 hours to populate."}]
+                   :initial-width 100
+                   :column-data :cost
+                   :render (fn [cost] (if (nil? cost) "n/a" (common/format-price cost)))}
+                  ]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
@@ -196,10 +205,17 @@
             [:div {} (common/format-date (:submissionDate submission)) " ("
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
-           (links/create-external {:data-test-id "submission-id"
-                                   :href (str moncommon/google-storage-context
-                                              (:bucketName props) "/" (:submissionId submission) "/")}
-             (style/create-paragraph (:submissionId submission)))]
+           (style/create-paragraph
+            (links/create-external
+              {:data-test-id "submission-id"
+               :href (str
+                      moncommon/google-storage-context
+                      (:bucketName props) "/" (:submissionId submission) "/")}
+              (:submissionId submission)))
+           (style/create-section-header "Total Run Cost")
+           (style/create-subsection-contents "(May take up to 14 hours to populate)")
+           (style/create-paragraph
+            ((fn [cost] (if (= 0 cost) "Not Available" (common/format-price cost))) (:cost submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)
