@@ -56,7 +56,7 @@
                 "Lowercase letters, numbers, and hypens only, 6-30 characters, must start with a letter."]
                [:div {:style {:fontSize "120%"}}
                 "2. Select a billing account:"]
-               [:div {:style {:fontSize "80%" :fontStyle "italic"}} "To grant FireCloud access to an account, enter its console and add billing@firecloud.org as a Billing Administrator."]
+               [:div {:style {:fontSize "80%" :fontStyle "italic"}} "To grant FireCloud access to an account, enter its console and add billing@firecloud.org as a Billing Account User."]
                (let [simple-th (fn [text]
                                  [:th {:style {:textAlign "left" :padding "0 0.5rem"}} text])
                      simple-td (fn [for text]
