@@ -177,24 +177,66 @@
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
-;; recursive partner of SubworkflowDetail
-(declare WorkflowDetails)
+(defn- render-gcs-path [components]
+  (str moncommon/google-storage-context (string/join "/" components) "/"))
 
-(react/defc- SubworkflowDetail
+;; recursive partner of render-subworkflow-detail
+(declare CallDetail)
+
+;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
+;; Only show new information
+(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id gcs-path-prefix]
+  (let [inputs (ffirst (workflow "calls"))
+        input-names (string/split inputs ".")
+        workflow-name-for-path (first input-names)
+        subworkflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))]
+    [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
+                   :backgroundColor (:background-light style/colors)}}
+     (create-field "Workflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
+     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
+       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
+     (when (seq (workflow "calls"))
+       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
+     (when-let [failures (workflow "failures")]
+       [Failures {:data failures}])
+     (when (seq (workflow "calls"))
+       [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
+     (for [[call data] (workflow "calls")]
+       [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+                    :workspace-id workspace-id :gcs-path-prefix subworkflow-path-components}])]))
+
+(react/defc- SubworkflowDetails
   {:get-initial-state
    (fn []
      {:expanded false})
    :render
+   (fn [{:keys [state props]}]
+     [:span {}
+      (links/create-internal {:onClick #(swap! state update :expanded not)}
+                             (if (:expanded @state) "Hide" "Show"))
+      [:div {}
+       (when (:expanded @state)
+         (let [server-response (:server-response @state)]
+           (cond
+             (nil? server-response)
+             (spinner "Loading subworkflow details...")
+             (not (:success? server-response))
+             (style/create-server-error-message (:response server-response))
+             :else
+             (render-subworkflow-detail (:response server-response) (:raw-response server-response)
+                                        (:workflow-name props) (:submission-id props) (:bucketName props)
+                                        (:workspace-id props) (:gcs-path-prefix props)))))]])
+   :component-did-mount
    (fn [{:keys [props state]}]
-       [:span {}
-        (links/create-internal {:onClick #(swap! state update :expanded not)}
-                               (if (:expanded @state) "Hide" "Show"))
-        [:div {}
-         (when (:expanded @state)
-           [WorkflowDetails props])]])})
-
-(defn- render-gcs-path [components]
-  (str moncommon/google-storage-context (string/join "/" components) "/"))
+     (endpoints/call-ajax-orch
+       {:endpoint
+                 (endpoints/get-workflow-details
+                   (:workspace-id props) (:submission-id props) (:workflow-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                   (swap! state assoc :server-response
+                          {:success?     success?
+                           :response     (if success? (get-parsed-response false) status-text)
+                           :raw-response raw-response}))}))})
 
 (react/defc- CallDetail
   {:get-initial-state
@@ -219,8 +261,8 @@
                   [:span {}
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
                    (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
-                    [SubworkflowDetail (merge (select-keys props [:workspace-id :bucketName :submission-id :workflow-name])
-                                              {:workflow-id subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
+                    [SubworkflowDetails (merge (select-keys props [:workspace-id :bucketName :submission-id :workflow-name])
+                                               {:workflow-id subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
                 (create-field "Operation"
@@ -292,10 +334,8 @@
          (style/create-server-error-message (:response server-response))
          :else
          ;; generate this workflow's GCS path prefix
-         ;; if parent workflow path components already exist, use those
-         ;; else use workspace-bucket-name/submission-id
-         (let [workflow-path-prefix (get props :gcs-path-prefix
-                                    [(:bucketName props) (:submission-id props)])]
+         ;; for top-level workflow, use workspace-bucket-name/submission-id
+         (let [workflow-path-prefix [(:bucketName props) (:submission-id props)]]
            (render-workflow-detail (:response server-response) (:raw-response server-response)
                                    (:workflow-name props) (:submission-id props) (:bucketName props)
                                    (:workspace-id props) workflow-path-prefix)))))
