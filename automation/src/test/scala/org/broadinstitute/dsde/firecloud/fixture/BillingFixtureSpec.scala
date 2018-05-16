@@ -46,7 +46,7 @@ abstract class BillingFixtureSpec extends fixture.FreeSpec with BillingFixtures 
   def unclaimBillingProject(): Unit = {
     val projectName = claimedBillingProject.projectName
     Try {
-      claimedBillingProject.cleanup(owner, List())
+      claimedBillingProject.cleanup(owner)
       logger.info(s"Billing project unclaimed: $projectName")
     }.recover{
       case ex: Exception =>
