@@ -202,7 +202,7 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+       [CallDetail {:label call :data data :submission-id submission-id :workflowId (workflow "id")
                     :workspace-id workspace-id :gcs-path-prefix subworkflow-path-components}])]))
 
 (react/defc- SubworkflowDetails
@@ -262,7 +262,7 @@
                   [:span {}
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
                    (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
-                    [SubworkflowDetails (merge (select-keys props [:workspace-id :bucketName :submission-id :workflow-name])
+                    [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
                                                {:workflow-id subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
@@ -321,7 +321,7 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+       [CallDetail {:label call :data data :submission-id submission-id :workflowId (workflow "id")
                     :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]))
 
 (react/defc- WorkflowDetails
