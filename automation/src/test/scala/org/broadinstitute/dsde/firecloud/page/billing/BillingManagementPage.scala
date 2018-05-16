@@ -1,9 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
+import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
+import org.broadinstitute.dsde.workbench.service.test.RandomUtil
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -14,7 +16,8 @@ import scala.concurrent.duration.DurationLong
   * Page class for managing billing projects.
   */
 class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[BillingManagementPage] {
+  with Page with PageUtil[BillingManagementPage] with LazyLogging with RandomUtil {
+
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
   override def awaitReady: Unit = {
@@ -52,7 +55,8 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     */
   def waitForCreateDone(projectName: String): Option[String] = {
     billingProjectTable.filter(projectName)
-    retry(10.seconds, 10.minutes)({
+    logger.info(s"Waiting for new billing project $projectName to complete in 20 minutes with 10 seconds polling interval")
+    retry(10.seconds, 20.minutes)({
       readCreationStatusForProject(projectName).filterNot(_ equals "running")
     })
   }
@@ -83,6 +87,32 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     await enabled emailQuery
     val userEmailElement = find(emailQuery)
     userEmail == userEmailElement.get.text
+  }
+
+  /**
+    *
+    * @param billingProjectName
+    * @param user
+    * @return Status of "success", "failure", or "unknown"
+    */
+  def newBillingProject(billingProjectName: String, user: Credentials): Option[String] = {
+    val billingProjectName = randomIdWithPrefix("billing")
+
+    logger.info(s"Creating billing project: $billingProjectName")
+
+    createBillingProject(billingProjectName, Config.Projects.billingAccount)
+    val statusOption: Option[String] = waitForCreateDone(billingProjectName)
+
+    statusOption match {
+      case None | Some("failure") | Some("unknown") =>
+        logger.info(s"Failure or timeout creating billing project: $billingProjectName")
+        statusOption
+      case Some("success") =>
+        logger.info(s"Created billing project: $billingProjectName")
+      case Some(text) =>
+        logger.error(s"Displayed unexpected status text ${text} creating billing project: $billingProjectName")
+    }
+    statusOption
   }
 }
 

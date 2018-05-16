@@ -64,7 +64,7 @@ Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 2))
 /**
   * Forked JVM options
   */
-Test / javaOptions ++= Seq("-Xmx6G")
+Test / javaOptions ++= Seq("-Xmx2G")
 
 /**
  * copy system properties to forked JVM

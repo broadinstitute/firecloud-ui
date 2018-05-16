@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.component.{Link, TestId}
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.Keys
@@ -31,20 +32,16 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
   }
 
   trait UI {
-    private val accountDropdown = testId("account-dropdown")
+    private val accountDropdown = TestId("account-dropdown")
     private val accountDropdownEmail = testId("account-dropdown-email")
-    private val signOutLink = testId("sign-out")
-
-    def checkAccountDropdown: Boolean = {
-      find(accountDropdown).isDefined
-    }
+    private val signOutLink = TestId("sign-out")
 
     def clickAccountDropdown(): Unit = {
-      click on accountDropdown
+      Link(accountDropdown).doClick()
     }
 
     def clickSignOut(): Unit = {
-      click on (await enabled signOutLink)
+      Link(signOutLink).doClick()
     }
 
     def readUserEmail(): String = {
