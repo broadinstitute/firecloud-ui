@@ -185,7 +185,7 @@
 
 ;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
 ;; Only show new information
-(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id gcs-path-prefix]
+(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -224,12 +224,13 @@
              (style/create-server-error-message (:response server-response))
              :else
              (render-subworkflow-detail (:response server-response) (:raw-response server-response)
-                                        (:workflow-name props) (:submission-id props) (:bucketName props)
+                                        (:workflow-name props) (:submission-id props)
                                         (:workspace-id props) (:gcs-path-prefix props)))))]])
    :component-did-update
    (fn [{:keys [props state]}]
+     (utils/cljslog "fire!")
      (when (and (:expanded @state) (nil? (:server-response @state)))
-     (endpoints/call-ajax-orch
+      (endpoints/call-ajax-orch
        {:endpoint
                  (endpoints/get-workflow-details
                    (:workspace-id props) (:submission-id props) (:workflow-id props))
@@ -335,7 +336,8 @@
          (style/create-server-error-message (:response server-response))
          :else
          ;; generate this workflow's GCS path prefix
-         ;; for top-level workflow, use workspace-bucket-name/submission-id
+         ;; subworkflows receive them as props from parent workflows
+         ;; top-level workflows use workspace-bucket-name/submission-id
          (let [workflow-path-prefix [(:bucketName props) (:submission-id props)]]
            (render-workflow-detail (:response server-response) (:raw-response server-response)
                                    (:workflow-name props) (:submission-id props) (:bucketName props)
