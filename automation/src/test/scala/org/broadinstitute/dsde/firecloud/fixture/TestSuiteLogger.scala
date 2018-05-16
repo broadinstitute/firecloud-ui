@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-import org.scalatest.{Args, Status, Suite}
+import org.scalatest.{Args, Status, Suite, TestSuite}
 
 
-trait TestSuiteLogger { self: Suite =>
+class TestSuiteLogger { self: TestSuite =>
 
   override protected def runTest(testName: String, args: Args): Status = {
     val testReporter = new ScalaTestReporter(args.reporter)

@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 import com.typesafe.scalalogging.LazyLogging
-import org.scalatest.Reporter
+import org.scalatest.{FreeSpec, Reporter}
 import org.scalatest.events._
 
 class ScalaTestReporter(val aggregateReporter: Reporter) extends Reporter with LazyLogging {
