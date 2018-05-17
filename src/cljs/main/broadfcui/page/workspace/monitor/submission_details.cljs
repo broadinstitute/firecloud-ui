@@ -102,7 +102,7 @@
                    :render (fn [cost]
                              (if (nil? cost)
                                [tooltip/FoundationTooltip
-                                {:text "n/a" :tooltip "Run costs may take up to 14 hours to populate."}]
+                                {:text "n/a" :tooltip "Run costs may take up to a day to populate."}]
                                (common/format-price cost)))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
@@ -210,7 +210,7 @@
                       (:bucketName props) "/" (:submissionId submission) "/")}
               (:submissionId submission)))
            (style/create-section-header "Total Run Cost")
-           (style/create-subsection-contents "(May take up to 14 hours to populate)")
+           (style/create-subsection-contents "(May take up to a day to populate)")
            (style/create-paragraph
             ((fn [cost] (if (= 0 cost) "Not Available" (common/format-price cost))) (:cost submission)))]
           (common/clear-both)
