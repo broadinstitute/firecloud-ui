@@ -12,6 +12,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -19,8 +20,7 @@
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
    [broadfcui.utils :as utils]
-   [broadfcui.utils.ajax :as ajax]
-   ))
+   [broadfcui.utils.ajax :as ajax]))
 
 
 (defn- color-for-submission [submission]
@@ -97,7 +97,14 @@
                          (links/create-external
                            {:href (str moncommon/google-storage-context bucketName "/" submission-id "/"
                                        workflow-name "/" workflowId "/")}
-                           workflowId))))}]}}])
+                           workflowId))))}
+                  {:header "Run Cost" :initial-width 100 :column-data :cost
+                   :render (fn [cost]
+                             (if (nil? cost)
+                               [:div {} "n/a"
+                                (dropdown/render-info-box
+                                 {:text "Costs may take up to one day to populate."})]
+                               (common/format-price cost)))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
@@ -196,10 +203,20 @@
             [:div {} (common/format-date (:submissionDate submission)) " ("
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
-           (links/create-external {:data-test-id "submission-id"
-                                   :href (str moncommon/google-storage-context
-                                              (:bucketName props) "/" (:submissionId submission) "/")}
-             (style/create-paragraph (:submissionId submission)))]
+           (style/create-paragraph
+            (links/create-external
+              {:data-test-id "submission-id"
+               :href (str
+                      moncommon/google-storage-context
+                      (:bucketName props) "/" (:submissionId submission) "/")}
+              (:submissionId submission)))
+           (style/create-section-header [:div {} "Total Run Cost"
+                                         (dropdown/render-info-box
+                                          {:text "Costs may take up to one day to populate."})])
+           (style/create-paragraph
+            ((fn [cost]
+               (if (or (= 0 cost) (nil? cost)) "Not Available" (common/format-price cost)))
+             (:cost submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)
