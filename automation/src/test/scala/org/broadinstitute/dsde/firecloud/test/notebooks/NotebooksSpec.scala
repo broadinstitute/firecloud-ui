@@ -44,9 +44,9 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
             // Cluster creation
             logger.info("Attempting to create dataproc cluster")
-            val createModal = notebooksPage.openCreateClusterModal
+            val createModal = notebooksPage.openCreateClusterModal()
             createModal.createCluster(clusterName)
-            createModal.awaitDismissed
+            createModal.awaitDismissed()
             assert(notebooksPage.getClusterStatus(clusterName) == "Creating")
             logger.info("Creating dataproc cluster " + clusterName)
             notebooksPage.waitUntilClusterIsRunning(clusterName)
@@ -58,7 +58,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
 
             //Cluster deletion
             logger.info("Attempting to delete dataproc cluster")
-            notebooksPage.openDeleteClusterModal(clusterName).deleteCluster
+            notebooksPage.openDeleteClusterModal(clusterName).deleteCluster()
             await condition (notebooksPage.getClusterStatus(clusterName) == "Deleting")
             logger.info("Deleting dataproc cluster " + clusterName)
             notebooksPage.waitUntilClusterIsDeleted(clusterName)
@@ -111,7 +111,6 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
       withWorkspace(projectName, "NotebookSpec_no_cluster_name") { workspaceName =>
         withWebDriver { implicit driver =>
           withSignIn(user) { _ =>
-            val clusterName = "notebookspec-no-cluster-name-" + UUID.randomUUID()
             val notebooksPage = new WorkspaceNotebooksPage(projectName, workspaceName).open
 
             logger.info("Attempting to create a cluster with no name ")

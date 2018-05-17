@@ -33,8 +33,6 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   private val submissionAbortButton = Button("submission-abort-button")
   private val statusMessage = Label("status-message")
 
-  private val WAITING_STATES = Array("Queued","Launching")
-  private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
   val SUCCESS_STATUS = "Succeeded"
   val FAILED_STATUS  = "Failed"
   val ABORTED_STATUS  = "Aborted"
@@ -104,7 +102,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   def abortSubmission(): Unit = {
     submissionAbortButton.doClick()
     val modal = await ready new ConfirmAbortModal()
-    modal.clickAbortSubmissionButton
+    modal.clickAbortSubmissionButton()
   }
 
 }
@@ -114,7 +112,7 @@ class ConfirmAbortModal(implicit webDriver: WebDriver) extends ConfirmModal {
   val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button" inside this)
   override val readyComponent: Awaiter = submissionAbortModalConfirmButton
 
-  def clickAbortSubmissionButton: Unit = {
+  def clickAbortSubmissionButton(): Unit = {
     submissionAbortModalConfirmButton.doClick()
     awaitDismissed()
   }

@@ -52,7 +52,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               api.library.setLibraryAttributes(billingProject, wsName, LibraryData.metadataBasic)
 
               withWebDriver { implicit driver =>
-                withSignIn(curatorUser) { wsList =>
+                withSignIn(curatorUser) { _ =>
                   val page = new WorkspaceSummaryPage(billingProject, wsName).open
                   page.hasPublishButton shouldBe true
                 }
@@ -166,7 +166,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
                 //clone workspace
                 withWebDriver { implicit driver =>
-                  withSignIn(curatorUser) { listPage =>
+                  withSignIn(curatorUser) { _ =>
                     val workspaceNameCloned = "PublishSpec_curator_publish_cloned" + randomUuid
                     val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
                     register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)

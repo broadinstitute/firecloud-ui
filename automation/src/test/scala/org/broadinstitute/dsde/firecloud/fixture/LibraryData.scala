@@ -37,7 +37,7 @@ object LibraryData {
      "library:technology"->Seq("is an optional","array attribute"),
      "_discoverableByGroups"->Seq("all_broad_users"))
 
-   val metadataORSP = metadataBasic ++ Map(
+   val metadataORSP: Map[String, Any] = metadataBasic ++ Map(
       "library:useLimitationOption"->"orsp",
       "library:orsp"->"some orsp")
 

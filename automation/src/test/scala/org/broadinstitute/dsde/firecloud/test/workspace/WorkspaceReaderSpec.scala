@@ -30,7 +30,7 @@ class WorkspaceReaderSpec extends FreeSpec with Matchers
 
   "Persisted workspace table handles extra columns in storage gracefully" in {
     val user = UserPool.chooseAnyUser
-    implicit val authToken = user.makeAuthToken()
+    implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "Dummy_workspace") { _ =>
         withWebDriver { implicit driver =>

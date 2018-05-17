@@ -42,7 +42,7 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
     try {
       await condition (pageUrl == webDriver.getCurrentUrl)
     } catch {
-      case e: TimeoutException =>
+      case _: TimeoutException =>
         logger.warn(s"Actual url: ${webDriver.getCurrentUrl}, Expect url: $pageUrl. Action of clicking Tab($tabName) possibily failed")
     }
   }

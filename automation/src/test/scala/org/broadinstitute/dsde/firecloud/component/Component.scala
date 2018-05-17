@@ -113,7 +113,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     js.executeScript(script, find(query).get.underlying).asInstanceOf[Boolean]
   }
 
-  val spinner = cssSelector("[data-test-id=spinner]")
+  val spinner: CssSelectorQuery = cssSelector("[data-test-id=spinner]")
 
   /**
     * Determine whether spinner is visible on page
@@ -131,5 +131,5 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   */
 object Component {
   import scala.language.implicitConversions
-  implicit def string2QueryString(s: String) = TestId(s)
+  implicit def string2QueryString(s: String): TestId = TestId(s)
 }

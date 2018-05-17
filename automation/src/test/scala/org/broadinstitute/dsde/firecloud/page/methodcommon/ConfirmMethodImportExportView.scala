@@ -10,7 +10,7 @@ class ConfirmMethodImportExportView(importing: Boolean)(implicit webDriver: WebD
   private val importExportButton = Button("import-export-confirm-button")
 
   // only exists for export:
-  val workspaceSelector = WorkspaceSelector()
+  val workspaceSelector = new WorkspaceSelector()
 
   override def awaitReady(): Unit = {
     if (importing)

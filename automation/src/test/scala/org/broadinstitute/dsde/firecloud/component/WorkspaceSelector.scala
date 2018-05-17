@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.openqa.selenium.WebDriver
 
-case class WorkspaceSelector(implicit webDriver: WebDriver) extends Component(TestId("workspace-selector")) {
+class WorkspaceSelector(implicit webDriver: WebDriver) extends Component(TestId("workspace-selector")) {
   override def awaitReady(): Unit = dropdown.awaitReady()
 
   private val dropdown = Select2("destination-workspace" inside this)

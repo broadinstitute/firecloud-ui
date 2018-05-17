@@ -12,12 +12,12 @@ object TestData {
   /* SAMPLES AND SAMPLE SETS */
   object HundredAndOneSampleSet {
     val entityId = "sampleSet101"
-    val sampleSetCreation = "entity:sample_set_id\n" +
+    val sampleSetCreation: String = "entity:sample_set_id\n" +
       "sampleSet101"
     private val samplePrefix = "sample"
-    val participantId = SingleParticipant.entityId
-    val samples = createSamples(samplePrefix, participantId, 101)
-    val sampleSetMembership = createSampleSet(entityId, samplePrefix, 101)
+    val participantId: String = SingleParticipant.entityId
+    val samples: String = createSamples(samplePrefix, participantId, 101)
+    val sampleSetMembership: String = createSampleSet(entityId, samplePrefix, 101)
   }
 
   private def createSamples(samplePrefix: String, participantId: String, numberOfSamples: Int): String = {

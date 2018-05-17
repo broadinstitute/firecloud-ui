@@ -22,7 +22,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
   private val clustersTable = Table("spark-clusters-table")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")
   val noClustersMessage = "There are no clusters to display."
-  def clusterStatusId(clusterName: String) = clusterName + "-status"
+  def clusterStatusId(clusterName: String): String = clusterName + "-status"
 
   // Goes to a Jupyter page. Currently doesn't return a page object
   // because Jupyter functionality is tested in leo automated tests.
@@ -40,11 +40,11 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     new JupyterPage().awaitLoaded()
   }
 
-  def waitUntilClusterIsRunning(clusterName: String) = {
+  def waitUntilClusterIsRunning(clusterName: String): Boolean = {
     await condition (getClusterStatus(clusterName) == "Running", 900)
   }
 
-  def waitUntilClusterIsDeleted(clusterName: String) = {
+  def waitUntilClusterIsDeleted(clusterName: String): Boolean = {
     await notVisible (testId(clusterStatusId(clusterName)), 900)
   }
 
@@ -66,7 +66,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
     clusterStatus.getText
   }
 
-  def getClusters() = {
+  def getClusters: List[List[String]] = {
     clustersTable.getData
   }
 }
@@ -107,10 +107,10 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
                     preemptibleWorkers: Int = 0,
                     extensionURI: Option[GcsPath] = None,
                     customScriptURI: Option[GcsPath] = None,
-                    labels: Map[String, String] = Map()) = {
+                    labels: Map[String, String] = Map()): Unit = {
 
     clusterNameField.setText(clusterName)
-    optionalSettingsArea.toggle
+    optionalSettingsArea.toggle()
 
     optionalSettingsArea.getInner.masterMachineTypeSelect.select(masterMachineType)
     optionalSettingsArea.getInner.masterDiskSizeField.setText(masterDiskSize.toString)
@@ -129,10 +129,10 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
     clickOk()
   }
 
-  def addLabels(labels: Map[String, String]) = {
+  def addLabels(labels: Map[String, String]): Unit = {
     optionalSettingsArea.ensureExpanded()
     var labelIndex = 0
-    labels.map{ label =>
+    labels.foreach{ label =>
       optionalSettingsArea.getInner.addLabelButton.doClick()
       val keyField = TextField("key-" + labelIndex + "-input")
       val valueField = TextField("value-" + labelIndex + "-input")
@@ -151,8 +151,8 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
 }
 
 class DeleteClusterModal(clusterName: String)(implicit webDriver: WebDriver) extends OKCancelModal("delete-cluster-modal") {
-  def deleteCluster() = {
-    submit
+  def deleteCluster(): Unit = {
+    submit()
   }
 }
 
@@ -166,7 +166,7 @@ class JupyterPage(implicit webDriver: WebDriver) extends WebBrowser with WebBrow
   /**
     * Assumes we only have the notebooks list page and the jupyter page open
     */
-  def returnToNotebooksList() = {
+  def returnToNotebooksList(): WebDriver = {
     switch to window((windowHandles - windowHandle).head)
   }
 }

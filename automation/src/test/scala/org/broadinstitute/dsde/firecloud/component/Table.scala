@@ -34,18 +34,18 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     * If any exception is thrown, this method returns false.
     * @return True if table is empty (no rows)
     */
-  def isEmpty(): Boolean = {
+  def isEmpty: Boolean = {
     try {
       tableMessage.isVisible || tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).isEmpty
     } catch {
-      case e: Exception => false // not able to determine table is empty
+      case _: Exception => false // not able to determine table is empty
     }
   }
 
   def filter(text: String): Unit = {
     // filtering on a empty table doesn't make sense, unless text string is empty.
     // if text is empty, user is using this method to clear filtered results.
-    if (text.isEmpty || !isEmpty()) {
+    if (text.isEmpty || !isEmpty) {
       filterField.setText(text)
       filterButton.doClick()
       awaitReady()
@@ -82,14 +82,14 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def getData: List[List[String]] = {
-    import scala.collection.JavaConversions._
-    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
-    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
+    import scala.collection.JavaConverters._
+    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).asScala.toList
+    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).asScala.toList.map(_.getText))
   }
 
   def getHref: List[String] = {
-    import scala.collection.JavaConversions._
-    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).toList.map(_.getAttribute("href"))
+    import scala.collection.JavaConverters._
+    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).asScala.toList.map(_.getAttribute("href"))
   }
 
   def readColumnHeaders: List[String] = {
@@ -126,7 +126,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     val cols = readColumnHeaders
 
     val map = for (row <- rows) yield {
-      (cols zip(row)).toMap
+      (cols zip row).toMap
     }
     map
   }
@@ -139,7 +139,7 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   private def clickColumnEditorButton(): CssSelectorQuery = {
     // find dynamic dropdown id
     val dropdownId = columnEditorButton.query.element.underlying.findElement(By.xpath("./..")).getAttribute("data-toggle")
-    val css = CssSelectorQuery(s"#${dropdownId}")
+    val css = CssSelectorQuery(s"#$dropdownId")
     columnEditorButton.doClick()
     Try(
       await condition {
