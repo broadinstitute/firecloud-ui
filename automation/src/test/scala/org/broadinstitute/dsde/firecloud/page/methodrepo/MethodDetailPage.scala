@@ -36,6 +36,8 @@ class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebD
 }
 
 class ExportModal(methodNamespace: String, methodName: String)(implicit webDriver: WebDriver) extends Modal("export-config-to-workspace-modal") {
+  override def awaitReady(): Unit = firstPage.awaitReady()
+
   val firstPage = new SelectConfigurationView(importing = false)
 
   def getPostExportModal: PostExportModal = await ready new PostExportModal(methodNamespace, methodName)
