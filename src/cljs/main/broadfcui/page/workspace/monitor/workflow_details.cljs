@@ -254,20 +254,21 @@
                 (if-let [subWorkflowId (data "subWorkflowId")]
                   [:span {}
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
-                   (let [thisSubworkflowExpanded? (contains? (:subworkflow-expanded @state) subWorkflowId)]
-                     (if thisSubworkflowExpanded?
-                       [:span {}
-                        (links/create-internal {:onClick #(swap! state update :subworkflow-expanded
-                                                                 (fn [expanded-map]
-                                                                   (dissoc expanded-map subWorkflowId)))}
-                                               "Hide")
-                        (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
-                          [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
-                                                     {:workflow-id subWorkflowId
-                                                      :gcs-path-prefix subworkflow-path-prefix})])]
-                       (links/create-internal {:onClick #(swap! state assoc-in
-                                                                [:subworkflow-expanded subWorkflowId] true)}
-                                              "Show")))]
+                   (if (contains? (:subworkflow-expanded @state) subWorkflowId)
+                     [:span {}
+                      ;; click to hide this SubworkflowDetails and remove from the :subworkflow-expanded map in @state
+                      (links/create-internal {:onClick #(swap! state update :subworkflow-expanded
+                                                               (fn [expanded-map]
+                                                                 (dissoc expanded-map subWorkflowId)))}
+                                             "Hide")
+                      (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
+                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
+                                                   {:workflow-id subWorkflowId
+                                                    :gcs-path-prefix subworkflow-path-prefix})])]
+                     ;; click to show subworkflow details and add it to the :subworkflow-expanded map in @state
+                     (links/create-internal {:onClick #(swap! state assoc-in
+                                                              [:subworkflow-expanded subWorkflowId] true)}
+                                            "Show"))]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
                 (create-field "Operation"
