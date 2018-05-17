@@ -106,11 +106,10 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
     statusOption match {
       case None | Some("failure") | Some("unknown") =>
         logger.info(s"Failure or timeout creating billing project: $billingProjectName")
-        statusOption
       case Some("success") =>
         logger.info(s"Created billing project: $billingProjectName")
       case Some(text) =>
-        logger.error(s"Displayed unexpected status text ${text} creating billing project: $billingProjectName")
+        logger.error(s"Displayed unexpected status text $text creating billing project: $billingProjectName")
     }
     statusOption
   }

@@ -126,7 +126,7 @@ testGrouping in Test := {
           s"-Ddir.name=${(Test / baseDirectory).value}",
           s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}",
           s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}"))
-    new Tests.Group(
+    Tests.Group(
       name = test.name,
       tests = Seq(test),
       runPolicy = Tests.SubProcess(options)

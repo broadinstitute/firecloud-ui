@@ -18,7 +18,7 @@ trait Clickable extends LazyLogging { this: Component =>
     try {
       await condition ( isVisible && isEnabled && invisibleSpinner, 60 )
     } catch {
-      case e: TimeoutException =>
+      case _: TimeoutException =>
         // show me query string on failed WebElement
         new WebDriverWait(webDriver, 5).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
     }
@@ -27,13 +27,13 @@ trait Clickable extends LazyLogging { this: Component =>
       click on query
     } catch {
       // on rare occasion, encounters stale exception
-      case e: StaleElementReferenceException => click on query
+      case _: StaleElementReferenceException => click on query
       case e: WebDriverException =>
         logger.debug(e.getMessage)
         // make an attempt to recover for this exact error
         if (e.getMessage.contains("Other element would receive the click")) {
           Thread.sleep(5000)
-          logger.debug(s"retrying click on query: ${query}")
+          logger.debug(s"retrying click on query: $query")
           click on query
         }
     }

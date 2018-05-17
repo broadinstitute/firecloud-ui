@@ -41,10 +41,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     Try[String](eventually[String] {
       find(CssSelectorQuery("body.broadinstitute-modal-open")).get.underlying.getTagName
     }) match {
-      case Failure(e) =>
+      case Failure(_) =>
         logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
         openLaunchAnalysisModalButton.doClick()
-      case Success(some) =>
+      case Success(_) =>
     }
   }
 

@@ -32,7 +32,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 
   private val signInButton = Button(CSSQuery("#sign-in-button"))
 
-  def isOpen = signInButton.isVisible
+  def isOpen: Boolean = signInButton.isVisible
 
   /**
     * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.
@@ -73,7 +73,6 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * Signs in to Google to authenticate for FireCloud.
     */
   def signIn(email: String, password: String): Unit = {
-    val chooseAccount = find(id("identifierLink")).filter(_.isDisplayed) foreach { click on _ }
 
     await enabled id("identifierId")
     emailField(id("identifierId")).value = email

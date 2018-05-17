@@ -75,7 +75,7 @@ class DataSpec extends BillingFixtureSpec with CleanUp with BeforeAndAfterAll {
             workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
             api.workspaces.waitForBucketReadAccess(projectOwnerFixture.billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(projectOwnerFixture.billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             workspaceDataTab.open
@@ -113,7 +113,7 @@ class DataSpec extends BillingFixtureSpec with CleanUp with BeforeAndAfterAll {
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(projectOwnerFixture.billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(projectOwnerFixture.billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(projectOwnerFixture.billingProject, workspaceName).open
@@ -149,7 +149,7 @@ class DataSpec extends BillingFixtureSpec with CleanUp with BeforeAndAfterAll {
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(projectOwnerFixture.billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(projectOwnerFixture.billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(projectOwnerFixture.billingProject, workspaceName).open
@@ -186,7 +186,7 @@ class DataSpec extends BillingFixtureSpec with CleanUp with BeforeAndAfterAll {
           withSignIn(owner) { _ =>
             api.workspaces.waitForBucketReadAccess(billingFixture.billingProject, workspaceName)
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingFixture.billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, "", true)
+            val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
             submissionTab.waitUntilSubmissionCompletes()
             assert(submissionTab.verifyWorkflowSucceeded())
             val workspaceDataTab = new WorkspaceDataPage(billingFixture.billingProject, workspaceName).open

@@ -1,6 +1,6 @@
 import Dependencies._
 import sbt.Keys._
-import sbt._
+import sbt.{Def, _}
 
 object Settings {
 
@@ -12,7 +12,7 @@ object Settings {
   )
 
   //coreDefaultSettings + defaultConfigs = the now deprecated defaultSettings
-  val commonBuildSettings = Defaults.coreDefaultSettings ++ Defaults.defaultConfigs ++ Seq(
+  val commonBuildSettings: Seq[Def.Setting[_]] = Defaults.coreDefaultSettings ++ Defaults.defaultConfigs ++ Seq(
     // javaOptions += "-Xmx2G",
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
   )
@@ -38,10 +38,10 @@ object Settings {
   )
 
   //common settings for all sbt subprojects
-  val commonSettings =
+  val commonSettings: Seq[Def.Setting[_]] =
     commonBuildSettings ++ testSettings ++ List(
     organization  := "org.broadinstitute.dsde.firecloud",
-    scalaVersion  := "2.11.8",
+    scalaVersion  := "2.12.6",
     resolvers ++= commonResolvers,
     scalacOptions ++= commonCompilerSettings
   )
@@ -49,7 +49,7 @@ object Settings {
   //the full list of settings for the root project that's ultimately the one we build into a fat JAR and run
   //coreDefaultSettings (inside commonSettings) sets the project name, which we want to override, so ordering is important.
   //thus commonSettings needs to be added first.
-  val rootSettings = commonSettings ++ List(
+  val rootSettings: Seq[Def.Setting[_]] = commonSettings ++ List(
     name := "FireCloud-UITests",
     libraryDependencies ++= rootDependencies
   )

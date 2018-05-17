@@ -44,7 +44,7 @@ case class TagSelect(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def readSelectResultText(): List[String] = {
-    findSelectResult.map {_.text}.toList
+    findSelectResult().map {_.text}.toList
   }
 
 }

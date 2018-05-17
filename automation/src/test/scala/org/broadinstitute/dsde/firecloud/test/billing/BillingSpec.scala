@@ -60,7 +60,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
            * have seen break in the past that relied on using a brand new billing project).
            */
           withWebDriver { implicit driver =>
-            withSignIn(user) { listPage =>
+            withSignIn(user) { _ =>
               //BEGIN: Test creating billing project in UI
               val billingPage = new BillingManagementPage().open
               val billingProjectName = createNewBillingProject(user, billingPage)
@@ -69,7 +69,6 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
               //BEGIN: Test creating workspace
               val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
               register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
-              val detailPage = listPage.open.createWorkspace(billingProjectName, workspaceName)
               //END: Test creating workspace
 
               //BEGIN: Test running analysis in workspace

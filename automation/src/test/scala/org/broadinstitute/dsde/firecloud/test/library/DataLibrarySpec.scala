@@ -136,9 +136,8 @@ class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures wit
                 val page = new DataLibraryPage().open
 
                 // entering multiple tags in Tags input-field
-                val expectedTags = attrTag.get("tag:tags").get
+                val expectedTags = attrTag("tag:tags")
                 page.doTagSearch(expectedTags)
-                val rows: List[Map[String, String]] = page.getRows
                 val codes: Seq[String] = page.getTags
 
                 page.hasDataset(wsName) shouldBe true

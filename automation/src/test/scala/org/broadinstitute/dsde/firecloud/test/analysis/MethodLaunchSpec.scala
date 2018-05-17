@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._

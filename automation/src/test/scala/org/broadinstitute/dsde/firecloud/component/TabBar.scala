@@ -7,7 +7,7 @@ case class TabBar(private val queryString: QueryString = TestId("tabs"))(implici
   def goToTab(name: String): Unit = {
     awaitReady()
     Link(s"$name-tab" inside this).doClick()
-    await condition (invisibleSpinner, 60)
+    await condition (invisibleSpinner(), 60)
   }
 
 }

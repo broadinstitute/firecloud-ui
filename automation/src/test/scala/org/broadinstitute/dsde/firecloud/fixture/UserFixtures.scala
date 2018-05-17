@@ -18,7 +18,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     * user is already registered so hands the test code a ready WorkspaceListPage.
     */
   def withSignIn(user: Credentials)
-                (testCode: (WorkspaceListPage) => Any)(implicit webDriver: WebDriver): Unit = {
+                (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignIn(user, new WorkspaceListPage)(testCode)
   }
 
@@ -27,7 +27,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     * hands the test code a ready WorkspaceListPage.
     */
   def withSignInReal(user: Credentials)
-                    (testCode: (WorkspaceListPage) => Any)(implicit webDriver: WebDriver): Unit = {
+                    (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignInReal(user, new WorkspaceListPage)(testCode)
   }
 
@@ -35,16 +35,15 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     * Signs in to FireCloud using the Google sign-in flow. Returns a ready RegistrationPage.
     */
   def withSignInNewUserReal(user: Credentials)
-                           (testCode: (RegistrationPage) => Any)(implicit webDriver: WebDriver): Unit = {
+                           (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignInReal(user, new RegistrationPage)(testCode)
   }
 
 
   private def withSignIn[T <: AuthenticatedPage](user: Credentials, page: T)
-                                                (testCode: (T) => Any)
+                                                (testCode: T => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
-      val openedPage: SignInPage = new SignInPage(Config.FireCloud.baseUrl).open
       // One way to workaround flaky SignIn issue
       var counter = 0
       retry(Seq.fill(2)(5.seconds)) ({
@@ -62,7 +61,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   }
 
   private def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
-                                                    (testCode: (T) => Any)
+                                                    (testCode: T => Any)
                                                     (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
       new SignInPage(Config.FireCloud.baseUrl).open.signIn(user.email, user.password)
@@ -70,7 +69,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   }
 
   private def withSignIn[T <: AuthenticatedPage](user: Credentials, signIn: => Unit,
-                                                         page: T, testCode: (T) => Any)
+                                                         page: T, testCode: T => Any)
                                                         (implicit webDriver: WebDriver): Unit = {
     signIn
     await ready page

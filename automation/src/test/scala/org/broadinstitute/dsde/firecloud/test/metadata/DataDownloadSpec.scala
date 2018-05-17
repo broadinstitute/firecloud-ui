@@ -204,7 +204,7 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
     def buildColumnDefaults: String = {
       def join(columns: List[String]) = columns match {
         case List() => ""
-        case l => "\"" + s"${columns.mkString("\", \"")}" + "\""
+        case _ => "\"" + s"${columns.mkString("\", \"")}" + "\""
       }
       s"""{"participant": {"shown": [${join(shown)}], "hidden": [${join(hidden)}]}}"""
     }

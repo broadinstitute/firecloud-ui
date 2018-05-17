@@ -14,8 +14,7 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
       withSignIn(user) { _ =>
         val profilePage = new ProfilePage().open
 
-        val username = user.email.split("@").head
-/* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
+        /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
         profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
 */
         profilePage.readProxyGroupEmail should endWith ("firecloud.org")
