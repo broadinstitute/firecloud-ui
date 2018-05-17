@@ -13,11 +13,6 @@ import org.scalatest._
 class WorkflowDetailSpec extends FreeSpec with Matchers with WebBrowserSpec
   with WorkspaceFixtures with BillingFixtures with UserFixtures with SubWorkflowFixtures {
 
-//  val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
-//  val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
-//  val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
-//  val missingInputsErrorText: String = "is missing definitions for these inputs:"
-//
   "WorkflowDetailSpec" - {
     "should retrieve subworkflow details" in withWebDriver { implicit webDriver =>
       val student = UserPool.chooseStudent
@@ -51,9 +46,21 @@ class WorkflowDetailSpec extends FreeSpec with Matchers with WebBrowserSpec
             val monitorPage = new SubmissionDetailsPage(projectName, workspaceName, submissionId).open
             monitorPage.awaitReady()
 
-            val foo = monitorPage.submissionId
-            foo shouldBe submissionId
+            monitorPage.getSubmissionId shouldBe submissionId
           }
+
+          // clean up: Abort and wait for Aborted
+
+          Rawls.submissions.abortSubmission(projectName, workspaceName, submissionId)
+
+          eventually {
+            val (status, _) = Rawls.submissions.getSubmissionStatus(projectName, workspaceName, submissionId)
+
+            withClue(s"Submission $projectName/$workspaceName/$submissionId: ") {
+              status shouldBe "Aborted"
+            }
+          }
+
         }
       }
     }
