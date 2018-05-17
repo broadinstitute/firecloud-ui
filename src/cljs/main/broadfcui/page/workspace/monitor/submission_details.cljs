@@ -12,7 +12,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
-   [broadfcui.components.foundation-tooltip :as tooltip]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -101,8 +101,9 @@
                   {:header "Run Cost" :initial-width 100 :column-data :cost
                    :render (fn [cost]
                              (if (nil? cost)
-                               [tooltip/FoundationTooltip
-                                {:text "n/a" :tooltip "Run costs may take up to a day to populate."}]
+                               [:div {} "n/a"
+                                (dropdown/render-info-box
+                                 {:text "Costs may take up to one day to populate."})]
                                (common/format-price cost)))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
@@ -209,10 +210,13 @@
                       moncommon/google-storage-context
                       (:bucketName props) "/" (:submissionId submission) "/")}
               (:submissionId submission)))
-           (style/create-section-header "Total Run Cost")
-           (style/create-subsection-contents "(May take up to a day to populate)")
+           (style/create-section-header [:div {} "Total Run Cost"
+                                         (dropdown/render-info-box
+                                          {:text "Costs may take up to one day to populate."})])
            (style/create-paragraph
-            ((fn [cost] (if (= 0 cost) "Not Available" (common/format-price cost))) (:cost submission)))]
+            ((fn [cost]
+               (if (or (= 0 cost) (nil? cost)) "Not Available" (common/format-price cost)))
+             (:cost submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)
