@@ -38,13 +38,14 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     openLaunchAnalysisModalButton.doClick()
     // defensive code to prevents test from failing. after click, expect to find either a Message or Analysis Modal
     implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(3, Seconds)))
-    Try[String](eventually[String] {
-      find(CssSelectorQuery("body.broadinstitute-modal-open")).get.underlying.getTagName
-    }) match {
+    Try[Boolean](
+      await condition (find(CssSelectorQuery("body.broadinstitute-modal-open")).isDefined)
+    ) match {
       case Failure(e) =>
-        logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
+        logger.warn(s"clickLaunchAnalysis Failure in finding a modal. Retrying click [button:${openLaunchAnalysisModalButton.query}]")
         openLaunchAnalysisModalButton.doClick()
       case Success(some) =>
+        logger.warn("clickLaunchAnalysis Success in finding a modal")
     }
   }
 
