@@ -12,7 +12,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
-   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.components.foundation-tooltip :as tooltip]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
@@ -20,8 +20,7 @@
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
    [broadfcui.utils :as utils]
-   [broadfcui.utils.ajax :as ajax]
-   ))
+   [broadfcui.utils.ajax :as ajax]))
 
 
 (defn- color-for-submission [submission]
@@ -99,14 +98,12 @@
                            {:href (str moncommon/google-storage-context bucketName "/" submission-id "/"
                                        workflow-name "/" workflowId "/")}
                            workflowId))))}
-                  {:header
-                   "Run Cost"
-                   ; TODO add a tooltip here
-                   ;[FoundationTooltip {:text "Run Cost" :tooltip "Run costs may take up to 14 hours to populate."}]
-                   :initial-width 100
-                   :column-data :cost
-                   :render (fn [cost] (if (nil? cost) "n/a" (common/format-price cost)))}
-                  ]}}])
+                  {:header "Run Cost" :initial-width 100 :column-data :cost
+                   :render (fn [cost]
+                             (if (nil? cost)
+                               [tooltip/FoundationTooltip
+                                {:text "n/a" :tooltip "Run costs may take up to 14 hours to populate."}]
+                               (common/format-price cost)))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
