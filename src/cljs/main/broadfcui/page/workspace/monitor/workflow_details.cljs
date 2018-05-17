@@ -206,44 +206,36 @@
                     :workspace-id workspace-id :gcs-path-prefix subworkflow-path-components}])]))
 
 (react/defc- SubworkflowDetails
-  {:get-initial-state
-   (fn []
-     {:expanded false})
-   :render
+  {:render
    (fn [{:keys [state props]}]
-     [:span {}
-      (links/create-internal {:onClick #(swap! state update :expanded not)}
-                             (if (:expanded @state) "Hide" "Show"))
-      [:div {}
-       (when (:expanded @state)
-         (let [server-response (:server-response @state)]
-           (cond
-             (nil? server-response)
-             (spinner "Loading subworkflow details...")
-             (not (:success? server-response))
-             (style/create-server-error-message (:response server-response))
-             :else
-             (render-subworkflow-detail (:response server-response) (:raw-response server-response)
-                                        (:workflow-name props) (:submission-id props)
-                                        (:workspace-id props) (:gcs-path-prefix props)))))]])
-   :component-did-update
-   (fn [{:keys [props state]}]
-     (utils/cljslog "fire!")
-     (when (and (:expanded @state) (nil? (:server-response @state)))
-      (endpoints/call-ajax-orch
-       {:endpoint
-                 (endpoints/get-workflow-details
-                   (:workspace-id props) (:submission-id props) (:workflow-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                   (swap! state assoc :server-response
-                          {:success?     success?
-                           :response     (if success? (get-parsed-response false) status-text)
-                           :raw-response raw-response}))})))})
+     [:div {}
+      (let [server-response (:server-response @state)]
+        (cond
+          (nil? server-response)
+          (spinner "Loading subworkflow details...")
+          (not (:success? server-response))
+          (style/create-server-error-message (:response server-response))
+          :else
+          (render-subworkflow-detail (:response server-response) (:raw-response server-response)
+                                     (:workflow-name props) (:submission-id props)
+                                     (:workspace-id props) (:gcs-path-prefix props))))])
+      :component-did-mount
+      (fn [{:keys [props state]}]
+        (endpoints/call-ajax-orch
+          {:endpoint
+           (endpoints/get-workflow-details
+             (:workspace-id props) (:submission-id props) (:workflow-id props))
+           :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                      (swap! state assoc :server-response
+                             {:success? success?
+                              :response (if success? (get-parsed-response false) status-text)
+                              :raw-response raw-response}))}))})
 
 (react/defc- CallDetail
   {:get-initial-state
    (fn []
-     {:expanded false})
+     {:expanded false
+      :subworkflow-expanded {}})
    :render
    (fn [{:keys [props state]}]
      (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))]
@@ -262,9 +254,20 @@
                 (if-let [subWorkflowId (data "subWorkflowId")]
                   [:span {}
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
-                   (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
-                    [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
-                                               {:workflow-id subWorkflowId :gcs-path-prefix subworkflow-path-prefix})])]
+                   (let [thisSubworkflowExpanded? (contains? (:subworkflow-expanded @state) subWorkflowId)]
+                     (if thisSubworkflowExpanded?
+                       [:span {}
+                        (links/create-internal {:onClick #(swap! state update :subworkflow-expanded
+                                                                 (fn [expanded-map]
+                                                                   (dissoc expanded-map subWorkflowId)))}
+                                               "Hide")
+                        (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
+                          [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
+                                                     {:workflow-id subWorkflowId
+                                                      :gcs-path-prefix subworkflow-path-prefix})])]
+                       (links/create-internal {:onClick #(swap! state assoc-in
+                                                                [:subworkflow-expanded subWorkflowId] true)}
+                                              "Show")))]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
                 (create-field "Operation"
