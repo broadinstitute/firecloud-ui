@@ -6,12 +6,17 @@ import org.broadinstitute.dsde.firecloud.test.ModalUtil
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers with ModalUtil {
+
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {
@@ -68,8 +73,8 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.selectSuggestion(brxSuggestionId)
 
-        researchPurposeModal.isTagSelected(brxTagId) shouldBe true
-        researchPurposeModal.isTagSelected(ffiTagId) shouldBe true // previously-selected tag still there
+        eventually { researchPurposeModal.isTagSelected(brxTagId) shouldBe true }
+        eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true } // previously-selected tag still there
 
         researchPurposeModal.xOut()
       }

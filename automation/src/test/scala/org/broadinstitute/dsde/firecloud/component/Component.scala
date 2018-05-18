@@ -55,7 +55,7 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
     }
   }
 
-  def awaitVisible(): Unit = await visible query
+  def awaitVisible(): Boolean = await visible query
   def awaitNotVisible(timeout: Long = defaultTimeOutInSeconds): Unit = await notVisible (query, timeout)
   def awaitEnabled(): Unit = await enabled query
 

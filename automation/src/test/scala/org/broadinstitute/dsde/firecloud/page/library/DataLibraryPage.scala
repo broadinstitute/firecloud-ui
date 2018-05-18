@@ -117,11 +117,11 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
       Thread sleep 100
       find(cssSelector(ontologySearch.query.queryString)).get.underlying.sendKeys(_)
     }
+    await condition ( invisibleSpinner, 10 )
   }
 
   def isSuggestionVisible(suggestionTestId: String): Boolean = {
     Link(suggestionTestId inside this).awaitVisible()
-    Link(suggestionTestId inside this).isVisible
   }
 
   def selectSuggestion(suggestionTestId: String): Unit = {
