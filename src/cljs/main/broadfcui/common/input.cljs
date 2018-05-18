@@ -70,6 +70,12 @@
 
 (def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
 
+(defn alphanumeric_-space [field-name]
+  {:test #(re-matches #"[A-Za-z0-9 _\-]*" %)
+   :message (str field-name " may only contain letters, numbers, underscores, dashes, and spaces.")})
+
+(def hint-alphanumeric_-space "Only letters, numbers, underscores, and dashes allowed")
+
 (defn max-string-length [field-name max-length]
   {:test #(<= (count %) max-length)
    :message (str field-name " must be no more than " max-length " characters.")})

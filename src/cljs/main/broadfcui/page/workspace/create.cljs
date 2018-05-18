@@ -48,8 +48,8 @@
                           :ref "wsName" :autoFocus true :style {:width "100%"}
                           :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
                           :predicates [(input/nonempty "Workspace name")
-                                       (input/alphanumeric_- "Workspace name")]}]
-        (style/create-textfield-hint input/hint-alphanumeric_-)
+                                       (input/alphanumeric_-space "Workspace name")]}]
+        (style/create-textfield-hint input/hint-alphanumeric_-space)
         (style/create-form-label "Billing Project")
         (if billing-loaded?
           (style/create-identity-select-name
