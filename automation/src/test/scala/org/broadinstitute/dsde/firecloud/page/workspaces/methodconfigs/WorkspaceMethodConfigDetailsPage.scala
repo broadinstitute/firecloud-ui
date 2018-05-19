@@ -8,6 +8,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.interactions.Actions
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
 import org.scalatest.time.{Seconds, Span}
@@ -41,10 +42,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       await condition (find(CssSelectorQuery(".broadinstitute-modal-open")).nonEmpty, 5)
     ) match {
       case Failure(e) =>
-        logger.warn(s"clickLaunchAnalysis Failed finding modal. Retrying click [button:${openLaunchAnalysisModalButton.query}]")
-        openLaunchAnalysisModalButton.doClick()
+        logger.warn(s"clickLaunchAnalysis failed. Retrying click [button:${openLaunchAnalysisModalButton.query}]")
+        // try alternative click
+        new Actions(webDriver).moveToElement(openLaunchAnalysisModalButton.query.webElement).click().build().perform();
       case Success(some) =>
-        logger.info("clickLaunchAnalysis Success finding modal")
+        logger.info("clickLaunchAnalysis Success")
     }
   }
 
