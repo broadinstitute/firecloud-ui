@@ -43,7 +43,7 @@ object Dependencies {
     "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
     "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,
-    "org.specs2"          %%  "specs2-core"   % "3.7"  % "test",
+    // "org.specs2"          %%  "specs2-core"   % "3.7"  % "test",
     "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
     "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
