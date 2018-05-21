@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  val jacksonV = "2.9.0"
+  val jacksonV = "2.9.2"
   val akkaV = "2.5.7"
   val akkaHttpV = "10.1.1"
 
@@ -28,7 +28,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
-    "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % jacksonV,
+    "com.fasterxml.jackson.module" % "jackson-module-scala_2.12" % jacksonV,
 
     "com.google.apis" % "google-api-services-oauth2" % "v1-rev127-1.22.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
