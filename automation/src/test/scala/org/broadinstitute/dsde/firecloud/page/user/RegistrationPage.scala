@@ -50,7 +50,7 @@ class RegistrationPage(implicit webDriver: WebDriver) extends AuthenticatedPage 
     registerButton.doClick()
   }
 
-  private def registrationCompleteMessageIsPresent(): Boolean = {
+  def registrationCompleteMessageIsPresent(): Boolean = {
     find(registrationCompleteMessage).isDefined
   }
 }

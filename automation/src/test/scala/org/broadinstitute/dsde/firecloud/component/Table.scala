@@ -82,14 +82,14 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def getData: List[List[String]] = {
-    import scala.collection.JavaConversions._
-    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
-    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
+    import scala.collection.JavaConverters._
+    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).asScala.toList
+    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).asScala.toList.map(_.getText))
   }
 
   def getHref: List[String] = {
-    import scala.collection.JavaConversions._
-    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).toList.map(_.getAttribute("href"))
+    import scala.collection.JavaConverters._
+    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).asScala.toList.map(_.getAttribute("href"))
   }
 
   def readColumnHeaders: List[String] = {
