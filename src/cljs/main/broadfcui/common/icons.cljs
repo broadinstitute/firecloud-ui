@@ -26,6 +26,7 @@
    :done-circle "fa-check-circle"
    :download "fa-download"
    :edit "fa-pencil"
+   :ellipsis-v "fa-ellipsis-v"
    :email "fa-envelope-o"
    :error "fa-exclamation-circle"
    :expand "fa-plus-square-o"

@@ -171,6 +171,14 @@
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :delete})
 
+(defn stop-cluster [google-project cluster-name]
+  {:path (str "/cluster/" google-project "/" cluster-name "/stop")
+   :method :post})
+
+(defn start-cluster [google-project cluster-name]
+  {:path (str "/cluster/" google-project "/" cluster-name "/start")
+   :method :post})
+
 (def get-clusters-list
   {:path (str "/clusters")
    :method :get})
