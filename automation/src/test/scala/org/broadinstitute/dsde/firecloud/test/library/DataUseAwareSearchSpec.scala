@@ -16,7 +16,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   implicit override val patienceConfig =
-    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
+    PatienceConfig(timeout = scaled(Span(3, Seconds)), interval = scaled(Span(500, Millis)))
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {
