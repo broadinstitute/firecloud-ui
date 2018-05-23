@@ -1,4 +1,5 @@
 import sbt._
+import sbt.Keys._
 
 object Dependencies {
   val jacksonV = "2.9.2"
@@ -13,7 +14,8 @@ object Dependencies {
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetrics: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-metrics" % workbenchMetricsV
 
-  val excludeV = "2.12"
+  val excludeV = scalaBinaryVersion
+  println(Keys.scalaBinaryVersion.value)
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$excludeV"),
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$excludeV"),
