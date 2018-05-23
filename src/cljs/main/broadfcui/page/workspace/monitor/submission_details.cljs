@@ -19,7 +19,6 @@
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
-   [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]))
 
 
@@ -99,12 +98,7 @@
                                        workflow-name "/" workflowId "/")}
                            workflowId))))}
                   {:header "Run Cost" :initial-width 100 :column-data :cost
-                   :render (fn [cost]
-                             (if (nil? cost)
-                               [:div {} "n/a"
-                                (dropdown/render-info-box
-                                 {:text "Costs may take up to one day to populate."})]
-                               (common/format-price cost)))}]}}])
+                   :render moncommon/render-cost}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)

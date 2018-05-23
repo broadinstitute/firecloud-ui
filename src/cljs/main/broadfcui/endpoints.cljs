@@ -185,6 +185,11 @@
               "/workflows/" workflow-id)
    :method :get})
 
+(defn get-workflow-cost [workspace-id submission-id workflow-id]
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id
+              "/workflows/" workflow-id "/cost/")
+   :method :get})
+
 (defn abort-submission [workspace-id submission-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id)
    :method :delete})

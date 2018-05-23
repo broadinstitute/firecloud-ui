@@ -5,9 +5,8 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
-   ))
+   [broadfcui.components.foundation-dropdown :as dropdown]))
 
 
 (defn render-date [date]
@@ -15,6 +14,13 @@
     (str (common/format-date date) " (" (duration/fuzzy-time-from-now-ms (.parse js/Date date) true) ")")
     [:span {:style {:fontStyle "italic"}} "Pending..."]))
 
+(defn render-cost [cost]
+  (if (nil? cost)
+    [:span {}
+     "n/a"
+     (dropdown/render-info-box
+      {:text "Costs may take up to one day to populate."})]
+    (common/format-price cost)))
 
 (def wf-success-statuses #{"Succeeded"})
 (def wf-running-statuses #{"Running" "Submitted" "Queued" "Launching"})
@@ -46,8 +52,8 @@
 
 (defn render-success-icon []
   (icons/render-icon {:style {:color (:state-success style/colors) :marginRight 4
-                       :width table-style/table-icon-size :height table-style/table-icon-size}
-               :data-test-id "status-icon" :data-test-value "success"}
+                              :width table-style/table-icon-size :height table-style/table-icon-size}
+                      :data-test-id "status-icon" :data-test-value "success"}
                      :done))
 (defn render-running-icon []
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
