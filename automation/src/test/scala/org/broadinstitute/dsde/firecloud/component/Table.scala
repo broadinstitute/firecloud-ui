@@ -47,9 +47,21 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     // if text is empty, user is using this method to clear filtered results.
     if (text.isEmpty || !isEmpty()) {
       filterField.setText(text)
-      filterButton.doClick()
+      clickFilterButton()
       awaitReady()
     }
+  }
+
+  def clickFilterButton(): Unit = {
+    filterButton.doClick()
+    // allows 2 seconds to verify data-test-state changes to "Loading" quickly
+    // prevents table's awaitReady() from false pass
+    try {
+      await condition(getState == "loading", 2)
+    } catch {
+      case _: Exception => // ignore if state of loading cannot be found in 2 seconds
+    }
+    awaitReady()
   }
 
   def goToTab(tabName: String): Unit = {
