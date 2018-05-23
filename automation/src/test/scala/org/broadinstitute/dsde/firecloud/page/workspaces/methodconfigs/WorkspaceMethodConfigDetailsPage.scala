@@ -8,10 +8,8 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.interactions.Actions
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
-import org.scalatest.time.{Seconds, Span}
 
 import scala.util.{Failure, Success, Try}
 
@@ -37,16 +35,16 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysis(): Unit = {
     openLaunchAnalysisModalButton.doClick()
-    // defensive code to prevents test from failing. after click, expect to find either a Message or Analysis Modal
     Try(
+      // after click, expect to find either a Message or Analysis Modal. If not found, retry click
       await condition (find(CssSelectorQuery(".broadinstitute-modal-open")).nonEmpty, 5)
     ) match {
       case Failure(e) =>
-        logger.warn(s"clickLaunchAnalysis failed. Retrying click [button:${openLaunchAnalysisModalButton.query}]")
-        // try alternative click
-        new Actions(webDriver).moveToElement(openLaunchAnalysisModalButton.query.webElement).click().build().perform();
+        logger.warn(s"clickLaunchAnalysis failed. Retrying click button: ${openLaunchAnalysisModalButton.query}")
+        // retry click
+        openLaunchAnalysisModalButton.doClick()
       case Success(some) =>
-        logger.info("clickLaunchAnalysis Success")
+        logger.info("clickLaunchAnalysis success")
     }
   }
 

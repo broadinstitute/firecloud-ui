@@ -122,6 +122,7 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
 
   def isSuggestionVisible(suggestionTestId: String): Boolean = {
     Link(suggestionTestId inside this).awaitVisible()
+    Link(suggestionTestId inside this).isVisible
   }
 
   def selectSuggestion(suggestionTestId: String): Unit = {
