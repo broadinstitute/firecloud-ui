@@ -48,18 +48,17 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     if (text.isEmpty || !isEmpty()) {
       filterField.setText(text)
       clickFilterButton()
-      awaitReady()
     }
   }
 
   def clickFilterButton(): Unit = {
     filterButton.doClick()
-    // allows 2 seconds to verify data-test-state changes to "Loading" quickly
-    // prevents table's awaitReady() from false pass
+    // allows 2 second to wait for data-test-state changed to "Loading" quickly
+    // ensure awaitReady() executes only after state of "loading"
     try {
       await condition(getState == "loading", 2)
     } catch {
-      case _: Exception => // ignore if state of loading cannot be found in 2 seconds
+      case _: Exception => // ignore timeout exception
     }
     awaitReady()
   }
