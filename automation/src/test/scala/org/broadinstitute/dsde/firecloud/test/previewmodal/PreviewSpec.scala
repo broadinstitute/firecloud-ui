@@ -143,7 +143,9 @@ class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures wi
             // give it .1 sec
             retry[Boolean](100.milliseconds, 1.minute)({
               val previewPane = previewModal.findInner("preview-pane")
-              if (previewPane.webElement.isDisplayed)
+              // avoids org.openqa.selenium.NoSuchElementException thrown from previewPane.webElement call
+              val allElem = previewPane.findAllElements
+              if (allElem.nonEmpty && allElem.toList.headOption.get.isDisplayed)
                 Some(true)
               else None
             }) match {
