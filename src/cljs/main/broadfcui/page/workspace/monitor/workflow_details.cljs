@@ -300,7 +300,7 @@
                   [Failures {:data failures}])]])
             (:data props)))]))})
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id gcs-path-prefix]
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id workflow-cost workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -310,6 +310,7 @@
      (create-field "Workflow ID" (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
      (let [status (workflow "status")]
        (create-field "Status" (moncommon/icon-for-wf-status status)))
+     (create-field "Total Run Cost" (moncommon/render-cost workflow-cost))
      (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
        (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
      (when-let [submission (workflow "submission")]
@@ -335,20 +336,26 @@
 (react/defc- WorkflowDetails
   {:render
    (fn [{:keys [state props]}]
-     (let [server-response (:server-response @state)]
+     (let [metadata-response (:metadata-response @state)
+           cost-response (:cost-response @state)]
        (cond
-         (nil? server-response)
+         (nil? metadata-response)
          (spinner "Loading workflow details...")
-         (not (:success? server-response))
-         (style/create-server-error-message (:response server-response))
+         (not (:success? metadata-response))
+         (style/create-server-error-message (:response metadata-response))
+         (nil? cost-response)
+         (spinner "Loading workflow cost...")
+         (not (:success? cost-response))
+         (style/create-server-error-message (:response cost-response))
          :else
          ;; generate this workflow's GCS path prefix
          ;; subworkflows receive them as props from parent workflows
          ;; top-level workflows use workspace-bucket-name/submission-id
          (let [workflow-path-prefix [(:bucketName props) (:submission-id props)]]
-           (render-workflow-detail (:response server-response) (:raw-response server-response)
-                                   (:workflow-name props) (:submission-id props) (:bucketName props)
-                                   (:workspace-id props) workflow-path-prefix)))))
+           (render-workflow-detail (:response metadata-response) (:raw-response metadata-response)
+                                   (:workflow-name props) (:submission-id props)
+                                   (:response cost-response) (:workspace-id props)
+                                   workflow-path-prefix)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -356,10 +363,18 @@
        (endpoints/get-workflow-details
         (:workspace-id props) (:submission-id props) (:workflow-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                  (swap! state assoc :server-response
+                  (swap! state assoc :metadata-response
                          {:success? success?
                           :response (if success? (get-parsed-response false) status-text)
-                          :raw-response raw-response}))}))})
+                          :raw-response raw-response}))})
+     (endpoints/call-ajax-orch
+      {:endpoint
+       (endpoints/get-workflow-cost
+        (:workspace-id props) (:submission-id props) (:workflow-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (swap! state assoc :cost-response
+                         {:success? success?
+                          :response (if success? (:cost (get-parsed-response)) status-text)}))}))})
 
 
 (defn render [props]
