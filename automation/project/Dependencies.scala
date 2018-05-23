@@ -13,11 +13,11 @@ object Dependencies {
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetrics: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-metrics" % workbenchMetricsV
 
-  val excludeV = "2.11"
+  val excludeV = "2.12"
   val workbenchExclusions = Seq(
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-model_" % excludeV),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-util_" % excludeV),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = "workbench-metrics_" % excludeV)
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$excludeV"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$excludeV"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_$excludeV")
   )
 
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
