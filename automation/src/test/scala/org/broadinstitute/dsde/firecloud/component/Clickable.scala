@@ -20,20 +20,22 @@ trait Clickable extends LazyLogging { this: Component =>
     } catch {
       case e: TimeoutException =>
         // show me query string on failed WebElement
-        new WebDriverWait(webDriver, 5).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
+        new WebDriverWait(webDriver, 1).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
     }
     scrollToVisible()
     try {
       click on query
     } catch {
       // on rare occasion, encounters stale exception
-      case e: StaleElementReferenceException => click on query
+      case e: StaleElementReferenceException =>
+        logger.warn(s"Encountered StaleElementReferenceException. Retrying click on query: $query")
+        click on query
       case e: WebDriverException =>
         logger.debug(e.getMessage)
         // make an attempt to recover for this exact error
         if (e.getMessage.contains("Other element would receive the click")) {
           Thread.sleep(5000)
-          logger.debug(s"retrying click on query: ${query}")
+          logger.warn(s"Encountered WebDriverException. Retrying click on query: $query")
           click on query
         }
     }
