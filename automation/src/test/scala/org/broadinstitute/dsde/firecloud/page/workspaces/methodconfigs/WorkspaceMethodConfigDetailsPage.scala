@@ -10,7 +10,6 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
-import org.scalatest.time.{Seconds, Span}
 
 import scala.util.{Failure, Success, Try}
 
@@ -36,15 +35,16 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickLaunchAnalysis(): Unit = {
     openLaunchAnalysisModalButton.doClick()
-    // defensive code to prevents test from failing. after click, expect to find either a Message or Analysis Modal
-    implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(3, Seconds)))
-    Try[String](eventually[String] {
-      find(CssSelectorQuery("body.broadinstitute-modal-open")).get.underlying.getTagName
-    }) match {
+    Try(
+      // after click, expect to find either a Message or Analysis Modal. If not found, retry click
+      await condition (find(CssSelectorQuery(".broadinstitute-modal-open")).nonEmpty, 5)
+    ) match {
       case Failure(e) =>
-        logger.debug(s"Retrying click [button:${openLaunchAnalysisModalButton.query}]")
+        logger.warn(s"clickLaunchAnalysis failed. Retrying click button: ${openLaunchAnalysisModalButton.query}")
+        // retry click
         openLaunchAnalysisModalButton.doClick()
       case Success(some) =>
+        logger.info("clickLaunchAnalysis success")
     }
   }
 
@@ -158,7 +158,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
 
   def searchAndSelectEntity(entityId: String): Unit = {
     entityTable.filter(entityId)
-    Link(entityId + "-link").doClick()
+    Link(entityId + "-link" inside entityTable).doClick()
   }
 
   def fillExpressionField(expression: String): Unit = {
