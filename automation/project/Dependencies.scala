@@ -14,12 +14,10 @@ object Dependencies {
   val workbenchModel: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-model" % workbenchModelV
   val workbenchMetrics: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-metrics" % workbenchMetricsV
 
-  val excludeV = scalaBinaryVersion
-  println(Keys.scalaBinaryVersion.value)
   val workbenchExclusions = Seq(
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$excludeV"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$excludeV"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_$excludeV")
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$scalaBinaryVersion"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$scalaBinaryVersion"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_$scalaBinaryVersion")
   )
 
   val workbenchGoogle: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-google" % workbenchGoogleV excludeAll(workbenchExclusions:_*)
@@ -31,7 +29,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
-    "com.fasterxml.jackson.module" % "jackson-module-scala_2.12" % jacksonV,
+    "com.fasterxml.jackson.module" % s"jackson-module-scala_2.12" % jacksonV,
 
     "com.google.apis" % "google-api-services-oauth2" % "v1-rev127-1.22.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
