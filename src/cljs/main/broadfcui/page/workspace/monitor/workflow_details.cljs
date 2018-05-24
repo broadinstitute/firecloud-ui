@@ -261,7 +261,10 @@
                                                                (fn [expanded-map]
                                                                  (dissoc expanded-map subWorkflowId)))}
                                              "Hide")
-                      (let [subworkflow-path-prefix (conj call-path-components (str "shard-" index))]
+                      ;; shardIndex -1 means un-scattered.  Omit the shard path element.
+                      (let [subworkflow-path-prefix (if (>= (data "shardIndex") 0)
+                                                      (conj call-path-components (str "shard-" index))
+                                                      call-path-components)]
                         [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
                                                    {:workflow-id subWorkflowId
                                                     :gcs-path-prefix subworkflow-path-prefix})])]
