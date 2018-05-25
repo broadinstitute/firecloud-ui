@@ -132,7 +132,7 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
   def addLabels(labels: Map[String, String]) = {
     optionalSettingsArea.ensureExpanded()
     var labelIndex = 0
-    labels.map{ label =>
+    labels.foreach{ label =>
       optionalSettingsArea.getInner.addLabelButton.doClick()
       val keyField = TextField("key-" + labelIndex + "-input")
       val valueField = TextField("value-" + labelIndex + "-input")

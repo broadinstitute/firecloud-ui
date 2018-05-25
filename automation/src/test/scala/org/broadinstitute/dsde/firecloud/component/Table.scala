@@ -47,9 +47,20 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     // if text is empty, user is using this method to clear filtered results.
     if (text.isEmpty || !isEmpty()) {
       filterField.setText(text)
-      filterButton.doClick()
-      awaitReady()
+      clickFilterButton()
     }
+  }
+
+  def clickFilterButton(): Unit = {
+    filterButton.doClick()
+    // allows 2 second to wait for data-test-state changed to "Loading" quickly
+    // ensure awaitReady() executes only after state of "loading"
+    try {
+      await condition(getState == "loading", 2)
+    } catch {
+      case _: Exception => // ignore timeout exception
+    }
+    awaitReady()
   }
 
   def goToTab(tabName: String): Unit = {
@@ -82,14 +93,14 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
   }
 
   def getData: List[List[String]] = {
-    import scala.collection.JavaConversions._
-    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).toList
-    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).toList.map(_.getText))
+    import scala.collection.JavaConverters._
+    val rows = tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-row']")).asScala.toList
+    rows.map(_.findElements(By.cssSelector("[data-test-class='table-cell']")).asScala.toList.map(_.getText))
   }
 
   def getHref: List[String] = {
-    import scala.collection.JavaConversions._
-    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).toList.map(_.getAttribute("href"))
+    import scala.collection.JavaConverters._
+    tableBody.webElement.findElements(By.cssSelector("[data-test-class='table-cell'] a")).asScala.toList.map(_.getAttribute("href"))
   }
 
   def readColumnHeaders: List[String] = {
