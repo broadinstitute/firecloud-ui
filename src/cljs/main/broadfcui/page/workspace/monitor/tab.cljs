@@ -7,6 +7,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
@@ -57,7 +58,13 @@
        :render (fn [submission-id]
                  (links/create-external {:href (str moncommon/google-storage-context
                                                     bucketName "/" submission-id "/")}
-                   submission-id))}]}
+                   submission-id))}
+      {:header "Run Cost" :initial-width 100 :column-data :cost
+       :render (fn [cost]
+                 (if (or (= 0 cost) (nil? cost))
+                   [:div {} "n/a"
+                    (dropdown/render-info-box {:text "Costs may take up to one day to populate."})]
+                   (common/format-price cost)))}]}
     :toolbar
     {:style {:alignItems "flex-end"}
      :get-items (constantly [flex/spring [QueueStatus]])}}])
