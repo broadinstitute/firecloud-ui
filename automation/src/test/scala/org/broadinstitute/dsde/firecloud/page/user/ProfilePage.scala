@@ -20,7 +20,7 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def readProxyGroupEmail: String = {
-    await visible (proxyGroupEmailQuery, 5)
+    await visible (proxyGroupEmailQuery, 10)
     readText(proxyGroupEmailQuery)
   }
 }

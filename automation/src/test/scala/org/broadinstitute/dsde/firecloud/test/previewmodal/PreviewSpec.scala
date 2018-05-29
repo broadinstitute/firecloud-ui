@@ -11,8 +11,8 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.concurrent.duration.DurationLong
 
-class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures with UserFixtures
-  with MethodFixtures with BillingFixtures with Matchers {
+class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures
+  with UserFixtures with MethodFixtures with BillingFixtures with Matchers {
 
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))

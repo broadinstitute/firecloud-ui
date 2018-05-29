@@ -11,7 +11,8 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
-class MethodRedactedSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodRedactedSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
+  with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 

@@ -47,7 +47,7 @@ object Dependencies {
     "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
     "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
 
     workbenchModel,

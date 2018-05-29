@@ -7,7 +7,8 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
-class MethodImportSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodImportSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
+  with UserFixtures with MethodFixtures with BillingFixtures {
 
   "import method config" - {
     "copy from a workspace" in {

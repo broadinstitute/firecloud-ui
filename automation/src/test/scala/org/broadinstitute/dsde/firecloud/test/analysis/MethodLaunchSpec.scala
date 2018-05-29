@@ -11,7 +11,8 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
 
-class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
+  with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."

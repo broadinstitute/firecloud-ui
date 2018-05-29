@@ -62,7 +62,7 @@ Test / logBuffered := false
 Global / concurrentRestrictions ++= Seq(Tags.limit(Tags.ForkedTestGroup, 5))
 
 /**
-  * Forked JVM options
+  * Forked jvm options
   */
 Test / run / javaOptions ++= Seq("-Xmx3G")
 

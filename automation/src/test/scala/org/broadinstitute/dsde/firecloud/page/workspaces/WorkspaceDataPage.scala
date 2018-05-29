@@ -15,7 +15,6 @@ import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
 
-
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
 
@@ -58,9 +57,14 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 5 seconds for file exist
       val f = new File(sourcePath)
-      logger.info(s"Retrying wait for file exist: $f")
+      logger.info(s"Retrying - downloaded file wait for exist: $f")
       retry[Boolean](1.seconds, 5.seconds) {
-        if (f.exists()) Some(true) else None
+        if (f.exists()) {
+          Some(true)
+        } else {
+          logger.error(s"downloaded file exist check failed: $f")
+          None
+        }
       }
       val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
       val destFile = new File(sourcePath).getName + s".$date"
@@ -77,7 +81,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
      * automatically close it when the download is complete.
      */
     // await condition (windowHandles.size == 1, 30)
-    // .submit automatically waits for the new window
+    // .submit call takes care waiting for a new window
     find(tagName("form")).get.underlying.submit()
 
     for {

@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.scalatest._
 
 
-class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec with ParallelTestExecution
+class WorkspaceWriterSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec
   with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
