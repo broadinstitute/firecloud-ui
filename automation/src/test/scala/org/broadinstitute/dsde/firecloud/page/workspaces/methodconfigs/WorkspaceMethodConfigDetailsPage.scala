@@ -40,7 +40,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       await condition (find(CssSelectorQuery(".broadinstitute-modal-open")).nonEmpty, 5)
     ) match {
       case Failure(e) =>
-        logger.warn(s"clickLaunchAnalysis failed. Retrying click button: ${openLaunchAnalysisModalButton.query}")
+        logger.info(s"clickLaunchAnalysis failed. Retrying click button: ${openLaunchAnalysisModalButton.query}")
         // retry click
         openLaunchAnalysisModalButton.doClick()
       case Success(some) =>

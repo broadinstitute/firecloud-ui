@@ -8,9 +8,12 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
+
+import scala.concurrent.duration.DurationLong
 
 
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
@@ -50,22 +53,32 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadMetadata(downloadPath: Option[String] = None): Option[String] = {
+  def downloadMetadata(downloadPath: Option[String] = None): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
+      // wait up to 5 seconds for file exist
+      val f = new File(sourcePath)
+      logger.info(s"Retrying wait for file exist: $f")
+      retry[Boolean](1.seconds, 5.seconds) {
+        if (f.exists()) Some(true) else None
+      }
       val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
       val destFile = new File(sourcePath).getName + s".$date"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
+      logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")
       destPath
     }
 
-    downloadMetadataButton.doClick()
+    downloadMetadataButton.awaitVisible()
+
     /*
      * Downloading a file will open another window while the download is in progress and
      * automatically close it when the download is complete.
      */
-    await condition (windowHandles.size == 1, 60)
+    // await condition (windowHandles.size == 1, 30)
+    // .submit automatically waits for the new window
+    find(tagName("form")).get.underlying.submit()
 
     for {
       path <- downloadPath

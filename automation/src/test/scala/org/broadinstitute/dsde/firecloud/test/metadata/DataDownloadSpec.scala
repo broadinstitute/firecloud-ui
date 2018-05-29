@@ -1,22 +1,23 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
 import java.io.{File, PrintWriter}
+import java.nio.file.{Files, Paths}
+import java.nio.file.attribute.PosixFilePermission
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.WebBrowser
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.io.Source
 
-class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures
-  with Matchers with WebBrowser with WebBrowserUtil with CleanUp {
+class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures
+  with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil {
 
   private def makeTempDownloadDirectory(): String = {
     /*
@@ -28,12 +29,21 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
     Files.setPosixFilePermissions(downloadPath, permissions.asJava)
     downloadPath.toString
      */
-    val downloadPath = "chrome/downloads"
-    new File(downloadPath).mkdirs()
-    downloadPath
-  }
 
-  private val downloadPath = makeTempDownloadDirectory()
+    val downloadPath = s"chrome/downloads/${makeRandomId(5)}"
+    val dir = new File(downloadPath)
+    dir.deleteOnExit()
+    dir.mkdirs()
+    val path = dir.toPath
+    logger.info(s"mkdir: $path")
+    val permissions = Set(
+      PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+      PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
+      PosixFilePermission.OTHERS_WRITE, PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE)
+    import scala.collection.JavaConverters._
+    Files.setPosixFilePermissions(path, permissions.asJava)
+    path.toString
+  }
 
   "import a participants file" in {
     val owner = UserPool.chooseProjectOwner
@@ -54,75 +64,106 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
   }
 
   "Download should reflect visible columns" - {
-    "no workspace defaults or user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo"),
-        expectedColumns = List("participant_id", "foo"))
+    "no workspace defaults or user preferences" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo"),
+          expectedColumns = List("participant_id", "foo"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "no workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo"),
-        userHidden = Some("foo"),
-        expectedColumns = List("participant_id"))
+    "no workspace defaults, with user preferences" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo"),
+          userHidden = Some("foo"),
+          expectedColumns = List("participant_id"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "no workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo"),
-        userHidden = Some("foo"),
-        importColumns = Some(List("participant_id", "foo", "bar")),
-        expectedColumns = List("participant_id", "bar"))
+    "no workspace defaults, with user preferences, new columns" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo"),
+          userHidden = Some("foo"),
+          importColumns = Some(List("participant_id", "foo", "bar")),
+          expectedColumns = List("participant_id", "bar"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "with workspace defaults, no user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo", "bar"),
-        defaultShown = Some(List("participant_id", "foo")),
-        defaultHidden = Some(List("bar")),
-        expectedColumns = List("participant_id", "foo"))
+    "with workspace defaults, no user preferences" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo", "bar"),
+          defaultShown = Some(List("participant_id", "foo")),
+          defaultHidden = Some(List("bar")),
+          expectedColumns = List("participant_id", "foo"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "with workspace defaults, no user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo", "bar"),
-        defaultShown = Some(List("participant_id", "foo")),
-        defaultHidden = Some(List("bar")),
-        importColumns = Some(List("participant_id", "foo", "bar", "baz")),
-        expectedColumns = List("participant_id", "foo", "baz"))
+    "with workspace defaults, no user preferences, new columns" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo", "bar"),
+          defaultShown = Some(List("participant_id", "foo")),
+          defaultHidden = Some(List("bar")),
+          importColumns = Some(List("participant_id", "foo", "bar", "baz")),
+          expectedColumns = List("participant_id", "foo", "baz"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "with workspace defaults, with user preferences" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo", "bar"),
-        defaultShown = Some(List("participant_id", "foo")),
-        defaultHidden = Some(List("bar")),
-        userHidden = Some("foo"),
-        expectedColumns = List("participant_id"))
+    "with workspace defaults, with user preferences" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo", "bar"),
+          defaultShown = Some(List("participant_id", "foo")),
+          defaultHidden = Some(List("bar")),
+          userHidden = Some("foo"),
+          expectedColumns = List("participant_id"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "with workspace defaults, with user preferences, new columns" in withWebDriver(downloadPath) { implicit driver =>
-      testMetadataDownload(
-        initialColumns = List("participant_id", "foo", "bar"),
-        defaultShown = Some(List("participant_id", "foo")),
-        defaultHidden = Some(List("bar")),
-        userHidden = Some("foo"),
-        importColumns = Some(List("participant_id", "foo", "bar", "baz")),
-        expectedColumns = List("participant_id", "baz"))
+    "with workspace defaults, with user preferences, new columns" in {
+      val downloadDir = makeTempDownloadDirectory()
+      withWebDriver(downloadDir) { implicit driver =>
+        testMetadataDownload(
+          initialColumns = List("participant_id", "foo", "bar"),
+          defaultShown = Some(List("participant_id", "foo")),
+          defaultHidden = Some(List("bar")),
+          userHidden = Some("foo"),
+          importColumns = Some(List("participant_id", "foo", "bar", "baz")),
+          expectedColumns = List("participant_id", "baz"),
+          downloadPath = downloadDir)
+      }
     }
 
-    "keep ID column in download even if hidden in UI" in withWebDriver(downloadPath) { implicit driver =>
+    "keep ID column in download even if hidden in UI" in {
+      val downloadDir = makeTempDownloadDirectory()
       val user = UserPool.chooseAnyUser
       implicit val authToken: AuthToken = user.makeAuthToken()
       withCleanBillingProject(user) { billingProject =>
         withWorkspace(billingProject, "DataSpec_download") { workspaceName =>
-          withSignIn(user) { _ =>
-            val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-            val columns = List("participant_id", "foo")
-            dataTab.importFile(generateMetadataFile(columns))
-            dataTab.dataTable.hideColumn("participant_id")
-            val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
-            readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns)
+          withWebDriver(downloadDir) { implicit driver =>
+            withSignIn(user) { _ =>
+              val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
+              val columns = List("participant_id", "foo")
+              dataTab.importFile(generateMetadataFile(columns))
+              dataTab.dataTable.hideColumn("participant_id")
+              val metadataFile = dataTab.downloadMetadata(Option(downloadDir)).get
+              readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns)
+            }
           }
         }
       }
@@ -135,7 +176,8 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
                                    defaultHidden: Option[List[String]] = None,
                                    userHidden: Option[String] = None,
                                    importColumns: Option[List[String]] = None,
-                                   expectedColumns: List[String])
+                                   expectedColumns: List[String],
+                                   downloadPath: String)
                                   (implicit webDriver: WebDriver): Unit = {
     val owner = UserPool.chooseProjectOwner
     val writer = UserPool.chooseStudent
@@ -213,6 +255,7 @@ class DataDownloadSpec extends FreeSpec with WebBrowserSpec with UserFixtures wi
   }
 
   private def readHeadersFromTSV(fileName: String): List[String] = {
+    val f = new File(fileName)
     Source.fromFile(fileName).getLines().next().split('\t').toList
   }
 

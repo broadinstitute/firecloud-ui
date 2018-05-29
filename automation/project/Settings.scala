@@ -34,14 +34,14 @@ object Settings {
   //     (removed on April 22, 2018) `G` - show reminder of failed and canceled tests with full stack traces at the end of log file
   // `-fW` - causes test results to be written to the summary.log without colored text
   val testSettings = List(
-    testOptions in Test += Tests.Argument("-oFD", "-u", "test-reports", "-fW", "test-reports/TEST-summary.log")
+    testOptions in Test += Tests.Argument("-oFD", "-u", "test-reports", "-fWD", "test-reports/TEST-summary.log")
   )
 
   //common settings for all sbt subprojects
   val commonSettings =
     commonBuildSettings ++ testSettings ++ List(
     organization  := "org.broadinstitute.dsde.firecloud",
-    scalaVersion  := "2.12.4",
+    scalaVersion  := "2.12.6",
     resolvers ++= commonResolvers,
     scalacOptions ++= commonCompilerSettings
   )

@@ -4,15 +4,15 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.concurrent.duration.DurationLong
 
-class PreviewSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures
-  with CleanUp with Matchers {
+class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures with UserFixtures
+  with MethodFixtures with BillingFixtures with Matchers {
 
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))

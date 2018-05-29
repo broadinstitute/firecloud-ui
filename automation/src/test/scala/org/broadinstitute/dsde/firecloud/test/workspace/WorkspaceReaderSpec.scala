@@ -16,9 +16,8 @@ import org.scalatest._
 
 import scala.util.Try
 
-class WorkspaceReaderSpec extends FreeSpec with Matchers
-  with WebBrowserSpec with CleanUp
-  with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Matchers
+  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
   val authTokenOwner: AuthToken = projectOwner.makeAuthToken()
