@@ -39,11 +39,12 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
 
   private def clickTab(tabName: String, pageUrl: String): Unit = {
     tabs.goToTab(tabName)
+    val expUrl = pageUrl.replaceAll(" ", "%20")
     try {
-      await condition (pageUrl == webDriver.getCurrentUrl)
+      await condition (webDriver.getCurrentUrl.compareTo(expUrl) == 0, 2)
     } catch {
       case e: TimeoutException =>
-        logger.warn(s"Actual url: ${webDriver.getCurrentUrl}, Expect url: $pageUrl. Action of clicking Tab($tabName) possibily failed")
+        logger.warn(s"Actual url: ${webDriver.getCurrentUrl}, Expect url: $expUrl. Action of clicking Tab($tabName) possibily failed")
     }
   }
 
