@@ -25,7 +25,7 @@ import scala.util.Try
  *
  * TODO: Fix Rawls group creation/deletion and run these tests in parallel
  */
-class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
+class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures
   with BillingFixtures with GroupFixtures
   with UserFixtures {
