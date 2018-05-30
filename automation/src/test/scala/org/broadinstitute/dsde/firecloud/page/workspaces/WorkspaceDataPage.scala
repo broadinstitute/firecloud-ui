@@ -27,6 +27,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   val dataTable = Table("entity-table")
   private val importMetadataButton = Button("import-metadata-button")
   private val downloadMetadataButton = Button("download-metadata-button")
+  val form = CssSelectorQuery(s"${dataTable.query.queryString} form")
 
   def importFile(filePath: String): Unit = {
     importMetadataButton.doClick()
@@ -81,7 +82,8 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
      */
     // await condition (windowHandles.size == 1, 30)
     // .submit call takes care waiting for a new window
-    find(tagName("form")).get.underlying.submit()
+    logger.info(s"form: ${form.queryString}")
+    find(form).get.underlying.submit()
 
     for {
       path <- downloadPath
