@@ -382,6 +382,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
               }
             }
           }
+
         }
       }
     }
