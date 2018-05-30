@@ -74,20 +74,20 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   }
 
   /**
-    * Wait for Submission to complete. 10 seconds polling.
+    * Wait for Submission to complete. 15 seconds polling.
     *
-    * @param timeOut: Time out. Default set 20.minutes
+    * @param timeOut: Time out. Default set 25.minutes
     */
-  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 20.minutes): Unit = {
+  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 25.minutes): Unit = {
     logger.info(s"Waiting for Workflow Submission to complete in $timeOut with 10 seconds polling interval")
     Thread.sleep(10000) // 10 seconds pause before checking
-    retry[Boolean](10.seconds, timeOut) ({
+    retry[Boolean](15.seconds, timeOut) ({
       // sometimes page auto reloads, displaying table "Workflow Detail". link submissionId is not in table "Workflow Detail".
       // click tab "Monitor" loads either table "Workflow Details" or table "Analysis Detail".
       if (workflowStatusLabel.isVisible) {
         val monitorTab = goToMonitorTab()
         monitorTab.openSubmission(submissionId) // link exists in "Analysis Detail" table
-        await ready (submissionStatusLabel, 10)
+        await ready (submissionStatusLabel, 5)
       }
       if (isError) {
         Some(false)

@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
 import java.io.{File, PrintWriter}
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
@@ -256,7 +256,9 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
 
   private def readHeadersFromTSV(fileName: String): List[String] = {
     val f = new File(fileName)
-    Source.fromFile(fileName).getLines().next().split('\t').toList
+    val texts = Source.fromFile(fileName).getLines().next().split('\t').toList
+    f.deleteOnExit()
+    texts
   }
 
   private def columnsToFileHeaders(columns: List[String]): List[String] = {

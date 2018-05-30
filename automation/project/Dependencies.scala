@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 
 object Dependencies {
-  val jacksonV = "2.9.2"
+  val jacksonV = "2.9.0"
   val akkaV = "2.5.13"
   val akkaHttpV = "10.1.1"
 
@@ -37,7 +37,8 @@ object Dependencies {
     ),
     "com.google.api-client" % "google-api-client" % "1.22.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
-      ExclusionRule("org.apache.httpcomponents", "httpclient")),
+      ExclusionRule("org.apache.httpcomponents", "httpclient")
+    ),
     "org.webjars"           %  "swagger-ui"    % "2.2.5",
     "com.typesafe.akka"   %%  "akka-http-core"     % akkaHttpV,
     "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV   % "test",
