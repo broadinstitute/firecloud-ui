@@ -3,11 +3,10 @@ package org.broadinstitute.dsde.firecloud.test.security
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
-import org.broadinstitute.dsde.workbench.service.{AclEntry, Orchestration, RestException, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.RestException
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
