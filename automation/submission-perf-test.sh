@@ -40,9 +40,16 @@ launchSubmission() {
         expression=$9
     "
 
-    echo "Note: If there is an error message below (with 'curl: (22)' and '404 Not Found') then that user needs to re-link to NIH."
-
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
+
+    # Verify that user does not need to refresh their token
+    curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
+    if [ $? -eq 0 ]; then
+        echo "This user needs its refresh token refreshed"
+        exit 1
+    fi
+
+    echo "Note: If there is an error message below (with 'curl: (22)' and '404 Not Found') then that user needs to re-link to NIH."
 
     #check if $9 is set for 'expression'
     if [ -z ${9+x} ] ; then
