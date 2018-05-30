@@ -29,12 +29,12 @@ cancelable in Global := true
   * Specify that each test class will be mapped to run in its own jvm.
   * Default: fork: = false It means all test classes run in one jvm.
   */
-Test / run / fork := true
+Test / fork := true
 
 /**
   * Forked test classes can run in parallel
   */
-Test / run / testForkedParallel := true
+Test / testForkedParallel := true
 
 /**
   * When fork, use the base directory as the working directory
@@ -59,19 +59,19 @@ Test / logBuffered := false
   *  Warning: can't set too high (set at 10 would crashes OS)
   *  This is not number of threads in each jvm. That would be up to sbt.
   */
-Global / concurrentRestrictions ++= Seq(Tags.limit(Tags.ForkedTestGroup, 5))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 5))
 
 /**
   * Forked jvm options
   */
-Test / run / javaOptions ++= Seq("-Xmx3G")
+Test / javaOptions ++= Seq("-Xmx3G")
 
 outputStrategy := Some(StdoutOutput)
 
 /**
  * copy system properties to forked jvm
   */
-Test / run / javaOptions ++= propertiesAsScalaMap(System.getProperties).map{ case (key,value) => "-D" + key + "=" +value }.toSeq
+Test / javaOptions ++= propertiesAsScalaMap(System.getProperties).map{ case (key,value) => "-D" + key + "=" +value }.toSeq
 
 // only show stack traces up to the first sbt stack frame
 traceLevel := 0
