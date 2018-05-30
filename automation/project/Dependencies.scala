@@ -3,7 +3,7 @@ import sbt.Keys._
 
 object Dependencies {
   val jacksonV = "2.9.2"
-  val akkaV = "2.5.7"
+  val akkaV = "2.5.13"
   val akkaHttpV = "10.1.1"
 
   val serviceTestV = "0.9-0012a13-SNAP"
@@ -40,7 +40,7 @@ object Dependencies {
       ExclusionRule("org.apache.httpcomponents", "httpclient")),
     "org.webjars"           %  "swagger-ui"    % "2.2.5",
     "com.typesafe.akka"   %%  "akka-http-core"     % akkaHttpV,
-    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV,
+    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV   % "test",
     "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
     "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,

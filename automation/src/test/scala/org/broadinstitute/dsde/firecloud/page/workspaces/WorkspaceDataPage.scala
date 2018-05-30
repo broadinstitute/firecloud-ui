@@ -58,11 +58,10 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       // wait up to 5 seconds for file exist
       val f = new File(sourcePath)
       logger.info(s"Retrying - downloaded file wait for exist: $f")
-      retry[Boolean](1.seconds, 5.seconds) {
+      retry[Boolean](1.seconds, 10.seconds) {
         if (f.exists()) {
           Some(true)
         } else {
-          logger.error(s"downloaded file exist check failed: $f")
           None
         }
       }

@@ -64,7 +64,7 @@ Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 5))
 /**
   * Forked jvm options
   */
-Test / javaOptions ++= Seq("-Xmx3G")
+Test / javaOptions ++= Seq("-Xmx4G")
 
 outputStrategy := Some(StdoutOutput)
 
