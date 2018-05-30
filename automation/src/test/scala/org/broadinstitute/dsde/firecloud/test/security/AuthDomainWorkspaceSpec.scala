@@ -12,6 +12,7 @@ import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingPr
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.util.Try
 
@@ -38,6 +39,9 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
   val defaultUser: Credentials = UserPool.chooseCurator
   val authTokenDefault: AuthToken = defaultUser.makeAuthToken()
 
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
+
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, projectName: String, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
     error should include(projectName)
@@ -58,7 +62,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                 val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName))
 
-                workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)
+                eventually {workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)}
               }
             }
           }
@@ -78,13 +82,13 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
 
                   val cloneWorkspaceName = workspaceName + "_clone"
                   val cloneModal = summaryPage.clickCloneButton()
-                  cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
+                  eventually {cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)}
 
                   register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authTokenDefault)
 
                   val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
-                  cloneSummaryPage.validateWorkspace shouldEqual true
-                  cloneSummaryPage.readAuthDomainGroups should include(authDomainName)
+                  eventually {cloneSummaryPage.validateWorkspace shouldEqual true}
+                  eventually {cloneSummaryPage.readAuthDomainGroups should include(authDomainName)}
                 }
               }
             }
@@ -123,7 +127,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
               withCleanBillingProject(defaultUser) { projectName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                   withSignIn(user) { workspaceListPage =>
-                    workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                    eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false}
 
                     val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                     checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -146,7 +150,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                   withSignIn(user) { listPage =>
                     val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                    summaryPage.readAuthDomainGroups should include(authDomainName)
+                    eventually {summaryPage.readAuthDomainGroups should include(authDomainName)}
                   }
                 }
               }
@@ -161,7 +165,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
               withCleanBillingProject(defaultUser) { projectName =>
                 withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
                   withSignIn(user) { workspaceListPage =>
-                    workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                    eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false}
 
                     val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                     checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -182,8 +186,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { listPage =>
                       val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                      summaryPage.readAuthDomainGroups should include(groupOneName)
-                      summaryPage.readAuthDomainGroups should include(groupTwoName)
+                      eventually {summaryPage.readAuthDomainGroups should include(groupOneName)}
+                      eventually {summaryPage.readAuthDomainGroups should include(groupTwoName)}
                     }
                   }
                 }
@@ -209,8 +213,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                   val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
 
-                  workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
-                  workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)
+                  eventually {workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)}
+                  eventually {workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)}
                 }
               }
             }
@@ -230,15 +234,15 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                     val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
                     val cloneWorkspaceName = workspaceName + "_clone"
                     val cloneModal = summaryPage.clickCloneButton()
-                    cloneModal.readLockedAuthDomainGroups() should contain(groupOneName)
-                    cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)
+                    eventually {cloneModal.readLockedAuthDomainGroups() should contain(groupOneName)}
+                    eventually {cloneModal.readLockedAuthDomainGroups() should contain(groupTwoName)}
 
                     register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authTokenDefault)
 
                     val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
-                    cloneSummaryPage.validateWorkspace shouldEqual true
-                    cloneSummaryPage.readAuthDomainGroups should include(groupOneName)
-                    cloneSummaryPage.readAuthDomainGroups should include(groupTwoName)
+                    eventually {cloneSummaryPage.validateWorkspace shouldEqual true}
+                    eventually {cloneSummaryPage.readAuthDomainGroups should include(groupOneName)}
+                    eventually {cloneSummaryPage.readAuthDomainGroups should include(groupTwoName)}
                   }
                 }
               }
@@ -264,9 +268,9 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
 
                       register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authTokenDefault)
 
-                      summaryPage.readAuthDomainGroups should include(groupOneName)
-                      summaryPage.readAuthDomainGroups should include(groupTwoName)
-                      summaryPage.readAuthDomainGroups should include(groupThreeName)
+                      eventually {summaryPage.readAuthDomainGroups should include(groupOneName)}
+                      eventually {summaryPage.readAuthDomainGroups should include(groupTwoName)}
+                      eventually {summaryPage.readAuthDomainGroups should include(groupThreeName)}
                     }
                   }
                 }
@@ -284,7 +288,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
               withWorkspace(projectName, "AuthDomainSpec_create", Set(groupOneName, groupTwoName)) { workspaceName =>
                 withCleanUp {
                   withSignIn(user) { workspaceListPage =>
-                    workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+                    eventually {workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true}
                   }
                 }
               }
@@ -304,8 +308,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
                   val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
 
-                  workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)
-                  workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)
+                  eventually {workspaceSummaryPage.readAuthDomainGroups should include(groupOneName)}
+                  eventually {workspaceSummaryPage.readAuthDomainGroups should include(groupTwoName)}
                 }
               }
             }
@@ -324,7 +328,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
                       workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                      workspaceListPage.showsRequestAccessModal shouldEqual true
+                      eventually {workspaceListPage.showsRequestAccessModal shouldEqual true}
                       workspaceListPage.validateLocation()
                       // TODO: add assertions for the new "request access" modal
                       // TODO: finish this test somewhere we can access the sign out button
@@ -347,7 +351,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 withCleanBillingProject(defaultUser) { projectName =>
                   withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
-                      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                      eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false}
 
                       val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                       checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -371,7 +375,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
                       workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                      workspaceListPage.showsRequestAccessModal shouldEqual true
+                      eventually {workspaceListPage.showsRequestAccessModal shouldEqual true}
                       workspaceListPage.validateLocation()
                       // TODO: add assertions for the new "request access" modal
                       // TODO: finish this test somewhere we can access the sign out button
@@ -393,7 +397,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                     withSignIn(defaultUser) { workspaceListPage =>
                       workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                      workspaceListPage.showsRequestAccessModal shouldEqual true
+                      eventually {workspaceListPage.showsRequestAccessModal shouldEqual true}
                       workspaceListPage.validateLocation()
                       // TODO: finish this test somewhere we can access the sign out button
 
@@ -415,7 +419,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 withCleanBillingProject(defaultUser) { projectName =>
                   withWorkspace(projectName, "AuthDomainSpec", Set(groupOneName, groupTwoName)) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
-                      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                      eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false}
 
                       val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                       checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -434,7 +438,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
                     withSignIn(defaultUser) { workspaceListPage =>
                       workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                      workspaceListPage.showsRequestAccessModal shouldEqual true
+                      eventually {eventually {workspaceListPage.showsRequestAccessModal shouldEqual true}
                       workspaceListPage.validateLocation()
                       // close "request access" Modal
                       workspaceListPage.closeModal()
@@ -459,8 +463,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { listPage =>
                       val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                      summaryPage.readAuthDomainGroups should include(groupOneName)
-                      summaryPage.readAuthDomainGroups should include(groupTwoName)
+                      eventually {summaryPage.readAuthDomainGroups should include(groupOneName)}
+                      eventually {summaryPage.readAuthDomainGroups should include(groupTwoName)}
                     }
                   }
                 }
@@ -478,7 +482,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                       withCleanUp {
                         withSignIn(user) { workspaceListPage =>
                           val summaryPage = workspaceListPage.enterWorkspace(projectName, workspaceName)
-                          summaryPage.readAccessLevel() should be(WorkspaceAccessLevel.Writer)
+                          eventually {summaryPage.readAccessLevel() should be(WorkspaceAccessLevel.Writer)}
                         }
                       }
                     }
@@ -497,8 +501,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                     withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName)) { workspaceName =>
                       withSignIn(user) { listPage =>
                         val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                        summaryPage.readAuthDomainGroups should include(groupOneName)
-                        summaryPage.readAuthDomainGroups should include(groupTwoName)
+                        eventually {summaryPage.readAuthDomainGroups should include(groupOneName)}
+                        eventually {summaryPage.readAuthDomainGroups should include(groupTwoName)}
                       }
                     }
                   }
@@ -517,8 +521,8 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { listPage =>
                       val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                      summaryPage.readAuthDomainGroups should include(groupOneName)
-                      summaryPage.readAuthDomainGroups should include(groupTwoName)
+                      eventually {summaryPage.readAuthDomainGroups should include(groupOneName)}
+                      eventually {summaryPage.readAuthDomainGroups should include(groupTwoName)}
                     }
                   }
                 }
@@ -533,7 +537,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 withCleanBillingProject(defaultUser) { projectName =>
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
-                      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true
+                      eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true}
 
                       val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                       checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -553,7 +557,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                 withCleanBillingProject(defaultUser) { projectName =>
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
-                      workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                      eventually {workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
 
                       val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                       checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)

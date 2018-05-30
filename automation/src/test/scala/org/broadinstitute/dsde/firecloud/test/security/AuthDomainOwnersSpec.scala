@@ -12,6 +12,7 @@ import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingPr
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.util.Try
 
@@ -37,6 +38,9 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
    */
   val defaultUser: Credentials = UserPool.chooseCurator
   val authTokenDefault: AuthToken = defaultUser.makeAuthToken()
+
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
 
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, projectName: String, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
