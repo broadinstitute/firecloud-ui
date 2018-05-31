@@ -1,5 +1,4 @@
 import Settings._
-import sbt._
 import sbt.Keys.{fork, javaOptions, parallelExecution, testForkedParallel}
 
 import scala.collection.JavaConverters._
@@ -18,8 +17,8 @@ cancelable in Global := true
 
 
 /**
-  * sbt forking jvm -- sbt provides 2 testing modes: forked vs not forked.
-  * -- forked: each task (test class) is executed sequentially in a forked JVM.
+  * sbt forking JVM -- sbt provides 2 testing modes: forked vs not forked.
+  * -- forked: each task (test class) runs in a new forked JVM.
   *    Test results are segregated, easy to read.
   * -- not forked: all tasks (test classes) are executed in same sbt JVM.
   *    Test results are not segregated, hard to read.
@@ -27,13 +26,12 @@ cancelable in Global := true
   */
 
 /**
-  * Specify that all tests will be executed in a single external JVM.
-  * By default, tests executed in a forked JVM are executed sequentially.
+  * Specify that each test class will be mapped to run in its own JVM.
   */
 Test / fork := true
 
 /**
-  * forked tests can optionally be run in parallel.
+  * Forked test classes can run in parallel
   */
 Test / testForkedParallel := true
 
@@ -43,9 +41,8 @@ Test / testForkedParallel := true
 Test / baseDirectory := (baseDirectory in ThisBuild).value
 
 /*
+ * Each test class is mapped to its own task.
  * Enables (true) or disables (false) parallel execution of tasks.
- * In not-forked mode: test classes are run in parallel in different threads, in same sbt jvm.
- * In forked mode: each test class runs tests in sequential order, in a separated jvm.
  */
 Test / parallelExecution := true
 
@@ -55,25 +52,26 @@ Test / parallelExecution := true
 Test / logBuffered := false
 
 /**
-  * Control the number of forked JVMs allowed to run at the same time by
+  * Control the number of forked JVM allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
+  *
   *  Warning: can't set too high (set at 10 would crashes OS)
+  *  This is not number of threads in each JVM. That would be up to sbt.
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 3))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 4))
 
 /**
   * Forked JVM options
   */
-Test / javaOptions ++= Seq("-Xmx2G")
+Test / javaOptions ++= Seq("-Xmx4G")
 
 /**
  * copy system properties to forked JVM
   */
-Test / javaOptions ++= Seq({
-  val props = System.getProperties
-  props.stringPropertyNames().asScala.toList.map { key => s"-D$key=${props.getProperty(key)}"}.mkString(" ")
-})
+Test / javaOptions ++= propertiesAsScalaMap(System.getProperties).map{ case (key,value) => "-D" + key + "=" +value }.toSeq
 
+// only show stack traces up to the first sbt stack frame
+traceLevel := 0
 
 /*
  * This works only in SBT version pre 1.x release. Save this until we're certain we don't need it.
@@ -126,7 +124,7 @@ testGrouping in Test := {
           s"-Ddir.name=${(Test / baseDirectory).value}",
           s"-Dheadless=${Option(System.getProperty("headless")).getOrElse("false")}",
           s"-Djsse.enableSNIExtension=${Option(System.getProperty("jsse.enableSNIExtension")).getOrElse("false")}"))
-    new Tests.Group(
+    Tests.Group(
       name = test.name,
       tests = Seq(test),
       runPolicy = Tests.SubProcess(options)

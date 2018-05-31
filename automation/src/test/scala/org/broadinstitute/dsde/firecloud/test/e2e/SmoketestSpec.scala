@@ -46,7 +46,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
       assert(methodConfigDetailsPage.isLoaded)
 
       // launch method config with call caching off
-      val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId, enableCallCaching=false)
+      val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, TestData().participantId, enableCallCaching=false)
       submissionDetailsPage.waitUntilSubmissionCompletes() //This feels like the wrong way to do this?
       assert(submissionDetailsPage.verifyWorkflowSucceeded())
 

@@ -10,13 +10,19 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
+import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
+import org.scalatest.time.{Seconds, Span}
 
 
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] with Eventually {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
+
+  implicit override val patienceConfig = {
+    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(1, Seconds)))
+  }
 
   override def awaitReady(): Unit = {
     dataTable.awaitReady()
@@ -25,6 +31,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   val dataTable = Table("entity-table")
   private val importMetadataButton = Button("import-metadata-button")
   private val downloadMetadataButton = Button("download-metadata-button")
+  val form = CssSelectorQuery(s"${dataTable.query.queryString} form")
 
   def importFile(filePath: String): Unit = {
     importMetadataButton.doClick()
@@ -50,22 +57,32 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadMetadata(downloadPath: Option[String] = None): Option[String] = {
+  def downloadMetadata(downloadPath: Option[String] = None): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
+      // wait up to 10 seconds for file exist
+      val f = new File(sourcePath)
+      eventually {
+        assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
+      }
       val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
       val destFile = new File(sourcePath).getName + s".$date"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
+      logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")
       destPath
     }
 
-    downloadMetadataButton.doClick()
+    downloadMetadataButton.awaitVisible()
+
     /*
      * Downloading a file will open another window while the download is in progress and
      * automatically close it when the download is complete.
      */
-    await condition (windowHandles.size == 1, 60)
+    // await condition (windowHandles.size == 1, 30)
+    // .submit call takes care waiting for a new window
+    logger.info(s"form: ${form.queryString}")
+    find(form).get.underlying.submit()
 
     for {
       path <- downloadPath

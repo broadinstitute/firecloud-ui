@@ -218,7 +218,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
-                api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+                api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -240,7 +240,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
-                api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+                api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)

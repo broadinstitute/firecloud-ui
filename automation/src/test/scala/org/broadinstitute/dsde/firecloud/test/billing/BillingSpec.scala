@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
-import org.broadinstitute.dsde.workbench.service.{Google, Orchestration, Rawls}
+import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -52,7 +52,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken()
           val secondUser = UserPool.chooseStudent.email
-
+          val testData = TestData()
 
           /*
            * This must continue to create a new billing project rather than using an allocated one.
@@ -74,7 +74,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
               //BEGIN: Test running analysis in workspace
               api.workspaces.waitForBucketReadAccess(billingProjectName, workspaceName)
-              api.importMetaData(billingProjectName, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+              api.importMetaData(billingProjectName, workspaceName, "entities", testData.participantEntity)
 
               val methodConfigName: String = "test_method" + UUID.randomUUID().toString
               api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace,
@@ -82,7 +82,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
               // verify running a method
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId)
 
               submissionDetailsPage.waitUntilSubmissionCompletes()
               assert(submissionDetailsPage.verifyWorkflowSucceeded())
