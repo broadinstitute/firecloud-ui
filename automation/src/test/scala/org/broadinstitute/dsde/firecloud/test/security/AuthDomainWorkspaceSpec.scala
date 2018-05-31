@@ -606,8 +606,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_share", Set(groupOneName, groupTwoName), List(AclEntry(groupNameToEmail(groupOneName), WorkspaceAccessLevel.Reader))) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
                       eventually {
-                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true
-                      }
+                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual true}
 
                       val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                       checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -628,7 +627,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   withWorkspace(projectName, "AuthDomainSpec_reject", Set(groupOneName, groupTwoName)) { workspaceName =>
                     withSignIn(user) { workspaceListPage =>
                       eventually {
-                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false}
 
                         val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
                         checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
@@ -641,58 +640,7 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
           }
         }
       }
-    }
-
-//  def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
-//    withWebDriver { implicit driver =>
-//      withSignIn(user) { workspaceListPage =>
-//        // Not in workspace list
-//        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
-//
-//        // No direct access
-//        val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-//        checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-//      }
-//    }
-//  }
-//
-//  def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
-//    withWebDriver { implicit driver =>
-//      withSignIn(user) { workspaceListPage =>
-//        // Looks restricted; implies in workspace list
-//        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-//
-//        // Clicking opens request access modal
-//        workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-//        workspaceListPage.showsRequestAccessModal() shouldEqual true
-//        // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
-//        Thread sleep 500
-//        new RequestAccessModal().cancel()
-//
-//        // No direct access
-//        val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-//        checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-//      }
-//    }
-//  }
-//
-//  def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
-//    withWebDriver { implicit driver =>
-//      withSignIn(user) { workspaceListPage =>
-//        // Looks restricted; implies in workspace list
-//        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
-//
-//        // Clicking opens workspace
-//        workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
-//
-//        // Direct access also works
-//        // Navigate somewhere else first otherwise background login status gets lost
-//        workspaceListPage.open
-//        new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
-//      }
-//    }
-//  }
-  }
-}
+   }
+ }
 
 
