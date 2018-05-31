@@ -2,7 +2,6 @@ package org.broadinstitute.dsde.firecloud.test.metadata
 
 import org.broadinstitute.dsde.workbench.config.UserPool
 import java.io.{File, PrintWriter}
-import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
@@ -17,7 +16,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with BillingFixtures with Matchers {
 
-  val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
+  val methodConfigName: String = randomIdWithPrefix(SimpleMethodConfig.configName)
   val testData = TestData()
 
   def makeMetadataFile(filePrefix: String, headers: List[String], rows: List[List[String]]): File = {

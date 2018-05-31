@@ -8,17 +8,21 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
+import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
+import org.scalatest.time.{Seconds, Span}
 
-import scala.concurrent.duration.DurationLong
 
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] with Eventually {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
+
+  implicit override val patienceConfig = {
+    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(1, Seconds)))
+  }
 
   override def awaitReady(): Unit = {
     dataTable.awaitReady()
@@ -56,15 +60,10 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   def downloadMetadata(downloadPath: Option[String] = None): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
-      // wait up to 5 seconds for file exist
+      // wait up to 10 seconds for file exist
       val f = new File(sourcePath)
-      logger.info(s"Retrying - downloaded file wait for exist: $f")
-      retry[Boolean](1.seconds, 10.seconds) {
-        if (f.exists()) {
-          Some(true)
-        } else {
-          None
-        }
+      eventually {
+        assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
       val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
       val destFile = new File(sourcePath).getName + s".$date"
