@@ -30,17 +30,18 @@ object Dependencies {
       ExclusionRule("org.apache.httpcomponents", "httpclient"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-core")
     ),
-    "org.webjars"           %  "swagger-ui"    % "2.2.5",
-    "com.typesafe.akka"   %%  "akka-http-core"     % akkaHttpV,
-    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV   % "test",
+
+    "com.typesafe.akka"   %%  "akka-http-core"      % akkaHttpV,
+    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
     "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
     "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,
-    "org.scalatest"       %%  "scalatest"     % "3.0.5"   % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "3.11.0" % "test",
+
+    "org.scalatest"       %%  "scalatest"       % "3.0.5"     % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "3.11.0"  % "test",
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
 
     workbenchServiceTest,
 

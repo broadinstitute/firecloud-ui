@@ -82,7 +82,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
               // verify running a method
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProjectName, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.entityId)
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId)
 
               submissionDetailsPage.waitUntilSubmissionCompletes()
               assert(submissionDetailsPage.verifyWorkflowSucceeded())

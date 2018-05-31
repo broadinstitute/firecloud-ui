@@ -17,17 +17,16 @@ cancelable in Global := true
 
 
 /**
-  * sbt forking jvm -- sbt provides 2 testing modes: forked vs not forked.
-  * -- forked: each task (test class) is executed sequentially in a forked jvm.
+  * sbt forking JVM -- sbt provides 2 testing modes: forked vs not forked.
+  * -- forked: each task (test class) runs in a new forked JVM.
   *    Test results are segregated, easy to read.
-  * -- not forked: all tasks (test classes) are executed in same sbt jvm.
+  * -- not forked: all tasks (test classes) are executed in same sbt JVM.
   *    Test results are not segregated, hard to read.
   *
   */
 
 /**
-  * Specify that each test class will be mapped to run in its own jvm.
-  * Default: fork: = false It means all test classes run in one jvm.
+  * Specify that each test class will be mapped to run in its own JVM.
   */
 Test / fork := true
 
@@ -45,7 +44,7 @@ Test / baseDirectory := (baseDirectory in ThisBuild).value
  * Each test class is mapped to its own task.
  * Enables (true) or disables (false) parallel execution of tasks.
  */
-Test / run / parallelExecution := true
+Test / parallelExecution := true
 
 /**
   * disable sbt's log buffering
@@ -53,23 +52,21 @@ Test / run / parallelExecution := true
 Test / logBuffered := false
 
 /**
-  * Control the number of forked jvm allowed to run at the same time by
+  * Control the number of forked JVM allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
   *
   *  Warning: can't set too high (set at 10 would crashes OS)
-  *  This is not number of threads in each jvm. That would be up to sbt.
+  *  This is not number of threads in each JVM. That would be up to sbt.
   */
 Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 4))
 
 /**
-  * Forked jvm options
+  * Forked JVM options
   */
 Test / javaOptions ++= Seq("-Xmx4G")
 
-outputStrategy := Some(StdoutOutput)
-
 /**
- * copy system properties to forked jvm
+ * copy system properties to forked JVM
   */
 Test / javaOptions ++= propertiesAsScalaMap(System.getProperties).map{ case (key,value) => "-D" + key + "=" +value }.toSeq
 

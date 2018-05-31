@@ -66,7 +66,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
               workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
               api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.entityId, "", true)
+              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()
               assert(submissionTab.verifyWorkflowSucceeded())
               workspaceDataTab.open
@@ -92,7 +92,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
       implicit val authToken: AuthToken = owner.makeAuthToken()
       withCleanBillingProject(owner) { billingProject =>
         withWorkspace(billingProject, "DataSpec_launchAnalysis_local", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\n${testData.entityId}\t1\t2")
+          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\n${testData.participantId}\t1\t2")
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -108,7 +108,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
             withSignIn(owner) { _ =>
               api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.entityId, "", true)
+              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()
               assert(submissionTab.verifyWorkflowSucceeded())
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -130,7 +130,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
       implicit val authToken: AuthToken = owner.makeAuthToken()
       withCleanBillingProject(owner) { billingProject =>
         withWorkspace(billingProject, "DataSpec_launchAnalysis_defaults", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\n${testData.entityId}\t1\t2")
+          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\n${testData.participantId}\t1\t2")
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -148,7 +148,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
             withSignIn(owner) { _ =>
               api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.entityId, "", true)
+              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()
               assert(submissionTab.verifyWorkflowSucceeded())
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
@@ -169,7 +169,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
       implicit val authToken: AuthToken = owner.makeAuthToken()
       withCleanBillingProject(owner) { billingProject =>
         withWorkspace(billingProject, "DataSpec_localDefaults_analysis", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\ttest3\n${testData.entityId}\t1\t2\t3")
+          api.importMetaData(billingProject, workspaceName, "entities", s"entity:participant_id\ttest1\ttest2\ttest3\n${testData.participantId}\t1\t2\t3")
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
           api.workspaces.setAttributes(billingProject, workspaceName, Map("workspace-column-defaults" -> "{\"participant\": {\"shown\": [\"participant_id\", \"test1\", \"test3\"], \"hidden\": [\"test2\"]}}"))
@@ -188,7 +188,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
             withSignIn(owner) { _ =>
               api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.entityId, "", true)
+              val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()
               assert(submissionTab.verifyWorkflowSucceeded())
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open

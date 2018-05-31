@@ -34,7 +34,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
           withSignIn(user) { _ =>
             val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
 
-            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.entityId)
+            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId)
 
             submissionDetailsPage.waitUntilSubmissionCompletes()
             submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
@@ -56,9 +56,9 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
       withWorkspace(billingProject, "MethodLaunchSpec_launch_modal_with_workflows_warning") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.samples)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.sampleSetCreation)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.sampleSetMembership)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.samples)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.sampleSetCreation)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.sampleSetMembership)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -69,7 +69,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
 
             val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
             launchModal.filterRootEntityType("sample_set")
-            launchModal.searchAndSelectEntity(testData.hundreAndOneSet.setEntityId)
+            launchModal.searchAndSelectEntity(testData.hundredAndOneSet.sampleSetId)
             launchModal.verifyWorkflowsWarning() shouldBe true
             launchModal.xOut()
           }
@@ -85,7 +85,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
       withWorkspace(billingProject, "MethodLaunchSpec_launch_workflow_with_wrong_root_entity") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.samples)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.samples)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -96,7 +96,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
 
             val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
             launchModal.filterRootEntityType("participant")
-            launchModal.searchAndSelectEntity(testData.entityId)
+            launchModal.searchAndSelectEntity(testData.participantId)
             launchModal.clickLaunchButton()
             launchModal.verifyErrorText(wrongRootEntityErrorText) shouldBe true
             launchModal.xOut()
@@ -113,9 +113,9 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
       withWorkspace(billingProject, "MethodLaunchSpec_launch_workflow_on_set_without_expression") { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.samples)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.sampleSetCreation)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.hundreAndOneSet.sampleSetMembership)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.samples)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.sampleSetCreation)
+        api.importMetaData(billingProject, workspaceName, "entities", testData.hundredAndOneSet.sampleSetMembership)
         api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
           SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
 
@@ -125,7 +125,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
             methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("sample"))
             val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
             launchModal.filterRootEntityType("sample_set")
-            launchModal.searchAndSelectEntity(testData.hundreAndOneSet.setEntityId)
+            launchModal.searchAndSelectEntity(testData.hundredAndOneSet.sampleSetId)
             launchModal.clickLaunchButton()
             launchModal.verifyErrorText(noExpressionErrorText) shouldBe true
             launchModal.xOut()
@@ -152,7 +152,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, method.methodNamespace, methodConfigName).open
               val launchModal = methodConfigDetailsPage.openLaunchAnalysisModal()
               launchModal.filterRootEntityType(method.rootEntityType)
-              launchModal.searchAndSelectEntity(testData.entityId)
+              launchModal.searchAndSelectEntity(testData.participantId)
               launchModal.clickLaunchButton()
               launchModal.verifyErrorText(missingInputsErrorText) shouldBe true
               launchModal.xOut()
@@ -179,7 +179,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
           withWebDriver { implicit driver =>
             withSignIn(user) { _ =>
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.entityId)
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId)
 
               submissionDetailsPage.waitUntilSubmissionCompletes()
               submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
@@ -209,7 +209,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
           withWebDriver { implicit driver =>
             withSignIn(user) { _ =>
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
-              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.entityId, "", shouldUseCallCaching)
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId, "", shouldUseCallCaching)
 
               //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
               submissionDetailsPage.abortSubmission()
