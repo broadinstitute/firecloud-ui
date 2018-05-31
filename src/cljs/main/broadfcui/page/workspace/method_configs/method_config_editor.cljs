@@ -8,7 +8,9 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -225,9 +227,10 @@
          (this :-render-main locked?)]]))
    :-render-main
    (fn [{:keys [state this locals props refs]} locked?]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted? entity-type?]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
+           entity-type-options (merge (if rootEntityType {(keyword rootEntityType) {}} {}) entity-types)
            {:keys [methodName methodNamespace]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
@@ -272,23 +275,43 @@
                                    :method method
                                    :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                   (utils/restructure redacted? config methods editing? wdl-parse-error))]))
-        (create-section-header "Root Entity Type")
         (create-section
-         (if editing?
-           (if (seq entity-types)
-             (style/create-identity-select {:ref "rootentitytype"
-                                            :data-test-id "edit-method-config-root-entity-type-select"
-                                            :defaultValue rootEntityType
-                                            :style {:maxWidth 500}
-                                            :onChange #(swap! state assoc :autocomplete-list
-                                                              (build-autocomplete-list
-                                                               {:workspace-attributes workspace-attributes
-                                                                :entity-types entity-types
-                                                                :selected-entity-type (.. % -target -value)}))}
-               (mapv #(name (first %)) entity-types))
-             [:select {:style (assoc style/select-style :width 500) :disabled true}
-              [:option {} "No entities in workspace. Import some in the Data tab."]])
-           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
+         (style/create-detail-well
+          [:div {:style {:display "flex" :font-size "90%"}}
+           [:div {:style {:flex "1 1 60%"}}
+            [:div {} [Checkbox {:label [:span {:style {:font-weight 500 :color "#000"}}
+                                        "Configure inputs/outputs using the Workspace Data Model"
+                                        (dropdown/render-info-box {:text "TODO: Insert info and link here"})]
+                                :checked? entity-type?
+                                :disabled? (not (seq entity-type-options))
+                                :on-change (fn [new-value]
+                                             (if editing?
+                                               (swap! state assoc :entity-type? new-value)
+                                               (do (swap! locals assoc :toggle-entity-type? true)
+                                                   (this :-begin-editing))))}]]
+            (if entity-type?
+              [:div {:style {:font-weight 500 :padding "1rem"}}
+               [:div {}
+                "Entity type for input/output referencing:"
+                (dropdown/render-info-box {:text "TODO: Insert info and link here"})]
+               (if editing?
+                 (if (seq entity-type-options)
+                   (style/create-identity-select {:ref "rootentitytype"
+                                                  :data-test-id "edit-method-config-root-entity-type-select"
+                                                  :defaultValue rootEntityType
+                                                  :style {:maxWidth 300}
+                                                  :onChange #(swap! state assoc :autocomplete-list
+                                                                    (build-autocomplete-list
+                                                                     {:workspace-attributes workspace-attributes
+                                                                      :entity-types entity-type-options
+                                                                      :selected-entity-type (.. % -target -value)}))}
+                     (mapv #(name (first %)) entity-type-options)))
+                 [:div {:style {:padding "0.5em 0 1em 0"}} (or rootEntityType "none")])])
+            (if-not (seq entity-type-options)
+              [:div {:style {:font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
+           [:div {:style {:flex "1 1 40%"}}
+            [:div {:style {:fontWeight 500}} "FireCloud Tip"]
+            [:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]]))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
@@ -317,24 +340,36 @@
                             (this :-begin-editing))
                           ;; FIXME: :data-attribute-load-error is unused
                           (swap! state assoc :data-attribute-load-error status-text)))}))
-       (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
+       (let [{:keys [loaded-config inputs-outputs redacted? entity-type?]} @state
+             {:keys [toggle-entity-type?]} @locals]
          ((@refs "IOTables") :start-editing)
-         (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?))))
+         (swap! state assoc
+                :editing? true
+                :original-config loaded-config
+                :original-inputs-outputs inputs-outputs
+                :original-redacted? redacted?
+                :original-entity-type? entity-type?)
+         (if toggle-entity-type?
+           (do (swap! state assoc :entity-type? (not entity-type?))
+               (swap! locals assoc :toggle-entity-type? false))))))
    :-cancel-editing
    (fn [{:keys [state refs]}]
      ((@refs "IOTables") :cancel-editing)
-     (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
+     (let [{:keys [original-inputs-outputs original-redacted? original-config original-entity-type?]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
+       (swap! state assoc
+              :editing? false
+              :loaded-config original-config
+              :inputs-outputs original-inputs-outputs
+              :redacted? original-redacted?
+              :entity-type? original-entity-type?)
        ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
            name (common/get-trimmed-text refs "confname")
-           root-entity-type (if (seq (:entity-types @state))
-                              (common/get-trimmed-text refs "rootentitytype")
-                              (:rootEntityType config))
+           root-entity-type (if (:entity-type? @state) (common/get-trimmed-text refs "rootentitytype") nil)
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -350,10 +385,12 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
-                      (do ((:on-rename props) name)
-                          ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
-                          (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
-                                                   (dissoc :redacted?)))
+                      (let [response (get-parsed-response)]
+                        ((:on-rename props) name)
+                        ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
+                        (swap! state assoc :entity-type? (boolean (-> response :methodConfiguration :rootEntityType)))
+                        (utils/multi-swap! state (assoc :loaded-config response)
+                                                 (dissoc :redacted?)))
                       (swap! state assoc :error-response (get-parsed-response false))))})))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
@@ -366,6 +403,7 @@
                                                 (let [method-config (:methodConfiguration data)]
                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
                                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
+                      (swap! state assoc :entity-type? (boolean (-> response :methodConfiguration :rootEntityType)))
                       (endpoints/call-ajax-orch
                        {:endpoint endpoints/get-inputs-outputs
                         :payload (get-in response [:methodConfiguration :methodRepoMethod])

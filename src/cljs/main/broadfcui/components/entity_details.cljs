@@ -29,9 +29,7 @@
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
       (let [{:keys [entity redacted?]} props
             config? (contains? entity :method)]
-        [:div {:style {:backgroundColor (:background-light style/colors)
-                       :borderRadius 8 :border style/standard-line
-                       :padding "1rem"}}
+        (style/create-detail-well
          (this :render-details entity)
          (when-not redacted?
            [:div {:style {:paddingTop "0.5rem"}}
@@ -44,7 +42,7 @@
                  (this :render-details (:method entity))
                  [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
                  [CodeMirror {:text (get-in entity [:method :payload])}]]
-                [CodeMirror {:text (:payload entity)}]))])])])
+                [CodeMirror {:text (:payload entity)}]))])))])
    :render-details
    (fn [{:keys [props refs state]} entity]
      (let [{:keys [editing? redacted?]} props

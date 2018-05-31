@@ -140,6 +140,12 @@
          :data-test-id "message-well"}
    message])
 
+(defn create-detail-well [& children]
+  [:div {:style {:backgroundColor (:background-light colors)
+                 :borderRadius 8 :border standard-line
+                 :padding "1rem"}}
+   children])
+
 (defn create-code-sample [text]
   [:code {:style {:backgroundColor (:background-dark colors) :color "white"
                   :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
