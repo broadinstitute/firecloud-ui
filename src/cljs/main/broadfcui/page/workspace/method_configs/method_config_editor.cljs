@@ -309,7 +309,7 @@
                  [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType])])
             (if-not (seq entity-type-options)
               [:div {:style {:font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
-           [:div {:style {:flex "1 1 40%"}}
+           #_[:div {:style {:flex "1 1 40%"}} ; This is here and ready-to-go when we add JSON upload
             [:div {:style {:fontWeight 500}} "FireCloud Tip"]
             [:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]]))
         (create-section-header "Connections")
