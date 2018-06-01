@@ -306,7 +306,7 @@
                                                                       :entity-types entity-type-options
                                                                       :selected-entity-type (.. % -target -value)}))}
                      (mapv #(name (first %)) entity-type-options)))
-                 [:div {:style {:padding "0.5em 0 1em 0"}} (or rootEntityType "none")])])
+                 [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType])])
             (if-not (seq entity-type-options)
               [:div {:style {:font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
            [:div {:style {:flex "1 1 40%"}}
@@ -420,7 +420,7 @@
                                                          [:methodConfiguration :methodRepoMethod key]))
                                                [:methodNamespace :methodName :methodPath :sourceRepo])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
-                                              [:namespace :name])
+                                              [:namespace :name :rootEntityType])
            method-ref {:sourceRepo source-repo
                        :methodPath method-path
                        :methodNamespace method-namespace
