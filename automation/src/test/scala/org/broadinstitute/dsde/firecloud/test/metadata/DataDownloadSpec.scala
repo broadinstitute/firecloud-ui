@@ -12,12 +12,15 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, WebBrowserUtil}
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.openqa.selenium.WebDriver
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.io.Source
 
 class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures
   with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   private def makeTempDownloadDirectory(): String = {
     /*
@@ -162,7 +165,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
               dataTab.importFile(generateMetadataFile(columns))
               dataTab.dataTable.hideColumn("participant_id")
               val metadataFile = dataTab.downloadMetadata(Option(downloadDir)).get
-              readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns)
+              eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns) }
             }
           }
         }
@@ -202,16 +205,16 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
 
           importColumns foreach { l => dataTab.importFile(generateMetadataFile(l)) }
 
-          dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns
+          eventually { dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns }
           val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
-          readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns)
+          eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns) }
         }
 
         withSignIn(owner) { _ =>
           val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-          dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns
+          eventually { dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns }
           val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
-          readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns)
+          eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns) }
         }
       }
     }

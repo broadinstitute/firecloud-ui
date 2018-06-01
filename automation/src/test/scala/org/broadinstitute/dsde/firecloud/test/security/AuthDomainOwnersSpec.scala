@@ -11,6 +11,7 @@ import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingPr
 import org.broadinstitute.dsde.workbench.service.Orchestration.groups.GroupRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
+import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.util.Try
@@ -26,9 +27,10 @@ import scala.util.Try
  * TODO: Fix Rawls group creation/deletion and run these tests in parallel
  */
 class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
-  with CleanUp with WebBrowserSpec with WorkspaceFixtures
-  with BillingFixtures with GroupFixtures
-  with UserFixtures {
+  with CleanUp with WebBrowserSpec with WorkspaceFixtures with Eventually
+  with BillingFixtures with GroupFixtures with UserFixtures {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   /*
    * Unless otherwise declared, this auth token will be used for API calls.
@@ -37,9 +39,6 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
    */
   val defaultUser: Credentials = UserPool.chooseCurator
   val authTokenDefault: AuthToken = defaultUser.makeAuthToken()
-
-  implicit override val patienceConfig =
-    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
 
   private def checkWorkspaceFailure(workspaceSummaryPage: WorkspaceSummaryPage, projectName: String, workspaceName: String): Unit = {
     val error = workspaceSummaryPage.readError()
@@ -334,11 +333,11 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
     withWebDriver { implicit driver =>
       withSignIn(user) { workspaceListPage =>
         // Looks restricted; implies in workspace list
-        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+        eventually { workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true }
 
         // Clicking opens request access modal
         workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-        workspaceListPage.showsRequestAccessModal() shouldEqual true
+        eventually { workspaceListPage.showsRequestAccessModal() shouldEqual true }
         // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
         Thread sleep 500
         new RequestAccessModal().cancel()
@@ -354,7 +353,7 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
     withWebDriver { implicit driver =>
       withSignIn(user) { workspaceListPage =>
         // Looks restricted; implies in workspace list
-        workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true
+        eventually { workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true }
 
         // Clicking opens workspace
         workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()

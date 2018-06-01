@@ -7,6 +7,8 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Page class for the page displayed when accessing FireCloud when not signed in.
   */
@@ -65,7 +67,21 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 
   def awaitLoaded(): GoogleSignInPopup = {
-    await condition (text("to continue to").findElement.isDefined || text("...").findElement.isDefined)
+
+    val popupTrial = Try {
+      await condition  (id("identifierLink").findElement.isDefined || (id("identifierId").findElement.isDefined))
+    }
+
+    popupTrial match {
+      case Success(_) =>
+        val chooseAccountLink = find(id("identifierLink")).isDefined
+        if (chooseAccountLink) {
+          click on (id("identifierLink"))
+          await visible id("identifierId")
+        }
+      case Failure(t) => throw new TimeoutException("Timed out (30 seconds) waiting for Google SignIn Popup.", t)
+    }
+
     this
   }
 
@@ -73,7 +89,6 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * Signs in to Google to authenticate for FireCloud.
     */
   def signIn(email: String, password: String): Unit = {
-    val chooseAccount = find(id("identifierLink")).filter(_.isDisplayed) foreach { click on _ }
 
     await enabled id("identifierId")
     emailField(id("identifierId")).value = email
@@ -84,9 +99,9 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     /*
      * The log-in pane animation is sometimes delayed or takes while during which the password field flips between
      * enabled and disabled. While it's not great to sleep for a fixed amount of time, we have very little ability to
-     * do anything better. From experimentation, 300ms isn't quite enough but 500ms seems to do it.
+     * do anything better. From experimentation, 300ms isn't quite enough but 1000s seems to do it.
      */
-    Thread sleep 500
+    Thread sleep 1000
     pwdField(name("password")).value = password
     pressKeys("\n")
 

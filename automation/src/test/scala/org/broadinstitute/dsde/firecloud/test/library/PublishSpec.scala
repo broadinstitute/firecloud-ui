@@ -11,13 +11,16 @@ import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixt
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
 class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with Matchers {
+
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val autocompleteTextQueryPrefix: String = "cance"  // partial string of "cancer" to test autocomplete
   val minNumOfResults: Int = 5
@@ -35,7 +38,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 withSignIn(curatorUser) { _ =>
                   val page = new WorkspaceSummaryPage(billingProject, wsName).open
                   val messageModal = page.clickPublishButton(expectSuccess = false)
-                  messageModal.isVisible shouldBe true
+                  eventually { messageModal.isVisible shouldBe true }
                   messageModal.clickOk()
                 }
               }
@@ -54,7 +57,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               withWebDriver { implicit driver =>
                 withSignIn(curatorUser) { wsList =>
                   val page = new WorkspaceSummaryPage(billingProject, wsName).open
-                  page.hasPublishButton shouldBe true
+                  eventually { page.hasPublishButton shouldBe true }
                 }
               }
             }
@@ -77,8 +80,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               withWebDriver { implicit driver =>
                 withSignIn(curatorUser) { _ =>
                   val page = new DataLibraryPage().open
-                  page.doSearch(wsName)
-                  page.hasDataset(wsName) shouldBe true
+                  eventually {
+                    page.doSearch(wsName)
+                    page.hasDataset(wsName) shouldBe true
+                  }
                 }
               }
             }
@@ -112,7 +117,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                     else Some(false)
                   }) match {
                     case None => fail()
-                    case Some(s) => s shouldBe false
+                    case Some(s) => eventually { s shouldBe false }
                   }
                 }
               }
@@ -139,10 +144,10 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                     val clonedWsName = wsName + "_clone"
                     register cleanUp api.workspaces.delete(billingProject, clonedWsName)
                     wspage.cloneWorkspace(billingProject, clonedWsName)
-                    wspage.hasPublishButton shouldBe true // this will fail if the Unpublish button is displayed.
+                    eventually { wspage.hasPublishButton shouldBe true } // this will fail if the Unpublish button is displayed.
                   val page = new DataLibraryPage().open
                     page.doSearch(wsName)
-                    page.hasDataset(clonedWsName) shouldBe false
+                    eventually { page.hasDataset(clonedWsName) shouldBe false }
                   }
                 }
               }
@@ -176,7 +181,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                     //navigating to the 3rd page and making sure that value displayed is "All users".
                     //In swagger you make sure that getDiscoverableGroup endpoint shows []
                     val accessGroup = Orchestration.library.getDiscoverableGroups(billingProject, workspaceNameCloned)
-                    accessGroup.size shouldBe 0
+                    eventually { accessGroup.size shouldBe 0 }
                   }
                 }
               }
@@ -199,7 +204,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
               withWebDriver { implicit driver =>
                 withSignIn(studentUser) { _ =>
                   val page = new WorkspaceSummaryPage(billingProject, wsName).open
-                  page.hasPublishButton shouldBe false
+                  eventually { page.hasPublishButton shouldBe false }
                 }
               }
             }
@@ -233,14 +238,16 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                 withWebDriver { implicit driver =>
                   withSignIn(studentUser) { _ =>
                     val page = new DataLibraryPage().open
-                    page.doSearch(wsName)
-                    page.hasDataset(wsName) shouldBe true
+                    eventually {
+                      page.doSearch(wsName)
+                      page.hasDataset(wsName) shouldBe true
+                    }
                     page.openDataset(wsName)
                     //verify that Request Access modal is shown
                     val requestAccessModal = page.RequestAccessModal()
-                    requestAccessModal.isVisible shouldBe true
+                    eventually { requestAccessModal.isVisible shouldBe true }
                     //verify that 'access to TCGA' text is being displayed
-                    requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText)
+                    eventually {  requestAccessModal.getMessageText should include(requestAccessModal.tcgaAccessText) }
                     requestAccessModal.clickOk()
                   }
                 }
@@ -257,14 +264,12 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
       val user = UserPool.chooseAnyUser
       // there is no need for an auth token for this test, except that the api wrapper expects one
       implicit val authToken: AuthToken = user.makeAuthToken()
-      val result = api.library.duosAutocomplete(autocompleteTextQueryPrefix)
-      val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
-      println(resultCount)
-      resultCount should be > minNumOfResults
+      eventually {
+        val result = api.library.duosAutocomplete(autocompleteTextQueryPrefix)
+        val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
+        resultCount should be > minNumOfResults
+      }
     }
   }
+
 }
-
-
-
-

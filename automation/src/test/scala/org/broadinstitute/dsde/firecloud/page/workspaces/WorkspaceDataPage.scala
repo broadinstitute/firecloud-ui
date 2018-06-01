@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import java.io.File
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
 import org.broadinstitute.dsde.workbench.config.Config
@@ -10,19 +11,16 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.Eventually._
 import org.scalatest.selenium.Page
-import org.scalatest.time.{Seconds, Span}
+import org.scalatest.time.{Millis, Seconds, Span}
 
 
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] with Eventually {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
 
+  implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
-
-  implicit override val patienceConfig = {
-    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(1, Seconds)))
-  }
 
   override def awaitReady(): Unit = {
     dataTable.awaitReady()
@@ -65,7 +63,8 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       eventually {
         assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
-      val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
+
+      val date = DateTimeFormatter.ofPattern(dateFormatPatter).format(LocalDateTime.now())
       val destFile = new File(sourcePath).getName + s".$date"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
@@ -89,6 +88,8 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       entityType <- find(CssSelectorQuery(downloadMetadataButton.query.queryString)).get.attribute("data-entity-type")
     } yield archiveDownloadedFile(s"$path/$entityType.txt")
   }
+
+  lazy val dateFormatPatter = "HH:mm:ss:N" // with nano seconds
 
   def getNumberOfParticipants: Int = {
     // TODO: click on the tab and read the actual table size

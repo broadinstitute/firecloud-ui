@@ -13,7 +13,7 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.scalatest._
 
 class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Matchers
-  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with BillingFixtures {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
   val authTokenOwner: AuthToken = projectOwner.makeAuthToken()
@@ -55,7 +55,7 @@ class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Match
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withCleanBillingProject(projectOwner) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceReaderSpec_readAccess_launchAnalysis", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
             api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
             withWebDriver { implicit driver =>
               withSignIn(user) { listPage =>
@@ -76,7 +76,7 @@ class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Match
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         withCleanBillingProject(projectOwner) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_readAccess", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceReaderSpec_readAccess_importConfig", Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.withName("READER")))) { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user) { _ =>
                 val methodConfigListPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
@@ -89,7 +89,7 @@ class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Match
       "should not see any of the Project Cost section of the summary page" in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
-        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        val testName = "WorkspaceReaderSpec_writerAccess_projectCost"
         withCleanBillingProject(projectOwner) { billingProject =>
           withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Reader, Some(false), Some(false)))) { workspaceName =>
             withWebDriver { implicit driver =>

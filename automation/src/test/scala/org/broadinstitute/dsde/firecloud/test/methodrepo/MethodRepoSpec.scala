@@ -2,7 +2,6 @@ package org.broadinstitute.dsde.firecloud.test.methodrepo
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
-import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodData, MethodFixtures, WorkspaceFixtures}
@@ -17,28 +16,32 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   implicit val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
-    "should be able to create a method and see it in the table" taggedAs Tags.SmokeTest in withWebDriver { implicit driver =>
-      withSignIn(ownerUser) { _ =>
-        val methodRepoPage = new MethodRepoPage().open
+    "should be able to create a method and see it in the table" in {
+      withCleanUp {
+        withWebDriver { implicit driver =>
+          withSignIn(ownerUser) { _ =>
+            val methodRepoPage = new MethodRepoPage().open
 
-        // create it
-        val name = "TEST-CREATE-" + randomUuid
-        val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name) + ("documentation" -> "documentation")
-        val namespace = attributes("namespace")
-        methodRepoPage.createNewMethod(attributes)
-        register cleanUp api.methods.redact(namespace, name, 1)
+            // create it
+            val name = "TEST-CREATE-" + randomUuid
+            val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name) + ("documentation" -> "documentation")
+            val namespace = attributes("namespace")
+            methodRepoPage.createNewMethod(attributes)
+            register cleanUp api.methods.redact(namespace, name, 1)
 
-        // go back to the method repo page and verify that it's in the table
-        methodRepoPage.open
-        methodRepoPage.methodRepoTable.goToTab("My Methods")
-        methodRepoPage.methodRepoTable.filter(name)
+            // go back to the method repo page and verify that it's in the table
+            methodRepoPage.open
+            methodRepoPage.methodRepoTable.goToTab("My Methods")
+            methodRepoPage.methodRepoTable.filter(name)
 
-        methodRepoPage.methodRepoTable.hasMethod(namespace, name) shouldBe true
+            methodRepoPage.methodRepoTable.hasMethod(namespace, name) shouldBe true
+          }
+        }
       }
     }
 
     "should be able to redact a method that they own" in {
-      withMethod( "TEST-REDACT-" ) { case (name,namespace)=>
+      withMethod( "TEST-REDACT" ) { case (name,namespace)=>
         withWebDriver { implicit driver =>
           withSignIn(ownerUser) { workspaceListPage =>
             val methodRepoPage = workspaceListPage.goToMethodRepository()

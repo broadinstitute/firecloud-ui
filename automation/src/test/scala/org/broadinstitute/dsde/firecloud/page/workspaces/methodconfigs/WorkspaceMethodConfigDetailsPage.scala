@@ -1,13 +1,14 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
 
@@ -33,35 +34,49 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
 
-  def clickLaunchAnalysis(): Unit = {
+  def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
     Try(
-      // after click, expect to find either a Message or Analysis Modal. If not found, retry click
-      await condition (find(CssSelectorQuery(".broadinstitute-modal-open")).nonEmpty, 5)
+      page.awaitReady() // check if click happened
     ) match {
-      case Failure(e) =>
-        logger.warn(s"clickLaunchAnalysis failed. Retrying click button: ${openLaunchAnalysisModalButton.query}")
+      case Failure(e) => // click failed
+        // TODO remove after proving it worked
+        logger.warn(s"clickLaunchAnalysis Failure. Retrying click button: ${openLaunchAnalysisModalButton.query}")
         // retry click
         openLaunchAnalysisModalButton.doClick()
-      case Success(some) =>
-        logger.info("clickLaunchAnalysis success")
+        await ready page
+      case Success(some) => // clicked
+        // TODO remove after proving it worked
+        logger.info("clickLaunchAnalysis Success")
+        page
     }
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
     val launchModal = openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
-    await ready new SubmissionDetailsPage(namespace, name)
+    try {
+      launchModal.awaitDismissed()
+      await ready new SubmissionDetailsPage(namespace, name)
+    } catch {
+      case e: TimeoutException =>
+        if (webDriver.getPageSource.contains("Please select an entity")) {
+          logger.warn(s"Retrying select participant $entityId and click Launch button in Launch Analysis modal")
+          launchModal.searchAndSelectEntity(entityId)
+          launchModal.clickLaunchButton()
+          await ready new SubmissionDetailsPage(namespace, name)
+        } else {
+          throw e
+        }
+    }
   }
 
   def openLaunchAnalysisModal(): LaunchAnalysisModal = {
-    clickLaunchAnalysis()
-    await ready new LaunchAnalysisModal
+    clickLaunchAnalysis(new LaunchAnalysisModal())
   }
 
   def clickLaunchAnalysisButtonError(): MessageModal = {
-    clickLaunchAnalysis()
-    await ready new MessageModal()
+    clickLaunchAnalysis(new MessageModal())
   }
 
   def openEditMode(expectSuccess: Boolean = true): Unit = {
@@ -141,6 +156,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
   private val callCachingCheckbox = Checkbox("call-cache-checkbox" inside this)
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean): Unit = { //Use Option(String) for expression?
+    logger.info(s"Selecting participant $entityId and click Launch button in Launch Analysis modal")
     filterRootEntityType(rootEntityType)
     searchAndSelectEntity(entityId)
     if (!expression.isEmpty) { fillExpressionField(expression) }

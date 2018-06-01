@@ -4,9 +4,13 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.scalatest.concurrent.Eventually
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers {
+class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers with Eventually {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   "Profile page" - {
     "should show the user's proxy group" in withWebDriver { implicit driver =>
@@ -15,11 +19,11 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
         val profilePage = new ProfilePage().open
 
         val username = user.email.split("@").head
-/* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
+        /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
         profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
-*/
-        profilePage.readProxyGroupEmail should endWith ("firecloud.org")
-/**/
+        */
+        eventually { profilePage.readProxyGroupEmail should endWith ("firecloud.org") }
+
       }
     }
   }

@@ -10,9 +10,10 @@ import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
+import org.scalatest.concurrent.Eventually
 
-class MethodRedactedSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodRedactedSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers with WebBrowserSpec with WorkspaceFixtures
+  with UserFixtures with MethodFixtures with BillingFixtures with Eventually {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 
@@ -32,7 +33,7 @@ class MethodRedactedSpec extends FreeSpec with ParallelTestExecution with Matche
               withSignIn(user) { _ =>
                 val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
                 methodConfigDetailsPage.openEditMode()
-                methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled"
+                eventually { methodConfigDetailsPage.checkSaveButtonState shouldEqual "disabled" }
                 methodConfigDetailsPage.saveEdits(expectSuccess = false)
                 val modal = await ready new MessageModal()
                 modal.isVisible shouldBe true

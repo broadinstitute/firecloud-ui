@@ -60,7 +60,9 @@ class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message
 
 class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
 
-class ConfirmModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal")
+class ConfirmModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal") {
+  def getMessageText: String = content.getText
+}
 
 class GCSFilePreviewModal(implicit webDriver: WebDriver) extends OKCancelModal("preview-modal") with SignalsReadiness {
   private val googleBucket = Label("google-bucket-content" inside this)

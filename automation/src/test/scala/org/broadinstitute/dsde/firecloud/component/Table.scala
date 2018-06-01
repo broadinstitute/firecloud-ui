@@ -48,15 +48,20 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
     if (text.isEmpty || !isEmpty()) {
       filterField.setText(text)
       clickFilterButton()
+      try {
+        await condition (filterField.query.element.underlying.getAttribute("value") == text, 2)
+      } catch {
+        case _: Exception => logger.warn(s"timed out (2 seconds) waiting for filter textfield's attribute == ${text}")
+      }
     }
   }
 
   def clickFilterButton(): Unit = {
     filterButton.doClick()
-    // allows 2 second to wait for data-test-state changed to "Loading" quickly
-    // ensure awaitReady() executes only after state of "loading"
+    // waiting up to 1 second for data-test-state change to "Loading". some tables don't change data-test-state at all
+    // to avoid race condition with table.awaitReady()
     try {
-      await condition(getState == "loading", 2)
+      await condition(getState == "loading", 1)
     } catch {
       case _: Exception => // ignore timeout exception
     }

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
+import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.workbench.config.Config
@@ -7,6 +8,8 @@ import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
+
+import scala.util.{Failure, Success, Try}
 
 
 class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: WebDriver)
@@ -31,7 +34,21 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
   def openSubmission(submissionId: String): Unit = {
     if (Link("submission-id").isVisible)
       goToMonitorTab()
-    submissionLink(submissionId).doClick()
-    await ready new SubmissionDetailsPage(namespace, name, submissionId)
+    clickSubmissionLink(submissionId, new SubmissionDetailsPage(namespace, name, submissionId))
   }
+
+  private def clickSubmissionLink[T <: FireCloudView](submissionId: String, page: T): T = {
+    submissionLink(submissionId).doClick()
+    Try {
+      await ready page
+    } match {
+      case Failure(e) => // click failed
+        logger.warn(s"clickSubmissionLink Failure. Retrying click submission link: submission-$submissionId}")
+        submissionLink(submissionId).doClick()
+        await ready page
+      case Success(some) => // clicked
+        page
+    }
+  }
+
 }
