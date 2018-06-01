@@ -50,7 +50,9 @@
       {:header "Data Entity" :initial-width 220
        :column-data (comp (juxt :entityName :entityType) :submissionEntity)
        :as-text (fn [[entity-name entity-type]]
-                  (str entity-name " (" entity-type ")"))}
+                  (if entity-type
+                    (str entity-name " (" entity-type ")")
+                    "N/A"))}
       {:header "Submitted By" :initial-width 220 :column-data :submitter}
       {:header "Submission ID" :initial-width 235 :column-data :submissionId
        :render (fn [submission-id]
