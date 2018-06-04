@@ -54,33 +54,46 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [creating? server-error validation-errors]} @state
-           {:keys [clusters]} props]
+           {:keys [cluster-map choose-notebook]} props
+           cluster-name (:cluster-name choose-notebook)
+           cluster-menu-entry (fn [c] (str (:clusterName c) " (" (:status c) ")"))]
        [modals/OKCancelForm
-        {:header "Create Cluster"
-         :dismiss (:dismiss props)
+        {:header "Choose or Create Cluster"
+         :dismiss (:dismiss-cluster-creator props)
          :ok-button {:onClick #(this :-create-or-choose-cluster)}
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
            (when creating? (blocker "Creating cluster..."))
-           [:div {:style {:display "inline-block" :fontSize "112.5%" :fontWeight 500}} "Choose a cluster"]
-           (dropdown/render-dropdown-menu
-            {:label
-             [:div {}
-              [:div {:style {:borderRadius 2 :display "inline-block"
-                             :margin-left 50 :width 200
-                             :backgroundColor "#fff"
-                             :padding "0.5rem" :border style/standard-line}
-                     :data-test-id "cluster-dropdown"}
-               [:span {} (if-let [sel (:selected-cluster-name @state)] sel "Select a cluster")]
-               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
-             :width :auto
-             :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
-             :items (map (fn [{:keys [clusterName status]} c]
-                           {:text [:span {:style {:display "inline-flex"}} (str clusterName (if (nil? status) "" (str " (" status ")")))]
-                            :dismiss #(swap! state assoc :selected-cluster-name clusterName)})
-                         clusters)})
-           [:div {:style {:fontSize "112.5%" :fontWeight 500 :textAlign :center :marginTop 20 :marginBottom 20 :color "blue"}} "OR"]
+           [Collapse
+            {:data-test-id "choose-cluster"
+             :style {:marginLeft -20} :default-hidden? false
+             :title [:span {:style {:display "inline-block" :fontSize "112.5%" :fontWeight 500}} "Choose a cluster"]
+             :contents
+             (react/create-element
+              (style/create-identity-select {:data-test-id "cluster-select" :ref "clusterSelect"
+                                             :style {:width "100%" :marginRight "4%" :marginTop 25}
+                                             :default-value (when-not (nil? cluster-name) (cluster-menu-entry (get cluster-map cluster-name)))}
+                                           (map cluster-menu-entry (vals cluster-map))))}]
+
+
+           ;    (dropdown/render-dropdown-menu
+           ;    {:label
+           ;    [:div {}
+           ;    [:div {:style {:borderRadius 2 :display "inline-block"
+           ;                 :margin-left 50 :width 200
+           ;                   :backgroundColor "#fff"
+           ;                   :padding "0.5rem" :border style/standard-line}
+        ;           :data-test-id "cluster-dropdown"}
+           ;     [:span {} (if-let [sel (:selected-cluster-name @state)] sel "Select a cluster")]
+           ;     [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
+           ;     :width :auto
+           ;     :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
+           ;    :items (map (fn [{:keys [clusterName status]} c]
+           ;                 {:text [:span {:style {:display "inline-flex"}} (str clusterName (if (nil? status) "" (str " (" status ")")))]
+           ;                   :dismiss #(swap! state assoc :selected-cluster-name clusterName)})
+           ;                clusters)})
+           [:div {:style {:fontSize "112.5%" :fontWeight 500 :marginTop 20 :marginBottom 20 :color "blue"}} "OR"]
            [Collapse
             {:data-test-id "create-cluster"
              :style {:marginLeft -20} :default-hidden? true
@@ -190,19 +203,19 @@
            (style/create-validation-error-message validation-errors)])}]))
 
    :-create-or-choose-cluster
-   (fn [{:keys [props state this]}]
-     (let [{:keys [selected-cluster-name]} @state]
-       (if (nil? selected-cluster-name)
-         (this :-create-cluster)
-         (this :-choose-cluster))))
+   (fn [{:keys [refs this]}]
+     (let [clusterNameCreate (input/get-text refs "clusterNameCreate")]
+       (if (string/blank? clusterNameCreate)
+         (this :-choose-cluster)
+         (this :-create-cluster))))
 
    :-choose-cluster
-   (fn [{:keys [props state this]}]
-     (let [{:keys [selected-cluster-name]} @state
-           {:keys [clusters]} props]
+   (fn [{:keys [props refs]}]
+     (let [selectedCluster (.-value (@refs "clusterSelect"))
+           selectecClusterName (first (clojure.string/split selectedCluster #" "))]
        (do
-         ((:choose-cluster props) selected-cluster-name)
-         ((:dismiss props)))))
+         ((:choose-cluster props) selectecClusterName)
+         ((:dismiss-cluster-creator props)))))
 
    :-create-cluster
    (fn [{:keys [this state refs props]}]
@@ -224,9 +237,8 @@
                           (swap! state dissoc :creating?)
                           (if success?
                             (do
-                              (js/alert clusterNameCreate)
                               ((:choose-cluster props) clusterNameCreate)
-                              ((:dismiss props)))
+                              ((:dismiss-cluster-creator props)))
                             (swap! state assoc :server-error (get-parsed-response false))))})))))
    :-process-labels
    (fn [{:keys [state]}]

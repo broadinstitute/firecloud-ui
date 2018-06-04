@@ -23,7 +23,10 @@
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.common.input :as input]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.page.workspace.notebooks.create_notebook :refer [NotebookCreator]]
    [broadfcui.page.workspace.notebooks.create_cluster :refer [ClusterCreator]]
+   [broadfcui.page.workspace.notebooks.delete_cluster :refer [ClusterDeleter]]
+   [broadfcui.page.workspace.notebooks.cluster_details :refer [ClusterDetails]]
    [clojure.string :as string]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    ))
@@ -61,14 +64,21 @@
 (react/defc NotebooksTable
   {:render
    (fn [{:keys [state props this]}]
-     (let [{:keys [show-cluster-choose-dialog?]} @state
+     (let [{:keys [show-cluster-choose-dialog? choose-notebook]} @state
            {:keys [notebooks cluster-map toolbar-items]} props]
        ;  (js/alert (str "cluster map is " cluster-map))
        [:div {}
         (when show-cluster-choose-dialog?
-          [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-cluster-choose-dialog?)
-                                       :clusters (vals cluster-map)
+          [ClusterCreator (assoc props :dismiss-cluster-creator #(swap! state dissoc :show-cluster-choose-dialog?)
+                                       :cluster-map cluster-map
+                                       :choose-notebook choose-notebook
                                        :choose-cluster #(this :-choose-cluster %))])
+        (when (:show-cluster-delete-dialog? @state)
+          [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-cluster-delete-dialog?)
+                                       :cluster-to-delete (:cluster-to-delete @state))])
+        (when (:show-cluster-details-dialog? @state)
+          [ClusterDetails (assoc props :dismiss #(swap! state dissoc :show-cluster-details-dialog?)
+                                       :cluster-to-display-details (:cluster-to-display-details @state))])
         [Table
          {:data-test-id "notebooks-table" :data notebooks
           :body
@@ -81,7 +91,16 @@
              :resizable? false :sortable? false :filterable? false :hidden? true
              :as-text :name :sort-by :name
              :render
-             (fn [] (icons/render-icon {} :ellipsis-v))}
+             (fn [notebook]
+               (dropdown/render-dropdown-menu
+                {:label
+                 (icons/render-icon {} :ellipsis-v)
+                 :width 100
+                 :button-style {:height :auto :marginRight "0.5rem" :marginBottom "0.4rem"}
+                 :items
+                 [{:text [:span {:style {:display "inline-flex"}} "Rename"]}
+                  {:text [:span {:style {:display "inline-flex"}} "Duplicate"]}
+                  {:text [:span {:style {:display "inline-flex"}} "Delete"]}]}))}
             {:header "Name" :initial-width 250
              :as-text :name :sort-by :name :sort-initial :asc
              :render
@@ -97,19 +116,30 @@
                (dropdown/render-dropdown-menu
                 {:label
                  (icons/render-icon {} :settings)
-                 :width 85
+                 :width 100
                  :button-style {:height :auto :marginRight "0.5rem" :marginBottom "0.4rem"}
                  :items
-                 (let [choose-link (links/create-internal
-                                    {:data-test-id (str (:name notebook) "-chooser")
-                                     :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                     :onClick #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
-                                    "Choose...")]
-                   (if (contains? notebook :cluster-name)
-                     [{:text [:span {:style {:display "inline-flex"}} choose-link]}
-                      {:text [:span {:style {:display "inline-flex"}} "Details"]}
-                      {:text [:span {:style {:display "inline-flex"}} "Delete"]}]
-                     [{:text [:span {:style {:display "inline-flex"}} choose-link]}]))}))}
+                 (filter (comp not nil?)
+                         ; Details - displayed when there is a cluster associated in any status
+                         [(when (contains? notebook :cluster-name)
+                            {:text [:span {:style {:display "inline-flex"}} "Details"]
+                             :dismiss #(swap! state assoc :show-cluster-details-dialog? true :cluster-to-display-details (:cluster-name notebook))})
+                          ; Choose - always displayed
+                          {:text [:span {:style {:display "inline-flex"}} "Choose..."]
+                           :dismiss #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
+                          ; Delete - displayed when there is a cluster associated in Running or Stopped status
+                          (when (and (contains? notebook :cluster-name) (contains-statuses [ (get cluster-map (:cluster-name notebook))] ["Running" "Stopped"]))
+                            {:text [:span {:style {:display "inline-flex"}} "Delete"]
+                             :dismiss #(swap! state assoc :show-cluster-delete-dialog? true :cluster-to-delete (:cluster-name notebook))})])}))}
+
+                 ;     (if (contains? notebook :cluster-name)
+                 ;     [{:text [:span {:style {:display "inline-flex"}} "Details"]}
+                 ;    {:text [:span {:style {:display "inline-flex"}} "Choose..."]
+                 ;     :dismiss #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
+                 ;    {:text [:span {:style {:display "inline-flex"}} "Delete"]
+                 ;     :dismiss #(swap! state assoc :show-cluster-delete-dialog? true :cluster-to-delete (:cluster-name notebook))}]
+                 ;   [{:text [:span {:style {:display "inline-flex"}} "Choose..."]
+                 ;     :dismiss #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}])}))}
 
             ;    (if-let [cluster (:cluster notebook)]
             ;     (links/create-internal
@@ -122,26 +152,24 @@
              :render
              (fn [notebook]
                (let [workspace-name (get-in props [:workspace :workspace :name])]
-                 (if-let [cluster-name (:cluster-name notebook)]
-                   (let [cluster (get cluster-map cluster-name)]
-                     (if (= (:status cluster) "Running")
-                       (links/create-external {:data-test-id (str (:clusterName cluster) "-link")
-                                               :href (leo-notebook-url cluster workspace-name notebook)} (:clusterName cluster))
-                       (:clusterName cluster)))
+                 (if-let [cluster (get cluster-map (:cluster-name notebook))]
+                   (if (= (:status cluster) "Running")
+                     (links/create-external {:data-test-id (str (:clusterName cluster) "-link")
+                                             :href (leo-notebook-url cluster workspace-name notebook)} (:clusterName cluster))
+                     (:clusterName cluster))
                    "<not set>")))}
 
-                 ;    (links/create-internal
-                 ;   {:data-test-id (str (:name notebook) "-chooser")
-                 ;    :style {:textDecoration "none" :color (:button-primary style/colors)}
-                 ;   :onClick #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
-                 ;   "Choose...")))}
+            ;    (links/create-internal
+            ;   {:data-test-id (str (:name notebook) "-chooser")
+            ;    :style {:textDecoration "none" :color (:button-primary style/colors)}
+            ;   :onClick #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
+            ;   "Choose...")))}
             {:header "Status" :initial-width 150
              :as-text :name :sort-by :name
              :render
              (fn [notebook]
-               (if-let [cluster-name (:cluster-name notebook)]
-                 (let [cluster (get cluster-map cluster-name)]
-                   (this :-render-cluster-status cluster))))}]}
+               (if-let [cluster (get cluster-map (:cluster-name notebook))]
+                 (this :-render-cluster-status cluster)))}]}
           :toolbar {:get-items (constantly toolbar-items)}}]]))
 
    :-render-cluster-status
@@ -149,9 +177,9 @@
      (let [clusterNameStatusId (str (:clusterName cluster) "-status")
            cluster-map (:cluster-map props)
            stop-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
-                                                      :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                                      :onClick #((:stop-cluster props) cluster)}
-                                                     pause-icon)
+                                                     :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                                     :onClick #((:stop-cluster props) cluster)}
+                                                    pause-icon)
            start-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
                                                       :style {:textDecoration "none" :color (:button-primary style/colors)}
                                                       :onClick #((:start-cluster props) cluster)}
@@ -163,11 +191,11 @@
        [:div {:key (when cluster-map (str (gensym))) ;this makes the spinners sync
               :style {:height table-style/table-icon-size}}
         (case (:status cluster)
-         "Error" [:div {:style {:display "inline-flex"}} (moncommon/render-failure-icon) view-error-link]
-         ("Creating" "Updating" "Deleting" "Starting" "Stopping") spinner-icon
-         "Running" [:div {:style {:display "inline-flex"}} (moncommon/render-success-icon) stop-cluster-link]
-         "Stopped" start-cluster-link
-         (moncommon/render-unknown-icon))
+          "Error" [:div {:style {:display "inline-flex"}} (moncommon/render-failure-icon) view-error-link]
+          ("Creating" "Updating" "Deleting" "Starting" "Stopping") spinner-icon
+          "Running" stop-cluster-link
+          "Stopped" start-cluster-link
+          (moncommon/render-unknown-icon))
         [:span {:data-test-id clusterNameStatusId} (:status cluster)]]))
 
    :-choose-cluster
@@ -184,9 +212,12 @@
 
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [server-response cluster-map]} @state
+     (let [{:keys [server-response cluster-map show-create-dialog?]} @state
            {:keys [notebooks server-error]} server-response]
        [:div {:display "inline-flex"}
+        (when show-create-dialog?
+          [NotebookCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
+                                        :reload-after-create #(this :-get-pet-token))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
         [:div {:style {:margin 10 :fontSize "88%"}} "These are your actual notebooks in the workspace"]
         (if server-error
@@ -200,6 +231,7 @@
                :choose-cluster #(this :-assoc-cluster-with-notebook %1 %2)
                :stop-cluster #(this :-stop-cluster %)
                :start-cluster #(this :-start-cluster %)
+               :reload-after-delete #(this :-get-clusters-list %)
                :cluster-map cluster-map
                :notebooks notebooks)]
             [:div {:style {:textAlign "center"}} (spinner "Loading notebooks...")]))]))
@@ -287,8 +319,7 @@
        :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (let [cluster-map (:cluster-map @state)]
-                      (this :-get-clusters-list))
+                    (this :-get-clusters-list)
                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
    :-start-cluster
@@ -314,8 +345,7 @@
                                                            (= (user/get-email) (:creator c)))) (get-parsed-response))
                           filtered-cluster-map (reduce merge (map (fn [c] {(:clusterName c) c}) filtered-clusters))]
                       ; Update the state with the current cluster list
-                      (when-not (= (:cluster-map @state) filtered-cluster-map)
-                        (swap! state assoc :cluster-map filtered-cluster-map))
+                      (this :-update-cluster-map filtered-cluster-map)
                       ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
                       (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
                         (js/setTimeout #(this :-get-clusters-list) 10000))
@@ -350,10 +380,22 @@
                                 (let [json-response (utils/parse-json-string raw-response true)
                                       notebooks (filter (comp #(clojure.string/ends-with? % ".ipynb") :name) (:items json-response))]
                                   (swap! state assoc :server-response {:notebooks notebooks}))
-                                  ;   (when (= 1 (count (:clusters @state)))
-                                  ;    (doseq [notebook notebooks]
-                                  ;      (this :-assoc-cluster-with-notebook notebook (first (:clusters @state))))))
+                                ;   (when (= 1 (count (:clusters @state)))
+                                ;    (doseq [notebook notebooks]
+                                ;      (this :-assoc-cluster-with-notebook notebook (first (:clusters @state))))))
                                 (swap! state assoc :server-response {:server-error raw-response})))})))
+
+   :-update-cluster-map
+   (fn [{:keys [state props this]} new-cluster-map]
+     (let [{:keys [server-response]} @state
+           {:keys [notebooks]} server-response]
+       (when-not (= (:cluster-map @state) new-cluster-map)
+         (swap! state assoc :cluster-map new-cluster-map)
+         (swap! state assoc :server-response {:notebooks (map (fn [n]
+                                                                (if (contains? new-cluster-map (:cluster-name n))
+                                                                  n
+                                                                  (dissoc n :cluster-name)))
+                                                              notebooks)}))))
 
    :-assoc-cluster-with-notebook
    (fn [{:keys [state props this]} notebook cluster-name]
