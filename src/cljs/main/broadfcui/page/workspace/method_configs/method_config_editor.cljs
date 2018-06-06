@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
@@ -274,44 +275,45 @@
                                    :method method
                                    :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                   (utils/restructure redacted? config methods editing? wdl-parse-error))]))
-        (create-section
-         (style/create-detail-well
-          [:div {:style {:display "flex" :font-size "90%"}}
-           [:div {:style {:flex "1 1 60%"}}
-            (when (this :-can-edit?)
-              [:div {} [Checkbox {:label [:span {:style {:font-weight 500 :color "#000"}}
-                                          "Configure inputs/outputs using the Workspace Data Model"
-                                          (dropdown/render-info-box {:text "TODO: Insert info and link here"})]
-                                  :checked? entity-type?
-                                  :disabled? (or (this :-edit-disabled?) (not (seq entity-type-options)))
-                                  :on-change (fn [new-value]
-                                               (if editing?
-                                                 (swap! state assoc :entity-type? new-value)
-                                                 (do (swap! locals assoc :toggle-entity-type? true)
-                                                     (this :-begin-editing))))}]])
-            (if entity-type?
-              [:div {:style {:padding "1rem 1rem 1rem 2rem"}}
-               [:div {:style {:font-weight 500}}
-                "Entity type for input/output referencing:"
-                (dropdown/render-info-box {:text "TODO: Insert info and link here"})]
-               (if editing?
-                 (if (seq entity-type-options)
-                   (style/create-identity-select {:ref "rootentitytype"
-                                                  :data-test-id "edit-method-config-root-entity-type-select"
-                                                  :defaultValue rootEntityType
-                                                  :style {:maxWidth 300}
-                                                  :onChange #(swap! state assoc :autocomplete-list
-                                                                    (build-autocomplete-list
-                                                                     {:workspace-attributes workspace-attributes
-                                                                      :entity-types entity-type-options
-                                                                      :selected-entity-type (.. % -target -value)}))}
-                     (mapv #(name (first %)) entity-type-options)))
-                 [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType])])
-            (when-not (seq entity-type-options)
-              [:div {:style {:padding "1rem 1rem 1rem 2rem" :font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
-           #_[:div {:style {:flex "1 1 40%"}} ; This is here and ready-to-go when we add JSON upload
-            [:div {:style {:fontWeight 500}} "FireCloud Tip"]
-            [:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]]))
+        (when (or (this :-can-edit?) entity-type?)
+          (create-section
+           (style/create-detail-well
+            [:div {:style {:display "flex" :font-size "90%"}}
+             [:div {:style {:flex "1 1 60%"}}
+              (when (this :-can-edit?)
+                [:div {} [Checkbox {:label [:span {:style {:font-weight 500 :color "#000"}}
+                                            "Configure inputs/outputs using the Workspace Data Model"
+                                            (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/quickstart?page=data" :style {:white-space "nowrap"}} "Learn more about Workspace data model")})]
+                                    :checked? entity-type?
+                                    :disabled? (or (this :-edit-disabled?) (not (seq entity-type-options)))
+                                    :on-change (fn [new-value]
+                                                 (if editing?
+                                                   (swap! state assoc :entity-type? new-value)
+                                                   (do (swap! locals assoc :toggle-entity-type? true)
+                                                       (this :-begin-editing))))}]])
+              (if entity-type?
+                [:div {:style {:padding "1rem 1rem 1rem 2rem"}}
+                 [:div {}
+                  [:span {:style {:font-weight 500}} "Entity type for input/output referencing: "]
+                  (when-not editing? rootEntityType)]
+                 (when editing?
+                   (if (seq entity-type-options)
+                     (style/create-identity-select {:ref "rootentitytype"
+                                                    :data-test-id "edit-method-config-root-entity-type-select"
+                                                    :defaultValue rootEntityType
+                                                    :style {:maxWidth 300}
+                                                    :onChange #(swap! state assoc :autocomplete-list
+                                                                      (build-autocomplete-list
+                                                                       {:workspace-attributes workspace-attributes
+                                                                        :entity-types entity-type-options
+                                                                        :selected-entity-type (.. % -target -value)}))}
+                       (mapv #(name (first %)) entity-type-options))))])
+              (when-not (seq entity-type-options)
+                [:div {:style {:padding "1rem 1rem 1rem 2rem" :font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
+             [:div {:style {:flex "1 1 40%"}} ; This is here and ready-to-go when we add JSON upload
+              [:div {:style {:fontWeight 500}} "FireCloud Tip"]
+              [:div {} "A Workspace Data Model is no longer required to launch a workflow."]
+              #_[:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]])))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
