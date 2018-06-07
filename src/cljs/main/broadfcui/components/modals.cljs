@@ -44,6 +44,7 @@
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
+     ;; show-header? option
      (let [{:keys [data-test-id data-test-state header content dismiss button-bar ok-button show-cancel? cancel-text show-close?]} props
            data-test-id (or data-test-id (when (string? header) (text->test-id header "modal")))
            make-test-id (fn [text] (when data-test-id (str data-test-id "-" text)))]
@@ -135,3 +136,11 @@
     :content [:div {:style {:width 500}} text]
     :ok-button confirm
     :dismiss dismiss}])
+
+(defn render-nav-warning [{:keys [dismiss]}]
+ [OKCancelForm
+  {:data-test-id "nav-warning-modal"
+   :header "To Be Removed"
+   :content "Do you want to leave? Changes you made will not be saved."
+   ;; :ok-button ok-button map including text "Leave" and onclick function
+   :dismiss dismiss}])
