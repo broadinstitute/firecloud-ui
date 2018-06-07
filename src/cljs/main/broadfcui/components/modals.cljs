@@ -136,11 +136,3 @@
     :content [:div {:style {:width 500}} text]
     :ok-button confirm
     :dismiss dismiss}])
-
-(defn render-nav-warning [{:keys [dismiss]}]
- [OKCancelForm
-  {:data-test-id "nav-warning-modal"
-   :header "To Be Removed"
-   :content "Do you want to leave? Changes you made will not be saved."
-   ;; :ok-button ok-button map including text "Leave" and onclick function
-   :dismiss dismiss}])

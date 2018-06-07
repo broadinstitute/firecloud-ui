@@ -212,7 +212,8 @@
             methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
         [:div {}
          (blocker (:blocker @state))
-         (when (:show-nav-warning? @state) (modals/render-nav-warning {:dismiss #(swap! state dissoc :show-nav-warning?)}))
+         (when (:show-nav-warning? @state)
+           (if (js/window.confirm "Do you want to leave? Changes you made will not be saved.") false))
          (when (:showing-error-popup? @state)
            (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
          (when-let [error-response (:error-response @state)]
@@ -421,10 +422,8 @@
                                                  :redacted? false)
                                           (swap! state assoc :error (:message (get-parsed-response))))))}))))})))}
   (react-utils/with-window-listeners
-   {"beforeunload"
+   {"popstate"
     (fn [{:keys [state]} e]
-      ;; CHANGE - add :onClick - go to target in new tab
-      ;; is swap! state the right approach?
       (when (:editing? @state)
-        (utils/log "hello")
+        (utils/log e)
         (swap! state assoc :show-nav-warning? true)))})))
