@@ -227,7 +227,7 @@
          (this :-render-main locked?)]]))
    :-render-main
    (fn [{:keys [state this locals props refs]} locked?]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted? entity-type?]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted? entity-type? selected-entity-type]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
            entity-type-options (merge (if rootEntityType {(keyword rootEntityType) {}} {}) entity-types)
@@ -288,7 +288,14 @@
                                     :disabled? (or (this :-edit-disabled?) (not (seq entity-type-options)))
                                     :on-change (fn [new-value]
                                                  (if editing?
-                                                   (swap! state assoc :entity-type? new-value)
+                                                   (swap! state assoc
+                                                          :entity-type? new-value
+                                                          :autocomplete-list (if-not new-value
+                                                                               ()
+                                                                               (build-autocomplete-list
+                                                                                {:workspace-attributes workspace-attributes
+                                                                                 :entity-types entity-type-options
+                                                                                 :selected-entity-type selected-entity-type})))
                                                    (do (swap! locals assoc :toggle-entity-type? true)
                                                        (this :-begin-editing))))}]])
               (if entity-type?
@@ -298,15 +305,16 @@
                   (when-not editing? rootEntityType)]
                  (when editing?
                    (if (seq entity-type-options)
-                     (style/create-identity-select {:ref "rootentitytype"
-                                                    :data-test-id "edit-method-config-root-entity-type-select"
-                                                    :defaultValue rootEntityType
+                     (style/create-identity-select {:data-test-id "edit-method-config-root-entity-type-select"
+                                                    :defaultValue selected-entity-type
                                                     :style {:maxWidth 300}
-                                                    :onChange #(swap! state assoc :autocomplete-list
-                                                                      (build-autocomplete-list
-                                                                       {:workspace-attributes workspace-attributes
-                                                                        :entity-types entity-type-options
-                                                                        :selected-entity-type (.. % -target -value)}))}
+                                                    :onChange #(let [new-entity-type (.. % -target -value)]
+                                                                 (swap! state assoc
+                                                                        :selected-entity-type new-entity-type
+                                                                        :autocomplete-list (build-autocomplete-list
+                                                                                            {:workspace-attributes workspace-attributes
+                                                                                             :entity-types entity-type-options
+                                                                                             :selected-entity-type new-entity-type})))}
                        (mapv #(name (first %)) entity-type-options))))])
               (when-not (seq entity-type-options)
                 [:div {:style {:padding "1rem 1rem 1rem 2rem" :font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
@@ -326,11 +334,16 @@
      (if-not (:entities-loaded? @locals)
        (when (this :-load-entities)
          (this :-begin-editing))
-       (let [{:keys [loaded-config inputs-outputs redacted? entity-type?]} @state
-             {:keys [toggle-entity-type?]} @locals]
+       (let [{:keys [loaded-config inputs-outputs redacted? entity-type? entity-types]} @state
+             {:keys [toggle-entity-type?]} @locals
+             workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+             selected-entity-type (-> loaded-config :methodConfiguration :rootEntityType)]
          ((@refs "IOTables") :start-editing)
          (swap! state assoc
                 :editing? true
+                :selected-entity-type selected-entity-type
+                :autocomplete-list (build-autocomplete-list
+                                    (utils/restructure workspace-attributes entity-types selected-entity-type))
                 :original-config loaded-config
                 :original-inputs-outputs inputs-outputs
                 :original-redacted? redacted?
@@ -355,7 +368,7 @@
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
            name (common/get-trimmed-text refs "confname")
-           root-entity-type (if (:entity-type? @state) (common/get-trimmed-text refs "rootentitytype") nil)
+           root-entity-type (if (:entity-type? @state) (:selected-entity-type @state) nil)
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -384,20 +397,26 @@
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (get-parsed-response)
+                    (let [config (get-parsed-response)
                           fake-inputs-outputs (fn [data]
                                                 (let [method-config (:methodConfiguration data)]
                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
                                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-                      (swap! state assoc :entity-type? (boolean (-> response :methodConfiguration :rootEntityType)))
                       (endpoints/call-ajax-orch
                        {:endpoint endpoints/get-inputs-outputs
-                        :payload (get-in response [:methodConfiguration :methodRepoMethod])
+                        :payload (get-in config [:methodConfiguration :methodRepoMethod])
                         :headers ajax/content-type=json
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
-                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
+                                     (swap! state assoc
+                                            :loaded-config config
+                                            :entity-type? (boolean (-> config :methodConfiguration :rootEntityType))
+                                            :inputs-outputs (get-parsed-response)
+                                            :redacted? false)
+                                     (swap! state assoc
+                                            :loaded-config config
+                                            :inputs-outputs (fake-inputs-outputs config)
+                                            :redacted? true)))}))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -455,9 +474,7 @@
                           selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
                       (swap! locals assoc :entities-loaded? true)
                       (utils/multi-swap! state
-                        (assoc :entity-types entity-types
-                               :autocomplete-list (build-autocomplete-list
-                                                   (utils/restructure workspace-attributes entity-types selected-entity-type)))
+                        (assoc :entity-types entity-types)
                         (dissoc :blocker))
                       success?)
                     ;; FIXME: :data-attribute-load-error is unused
