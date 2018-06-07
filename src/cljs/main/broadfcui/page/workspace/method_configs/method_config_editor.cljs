@@ -212,8 +212,6 @@
             methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])]
         [:div {}
          (blocker (:blocker @state))
-         (when (:show-nav-warning? @state)
-           (if (js/window.confirm "Do you want to leave? Changes you made will not be saved.") false))
          (when (:showing-error-popup? @state)
            (modals/render-error {:text (:wdl-parse-error @state) :dismiss #(swap! state dissoc :showing-error-popup?)}))
          (when-let [error-response (:error-response @state)]
@@ -426,4 +424,4 @@
     (fn [{:keys [state]} e]
       (when (:editing? @state)
         (utils/log e)
-        (swap! state assoc :show-nav-warning? true)))})))
+        (js/window.confirm "Do you want to leave? Changes you made will not be saved.")))})))
