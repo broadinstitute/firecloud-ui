@@ -21,26 +21,24 @@ trait PageUtil[P <: Page] extends FireCloudView with LazyLogging { self: P =>
     */
   def open(implicit webDriver: WebDriver): P = {
     go to this
-    Try {
-      await notVisible (cssSelector("[data-test-id=spinner]"), 60)
-    } match {
+    val result = Try (await notVisible cssSelector("[data-test-id=spinner]"))
+    result match {
       case Success(_) =>
       case Failure(_) =>
         logger.warn(s"Timed out (60 seconds) waiting for spinner to disappear on page. Refreshing page ${this.url}")
         webDriver.navigate().refresh() // reload page
-        await notVisible (cssSelector("[data-test-id=spinner]"), 60) // terminates test if spinner is not going away in retry
+        await notVisible cssSelector("[data-test-id=spinner]") // test terminates if spinner is not going away in retry
     }
-    Try {
-      awaitReady()
-    } match {
-      case Success(_) => logger.info(s"Opened page ${this.url}")
+    Try (awaitReady()) match {
+      case Success(_) =>
       case Failure(_) =>
         logger.warn(s"Timed out ($defaultTimeOutInSeconds seconds) waiting for page ready. Reopening page ${this.url}")
         go to this
-        // test terminate if timeout exception happens again
-        await notVisible (cssSelector("[data-test-id=spinner]"))
-        awaitReady()
+        await notVisible cssSelector("[data-test-id=spinner]")
+        awaitReady() // test terminates if timeout exception happens again
     }
+
+    logger.info(s"Opened page ${this.url}")
     this
   }
 }
