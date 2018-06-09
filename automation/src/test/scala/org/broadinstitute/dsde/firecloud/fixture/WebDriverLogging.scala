@@ -26,6 +26,6 @@ object WebDriverLogging {
   */
 
   implicit case object CanLogSessionId extends CanLog[WebDriver] {
-    override def logMessage(originalMsg: String, driver: WebDriver): String = s"(${driver.asInstanceOf[RemoteWebDriver].getSessionId.toString}) $originalMsg"
+    override def logMessage(originalMsg: String, driver: WebDriver): String = s"[${driver.asInstanceOf[RemoteWebDriver].getSessionId.toString}] $originalMsg"
   }
 }
