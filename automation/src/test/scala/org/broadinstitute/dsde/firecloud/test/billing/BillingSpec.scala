@@ -3,8 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
-import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{WebDriverLogging, TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -13,6 +12,7 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.openqa.selenium.WebDriver
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -20,7 +20,7 @@ import org.scalatest.{FreeSpec, Matchers}
   * Tests related to billing accounts.
   */
 class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
-  with Matchers with WorkspaceFixtures with BillingFixtures with LazyLogging {
+  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverLogging {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
@@ -119,9 +119,9 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     }
   }
 
-  private def createNewBillingProject(user: Credentials, billingPage: BillingManagementPage, trials: Int = 3): String = {
+  private def createNewBillingProject(user: Credentials, billingPage: BillingManagementPage, trials: Int = 3)(implicit driver: WebDriver): String = {
     val billingProjectName = "billing-spec-create-" + makeRandomId()
-    logger.info(s"Creating billing project: $billingProjectName")
+    log.info(s"Creating billing project: $billingProjectName")
 
     billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
     register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(user.makeAuthToken().value), WorkbenchUserId("0"), WorkbenchEmail(user.email), 3600))(UserPool.chooseAdmin.makeAuthToken())
@@ -130,7 +130,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
     statusOption match {
       case None | Some("failure") if trials > 1 =>
-        logger.info(s"failure or timeout creating project $billingProjectName, retrying ${trials-1} more times")
+        log.info(s"failure or timeout creating project $billingProjectName, retrying ${trials-1} more times")
         createNewBillingProject(user, billingPage, trials-1)
       case None =>
         fail(s"timed out waiting billing project $billingProjectName to be ready")
