@@ -6,7 +6,7 @@ object Dependencies {
   val akkaV = "2.5.13"
   val akkaHttpV = "10.1.1"
 
-  val serviceTestV = "0.9-9cca99a-SNAP"
+  val serviceTestV = "0.9-49b96b1"
 
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$scalaBinaryVersion"),
