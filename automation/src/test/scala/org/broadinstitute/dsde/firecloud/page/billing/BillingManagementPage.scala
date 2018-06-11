@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.page.billing
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.fixture.WebDriverLogging
+import org.broadinstitute.dsde.firecloud.fixture.WebDriverIdLogging
 import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.test.RandomUtil
@@ -17,7 +17,7 @@ import scala.concurrent.duration.DurationLong
   * Page class for managing billing projects.
   */
 class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[BillingManagementPage] with WebDriverLogging with RandomUtil {
+  with Page with PageUtil[BillingManagementPage] with WebDriverIdLogging with RandomUtil {
 
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 

@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.broadinstitute.dsde.firecloud.fixture.WebDriverLogging
+import org.broadinstitute.dsde.firecloud.fixture.WebDriverIdLogging
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * Mix-in utilities for ScalaTest's Page.
   */
-trait PageUtil[P <: Page] extends FireCloudView with WebDriverLogging { self: P =>
+trait PageUtil[P <: Page] extends FireCloudView with WebDriverIdLogging { self: P =>
 
   /**
     * Sends the browser to the URL for this Page object. Returns the page

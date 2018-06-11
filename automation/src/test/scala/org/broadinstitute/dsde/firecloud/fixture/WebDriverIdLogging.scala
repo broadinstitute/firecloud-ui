@@ -7,11 +7,11 @@ import org.openqa.selenium.remote.RemoteWebDriver
 /**
   * Write WebDriver SessionId to log for easy troubleshooting
   */
-trait WebDriverLogging {
-  protected val log: LoggerTakingImplicit[WebDriver] = Logger.takingImplicit(getClass)(WebDriverLogging.CanLogSessionId)
+trait WebDriverIdLogging {
+  protected val log: LoggerTakingImplicit[WebDriver] = Logger.takingImplicit(getClass)(WebDriverIdLogging.CanLogSessionId)
 }
 
-object WebDriverLogging {
+object WebDriverIdLogging {
 
   /*
   final class SessionId()(implicit driver: WebDriver) {
@@ -26,6 +26,6 @@ object WebDriverLogging {
   */
 
   implicit case object CanLogSessionId extends CanLog[WebDriver] {
-    override def logMessage(originalMsg: String, driver: WebDriver): String = s"[${driver.asInstanceOf[RemoteWebDriver].getSessionId.toString}] $originalMsg"
+    override def logMessage(originalMsg: String, driver: WebDriver): String = s"$originalMsg - [${driver.asInstanceOf[RemoteWebDriver].getSessionId.toString}]"
   }
 }

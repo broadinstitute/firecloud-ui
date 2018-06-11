@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
-import org.broadinstitute.dsde.firecloud.fixture.{WebDriverLogging, TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{WebDriverIdLogging, TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -20,7 +20,7 @@ import org.scalatest.{FreeSpec, Matchers}
   * Tests related to billing accounts.
   */
 class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
-  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverLogging {
+  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverIdLogging {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
