@@ -109,6 +109,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("
   private val confirmUploadMetadataButton = Button("confirm-upload-metadata-button" inside this)
   private val uploadSuccessMessage = Label("upload-success-message" inside this)
   private val chooseFileButton = Button("choose-file-button" inside this)
+  private val previewText = CssSelectorQuery(this.query.queryString + " pre")
 
   /**
     * Imports metadata from a file.
@@ -116,8 +117,8 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("
   def importFile(file: String): Unit = {
     importFromFileButton.doClick()
     fileUploadInput.selectFile(file)
+    await condition (find(previewText).get.underlying.getText.contains("entity"))
 
-    confirmUploadMetadataButton.awaitEnabledState()
     confirmUploadMetadataButton.doClick()
     confirmUploadMetadataButton.awaitNotVisible()
 
