@@ -261,8 +261,10 @@
                                                    (swap! locals assoc :autocomplete-list (this :-build-autocomplete-list (if new-value selected-entity-type nil)))
                                                    (if editing?
                                                      (swap! state assoc :entity-type? new-value :selected-entity-type selected-entity-type)
-                                                     (do (swap! locals assoc :toggle-entity-type? true)
-                                                         (this :-begin-editing)))))}]])
+                                                     (do
+                                                       ; Can't modify state here. Must wait until actually entering edit mode in order to correctly remember original value to restore on cancel.
+                                                       (swap! locals assoc :toggle-entity-type? true)
+                                                       (this :-begin-editing)))))}]])
               (if entity-type?
                 [:div {:style {:padding "1rem 1rem 1rem 2rem"}}
                  [:div {}
@@ -486,7 +488,7 @@
    :-edit-disabled?
    (fn [{:keys [props state]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
-           redacted? (:redacted? @state)
+           {:keys [redacted? methods]} @state
            methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])
            snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))]
        (cond locked? "The workspace is locked"
