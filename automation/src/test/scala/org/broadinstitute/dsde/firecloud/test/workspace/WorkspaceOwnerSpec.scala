@@ -3,22 +3,23 @@ package org.broadinstitute.dsde.firecloud.test.workspace
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.MethodData.SimpleMethod
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.workbench.service.{AclEntry, RestException, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.workbench.service.test.{RandomUtil, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.{RestException, WorkspaceAccessLevel}
 import org.scalatest._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.util.Try
 
-class WorkspaceOwnerSpec extends FreeSpec with Matchers
-  with WebBrowserSpec with CleanUp
-  with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec
+  with RandomUtil with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
   val authTokenOwner: AuthToken = projectOwner.makeAuthToken()
@@ -41,10 +42,10 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
               register cleanUp api.workspaces.delete(billingProject, workspaceName)
               val detailPage = listPage.createWorkspace(billingProject, workspaceName)
 
-              detailPage.validateWorkspace shouldEqual true
+              eventually { detailPage.validateWorkspace shouldEqual true }
 
               listPage.open
-              listPage.hasWorkspace(billingProject, workspaceName) shouldBe true
+              eventually { listPage.hasWorkspace(billingProject, workspaceName) shouldBe true }
             }
           }
         }
@@ -63,7 +64,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                 workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned)
 
                 listPage.open
-                listPage.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true
+                eventually { listPage.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true }
               }
             }
           }
@@ -72,11 +73,11 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
     }
 
     "who owns a workspace" - {
-      "should be able to delete the workspace" taggedAs Tags.SmokeTest in {
+      "should be able to delete the workspace" in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withCleanBillingProject(user) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_delete", cleanUp = false) { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_delete", cleanUp = false) { workspaceName =>
             // special cleanup because it is expected to fail as it should already be deleted
             register cleanUp Try(api.workspaces.delete(billingProject, workspaceName)).recover {
               case _: RestException =>
@@ -86,7 +87,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 detailPage.deleteWorkspace()
                 listPage.validateLocation()
-                listPage.hasWorkspace(billingProject, workspaceName) shouldBe false
+                eventually { listPage.hasWorkspace(billingProject, workspaceName) shouldBe false }
               }
             }
           }
@@ -102,8 +103,8 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
               withWebDriver { implicit driver =>
                 withSignIn(projectOwner) { listPage =>
                   val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-                  workspacePage.hasGoogleBillingLink shouldBe true
-                  workspacePage.hasStorageCostEstimate shouldBe true
+                  eventually { workspacePage.hasGoogleBillingLink shouldBe true }
+                  eventually { workspacePage.hasStorageCostEstimate shouldBe true }
                 }
               }
             }
@@ -115,7 +116,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceSpec_shareWorkspace") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -123,7 +124,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
               }
               withSignIn(user2) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
-                detailPage2.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader
+               eventually { detailPage2.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader }
               }
             }
           }
@@ -134,7 +135,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_sharePermission") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -142,7 +143,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
               }
               withSignIn(user2) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
-                detailPage2.hasShareButton shouldBe true
+                eventually { detailPage2.hasShareButton shouldBe true }
               }
             }
           }
@@ -153,15 +154,15 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_shareCompute") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
-                aclEditor.canComputeBox.isEnabled shouldBe true
-                aclEditor.canComputeBox.isChecked shouldBe true
-                aclEditor.canComputeBox.ensureUnchecked()
-                aclEditor.canComputeBox.isChecked shouldBe false
+                eventually { aclEditor.canComputeBox.isEnabled shouldBe true }
+                eventually { aclEditor.canComputeBox.isChecked shouldBe true }
+                eventually { aclEditor.canComputeBox.ensureUnchecked() }
+                eventually { aclEditor.canComputeBox.isChecked shouldBe false }
                 aclEditor.cancel()
               }
             }
@@ -173,15 +174,15 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_canCompute") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_canCompute") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
-                aclEditor.canComputeBox.isChecked shouldBe true
+                eventually { aclEditor.canComputeBox.isChecked shouldBe true }
                 aclEditor.updateAccess("READER")
-                aclEditor.canComputeBox.isChecked shouldBe false
-                aclEditor.canComputeBox.isEnabled shouldBe false
+                eventually { aclEditor.canComputeBox.isChecked shouldBe false }
+                  eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
                 aclEditor.cancel()
               }
             }
@@ -193,17 +194,17 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_noAccess") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_noAccess") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "WRITER")
-                aclEditor.canComputeBox.isChecked shouldBe true
+                eventually { aclEditor.canComputeBox.isChecked shouldBe true }
                 aclEditor.updateAccess("NO ACCESS")
-                aclEditor.canComputeBox.isChecked shouldBe false
-                aclEditor.canComputeBox.isEnabled shouldBe false
-                aclEditor.canShareBox.isChecked shouldBe false
-                aclEditor.canShareBox.isEnabled shouldBe false
+                eventually { aclEditor.canComputeBox.isChecked shouldBe false }
+                eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
+                eventually { aclEditor.canShareBox.isChecked shouldBe false }
+                eventually { aclEditor.canShareBox.isEnabled shouldBe false }
                 aclEditor.cancel()
               }
             }
@@ -215,7 +216,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_noComputeOwner") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
@@ -223,8 +224,8 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "OWNER")
-                aclEditor.canComputeBox.isEnabled shouldBe false
-                aclEditor.canComputeBox.isChecked shouldBe true
+                eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
+                  eventually { aclEditor.canComputeBox.isChecked shouldBe true }
                 aclEditor.cancel()
               }
             }
@@ -237,7 +238,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val Seq(user1, user2) = UserPool.chooseStudents(2)
         implicit val authToken: AuthToken = user1.makeAuthToken()
         withCleanBillingProject(user1) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_share") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_noComputerReader") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
@@ -245,8 +246,8 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                   SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "READER")
-                aclEditor.canComputeBox.isEnabled shouldBe false
-                aclEditor.canComputeBox.isChecked shouldBe false
+                eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
+                  eventually { aclEditor.canComputeBox.isChecked shouldBe false }
                 aclEditor.cancel()
               }
             }
@@ -259,7 +260,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withCleanBillingProject(user) { billingProject =>
-          withWorkspace(billingProject, "WorkspaceSpec_add_ws_attrs") { workspaceName =>
+          withWorkspace(billingProject, "WorkspaceOwnerSpec_add_attrs") { workspaceName =>
             withWebDriver { implicit driver =>
               withSignIn(user) { listPage =>
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -271,7 +272,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                 }
 
                 // TODO: ensure sort, for now it's default sorted by key, ascending
-                detailPage.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z"))
+                eventually { detailPage.readWorkspaceTable shouldBe List(List("a", "X"), List("b", "Y"), List("c", "Z")) }
               }
             }
           }
@@ -285,7 +286,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
           withCleanBillingProject(user) { billingProject =>
-            withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            withWorkspace(billingProject, "WorkspaceOwnerSpec_del_attrs_fromTop", attributes = Some(testAttributes)) { workspaceName =>
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
                   val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -294,7 +295,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                     detailPage.deleteWorkspaceAttribute("A-key")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("B-key", "B value"), List("C-key", "C value")) }
                 }
               }
             }
@@ -306,7 +307,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
           withCleanBillingProject(user) { billingProject =>
-            withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            withWorkspace(billingProject, "WorkspaceOwnerSpec_del_attrs_fromMiddle", attributes = Some(testAttributes)) { workspaceName =>
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
                   val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -315,7 +316,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                     detailPage.deleteWorkspaceAttribute("B-key")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("C-key", "C value")) }
                 }
               }
             }
@@ -327,7 +328,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
           withCleanBillingProject(user) { billingProject =>
-            withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs", attributes = Some(testAttributes)) { workspaceName =>
+            withWorkspace(billingProject, "WorkspaceOwnerSpec_del_attrs_fromBottom", attributes = Some(testAttributes)) { workspaceName =>
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
                   val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -336,7 +337,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                     detailPage.deleteWorkspaceAttribute("C-key")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("A-key", "A value"), List("B-key", "B value")) }
                 }
               }
             }
@@ -348,7 +349,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
           withCleanBillingProject(user) { billingProject =>
-            withWorkspace(billingProject, "WorkspaceSpec_del_ws_attrs") { workspaceName =>
+            withWorkspace(billingProject, "WorkspaceOwnerSpec_del_attrs_afterAdd") { workspaceName =>
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
                   val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
@@ -359,25 +360,25 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers
                     detailPage.addWorkspaceAttribute("c", "Y")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y")) }
 
                   detailPage.edit {
                     detailPage.addWorkspaceAttribute("d", "Z")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("c", "Y"), List("d", "Z")) }
 
                   detailPage.edit {
                     detailPage.deleteWorkspaceAttribute("c")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("b", "X"), List("d", "Z")) }
 
                   detailPage.edit {
                     detailPage.deleteWorkspaceAttribute("b")
                   }
 
-                  detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z"))
+                  eventually { detailPage.readWorkspaceTable shouldBe List(List("a", "W"), List("d", "Z")) }
                 }
               }
             }

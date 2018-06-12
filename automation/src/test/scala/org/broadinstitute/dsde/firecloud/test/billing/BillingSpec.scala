@@ -3,8 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
-import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{WebDriverIdLogging, TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -13,13 +12,17 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.openqa.selenium.WebDriver
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 /**
   * Tests related to billing accounts.
   */
 class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
-  with Matchers with WorkspaceFixtures with BillingFixtures with LazyLogging {
+  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverIdLogging {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   "A user" - {
     "with a billing account" - {
@@ -70,6 +73,11 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
               val workspaceName = "BillingSpec_makeWorkspace_" + randomUuid
               register cleanUp api.workspaces.delete(billingProjectName, workspaceName)
               val detailPage = listPage.open.createWorkspace(billingProjectName, workspaceName)
+
+              eventually { detailPage.validateWorkspace shouldEqual true }
+
+              listPage.open
+              eventually { listPage.hasWorkspace(billingProjectName, workspaceName) shouldBe true }
               //END: Test creating workspace
 
               //BEGIN: Test running analysis in workspace
@@ -92,18 +100,17 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
               billingPage.open.openBillingProject(billingProjectName)
               billingPage.addUserToBillingProject(secondUser, "User")
 
-              val isSuccess = billingPage.isUserInBillingProject(secondUser)
-              isSuccess shouldEqual true
+              eventually { billingPage.isUserInBillingProject(secondUser) shouldEqual true }
               //END: Test adding user to project
 
               //BEGIN: should be able to change the billing account associated with the project
               val originalBillingAccount = Google.billing.getBillingProjectAccount(billingProjectName)
-              originalBillingAccount shouldBe Some(Config.Projects.billingAccountId)
+              eventually { originalBillingAccount shouldBe Some(Config.Projects.billingAccountId) }
 
               Google.billing.removeBillingProjectAccount(billingProjectName)
 
               val newBillingAccount = Google.billing.getBillingProjectAccount(billingProjectName)
-              newBillingAccount shouldBe None
+              eventually { newBillingAccount shouldBe None }
               //END: should be able to change the billing account associated with the project
             }
           }
@@ -112,9 +119,9 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     }
   }
 
-  private def createNewBillingProject(user: Credentials, billingPage: BillingManagementPage, trials: Int = 3): String = {
+  private def createNewBillingProject(user: Credentials, billingPage: BillingManagementPage, trials: Int = 3)(implicit driver: WebDriver): String = {
     val billingProjectName = "billing-spec-create-" + makeRandomId()
-    logger.info(s"Creating billing project: $billingProjectName")
+    log.info(s"Creating billing project: $billingProjectName")
 
     billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
     register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(user.makeAuthToken().value), WorkbenchUserId("0"), WorkbenchEmail(user.email), 3600))(UserPool.chooseAdmin.makeAuthToken())
@@ -123,7 +130,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
     statusOption match {
       case None | Some("failure") if trials > 1 =>
-        logger.info(s"failure or timeout creating project $billingProjectName, retrying ${trials-1} more times")
+        log.info(s"failure or timeout creating project $billingProjectName, retrying ${trials-1} more times")
         createNewBillingProject(user, billingPage, trials-1)
       case None =>
         fail(s"timed out waiting billing project $billingProjectName to be ready")

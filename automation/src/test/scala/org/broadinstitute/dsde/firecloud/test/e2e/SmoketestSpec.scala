@@ -11,9 +11,12 @@ import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.fixture.{SimpleMethodConfig, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 class SmoketestSpec extends FreeSpec with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures with Matchers {
+
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val billingProject: String = Config.Projects.smoketestBillingProject
 
@@ -21,13 +24,14 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
 
     // login
     withSignInReal(Config.Users.smoketestuser) { listPageAsUser =>
-      listPageAsUser.readUserEmail() shouldEqual Config.Users.smoketestuser.email
+
+      eventually { listPageAsUser.readUserEmail() shouldEqual Config.Users.smoketestuser.email }
 
       // create workspace
       val workspaceName = "Smoketests_create_" + randomUuid
       val detailPage = listPageAsUser.createWorkspace(billingProject, workspaceName)
 
-      detailPage.readWorkspace shouldEqual (billingProject, workspaceName)
+      eventually { detailPage.readWorkspace shouldEqual (billingProject, workspaceName) }
       listPageAsUser.open
       listPageAsUser.hasWorkspace(billingProject, workspaceName) shouldBe true
 
@@ -35,7 +39,7 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
       val filename = "src/test/resources/participants.txt"
       val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
       workspaceDataTab.importFile(filename)
-      workspaceDataTab.getNumberOfParticipants shouldEqual 1
+      eventually { workspaceDataTab.getNumberOfParticipants shouldEqual 1 }
 
       // import known method config
       val methodConfigName = Config.Methods.testMethodConfig + "_" + UUID.randomUUID().toString
@@ -53,6 +57,8 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
       // delete workspace
       val wsSummaryPage = new WorkspaceSummaryPage(billingProject, workspaceName).open
       wsSummaryPage.deleteWorkspace()
+      listPageAsUser.validateLocation()
+      listPageAsUser.hasWorkspace(billingProject, workspaceName) shouldBe false
     }
   }
 

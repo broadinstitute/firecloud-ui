@@ -11,12 +11,11 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp with Matchers with ModalUtil {
+class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp
+  with Matchers with ModalUtil {
 
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-
-  implicit override val patienceConfig =
-    PatienceConfig(timeout = scaled(Span(3, Seconds)), interval = scaled(Span(500, Millis)))
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {

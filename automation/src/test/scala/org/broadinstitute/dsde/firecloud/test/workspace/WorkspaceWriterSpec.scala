@@ -1,23 +1,24 @@
 package org.broadinstitute.dsde.firecloud.test.workspace
 
-import java.util.UUID
-
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
-import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.test.{RandomUtil, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.scalatest._
 
 
-class WorkspaceWriterSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec
-  with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+/**
+  * June 3, 2018
+  *   Cannot use `with ParalleTestExecution` because data interference. Error comes from api.methods.setMethodPermissions
+  */
+
+class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec
+  with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures with RandomUtil {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
   val authTokenOwner: AuthToken = projectOwner.makeAuthToken()
-  val methodConfigName: String = SimpleMethodConfig
-    .configName + "_" + UUID.randomUUID().toString + "Config"
 
   val testAttributes = Map("A-key" -> "A value", "B-key" -> "B value", "C-key" -> "C value")
   val noAccessText = "You do not have access to run analysis."
@@ -28,7 +29,7 @@ class WorkspaceWriterSpec extends FreeSpec with ParallelTestExecution with Match
       "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
-        val testName = "WorkspaceSpec_writerAccess_projectCost"
+        val testName = "WorkspaceWriterSpec_writerAccess_projectCost"
         withCleanBillingProject(projectOwner) { billingProject =>
           withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
             withWebDriver { implicit driver =>
@@ -45,18 +46,17 @@ class WorkspaceWriterSpec extends FreeSpec with ParallelTestExecution with Match
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in {
           val user = UserPool.chooseStudent
-          implicit val authToken: AuthToken = authTokenOwner
-          val testName = "WorkspaceSpec_writerAccess_withCompute"
+          val testName = "WorkspaceWriterSpec_writerAccess_withoutCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withCleanBillingProject(projectOwner) { billingProject =>
               withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
-                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)(authTokenOwner)
 
                 api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
                   SimpleMethodConfig.configNamespace, methodConfigName, 1,
-                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")(authTokenOwner)
 
                 withWebDriver { implicit driver =>
                   withSignIn(user) { listPage =>
@@ -76,7 +76,8 @@ class WorkspaceWriterSpec extends FreeSpec with ParallelTestExecution with Match
         "should be able to launch analysis" in {
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
-          val testName = "WorkspaceSpec_writerAccess_withCompute"
+
+          val testName = "WorkspaceWriterSpec_writerAccess_withCompute"
           withMethod(testName, MethodData.SimpleMethod) { methodName =>
             val methodConfigName = methodName + "Config"
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)

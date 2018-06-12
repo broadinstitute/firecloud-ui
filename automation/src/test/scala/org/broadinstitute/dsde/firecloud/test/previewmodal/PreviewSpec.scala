@@ -6,16 +6,16 @@ import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.concurrent.duration.DurationLong
 
 class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures with Matchers {
+  with UserFixtures with MethodFixtures with BillingFixtures with Matchers with Eventually {
 
-  implicit override val patienceConfig =
-    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val gsLink = "gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam"
   val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/dos.json"

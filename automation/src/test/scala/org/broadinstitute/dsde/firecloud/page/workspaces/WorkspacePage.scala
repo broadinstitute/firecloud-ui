@@ -69,6 +69,18 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   def goToMonitorTab(): WorkspaceMonitorPage = {
     val page = new WorkspaceMonitorPage(namespace, name)
     clickTab("Monitor", page.url)
+    await condition {
+      try {
+        val element = find(CssSelectorQuery(s"[data-test-persistence-key='$name:monitor']"))
+        if (element.isDefined) {
+          element.get.underlying.getAttribute("data-test-state") == "ready"
+        } else {
+          false
+        }
+      } catch {
+        case _: Exception => false
+      }
+    }
     await ready page
   }
 

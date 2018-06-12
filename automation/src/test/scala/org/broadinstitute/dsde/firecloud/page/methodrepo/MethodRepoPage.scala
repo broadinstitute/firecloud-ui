@@ -30,6 +30,12 @@ class CreateMethodModal(implicit webDriver: WebDriver) extends OKCancelModal("cr
   private val wdlField = WDLField("wdl-field") // Unable to "inside" this one, but unlikely to collide with anything
   private val documentationField = MarkdownEditor("documentation-field" inside this)
   private val synopsisField = TextField("synopsis-field" inside this)
+  private val uploadButton = Button("create-new-method-modal-submit-button" inside this)
+
+  override def awaitReady(): Unit = {
+    super.awaitReady()
+    uploadButton.awaitEnabledState()
+  }
 
   def fillOut(attributes: Map[String, String]): Unit = {
     namespaceField.setText(attributes("namespace"))

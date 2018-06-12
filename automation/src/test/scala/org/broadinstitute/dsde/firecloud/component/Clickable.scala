@@ -16,7 +16,7 @@ trait Clickable extends LazyLogging { this: Component =>
     */
   def doClick()(implicit webDriver: WebDriver): Unit = {
     try {
-      await condition ( isVisible && isEnabled && invisibleSpinner, 60 )
+      await condition ( isVisible && isEnabled && invisibleSpinner)
     } catch {
       case e: TimeoutException =>
         // show me query string on failed WebElement

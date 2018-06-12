@@ -76,11 +76,11 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   /**
     * Wait for Submission to complete. 15 seconds polling.
     *
-    * @param timeOut: Time out. Default set 25.minutes
+    * @param timeOut: Time out. Default set 35.minutes
     */
-  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 25.minutes): Unit = {
-    logger.info(s"Waiting for Workflow Submission to complete in $timeOut with 10 seconds polling interval")
-    Thread.sleep(10000) // 10 seconds pause before checking
+  def waitUntilSubmissionCompletes(timeOut: FiniteDuration = 35.minutes): Unit = {
+    logger.info(s"Waiting for Workflow Submission to complete in $timeOut with 15 seconds polling interval")
+    Thread.sleep(30000) // 30 seconds pause before checking
     retry[Boolean](15.seconds, timeOut) ({
       // sometimes page auto reloads, displaying table "Workflow Detail". link submissionId is not in table "Workflow Detail".
       // click tab "Monitor" loads either table "Workflow Details" or table "Analysis Detail".
@@ -95,9 +95,9 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
         if (isSubmissionDone) Some(true) else None
       }
     }) match {
-      case None => throw new TimeoutException(s"Timed out ($timeOut) waiting for submission $submissionId to complete")
+      case None => throw new TimeoutException(s"Timed out ($timeOut) waiting for Workflow submission: $submissionId to finish")
       case Some(false) => throw new Exception("Error on Submission page")
-      case Some(true) =>
+      case Some(true) => logger.info(s"Workflow Submission: $submissionId finished with status: ${getSubmissionStatus}")
     }
   }
 
@@ -114,8 +114,15 @@ class ConfirmAbortModal(implicit webDriver: WebDriver) extends ConfirmModal {
   val submissionAbortModalConfirmButton = Button("submission-abort-modal-confirm-button" inside this)
   override val readyComponent: Awaiter = submissionAbortModalConfirmButton
 
+  override def awaitReady(): Unit = {
+    super.awaitReady()
+    submissionAbortModalConfirmButton.awaitEnabledState()
+  }
+
   def clickAbortSubmissionButton: Unit = {
+    await condition (getMessageText.equalsIgnoreCase("Are you sure you want to abort this submission?"), 10)
     submissionAbortModalConfirmButton.doClick()
     awaitDismissed()
   }
+
 }
