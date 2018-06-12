@@ -200,7 +200,6 @@
                                                        (dissoc :banner))))}))))))
    :-export-loaded-config
    (fn [{:keys [props state]} workspace-id config]
-     (assert (some? (:rootEntityType config)) "Trying to send a config ID where a config is required")
      (swap! state assoc :banner (if (:workspace-id props) "Importing..." "Exporting..."))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/post-workspace-method-config workspace-id)
