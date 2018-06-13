@@ -125,6 +125,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
+    await spinner "Loading attributes..."
     openLaunchAnalysisModalButton.isVisible
   }
 
