@@ -72,8 +72,8 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     val popupTrial = Try {
       val wait = new WebDriverWait(webDriver,10)
       wait.until(ExpectedConditions.or(
-        ExpectedConditions.elementToBeClickable(id("identifierLink").element.underlying),
-        ExpectedConditions.elementToBeClickable(id("identifierId").element.underlying)))
+        ExpectedConditions.visibilityOfElementLocated(id("identifierLink").by),
+        ExpectedConditions.elementToBeClickable(id("identifierId").by)))
     }
 
     popupTrial match {
@@ -123,7 +123,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * such as findElement to fail with NullPointerException. Therefore, the
      * only safe check we can make is on the number of windows.
      */
-    await condition (windowHandles.size == 1, 60)
+    await condition (windowHandles.size == 1)
 
     /*
      * If there is still more than 1 window after 30 seconds, we most likely
