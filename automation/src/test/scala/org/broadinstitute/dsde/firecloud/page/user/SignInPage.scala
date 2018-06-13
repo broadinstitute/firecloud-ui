@@ -55,7 +55,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     val initialWindowHandles = windowHandles
 
     signInButton.doClick()
-    await condition (windowHandles.size > 1)
+    await condition (windowHandles.size == 2)
 
     val popupWindowHandle = (windowHandles -- initialWindowHandles).head
 
@@ -69,7 +69,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
   def awaitLoaded(): GoogleSignInPopup = {
 
     val popupTrial = Try {
-      await condition  (id("identifierLink").findElement.isDefined || (id("identifierId").findElement.isDefined))
+      await condition (id("identifierLink").findElement.exists(_.isDisplayed) || id("identifierId").findElement.exists(_.isEnabled),10)
     }
 
     popupTrial match {
@@ -79,7 +79,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
           click on (id("identifierLink"))
           await visible id("identifierId")
         }
-      case Failure(t) => throw new TimeoutException("Timed out (30 seconds) waiting for Google SignIn Popup.", t)
+      case Failure(t) => throw new TimeoutException("Timed out (10 seconds) waiting for Google SignIn Popup.", t)
     }
 
     this
@@ -119,7 +119,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * such as findElement to fail with NullPointerException. Therefore, the
      * only safe check we can make is on the number of windows.
      */
-    await condition (windowHandles.size == 1, 60)
+    await condition (windowHandles.size == 1)
 
     /*
      * If there is still more than 1 window after 30 seconds, we most likely

@@ -3,8 +3,8 @@ import sbt.Keys._
 
 object Dependencies {
   val jacksonV = "2.9.0"
-  val akkaV = "2.5.13"
-  val akkaHttpV = "10.1.1"
+  // val akkaV = "2.5.13"
+  // val akkaHttpV = "10.1.1"
 
   val serviceTestV = "0.9-49b96b1"
 
@@ -24,21 +24,22 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonV,
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
     "com.fasterxml.jackson.module" % "jackson-module-scala_2.12" % jacksonV,
-
+  /*
     "com.google.api-client" % "google-api-client" % "1.22.0" excludeAll (
       ExclusionRule("com.google.guava", "guava-jdk5"),
       ExclusionRule("org.apache.httpcomponents", "httpclient"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-core")
     ),
+  */
 
-    "com.typesafe.akka"   %%  "akka-http-core"      % akkaHttpV,
-    "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV     % "test",
-    "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
-    "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
-    "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,
+   // "com.typesafe.akka"   %%  "akka-http-core"      % akkaHttpV,
+   // "com.typesafe.akka"   %%  "akka-stream-testkit" % akkaV     % "test",
+   // "com.typesafe.akka"   %%  "akka-http"           % akkaHttpV,
+   // "com.typesafe.akka"   %%  "akka-testkit"        % akkaV     % "test",
+   // "com.typesafe.akka"   %%  "akka-slf4j"          % akkaV,
 
-    "org.scalatest"       %%  "scalatest"       % "3.0.5"     % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "3.11.0"  % "test",
+    "org.scalatest"       %%  "scalatest"       % "3.0.5"   % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "3.12.0"  % "test",
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
