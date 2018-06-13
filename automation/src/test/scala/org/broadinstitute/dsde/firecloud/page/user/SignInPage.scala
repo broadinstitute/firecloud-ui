@@ -4,7 +4,6 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
-import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
@@ -70,10 +69,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
   def awaitLoaded(): GoogleSignInPopup = {
 
     val popupTrial = Try {
-      val wait = new WebDriverWait(webDriver,10)
-      wait.until(ExpectedConditions.or(
-        ExpectedConditions.visibilityOfElementLocated(id("identifierLink").by),
-        ExpectedConditions.elementToBeClickable(id("identifierId").by)))
+      await condition (id("identifierLink").findElement.exists(_.isDisplayed) || id("identifierId").findElement.exists(_.isEnabled),10)
     }
 
     popupTrial match {
