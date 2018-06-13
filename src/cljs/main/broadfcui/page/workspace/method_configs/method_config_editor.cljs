@@ -355,13 +355,19 @@
                           (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
                                                    (dissoc :redacted?)))
                       (swap! state assoc :error-response (get-parsed-response false))))})))
+   (defn- fix-validated-method-config [config]
+     (let
+       [munged-missing (map (fn [missing-input] {:missing-input "This input is declared in the method and missing in your method configuration."}) (:missingInputs config))
+        munged-extras (map (fn [extra-input] {:extra-input "This input is declared in your method configuration but not listed in the method."}) (:extraInputs config))]
+       (into (:invalidInputs config) (conj munged-missing munged-extras))
+       ))
    :-load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (get-parsed-response)
+                    (let [response (fix-validated-method-config get-parsed-response)
                           fake-inputs-outputs (fn [data]
                                                 (let [method-config (:methodConfiguration data)]
                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
