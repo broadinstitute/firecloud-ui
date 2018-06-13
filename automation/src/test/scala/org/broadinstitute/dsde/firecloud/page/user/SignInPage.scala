@@ -4,6 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
+import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
@@ -55,7 +56,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     val initialWindowHandles = windowHandles
 
     signInButton.doClick()
-    await condition (windowHandles.size > 1)
+    await condition (windowHandles.size == 2)
 
     val popupWindowHandle = (windowHandles -- initialWindowHandles).head
 
@@ -69,7 +70,10 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
   def awaitLoaded(): GoogleSignInPopup = {
 
     val popupTrial = Try {
-      await condition  (id("identifierLink").findElement.isDefined || (id("identifierId").findElement.isDefined))
+      val wait = new WebDriverWait(webDriver,10)
+      wait.until(ExpectedConditions.or(
+        ExpectedConditions.elementToBeClickable(id("identifierLink").element.underlying),
+        ExpectedConditions.elementToBeClickable(id("identifierId").element.underlying)))
     }
 
     popupTrial match {
@@ -79,7 +83,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
           click on (id("identifierLink"))
           await visible id("identifierId")
         }
-      case Failure(t) => throw new TimeoutException("Timed out (30 seconds) waiting for Google SignIn Popup.", t)
+      case Failure(t) => throw new TimeoutException("Timed out (10 seconds) waiting for Google SignIn Popup.", t)
     }
 
     this
