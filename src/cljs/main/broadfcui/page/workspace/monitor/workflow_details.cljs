@@ -185,7 +185,7 @@
 
 ;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
 ;; Only show new information
-(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id workspace-id gcs-path-prefix]
+(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -193,8 +193,6 @@
     [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                    :backgroundColor (:background-light style/colors)}}
      (create-field "Subworkflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
-     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
-       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
      (when (seq (workflow "calls"))
        [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
      (when-let [failures (workflow "failures")]
@@ -202,7 +200,7 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :workflowId (workflow "id")
+       [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
                     :workspace-id workspace-id :gcs-path-prefix subworkflow-path-components}])]))
 
 (react/defc- SubworkflowDetails
@@ -217,7 +215,7 @@
           (style/create-server-error-message (:response server-response))
           :else
           (render-subworkflow-detail (:response server-response) (:raw-response server-response)
-                                     (:workflow-name props) (:submission-id props)
+                                     (:workflow-name props) (:submission-id props) (:use-call-cache props)
                                      (:workspace-id props) (:gcs-path-prefix props))))])
       :component-did-mount
       (fn [{:keys [props state]}]
@@ -265,7 +263,7 @@
                       (let [subworkflow-path-prefix (if (>= (data "shardIndex") 0)
                                                       (conj call-path-components (str "shard-" index))
                                                       call-path-components)]
-                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :workflow-name])
+                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :use-call-cache :workflow-name])
                                                    {:workflow-id subWorkflowId
                                                     :gcs-path-prefix subworkflow-path-prefix})])]
                      ;; click to show subworkflow details and add it to the :subworkflow-expanded map in @state
@@ -286,21 +284,23 @@
                                (data "jobId")])
                 (let [status (data "executionStatus")]
                   (create-field "Status" (moncommon/icon-for-call-status status) status))
-                (when (= (get-in data ["callCaching" "effectiveCallCachingMode"]) "ReadAndWriteCache")
+                (when (and (:use-call-cache props) (not (data "subWorkflowId")))
                   (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
                 (create-field "Started" (moncommon/render-date (data "start")))
                 ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
                 [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
                 [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
-                (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
-                (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
+                (when (not (data "subWorkflowId"))
+                  (do
+                    (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
+                    (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))))
                 (backend-logs data)
                 (when-let [failures (data "failures")]
                   [Failures {:data failures}])]])
             (:data props)))]))})
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id workflow-cost workspace-id gcs-path-prefix]
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workflow-cost workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -311,8 +311,6 @@
      (let [status (workflow "status")]
        (create-field "Status" (moncommon/icon-for-wf-status status)))
      (create-field "Total Run Cost" (moncommon/render-cost workflow-cost))
-     (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
-       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
      (when-let [submission (workflow "submission")]
        (create-field "Submitted" (moncommon/render-date submission)))
      (when-let [start (workflow "start")]
@@ -330,7 +328,7 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :workflowId (workflow "id")
+       [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
                     :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]))
 
 (react/defc- WorkflowDetails
@@ -353,7 +351,7 @@
          ;; top-level workflows use workspace-bucket-name/submission-id
          (let [workflow-path-prefix [(:bucketName props) (:submission-id props)]]
            (render-workflow-detail (:response metadata-response) (:raw-response metadata-response)
-                                   (:workflow-name props) (:submission-id props)
+                                   (:workflow-name props) (:submission-id props) (:use-call-cache props)
                                    (:response cost-response) (:workspace-id props)
                                    workflow-path-prefix)))))
    :component-did-mount
@@ -378,5 +376,5 @@
 
 
 (defn render [props]
-  (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
+  (assert (every? #(contains? props %) #{:workspace-id :submission-id :use-call-cache :workflow-id}))
   [WorkflowDetails props])

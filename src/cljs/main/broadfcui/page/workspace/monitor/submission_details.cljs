@@ -113,7 +113,7 @@
                                                    (:submission-id props))}
                               {:text workflowName}]}]]
         (workflow-details/render
-         (merge (select-keys props [:workspace-id :submission-id :bucketName])
+         (merge (select-keys props [:workspace-id :submission-id :use-call-cache :bucketName])
                 {:workflow-id workflowId
                  :submission (:submission props)
                  :workflow-name workflowName}))]))})
@@ -189,7 +189,11 @@
              [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])]
+             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])
+           (style/create-section-header "Call Caching")
+           (style/create-paragraph
+            [:div {}
+             [:span {:style {:fontWeight 500}} (if (:useCallCache submission) "Enabled" "Disabled")]])]
           [:div {:style {:float "right"}}
            (style/create-section-header "Submitted by")
            (style/create-paragraph
@@ -218,6 +222,7 @@
                            :submission submission
                            :bucketName (:bucketName props)
                            :submission-id (:submissionId submission)
+                           :use-call-cache (:useCallCache submission)
                            :workflow-id (:workflow-id props)}]])))
    :load-details
    (fn [{:keys [props state]}]
