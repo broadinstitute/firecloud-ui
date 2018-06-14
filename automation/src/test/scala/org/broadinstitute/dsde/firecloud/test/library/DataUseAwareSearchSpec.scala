@@ -5,14 +5,15 @@ import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.test.ModalUtil
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
-import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with CleanUp
-  with Matchers with ModalUtil {
+class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures
+  with Matchers with ModalUtil with Eventually {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
@@ -33,11 +34,11 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         modal.selectCheckbox("poa")
         modal.submit()
 
-        modal.isVisible shouldBe false
+        eventually { modal.isVisible shouldBe false }
 
-        page.showsResearchPurposeCode("control") shouldBe true
-        page.showsResearchPurposeCode("poa") shouldBe true
-        page.showsResearchPurposeCode("commercial") shouldBe false // We didn't select this one
+        eventually { page.showsResearchPurposeCode("control") shouldBe true }
+        eventually { page.showsResearchPurposeCode("poa") shouldBe true }
+        eventually { page.showsResearchPurposeCode("commercial") shouldBe false } // We didn't select this one
       }
     }
 
@@ -56,11 +57,11 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.enterOntologySearchText("fatal")
 
-        researchPurposeModal.isSuggestionVisible(ffiSuggestionId) shouldBe true
+        eventually { researchPurposeModal.isSuggestionVisible(ffiSuggestionId) shouldBe true }
 
         researchPurposeModal.selectSuggestion(ffiSuggestionId)
 
-        researchPurposeModal.isTagSelected(ffiTagId) shouldBe true
+        eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true }
 
         // Disease 2
         val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846" // bruxism
@@ -68,7 +69,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
 
         researchPurposeModal.enterOntologySearchText("brux")
 
-        researchPurposeModal.isSuggestionVisible(brxSuggestionId) shouldBe true
+        eventually { researchPurposeModal.isSuggestionVisible(brxSuggestionId) shouldBe true }
 
         researchPurposeModal.selectSuggestion(brxSuggestionId)
 

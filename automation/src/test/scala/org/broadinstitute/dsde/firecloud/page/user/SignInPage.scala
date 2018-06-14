@@ -13,6 +13,7 @@ import scala.util.{Failure, Success, Try}
   * Page class for the page displayed when accessing FireCloud when not signed in.
   */
 class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends FireCloudView with Page with PageUtil[SignInPage] {
+
   override def awaitReady(): Unit = {
     signInButton awaitReady()
     /*
@@ -27,7 +28,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
      * user-status). Instead of reworking the sign-in logic for a case that (for the most part) only
      * a computer will operate fast enough to encounter, we'll just slow the computer down a little.
      */
-    Thread.sleep(250)
+    Thread.sleep(500)
   }
 
   override val url: String = baseUrl
@@ -67,16 +68,14 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 
   def awaitLoaded(): GoogleSignInPopup = {
-
-    val popupTrial = Try {
-      await condition (id("identifierLink").findElement.exists(_.isDisplayed) || id("identifierId").findElement.exists(_.isEnabled),10)
-    }
-
-    popupTrial match {
+    Try {
+      await condition (id("identifierLink").findElement.exists(_.isDisplayed)
+        || id("identifierId").findElement.exists(_.isEnabled)
+        || id("Email").findElement.exists(_.isDisplayed), 10) // One Account All of Google popup
+    } match {
       case Success(_) =>
-        val chooseAccountLink = find(id("identifierLink")).isDefined
-        if (chooseAccountLink) {
-          click on (id("identifierLink"))
+        find(id("identifierLink")) foreach { link =>
+          click on link
           await visible id("identifierId")
         }
       case Failure(t) => throw new TimeoutException("Timed out (10 seconds) waiting for Google SignIn Popup.", t)
@@ -89,7 +88,14 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * Signs in to Google to authenticate for FireCloud.
     */
   def signIn(email: String, password: String): Unit = {
+    (id("Email").findElement.isDefined) match {
+      case true => oneAccountSignIn(email, password)
+      case false => normalSignIn(email, password)
+    }
+    returnFromSignIn()
+  }
 
+  private def normalSignIn(email: String, password: String): Unit = {
     await enabled id("identifierId")
     emailField(id("identifierId")).value = email
     pressKeys("\n")
@@ -104,8 +110,13 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     Thread sleep 1000
     pwdField(name("password")).value = password
     pressKeys("\n")
+  }
 
-    returnFromSignIn()
+  private def oneAccountSignIn(email: String, password: String): Unit = {
+    emailField(id("email")).value = email
+    find(id("next")).get.underlying.submit()
+    pwdField(id("Passwd")).value = password
+    find(id("signIn")).get.underlying.submit()
   }
 
   /**
@@ -119,15 +130,18 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * such as findElement to fail with NullPointerException. Therefore, the
      * only safe check we can make is on the number of windows.
      */
-    await condition (windowHandles.size == 1)
-
-    /*
-     * If there is still more than 1 window after 30 seconds, we most likely
-     * need to approve access to continue.
-     */
-    if (windowHandles.size > 1) {
-      click on id("submit_approve_access")
-      await condition(windowHandles.size == 1)
+    try {
+      await condition (windowHandles.size == 1)
+    } catch {
+      case _: TimeoutException =>
+        /*
+         * If there is still more than 1 window after 30 seconds, we most likely
+         * need to approve access to continue.
+         */
+        if (windowHandles.size > 1) {
+          click on id("submit_approve_access")
+          await condition(windowHandles.size == 1)
+        }
     }
 
     switch to window(windowHandles.head)
