@@ -35,7 +35,9 @@
        :render #(links/create-internal {:data-test-id (str "submission-" %)
                                         :href (nav/get-link :workspace-submission workspace-id %)}
                   "View")}
-      {:header "Status" :as-text :status :sort-by :text
+      {:header "Status"
+       :sort-by (fn [submission] (:status submission))
+       :as-text (fn [submission] (.stringify js/JSON (clj->js (:workflowStatuses submission))))
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
                   (case (:status submission)
