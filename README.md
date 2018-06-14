@@ -29,7 +29,7 @@ Support for running FireCloud outside of the Broad is planned.
 
 ### Styles and Conventions
 
-**Before you get started**, take a look at [CONTRIBUTING.md](contributing.md)
+**Before you get started**, take a look at [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ### Development Stack Setup
 
