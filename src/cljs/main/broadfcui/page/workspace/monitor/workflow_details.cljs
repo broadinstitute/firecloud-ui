@@ -309,7 +309,7 @@
                    :backgroundColor (:background-light style/colors)}}
      (create-field "Workflow ID" (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
      (let [status (workflow "status")]
-       (create-field "Status" (moncommon/icon-for-wf-status status)))
+       (create-field "Status" (moncommon/icon-for-wf-status status) status))
      (create-field "Total Run Cost" (moncommon/render-cost workflow-cost))
      (when-let [submission (workflow "submission")]
        (create-field "Submitted" (moncommon/render-date submission)))
