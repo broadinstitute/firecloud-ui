@@ -293,7 +293,7 @@
                 [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
                 (when (data "stdout")
                   (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/")))))
-                (when (data "stdout")
+                (when (data "stderr")
                   (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/")))))
                 (backend-logs data)
                 (when-let [failures (data "failures")]
