@@ -214,10 +214,14 @@
                 (if (or (= 0 cost) (nil? cost)) "Not Available" (common/format-price cost)))
               (:cost submission))]
              [:br {}]) ;; extra br to align section headers across columns
-            (style/create-section-header "Call Caching")
+            (style/create-section-header [:div {} "Call Caching"
+                                          (dropdown/render-info-box
+                                           {:text (if (:useCallCache submission)
+                                             "Call caching was enabled for this submission by its submitter. Review individual
+                                                workflow calls below to see if they are cache hits or misses."
+                                             "Call caching was disabled for this submission by its submitter.")})])
             (style/create-paragraph
-             [:div {}
-              [:span {:style {:fontWeight 500}} (if (:useCallCache submission) "Enabled" "Disabled")]])]]
+             [:div {} (if (:useCallCache submission) "Enabled" "Disabled")])]]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)
