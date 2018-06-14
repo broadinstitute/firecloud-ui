@@ -284,17 +284,17 @@
                                (data "jobId")])
                 (let [status (data "executionStatus")]
                   (create-field "Status" (moncommon/icon-for-call-status status) status))
-                (when (and (:use-call-cache props) (not (data "subWorkflowId")))
+                (when (and (:use-call-cache props) (some? (get (data "callCaching") "hit")))
                   (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
                 (create-field "Started" (moncommon/render-date (data "start")))
                 ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
                 [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
                 [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
-                (when (not (data "subWorkflowId"))
-                  (do
-                    (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
-                    (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))))
+                (when (data "stdout")
+                  (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/")))))
+                (when (data "stdout")
+                  (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/")))))
                 (backend-logs data)
                 (when-let [failures (data "failures")]
                   [Failures {:data failures}])]])
