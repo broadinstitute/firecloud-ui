@@ -178,7 +178,7 @@
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
-                  (spinner "Loading enormous lemon...")]))
+                  (spinner "Loading Method Configuration...")]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-validated-method-config))
