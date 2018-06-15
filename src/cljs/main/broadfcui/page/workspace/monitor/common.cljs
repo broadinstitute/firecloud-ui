@@ -94,7 +94,10 @@
     :else (do (utils/log "Unknown submission status: " wf-statuses)
               (render-unknown-icon))))
 
-(defn icon-for-project-status [project-status]
+(defn icon-for-submission [sub-status wf-statuses]
+  (if (= "Done" sub-status)
+    (icon-for-sub-status wf-statuses)
+    (icon-for-wf-status sub-status)))(defn icon-for-project-status [project-status]
   (cond
     (= project-status "Error") (render-failure-icon)
     (= project-status "Ready") (render-success-icon)
