@@ -110,6 +110,15 @@
     :else (do (utils/log "Unknown call status: " status)
               (render-unknown-icon))))
 
+(defn icons-for-call-statuses [statuses]
+  [:span {}
+    (when (some #(contains? call-success-statuses %) statuses)
+     (render-success-icon))
+    (when (some #(contains? call-failure-statuses %) statuses)
+     (render-failure-icon))
+    (when (some #(contains? call-running-statuses %) statuses)
+      (render-running-icon))])
+
 (defn format-call-cache [cache-hit]
   (if cache-hit "Hit" "Miss"))
 

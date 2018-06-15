@@ -236,11 +236,13 @@
       :subworkflow-expanded {}})
    :render
    (fn [{:keys [props state]}]
-     (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))]
+     (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))
+           all-call-statuses (set (map #(get % "executionStatus") (:data props)))]
        [:div {:style {:marginTop "1em"}}
         (when (:show-operation-dialog? @state)
           [OperationDialog (:operation-dialog-props @state)])
         [:div {:style {:display "inline-block" :marginRight "1em"}}
+         (moncommon/icons-for-call-statuses all-call-statuses)
          (links/create-external {:href (render-gcs-path call-path-components)} (:label props))]
         (links/create-internal {:onClick #(swap! state update :expanded not)}
                                (if (:expanded @state) "Hide" "Show"))
