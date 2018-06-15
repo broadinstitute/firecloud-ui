@@ -363,7 +363,7 @@
                       (swap! state assoc :error-response (get-parsed-response false))))})))
 
    :-load-validated-method-config
-   (fn [{:keys [this state props]}]
+   (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
