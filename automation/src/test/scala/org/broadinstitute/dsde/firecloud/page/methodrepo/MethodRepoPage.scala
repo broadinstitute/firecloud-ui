@@ -1,15 +1,15 @@
 package org.broadinstitute.dsde.firecloud.page.methodrepo
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with Page with PageUtil[MethodRepoPage] {
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#methods"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#methods"
 
   override def awaitReady(): Unit = methodRepoTable.awaitReady()
 

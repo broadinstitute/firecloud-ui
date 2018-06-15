@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
-import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
@@ -19,7 +18,7 @@ class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: 
     if (!isError) filterInput.awaitVisible()
   }
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
 
   // TODO: make this a Table
   private val filterInput = SearchField("filter-input")

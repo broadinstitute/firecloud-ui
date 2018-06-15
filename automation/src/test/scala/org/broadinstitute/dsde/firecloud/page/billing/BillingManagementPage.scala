@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.billing
 
-import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.fixture.WebDriverIdLogging
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
+import org.broadinstitute.dsde.workbench.config.Credentials
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.test.RandomUtil
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
@@ -19,7 +19,7 @@ import scala.concurrent.duration.DurationLong
 class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   with Page with PageUtil[BillingManagementPage] with WebDriverIdLogging with RandomUtil {
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#billing"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#billing"
 
   override def awaitReady: Unit = {
     billingProjectTable.awaitReady()
@@ -101,7 +101,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloud
 
     log.info(s"Creating billing project: $billingProjectName")
 
-    createBillingProject(billingProjectName, Config.Projects.billingAccount)
+    createBillingProject(billingProjectName, FireCloudConfig.Projects.billingAccount)
     val statusOption: Option[String] = waitForCreateDone(billingProjectName)
 
     statusOption match {

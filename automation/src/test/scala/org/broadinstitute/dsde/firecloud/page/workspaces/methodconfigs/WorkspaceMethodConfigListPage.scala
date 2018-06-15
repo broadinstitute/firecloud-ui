@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.workbench.config.Config
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -14,7 +14,7 @@ class WorkspaceMethodConfigListPage(namespace: String, name: String)(implicit we
 
   override def awaitReady(): Unit = methodConfigsTable.awaitReady()
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
   private val openImportConfigModalButton: Button = Button("import-config-button")
   private val methodConfigsTable = Table("method-configs-tab-table")

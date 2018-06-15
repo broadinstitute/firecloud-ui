@@ -4,8 +4,8 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
@@ -20,7 +20,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceDataPage] {
 
   implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 
   override def awaitReady(): Unit = {
     dataTable.awaitReady()
