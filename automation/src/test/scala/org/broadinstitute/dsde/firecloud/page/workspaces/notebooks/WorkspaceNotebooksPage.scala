@@ -1,12 +1,11 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.notebooks
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.model.google.GcsPath
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
@@ -17,7 +16,7 @@ class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver
 
   override def awaitReady(): Unit = clustersTable.awaitReady()
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
 
   private val clustersTable = Table("spark-clusters-table")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")

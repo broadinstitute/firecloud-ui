@@ -2,10 +2,11 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.util.UUID
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
-import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.{WorkspaceMethodConfigDetailsPage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
@@ -21,7 +22,7 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
   val testData = TestData()
 
   "launch workflow and delete a workflow" in {
-    val user = Config.Users.owner
+    val user = FireCloudConfig.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "MethodLaunchSpec_launch_a_simple_workflow") { workspaceName =>
@@ -164,7 +165,7 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
   }
 
   "launch a method from the method repo" in {
-    val user = Config.Users.owner
+    val user = FireCloudConfig.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "MethodLaunchSpec_launch_method_from_workspace") { workspaceName =>
@@ -191,7 +192,7 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
   }
 
   "owner can abort a launched submission" in {
-    val user = Config.Users.owner
+    val user = FireCloudConfig.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "MethodLaunchSpec_abort_submission") { workspaceName =>

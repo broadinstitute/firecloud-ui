@@ -1,10 +1,9 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.FireCloudView
+import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
@@ -22,7 +21,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     await spinner "Checking permissions..."
   }
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
   private val openLaunchAnalysisModalButton = Button("open-launch-analysis-modal-button")
   private val openEditModeButton = Button("edit-method-config-button")

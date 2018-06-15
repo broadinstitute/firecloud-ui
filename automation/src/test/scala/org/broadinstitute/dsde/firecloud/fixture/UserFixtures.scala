@@ -1,15 +1,17 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials}
+import org.broadinstitute.dsde.workbench.config.Credentials
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+
 import scala.concurrent.duration._
 
 trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: WebBrowserSpec with TestSuite =>
@@ -48,7 +50,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
       // workaround for failed forceSignedIn
       var counter = 0
       retry(Seq.fill(2)(1.seconds)) ({
-        new SignInPage(Config.FireCloud.baseUrl).open
+        new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
         executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
         if (counter > 0) logger.warn(s"Retrying forceSignedIn. $counter")
         counter +=1
@@ -67,7 +69,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
                                                     (testCode: T => Any)
                                                     (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
-      new SignInPage(Config.FireCloud.baseUrl).open.signIn(user.email, user.password)
+      new SignInPage(FireCloudConfig.FireCloud.baseUrl).open.signIn(user.email, user.password)
     }, page, testCode)
   }
 

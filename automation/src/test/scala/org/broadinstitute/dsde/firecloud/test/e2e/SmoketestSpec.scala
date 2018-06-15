@@ -2,12 +2,12 @@ package org.broadinstitute.dsde.firecloud.test.e2e
 
 import java.util.UUID
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.workbench.fixture.{SimpleMethodConfig, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
@@ -18,14 +18,14 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
-  val billingProject: String = Config.Projects.smoketestBillingProject
+  val billingProject: String = FireCloudConfig.Projects.smoketestBillingProject
 
   "Smoketest 1:  Log in, create workspace, import data, import method config, run method config, delete workspace" taggedAs Tags.ProdTest in withWebDriver { implicit driver =>
 
     // login
-    withSignInReal(Config.Users.smoketestuser) { listPageAsUser =>
+    withSignInReal(FireCloudConfig.Users.smoketestuser) { listPageAsUser =>
 
-      eventually { listPageAsUser.readUserEmail() shouldEqual Config.Users.smoketestuser.email }
+      eventually { listPageAsUser.readUserEmail() shouldEqual FireCloudConfig.Users.smoketestuser.email }
 
       // create workspace
       val workspaceName = "Smoketests_create_" + randomUuid
@@ -42,10 +42,10 @@ class SmoketestSpec extends FreeSpec with WebBrowserSpec
       eventually { workspaceDataTab.getNumberOfParticipants shouldEqual 1 }
 
       // import known method config
-      val methodConfigName = Config.Methods.testMethodConfig + "_" + UUID.randomUUID().toString
+      val methodConfigName = FireCloudConfig.Methods.testMethodConfig + "_" + UUID.randomUUID().toString
       val workspaceMethodConfigPage = new WorkspaceMethodConfigListPage(billingProject, workspaceName).open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(Config.Methods.methodConfigNamespace,
-        Config.Methods.testMethodConfig, Config.Methods.snapshotID, methodConfigName)
+      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(FireCloudConfig.Methods.methodConfigNamespace,
+        FireCloudConfig.Methods.testMethodConfig, FireCloudConfig.Methods.snapshotID, methodConfigName)
 
       assert(methodConfigDetailsPage.isLoaded)
 

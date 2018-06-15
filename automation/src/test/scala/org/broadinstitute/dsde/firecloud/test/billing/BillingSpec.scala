@@ -3,11 +3,12 @@ package org.broadinstitute.dsde.firecloud.test.billing
 import java.util.UUID
 
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
-import org.broadinstitute.dsde.firecloud.fixture.{WebDriverIdLogging, TestData, UserFixtures}
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
+import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, WebDriverIdLogging}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
@@ -105,7 +106,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
 
               //BEGIN: should be able to change the billing account associated with the project
               val originalBillingAccount = Google.billing.getBillingProjectAccount(billingProjectName)
-              eventually { originalBillingAccount shouldBe Some(Config.Projects.billingAccountId) }
+              eventually { originalBillingAccount shouldBe Some(FireCloudConfig.Projects.billingAccountId) }
 
               Google.billing.removeBillingProjectAccount(billingProjectName)
 
@@ -123,7 +124,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     val billingProjectName = "billing-spec-create-" + makeRandomId()
     log.info(s"Creating billing project: $billingProjectName")
 
-    billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
+    billingPage.createBillingProject(billingProjectName, FireCloudConfig.Projects.billingAccount)
     register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(user.makeAuthToken().value), WorkbenchUserId("0"), WorkbenchEmail(user.email), 3600))(UserPool.chooseAdmin.makeAuthToken())
 
     val statusOption = billingPage.waitForCreateDone(billingProjectName)

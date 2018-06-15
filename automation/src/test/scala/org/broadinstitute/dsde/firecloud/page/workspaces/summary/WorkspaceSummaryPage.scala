@@ -4,8 +4,7 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.{WorkspaceListPage, WorkspacePage}
-import org.broadinstitute.dsde.firecloud.{FireCloudView, ReadyComponent, SignalsReadiness, Stateful}
-import org.broadinstitute.dsde.workbench.config.Config
+import org.broadinstitute.dsde.firecloud._
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
@@ -18,7 +17,7 @@ import org.scalatest.selenium.Page
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriver: WebDriver)
   extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
 
-  override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name"
+  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
   override val query: Query = testId("summary-tab")
 

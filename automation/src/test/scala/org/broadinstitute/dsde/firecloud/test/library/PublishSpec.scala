@@ -1,12 +1,13 @@
 package org.broadinstitute.dsde.firecloud.test.library
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
-import org.broadinstitute.dsde.workbench.config.{Config, UserPool}
+import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
@@ -223,9 +224,9 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           val curatorUser = UserPool.chooseCurator
           implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
 
-          api.NIH.refreshUserInNIH(Config.Users.tcgaJsonWebTokenKey) (curatorAuthToken)
+          api.NIH.refreshUserInNIH(FireCloudConfig.Users.tcgaJsonWebTokenKey) (curatorAuthToken)
           withCleanBillingProject(curatorUser) { billingProject =>
-            withWorkspace(billingProject, "TCGA_", Set(Config.FireCloud.tcgaAuthDomain)) { wsName =>
+            withWorkspace(billingProject, "TCGA_", Set(FireCloudConfig.FireCloud.tcgaAuthDomain)) { wsName =>
               withCleanUp {
                 val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
                 api.library.setLibraryAttributes(billingProject, wsName, data)

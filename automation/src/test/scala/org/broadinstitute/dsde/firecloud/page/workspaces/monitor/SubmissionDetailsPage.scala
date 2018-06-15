@@ -2,9 +2,9 @@ package org.broadinstitute.dsde.firecloud.page.workspaces.monitor
 
 import java.util.concurrent.TimeoutException
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.workbench.config.Config
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
@@ -18,7 +18,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
 
   // TODO: Launch Analysis sends us to this page without knowing the submission ID. Fix this.
-  override lazy val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
+  override lazy val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
 
   override def awaitReady(): Unit = {
     // TODO: wait on the table, once we're testing that
