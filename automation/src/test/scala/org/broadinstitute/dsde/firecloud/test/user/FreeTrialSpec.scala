@@ -64,7 +64,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in {
+      "should be able to see the free trial banner, enroll and get terminated" ignore {
         setUpEnabledUserAndProject(testUser)
         val trialAuthToken = TrialBillingAccountAuthToken()
         api.trial.reportTrialProjects().foreach { x =>
