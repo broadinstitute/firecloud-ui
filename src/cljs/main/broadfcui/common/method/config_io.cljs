@@ -19,23 +19,19 @@
 
 (def clip (partial merge table-style/clip-text))
 
-;(def [inputs-outputs]
-;  (filter #(string/blank? ((keyword (:name %)) (:outputs values)))
-;          (:outputs inputs-outputs)))
-
 
 (react/defc IOTables
   {:start-editing
    (fn [{:keys [props state]}]
      (let [{:keys [outputs]} @state]
-     (swap! state utils/deep-merge (:values props))
-     (swap! state assoc :original-outputs outputs)
-     (swap! state assoc :editing? true)))
+       (swap! state assoc :editing? true)
+       (swap! state utils/deep-merge (:values props))
+       (swap! state assoc :original-outputs outputs)))
    :cancel-editing
    (fn [{:keys [state]}]
      (let [{:keys [original-outputs]} @state]
        (swap! state dissoc :editing?)
-       (swap! state assoc :outputs original-outputs)))
+       (swap! state assoc :outputs (utils/log original-outputs))))
    :save
    (fn [{:keys [props state]}]
      (swap! state dissoc :editing?)
@@ -43,32 +39,35 @@
       :outputs (select-keys (:outputs @state) (map (comp keyword :name) (:outputs (:inputs-outputs props))))})
    :-get-defaultable-outputs
    (fn [{:keys [props state]}]
-     (let [{:keys [ inputs-outputs]} props]
-           (filter #(string/blank? ((keyword (:name %)) (:outputs @state)))
-             (:outputs inputs-outputs))))
+     (let [{:keys [inputs-outputs]} props
+           {:keys [outputs]} @state]
+       (filter #(string/blank? ((keyword (:name %)) outputs))
+               (:outputs inputs-outputs))))
    :-add-default-outputs
    (fn [{:keys [props state this]}]
-     (let [{:keys [values begin-editing]} props
+     (let [{:keys [begin-editing]} props
+           {:keys [outputs editing?]} @state
            defaultable-outputs (this :-get-defaultable-outputs)
-           new-outputs (merge (:outputs @state) (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaultable-outputs)))]
-       (when-not (empty? defaultable-outputs) (begin-editing))
+           new-outputs (merge outputs (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaultable-outputs)))]
+       (when-not editing? (begin-editing))
        (swap! state update :outputs merge new-outputs)))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
    :render
    (fn [{:keys [props this]}]
-     (let [id (gensym "io-table-")]
-       [:div {:id id :style (:style props)}
+     (let [{:keys [default-hidden? entity-type? style]} props
+           id (gensym "io-table-")]
+       [:div {:id id :style style}
         [Collapse {:title "Inputs"
-                   :default-hidden? (:default-hidden? props)
+                   :default-hidden? default-hidden?
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
-                   :secondary-title (when (and (:entity-type? props) (not (empty? (this :-get-defaultable-outputs))))
+                   :secondary-title (when (and entity-type? (not (empty? (this :-get-defaultable-outputs))))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
                                         (str "Populate blank attributes with defaults")))
-                   :default-hidden? (:default-hidden? props)
+                   :default-hidden? default-hidden?
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
    (fn [{:keys [props state]} io-key]

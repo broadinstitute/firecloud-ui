@@ -291,7 +291,6 @@
                                    :inputs-outputs inputs-outputs
                                    :entity-type? entity-type?
                                    :begin-editing #(this :-begin-editing)
-                                   :save-outputs-things #(this :-commit)
                                    :values (select-keys config [:inputs :outputs])
                                    :invalid-values {:inputs (:invalidInputs loaded-config)
                                                     :outputs (:invalidOutputs loaded-config)}
