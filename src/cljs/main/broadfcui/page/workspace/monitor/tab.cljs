@@ -35,13 +35,12 @@
        :render #(links/create-internal {:data-test-id (str "submission-" %)
                                         :href (nav/get-link :workspace-submission workspace-id %)}
                   "View")}
-      {:header "Status" :as-text :status :sort-by :text
+      {:header "Status"
+       :sort-by (fn [submission] (:status submission))
+       :as-text (fn [submission] (.stringify js/JSON (clj->js (:workflowStatuses submission))))
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
-                  (case (:status submission)
-                    "Done" (moncommon/icon-for-sub-status (:workflowStatuses submission))
-                    "Aborted" moncommon/render-failure-icon
-                    nil)
+                  (moncommon/icon-for-submission (:status submission) (:workflowStatuses submission))
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
        :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)

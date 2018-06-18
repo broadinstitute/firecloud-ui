@@ -113,7 +113,7 @@
                                                    (:submission-id props))}
                               {:text workflowName}]}]]
         (workflow-details/render
-         (merge (select-keys props [:workspace-id :submission-id :bucketName])
+         (merge (select-keys props [:workspace-id :submission-id :use-call-cache :bucketName])
                 {:workflow-id workflowId
                  :submission (:submission props)
                  :workflow-name workflowName}))]))})
@@ -173,44 +173,55 @@
                            (this :load-details))
                :workspace-id (:workspace-id props)
                :submission-id (:submissionId submission)}])]
-          [:div {:style {:float "left"}}
-           (style/create-section-header "Method Configuration")
-           (style/create-paragraph
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
-             [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
-           (style/create-section-header "Submission Entity")
-           (style/create-paragraph
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])]
-          [:div {:style {:float "right"}}
-           (style/create-section-header "Submitted by")
-           (style/create-paragraph
-            [:div {} (:submitter submission)]
-            [:div {} (common/format-date (:submissionDate submission)) " ("
-             (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
-           (style/create-section-header "Submission ID")
-           (style/create-paragraph
-            (links/create-external
-              {:data-test-id "submission-id"
-               :href (str
-                      moncommon/google-storage-context
-                      (:bucketName props) "/" (:submissionId submission) "/")}
-              (:submissionId submission)))
-           (style/create-section-header [:div {} "Total Run Cost"
-                                         (dropdown/render-info-box
-                                          {:text "Costs may take up to one day to populate."})])
-           (style/create-paragraph
-            ((fn [cost]
-               (if (or (= 0 cost) (nil? cost)) "Not Available" (common/format-price cost)))
-             (:cost submission)))]
+          [:div {:style {:float "right" :width "calc(100% - 330px)"}} 
+           [:div {:style {:float "left" :width "33.33%"}}
+            (style/create-section-header "Method Configuration")
+            (style/create-paragraph
+             [:div {}
+              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
+              [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
+             [:div {}
+              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+              [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
+            (style/create-section-header "Submission Entity")
+            (style/create-paragraph
+             [:div {}
+              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
+              [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
+             [:div {}
+              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+              [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])]
+           [:div {:style {:float "left" :width "33.33%"}}
+            (style/create-section-header "Submitted by")
+            (style/create-paragraph
+             [:div {} (:submitter submission)]
+             [:div {} (common/format-date (:submissionDate submission)) " ("
+              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
+            (style/create-section-header "Submission ID")
+            (style/create-paragraph
+             (links/create-external
+               {:data-test-id "submission-id"
+                :href (str
+                       moncommon/google-storage-context
+                       (:bucketName props) "/" (:submissionId submission) "/")}
+               (:submissionId submission)))]
+           [:div {:style {:float "left" :width "33.33%"}}
+            (style/create-section-header [:div {} "Total Run Cost"
+                                          (dropdown/render-info-box
+                                           {:text "Costs may take up to one day to populate."})])
+            (style/create-paragraph
+             [:div {} ((fn [cost]
+                (if (or (= 0 cost) (nil? cost)) "Not Available" (common/format-price cost)))
+              (:cost submission))]
+             [:br {}]) ;; extra br to align section headers across columns
+            (style/create-section-header [:div {} "Call Caching"
+                                          (dropdown/render-info-box
+                                           {:text (if (:useCallCache submission)
+                                             "Call caching was enabled for this submission by its submitter. Review individual
+                                                workflow calls below to see if they are cache hits or misses."
+                                             "Call caching was disabled for this submission by its submitter.")})])
+            (style/create-paragraph
+             [:div {} (if (:useCallCache submission) "Enabled" "Disabled")])]]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)
@@ -218,6 +229,7 @@
                            :submission submission
                            :bucketName (:bucketName props)
                            :submission-id (:submissionId submission)
+                           :use-call-cache (:useCallCache submission)
                            :workflow-id (:workflow-id props)}]])))
    :load-details
    (fn [{:keys [props state]}]

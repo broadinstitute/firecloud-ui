@@ -94,7 +94,10 @@
     :else (do (utils/log "Unknown submission status: " wf-statuses)
               (render-unknown-icon))))
 
-(defn icon-for-project-status [project-status]
+(defn icon-for-submission [sub-status wf-statuses]
+  (if (= "Done" sub-status)
+    (icon-for-sub-status wf-statuses)
+    (icon-for-wf-status sub-status)))(defn icon-for-project-status [project-status]
   (cond
     (= project-status "Error") (render-failure-icon)
     (= project-status "Ready") (render-success-icon)
@@ -110,9 +113,14 @@
     :else (do (utils/log "Unknown call status: " status)
               (render-unknown-icon))))
 
-
-(defn call-cache-result [cache-status]
-  (if (= cache-status "ReadAndWriteCache") "Enabled" "Disabled"))
+(defn icons-for-call-statuses [statuses]
+  [:span {}
+    (when (some #(contains? call-success-statuses %) statuses)
+     (render-success-icon))
+    (when (some #(contains? call-failure-statuses %) statuses)
+     (render-failure-icon))
+    (when (some #(contains? call-running-statuses %) statuses)
+      (render-running-icon))])
 
 (defn format-call-cache [cache-hit]
   (if cache-hit "Hit" "Miss"))
