@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common.links :as links]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
@@ -32,6 +33,17 @@
      (swap! state dissoc :editing?)
      {:inputs (select-keys (:inputs @locals) (map (comp keyword :name) (:inputs (:inputs-outputs props))))
       :outputs (select-keys (:outputs @locals) (map (comp keyword :name) (:outputs (:inputs-outputs props))))})
+   :-add-default-outputs
+   (fn [{:keys [props state locals]} io-key]
+     (let [{:keys [values inputs-outputs]} props
+           defaulted-outputs (filter #(string/blank? ((keyword (:name %)) (:outputs values)))
+                               (:outputs inputs-outputs))
+           new-outputs (merge (:outputs values) (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaulted-outputs)))]
+     (swap! locals update io-key merge new-outputs)
+     ;(keyword name) (if (empty? value) "" value))
+       ;(utils/log defaulted-outputs)
+       ;(utils/log values)
+       ))
    :component-will-mount
    (fn [{:keys [props locals]}]
      (swap! locals utils/deep-merge (:values props)))
@@ -44,6 +56,9 @@
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
+                   :secondary-title (when (:entity-type? props)
+                                      (links/create-internal {:onClick #(this :-add-default-outputs)}
+                                        (str "Populate with defaults")))
                    :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
