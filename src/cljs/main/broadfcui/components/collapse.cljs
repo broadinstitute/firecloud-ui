@@ -22,7 +22,7 @@
           (icons/render-icon {:className "fa-fw" :style {:flexShrink 0}}
                              (if visible? :disclosure-opened :disclosure-closed))
           title]
-         (when secondary-title [:div {} secondary-title])
+         (when secondary-title [:div {:style {:paddingLeft "1rem" :fontSize "small" :alignSelf "center"}} secondary-title])
          (when visible? title-expand)]
         [:div {:style {:display (when-not visible? "none") :paddingLeft icons/fw-icon-width}}
          contents]]))})

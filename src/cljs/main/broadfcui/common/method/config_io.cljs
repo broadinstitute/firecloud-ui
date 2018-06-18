@@ -19,34 +19,43 @@
 
 (def clip (partial merge table-style/clip-text))
 
+;(def [inputs-outputs]
+;  (filter #(string/blank? ((keyword (:name %)) (:outputs values)))
+;          (:outputs inputs-outputs)))
+
 
 (react/defc IOTables
   {:start-editing
-   (fn [{:keys [props state locals]}]
-     (swap! locals utils/deep-merge (:values props))
-     (swap! state assoc :editing? true))
+   (fn [{:keys [props state]}]
+     (let [{:keys [outputs]} @state]
+     (swap! state utils/deep-merge (:values props))
+     (swap! state assoc :original-outputs outputs)
+     (swap! state assoc :editing? true)))
    :cancel-editing
    (fn [{:keys [state]}]
-     (swap! state dissoc :editing?))
+     (let [{:keys [original-outputs]} @state]
+       (swap! state dissoc :editing?)
+       (swap! state assoc :outputs original-outputs)))
    :save
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state]}]
      (swap! state dissoc :editing?)
-     {:inputs (select-keys (:inputs @locals) (map (comp keyword :name) (:inputs (:inputs-outputs props))))
-      :outputs (select-keys (:outputs @locals) (map (comp keyword :name) (:outputs (:inputs-outputs props))))})
+     {:inputs (select-keys (:inputs @state) (map (comp keyword :name) (:inputs (:inputs-outputs props))))
+      :outputs (select-keys (:outputs @state) (map (comp keyword :name) (:outputs (:inputs-outputs props))))})
+   :-get-defaultable-outputs
+   (fn [{:keys [props state]}]
+     (let [{:keys [ inputs-outputs]} props]
+           (filter #(string/blank? ((keyword (:name %)) (:outputs @state)))
+             (:outputs inputs-outputs))))
    :-add-default-outputs
-   (fn [{:keys [props state locals]} io-key]
-     (let [{:keys [values inputs-outputs]} props
-           defaulted-outputs (filter #(string/blank? ((keyword (:name %)) (:outputs values)))
-                               (:outputs inputs-outputs))
-           new-outputs (merge (:outputs values) (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaulted-outputs)))]
-     (swap! locals update io-key merge new-outputs)
-     ;(keyword name) (if (empty? value) "" value))
-       ;(utils/log defaulted-outputs)
-       ;(utils/log values)
-       ))
+   (fn [{:keys [props state this]}]
+     (let [{:keys [values begin-editing]} props
+           defaultable-outputs (this :-get-defaultable-outputs)
+           new-outputs (merge (:outputs @state) (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaultable-outputs)))]
+       (when-not (empty? defaultable-outputs) (begin-editing))
+       (swap! state update :outputs merge new-outputs)))
    :component-will-mount
-   (fn [{:keys [props locals]}]
-     (swap! locals utils/deep-merge (:values props)))
+   (fn [{:keys [props state]}]
+     (swap! state utils/deep-merge (:values props)))
    :render
    (fn [{:keys [props this]}]
      (let [id (gensym "io-table-")]
@@ -56,13 +65,13 @@
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
-                   :secondary-title (when (:entity-type? props)
+                   :secondary-title (when (and (:entity-type? props) (not (empty? (this :-get-defaultable-outputs))))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
-                                        (str "Populate with defaults")))
+                                        (str "Populate blank attributes with defaults")))
                    :default-hidden? (:default-hidden? props)
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state locals]} io-key]
+   (fn [{:keys [props state]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -70,7 +79,7 @@
                                  (let [[task variable] (take-last 2 (string/split name "."))
                                        k-name (keyword name)
                                        error-message (get-in invalid-values [io-key k-name])
-                                       value (get-in @locals [io-key k-name])]
+                                       value (get-in @state [io-key k-name])]
                                    (merge (dissoc item :inputType :outputType :optional)
                                           (utils/restructure task variable error-message value)
                                           {:type (some-> (or inputType outputType) process-type)
@@ -120,15 +129,15 @@
                                      (if editing?
                                        [Autosuggest
                                         {:key name
-                                         :default-value value
-                                         :caching? true
+                                         :value value
+                                         :caching? false
                                          :data data
                                          :shouldRenderSuggestions (constantly true)
                                          :inputProps {:data-test-id (str name "-text-input")
                                                       :placeholder (if optional? "Optional" "Select or enter")}
                                          :suggestionsProps {:data-test-id (str name "-suggestions")}
                                          :on-change (fn [value]
-                                                      (swap! locals update io-key assoc (keyword name)
+                                                      (swap! state update io-key assoc (keyword name)
                                                              (if (empty? value) "" value)))
                                          :theme {:input {:width "calc(100% - 16px)"}}}]
                                        [:span {:style (when optional? table-style/table-cell-optional)}
