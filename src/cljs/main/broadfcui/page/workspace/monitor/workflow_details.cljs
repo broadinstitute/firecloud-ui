@@ -293,10 +293,10 @@
                 (create-field "Ended" (moncommon/render-date (data "end")))
                 [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
                 [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
-                (when (data "stdout")
-                  (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/")))))
-                (when (data "stderr")
-                  (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/")))))
+                (when-let [stdout (data "stdout")]
+                  (create-field "stdout" (display-value stdout (last (string/split stdout #"/")))))
+                (when-let [stderr (data "stderr")]
+                  (create-field "stderr" (display-value stderr (last (string/split stderr #"/")))))
                 (backend-logs data)
                 (when-let [failures (data "failures")]
                   [Failures {:data failures}])]])
