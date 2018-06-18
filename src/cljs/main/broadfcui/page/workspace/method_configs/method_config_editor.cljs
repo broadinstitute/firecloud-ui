@@ -251,7 +251,8 @@
             [:div {:style {:display "flex" :font-size "90%"}}
              [:div {:style {:flex "1 1 60%"}}
               (when (this :-can-edit?)
-                [:div {} [Checkbox {:label [:span {:style {:font-weight 500 :color "#000"}}
+                [:div {} [Checkbox {:data-test-id "data-model-checkbox"
+                                    :label [:span {:style {:font-weight 500 :color "#000"}}
                                             "Configure inputs/outputs using the Workspace Data Model"
                                             (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/quickstart?page=data" :style {:white-space "nowrap"}} "Learn more about Workspace data model")})]
                                     :checked? entity-type?

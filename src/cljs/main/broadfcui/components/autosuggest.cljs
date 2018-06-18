@@ -32,6 +32,7 @@
   :value (required when not caching)
 
   Other props to pass through to input element go in :inputProps.
+  Other props to pass through to suggestion container element go in :suggestionsProps
 
   :set-value is exposed publicly, for use when caching."
   {:component-will-mount
@@ -53,7 +54,7 @@
      {:value (or (:value props) (:default-value props))})
    :render
    (fn [{:keys [state props locals]}]
-     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value]} props
+     (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value suggestionsProps]} props
            {:keys [suggestions]} @state
            value (or (:value (if caching? @state props)) "")
            get-suggestions (cond
@@ -111,7 +112,7 @@
                    :renderSuggestionsContainer (fn [arg]
                                                  (let [{:keys [containerProps]} (js->clj arg :keywordize-keys true)]
                                                    (react/create-element
-                                                    [:div containerProps
+                                                    [:div (merge suggestionsProps containerProps)
                                                      (case suggestions
                                                        [:loading] (spinner "Loading...")
                                                        [:error] [:div {:style {:margin "1em"}} "Error loading results."]
@@ -149,7 +150,7 @@
                     :sectionContainer {}
                     :sectionContainerFirst {}
                     :sectionTitle {}}}
-                  (dissoc props :default-value :value :on-submit :data :url :service-prefix :get-suggestions :on-change :caching? :get-value)))]))
+                  (dissoc props :default-value :value :on-submit :data :url :service-prefix :get-suggestions :on-change :caching? :get-value :suggestionsProps)))]))
    :component-did-mount
    (fn [{:keys [locals this]}]
      (when-let [on-clear (:on-clear @locals)]

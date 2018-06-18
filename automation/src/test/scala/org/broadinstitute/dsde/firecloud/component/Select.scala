@@ -8,4 +8,6 @@ case class Select(queryString: QueryString)(implicit webDriver: WebDriver) exten
     new WebDriverWait(webDriver, 10).until(ExpectedConditions.elementToBeClickable(query.element.underlying))
     singleSel(query).value = option value o
   }
+
+  def value: String = singleSel(query).value
 }

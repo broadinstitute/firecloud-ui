@@ -33,6 +33,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val deleteMethodConfigButton = Button("delete-method-config-button")
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
+  private val dataModelCheckbox = Checkbox("data-model-checkbox")
 
   def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
@@ -79,6 +80,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     clickLaunchAnalysis(new MessageModal())
   }
 
+  def isEditing: Boolean = {
+    if (openEditModeButton.isVisible) false
+    else if (saveEditedMethodConfigButton.isVisible) true
+    else throw new Exception("Could not determine edit mode of method config view")
+  }
+
   def openEditMode(expectSuccess: Boolean = true): Unit = {
     openEditModeButton.doClick()
     if (expectSuccess)
@@ -109,6 +116,26 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     if (outputs.isDefined) { changeInputsOutputs(outputs.get)}
 
     saveEdits()
+  }
+
+  def toggleDataModel(): Boolean = {
+    if (dataModelCheckbox.isChecked) dataModelCheckbox.ensureUnchecked()
+    else dataModelCheckbox.ensureChecked()
+    dataModelCheckbox.isChecked
+  }
+
+  def readRootEntityTypeSelect: String = {
+    editMethodConfigRootEntityTypeSelect.value
+  }
+
+  def selectRootEntityType(rootEntityType: String): Unit = {
+    editMethodConfigRootEntityTypeSelect.select(rootEntityType)
+  }
+
+  def clickAndReadSuggestions(field: String): Seq[String] = {
+    click on testId(s"$field-text-input")
+    val elements = findAll(xpath(s"//*[@data-test-id='$field-suggestions']/*/li"))
+    elements.map(_.text).toSeq
   }
 
   def changeSnapshotId(newSnapshotId: Int): Unit = {
