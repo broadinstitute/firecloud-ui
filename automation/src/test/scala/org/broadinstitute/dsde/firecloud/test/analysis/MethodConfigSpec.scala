@@ -26,6 +26,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             Map.empty, Map.empty,
             "sample")
 
+          val workspaceSuggestions = Seq("workspace.foo")
+          val participantSuggestions = Seq("this.is_a_participant")
+
           withWebDriver { implicit driver =>
             withSignIn(user) { _ =>
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
@@ -33,11 +36,11 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
               configPage.toggleDataModel() shouldBe false
               configPage.isEditing shouldBe true
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions
 
               configPage.toggleDataModel() shouldBe true
               configPage.readRootEntityTypeSelect shouldBe "sample"
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions
 
               api.importMetaData(projectName, workspaceName, "entities",
                 "entity:participant_id\tis_a_participant\nparticipant1\ttrue")
@@ -48,17 +51,18 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
               configPage.openEditMode()
               configPage.readRootEntityTypeSelect shouldBe "sample"
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions
 
               configPage.selectRootEntityType("participant")
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo", "this.is_a_participant")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions ++ participantSuggestions
 
+              // Unchecking data model should suppress participant suggestions
               configPage.toggleDataModel() shouldBe false
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions
 
               configPage.toggleDataModel() shouldBe true
               configPage.readRootEntityTypeSelect shouldBe "participant"
-              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs Seq("workspace.foo", "this.is_a_participant")
+              configPage.clickAndReadSuggestions("test.hello.name") should contain theSameElementsAs workspaceSuggestions ++ participantSuggestions
             }
           }
         }
