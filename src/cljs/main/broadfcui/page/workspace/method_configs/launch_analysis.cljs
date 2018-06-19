@@ -29,53 +29,56 @@
   [:div {:style {:width "80vw"}}
    (when (:launching? @state)
      (blocker "Launching analysis..."))
-   (style/create-form-label "Select Entity")
-   [:div {:style {:backgroundColor "#fff" :border style/standard-line
-                  :padding "1em" :marginBottom "0.5em"}}
-    [:div {:style {:display "flex" :alignItems "flex-end"}}
-     [:div {:style {:marginBottom "1em" :fontSize "140%"}
-            :data-test-id "selected-entity"}
-      "Selected: "
-      (if-let [e (:selected-entity @state)]
-        (str (:name e) " (" (:type e) ")")
-        "None")]
-     flex/spring
-     [QueueStatus]]
-    (let [set-entity (fn [entity]
-                       (swap! state assoc
-                              :selected-entity (entity->id entity)
-                              :workflow-count (common/count-workflows
-                                               entity (:root-entity-type props))))]
-      [EntityTable
-       {:workspace-id (:workspace-id props)
-        :initial-entity-type (:root-entity-type props)
-        :column-defaults
-        (data-utils/get-column-defaults (:column-defaults props))
-        :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
-                                (let [entity-name (or name entityName)]
-                                  (links/create-internal
-                                    {:data-test-id (str entity-name "-link")
-                                     :onClick #(set-entity entity)}
-                                    entity-name)))
-        :style {:body-row (fn [{:keys [index row]}]
-                            {:backgroundColor
-                             (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
-                                   (even? index) (:background-light style/colors)
-                                   :else "#fff")
-                             :cursor "pointer"})}
-        :on-row-click (fn [_ entity] (set-entity entity))}])]
-   (style/create-form-label "Define Expression")
-   (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
-     (style/create-text-field {:placeholder "leave blank for default"
-                               :style {:width "100%"
-                                       :backgroundColor (when disabled (:background-light style/colors))}
-                               :disabled disabled
-                               :value (if disabled
-                                        "Disabled - selected entity is of root entity type"
-                                        (:expression @state))
-                               :data-test-id "define-expression-input"
-                               :onChange #(let [text (-> % .-target .-value string/trim)]
-                                            (swap! state assoc :expression text))}))
+   (if-not (:root-entity-type props)
+     [:div {:style {:background-color "#fff" :border style/standard-line :padding "1em" :marginBottom "0.5em"}} [QueueStatus]]
+     [:div
+       (style/create-form-label "Select Entity")
+       [:div {:style {:backgroundColor "#fff" :border style/standard-line
+                      :padding "1em" :marginBottom "0.5em"}}
+        [:div {:style {:display "flex" :alignItems "flex-end"}}
+         [:div {:style {:marginBottom "1em" :fontSize "140%"}
+                :data-test-id "selected-entity"}
+          "Selected: "
+          (if-let [e (:selected-entity @state)]
+            (str (:name e) " (" (:type e) ")")
+            "None")]
+         flex/spring
+         [QueueStatus]]
+        (let [set-entity (fn [entity]
+                           (swap! state assoc
+                                  :selected-entity (entity->id entity)
+                                  :workflow-count (common/count-workflows
+                                                   entity (:root-entity-type props))))]
+          [EntityTable
+           {:workspace-id (:workspace-id props)
+            :initial-entity-type (:root-entity-type props)
+            :column-defaults
+            (data-utils/get-column-defaults (:column-defaults props))
+            :entity-name-renderer (fn [{:keys [name entityName] :as entity}]
+                                    (let [entity-name (or name entityName)]
+                                      (links/create-internal
+                                        {:data-test-id (str entity-name "-link")
+                                         :onClick #(set-entity entity)}
+                                        entity-name)))
+            :style {:body-row (fn [{:keys [index row]}]
+                                {:backgroundColor
+                                 (cond (= (entity->id row) (:selected-entity @state)) (:tag-background style/colors)
+                                       (even? index) (:background-light style/colors)
+                                       :else "#fff")
+                                 :cursor "pointer"})}
+            :on-row-click (fn [_ entity] (set-entity entity))}])]
+       (style/create-form-label "Define Expression")
+       (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
+         (style/create-text-field {:placeholder "leave blank for default"
+                                   :style {:width "100%"
+                                           :backgroundColor (when disabled (:background-light style/colors))}
+                                   :disabled disabled
+                                   :value (if disabled
+                                            "Disabled - selected entity is of root entity type"
+                                            (:expression @state))
+                                   :data-test-id "define-expression-input"
+                                   :onChange #(let [text (-> % .-target .-value string/trim)]
+                                                (swap! state assoc :expression text))}))])
    [:div {:style {:marginTop "1em"}}
     [Checkbox
      {:ref "callCache-check"
@@ -123,8 +126,9 @@
           (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))))
    :launch
    (fn [{:keys [props state refs]}]
-     (if-let [entity (:selected-entity @state)]
-       (let [config-id (:config-id props)
+     (if (or (not (:root-entity-type props)) (:selected-entity @state))
+       (let [entity (:selected-entity @state)
+             config-id (:config-id props)
              expression (:expression @state)
              payload (merge {:methodConfigurationNamespace (:namespace config-id)
                              :methodConfigurationName (:name config-id)

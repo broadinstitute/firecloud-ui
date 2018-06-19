@@ -111,6 +111,7 @@
                                          :shouldRenderSuggestions (constantly true)
                                          :inputProps {:data-test-id (str name "-text-input")
                                                       :placeholder (if optional? "Optional" "Select or enter")}
+                                         :suggestionsProps {:data-test-id (str name "-suggestions")}
                                          :on-change (fn [value]
                                                       (swap! locals update io-key assoc (keyword name)
                                                              (if (empty? value) "" value)))

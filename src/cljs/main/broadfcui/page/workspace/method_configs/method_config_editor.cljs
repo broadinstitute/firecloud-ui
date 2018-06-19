@@ -4,11 +4,14 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
+   [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.entity-details :refer [EntityDetails]]
+   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -103,10 +106,8 @@
 (react/defc- Sidebar
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [access-level workspace-id after-delete
-                   redacted? name-validation-errors? snapshots
+     (let [{:keys [workspace-id after-delete redacted? name-validation-errors? snapshots
                    editing? locked? loaded-config body-id parent]} props
-           can-edit? (common/access-greater-than? access-level "READER")
            config-id (ws-common/config->id (:methodConfiguration loaded-config))
            source-repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -137,15 +138,14 @@
                 :text "Cancel Editing" :icon :cancel
                 :onClick #(parent :-cancel-editing)}])
              (list
-              (when can-edit?
+              (when (parent :-can-edit?)
                 [buttons/SidebarButton
                  {:data-test-id "edit-method-config-button"
                   :style :light :color :button-primary
                   :text "Edit Configuration" :icon :edit
-                  :disabled? (cond locked? "The workspace is locked"
-                                   (and redacted? (empty? snapshots)) "There are no available method snapshots.")
+                  :disabled? (parent :-edit-disabled?)
                   :onClick #(parent :-begin-editing snapshots)}])
-              (when can-edit?
+              (when (parent :-can-edit?)
                 [buttons/SidebarButton
                  {:data-test-id "delete-method-config-button"
                   :style :light :color :state-exception :margin :top
@@ -154,7 +154,7 @@
                   :onClick #(swap! state assoc :show-delete-dialog? true)}])
               (when (and (not redacted?) (= source-repo "agora"))
                 [buttons/SidebarButton
-                 {:style :light :color :button-primary :margin (when can-edit? :top)
+                 {:style :light :color :button-primary :margin (when (parent :-can-edit?) :top)
                   :text "Publish..." :icon :share
                   :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
 
@@ -176,34 +176,6 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-validated-method-config))
-   :component-did-update
-   (fn [{:keys [state]}]
-     (let [{:keys [methods loaded-config]} @state]
-       (when (and (not methods) loaded-config)
-         (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])
-               repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
-           (case repo
-             "agora"
-             (endpoints/call-ajax-orch
-              {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
-               :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                          (let [response (get-parsed-response)]
-                            (if success?
-                              (swap! state assoc
-                                     :methods-response response
-                                     :methods {[methodNamespace methodName] (mapv :snapshotId response)})
-                              ;; FIXME: :error-message is unused
-                              (swap! state assoc :methods {} :error-message status-text))))})
-             "dockstore"
-             (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
-               (endpoints/dockstore-get-versions
-                path
-                (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc
-                           ;; vector only used when checking redaction, N/A for Dockstore
-                           :methods {[nil nil] (mapv :name (get-parsed-response))})
-                    (swap! state assoc :methods {} :error-message status-text))))))))))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -218,16 +190,17 @@
         (if (= (:sourceRepo methodRepoMethod) "agora")
           [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])])
         [:div {:style {:padding "1em 2em" :display "flex"}}
-         [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
+         [Sidebar (merge (select-keys props [:workspace-id :after-delete])
                          (select-keys @state [:editing? :loaded-config :redacted? :name-validation-errors?])
                          (select-keys @locals [:body-id])
                          {:parent this :locked? locked? :snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))})]
          (this :-render-main locked?)]]))
    :-render-main
    (fn [{:keys [state this locals props refs]} locked?]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted?]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs entity-types methods methods-response redacted? entity-type? selected-entity-type]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod rootEntityType]} config
+           entity-type-options (merge (if rootEntityType {(keyword rootEntityType) {}} {}) entity-types)
            {:keys [methodName methodNamespace]} methodRepoMethod
            {:keys [body-id]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
@@ -272,69 +245,92 @@
                                    :method method
                                    :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                   (utils/restructure redacted? config methods editing? wdl-parse-error))]))
-        (create-section-header "Root Entity Type")
-        (create-section
-         (if editing?
-           (if (seq entity-types)
-             (style/create-identity-select {:ref "rootentitytype"
-                                            :data-test-id "edit-method-config-root-entity-type-select"
-                                            :defaultValue rootEntityType
-                                            :style {:maxWidth 500}
-                                            :onChange #(swap! state assoc :autocomplete-list
-                                                              (build-autocomplete-list
-                                                               {:workspace-attributes workspace-attributes
-                                                                :entity-types entity-types
-                                                                :selected-entity-type (.. % -target -value)}))}
-               (mapv #(name (first %)) entity-types))
-             [:select {:style (assoc style/select-style :width 500) :disabled true}
-              [:option {} "No entities in workspace. Import some in the Data tab."]])
-           [:div {:style {:padding "0.5em 0 1em 0"}} rootEntityType]))
+        (when (or (this :-can-edit?) entity-type?)
+          (create-section
+           (style/create-detail-well
+            [:div {:style {:display "flex" :font-size "90%"}}
+             [:div {:style {:flex "1 1 60%"}}
+              (when (this :-can-edit?)
+                [:div {} [Checkbox {:data-test-id "data-model-checkbox"
+                                    :label [:span {:style {:font-weight 500 :color "#000"}}
+                                            "Configure inputs/outputs using the Workspace Data Model"
+                                            (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/quickstart?page=data" :style {:white-space "nowrap"}} "Learn more about Workspace data model")})]
+                                    :checked? entity-type?
+                                    :disabled? (or (this :-edit-disabled?) (not (seq entity-type-options)))
+                                    :on-change (fn [new-value]
+                                                 (let [selected-entity-type (or (:selected-entity-type @state) (name (first (keys entity-type-options))))]
+                                                   (swap! locals assoc :autocomplete-list (this :-build-autocomplete-list (if new-value selected-entity-type nil)))
+                                                   (if editing?
+                                                     (swap! state assoc :entity-type? new-value :selected-entity-type selected-entity-type)
+                                                     (do
+                                                       ; Can't modify state here. Must wait until actually entering edit mode in order to correctly remember original value to restore on cancel.
+                                                       (swap! locals assoc :toggle-entity-type? true)
+                                                       (this :-begin-editing)))))}]])
+              (if entity-type?
+                [:div {:style {:padding "1rem 1rem 1rem 2rem"}}
+                 [:div {}
+                  [:span {:style {:font-weight 500}} "Entity type for input/output referencing: "]
+                  (when-not editing? rootEntityType)]
+                 (when editing?
+                   (if (seq entity-type-options)
+                     (style/create-identity-select {:data-test-id "edit-method-config-root-entity-type-select"
+                                                    :defaultValue selected-entity-type
+                                                    :style {:maxWidth 300}
+                                                    :onChange #(let [new-entity-type (.. % -target -value)]
+                                                                 (swap! locals assoc :autocomplete-list (this :-build-autocomplete-list new-entity-type))
+                                                                 (swap! state assoc :selected-entity-type new-entity-type))}
+                       (mapv #(name (first %)) entity-type-options))))])
+              (when-not (seq entity-type-options)
+                [:div {:style {:padding "1rem 1rem 1rem 2rem" :font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
+             [:div {:style {:flex "1 1 40%"}}
+              [:div {:style {:fontWeight 500}} "FireCloud Tip"]
+              [:div {} "A Workspace Data Model is no longer required to launch a workflow."]
+              #_[:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]]))) ; This is here and ready-to-go when we add JSON upload
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
                                    :values (select-keys config [:inputs :outputs])
                                    :invalid-values {:inputs (:invalidInputs loaded-config)
                                                     :outputs (:invalidOutputs loaded-config)}
-                                   :data (:autocomplete-list @state)}])]))
+                                   :data (:autocomplete-list @locals)}])]))
    :-begin-editing
-   (fn [{:keys [props state locals refs this]}]
+   (fn [{:keys [state locals refs this]}]
      (if-not (:entities-loaded? @locals)
-       (do (swap! state assoc :blocker "Loading attributes...")
-           (endpoints/call-ajax-orch
-            {:endpoint (endpoints/get-entity-types (:workspace-id props))
-             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                        (if success?
-                          (let [loaded-config (:loaded-config @state)
-                                entity-types (get-parsed-response)
-                                workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
-                                selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
-                            (swap! locals assoc :entities-loaded? true)
-                            (utils/multi-swap! state
-                              (assoc :entity-types entity-types
-                                     :autocomplete-list (build-autocomplete-list
-                                                         (utils/restructure workspace-attributes entity-types selected-entity-type)))
-                              (dissoc :blocker))
-                            (this :-begin-editing))
-                          ;; FIXME: :data-attribute-load-error is unused
-                          (swap! state assoc :data-attribute-load-error status-text)))}))
-       (let [{:keys [loaded-config inputs-outputs redacted?]} @state]
+       (when (this :-load-entities)
+         (this :-begin-editing))
+       (let [{:keys [loaded-config inputs-outputs redacted? entity-type? entity-types]} @state
+             {:keys [toggle-entity-type?]} @locals
+             new-entity-type? (if-not toggle-entity-type? entity-type? (not entity-type?))
+             selected-entity-type (if new-entity-type? (or (-> loaded-config :methodConfiguration :rootEntityType) (name (first (keys entity-types)))) nil)]
          ((@refs "IOTables") :start-editing)
-         (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs :original-redacted? redacted?))))
+         (swap! locals assoc :autocomplete-list (this :-build-autocomplete-list selected-entity-type))
+         (swap! state assoc
+                :editing? true
+                :entity-type? new-entity-type?
+                :selected-entity-type selected-entity-type
+                :original-config loaded-config
+                :original-inputs-outputs inputs-outputs
+                :original-redacted? redacted?
+                :original-entity-type? entity-type?)
+         (swap! locals assoc :toggle-entity-type? false))))
    :-cancel-editing
    (fn [{:keys [state refs]}]
      ((@refs "IOTables") :cancel-editing)
-     (let [{:keys [original-inputs-outputs original-redacted? original-config]} @state
+     (let [{:keys [original-inputs-outputs original-redacted? original-config original-entity-type?]} @state
            method-ref (-> original-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-config :inputs-outputs original-inputs-outputs :redacted? original-redacted?)
+       (swap! state assoc
+              :editing? false
+              :loaded-config original-config
+              :inputs-outputs original-inputs-outputs
+              :redacted? original-redacted?
+              :entity-type? original-entity-type?)
        ((@refs "methodDetailsViewer") :load-method-from-repo method-ref)))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (get-in @state [:loaded-config :methodConfiguration])
            name (common/get-trimmed-text refs "confname")
-           root-entity-type (if (seq (:entity-types @state))
-                              (common/get-trimmed-text refs "rootentitytype")
-                              (:rootEntityType config))
+           root-entity-type (if (:entity-type? @state) (:selected-entity-type @state) nil)
            selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -350,30 +346,28 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
-                      (do ((:on-rename props) name)
-                          ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
-                          (utils/multi-swap! state (assoc :loaded-config (get-parsed-response))
-                                                   (dissoc :redacted?)))
+                      (let [response (get-parsed-response)]
+                        ((:on-rename props) name)
+                        ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
+                        (swap! state assoc :entity-type? (boolean (-> response :methodConfiguration :rootEntityType)))
+                        (utils/multi-swap! state (assoc :loaded-config response)
+                                                 (dissoc :redacted?)))
                       (swap! state assoc :error-response (get-parsed-response false))))})))
+   :-build-autocomplete-list
+   (fn [{:keys [props state]} selected-entity-type]
+     (let [{:keys [entity-types]} @state
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
+       (build-autocomplete-list
+        (utils/restructure workspace-attributes entity-types selected-entity-type))))
    :-load-validated-method-config
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (get-parsed-response)
-                          fake-inputs-outputs (fn [data]
-                                                (let [method-config (:methodConfiguration data)]
-                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-                      (endpoints/call-ajax-orch
-                       {:endpoint endpoints/get-inputs-outputs
-                        :payload (get-in response [:methodConfiguration :methodRepoMethod])
-                        :headers ajax/content-type=json
-                        :on-done (fn [{:keys [success? get-parsed-response]}]
-                                   (if success?
-                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
+                    (let [loaded-config (get-parsed-response)]
+                      (this :-load-inputs-outputs loaded-config)
+                      (this :-fetch-method-versions loaded-config))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -382,7 +376,7 @@
                                                          [:methodConfiguration :methodRepoMethod key]))
                                                [:methodNamespace :methodName :methodPath :sourceRepo])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
-                                              [:namespace :name])
+                                              [:namespace :name :rootEntityType])
            method-ref {:sourceRepo source-repo
                        :methodPath method-path
                        :methodNamespace method-namespace
@@ -417,4 +411,86 @@
                                                                  :validOutputs {})
                                                 :inputs-outputs (get-parsed-response)
                                                 :redacted? false)
-                                         (swap! state assoc :error (:message (get-parsed-response))))))}))))})))})
+                                         (swap! state assoc :error (:message (get-parsed-response))))))}))))})))
+   :-load-inputs-outputs
+   (fn [{:keys [state]} loaded-config]
+     (let [fake-inputs-outputs (fn [data]
+                                 (let [method-config (:methodConfiguration data)]
+                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
+       (endpoints/call-ajax-orch
+        {:endpoint endpoints/get-inputs-outputs
+         :payload (get-in loaded-config [:methodConfiguration :methodRepoMethod])
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (swap! state assoc
+                             :loaded-config loaded-config
+                             :entity-type? (boolean (-> loaded-config :methodConfiguration :rootEntityType))
+                             :inputs-outputs (get-parsed-response)
+                             :redacted? false)
+                      (swap! state assoc
+                             :loaded-config loaded-config
+                             :inputs-outputs (fake-inputs-outputs loaded-config)
+                             :redacted? true)))})))
+   ; Inputs loaded-config (:entities-loaded? @locals)
+   ; Outputs (:methods-response @state) (:methods @state) (:error-message @state)
+   :-fetch-method-versions
+   (fn [{:keys [locals state this]} loaded-config]
+     (let [{:keys [methodName methodNamespace]} (get-in loaded-config [:methodConfiguration :methodRepoMethod])
+           repo (get-in loaded-config [:methodConfiguration :methodRepoMethod :sourceRepo])]
+       (case repo
+         "agora"
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/list-method-snapshots methodNamespace methodName)
+           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                      (let [response (get-parsed-response)]
+                        (if success?
+                          (swap! state assoc
+                                 :methods-response response
+                                 :methods {[methodNamespace methodName] (mapv :snapshotId response)})
+                          ;; FIXME: :error-message is unused
+                          (swap! state assoc :methods {} :error-message status-text)))
+                      (if-not (:entities-loaded? @locals)
+                        (this :-load-entities)))})
+         "dockstore"
+         (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
+           (endpoints/dockstore-get-versions
+            path
+            (fn [{:keys [success? get-parsed-response status-text]}]
+              (if success?
+                (swap! state assoc
+                       ;; vector only used when checking redaction, N/A for Dockstore
+                       :methods {[nil nil] (mapv :name (get-parsed-response))})
+                (swap! state assoc :methods {} :error-message status-text))))))))
+   ; Inputs (:workspace-id props) (:workspace props) (:loaded-config @state)
+   ; Outputs (:entity-types @state) (:entities-loaded? @locals) (:blocker @state) (:data-attribute-load-error @state)
+   :-load-entities
+   (fn [{:keys [locals props state]}]
+     (swap! state assoc :blocker "Loading attributes...")
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-entity-types (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (let [loaded-config (:loaded-config @state)
+                          entity-types (get-parsed-response)
+                          workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+                          selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
+                      (swap! locals assoc :entities-loaded? true)
+                      (utils/multi-swap! state
+                        (assoc :entity-types entity-types)
+                        (dissoc :blocker))
+                      success?)
+                    ;; FIXME: :data-attribute-load-error is unused
+                    (swap! state assoc :data-attribute-load-error status-text)))}))
+   :-can-edit?
+   (fn [{:keys [props]}]
+     (common/access-greater-than? (:access-level props) "READER"))
+   :-edit-disabled?
+   (fn [{:keys [props state]}]
+     (let [locked? (get-in props [:workspace :workspace :isLocked])
+           {:keys [redacted? methods]} @state
+           methodRepoMethod (get-in @state [:loaded-config :methodConfiguration :methodRepoMethod])
+           snapshots (get methods (replace methodRepoMethod [:methodNamespace :methodName]))]
+       (cond locked? "The workspace is locked"
+             (and redacted? (empty? snapshots)) "There are no available method snapshots.")))})
