@@ -9,6 +9,9 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.utils :as utils]
    ))
 
@@ -23,15 +26,19 @@
 (react/defc IOTables
   {:start-editing
    (fn [{:keys [props state]}]
-     (let [{:keys [outputs]} @state]
+     (let [{:keys [inputs outputs]} @state]
        (swap! state assoc :editing? true)
        (swap! state utils/deep-merge (:values props))
-       (swap! state assoc :original-outputs outputs)))
+       (swap! state assoc
+              :original-inputs inputs
+              :original-outputs outputs)))
    :cancel-editing
    (fn [{:keys [state]}]
-     (let [{:keys [original-outputs]} @state]
+     (let [{:keys [original-inputs original-outputs]} @state]
        (swap! state dissoc :editing?)
-       (swap! state assoc :outputs (utils/log original-outputs))))
+       (swap! state assoc
+              :inputs original-inputs
+              :outputs (utils/log original-outputs))))
    :save
    (fn [{:keys [props state]}]
      (swap! state dissoc :editing?)
@@ -55,11 +62,33 @@
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
    :render
-   (fn [{:keys [props this]}]
-     (let [{:keys [default-hidden? entity-type? style]} props
+   (fn [{:keys [props state this]}]
+     (let [{:keys [default-hidden? entity-type? style begin-editing]} props
+           {:keys [editing?]} @state
            id (gensym "io-table-")]
        [:div {:id id :style style}
+        (when (:show-upload? @state)
+          [modals/OKCancelForm
+           {:header "Upload JSON" :show-cancel? true :cancel-text "Close"
+            :dismiss #(swap! state dissoc :show-upload?)
+            :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
+                      [import-data/Page
+                       {:on-upload
+                        (fn [{:keys [file-contents]}]
+                          (let [uploaded-inputs (utils/parse-json-string file-contents true)
+                                new-inputs (merge (:inputs @state) uploaded-inputs)]
+                            (swap! state assoc :inputs new-inputs)
+                            (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
+                   :secondary-title [:div {}
+                                     (links/create-internal
+                                       {:data-test-id "populate-with-json-link"
+                                        :on-click (fn []
+                                                    (swap! state assoc :show-upload? true)
+                                                    (when-not editing? (begin-editing)))}
+                                       "Populate with a .json file...")
+                                     (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
+                                                                                              :style {:white-space "nowrap"}} "Learn more about the expected format")})]
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}

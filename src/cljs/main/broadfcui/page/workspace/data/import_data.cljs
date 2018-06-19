@@ -69,17 +69,19 @@
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     (endpoints/call-ajax-orch
-      {:endpoint ((if (= "data" (:import-type props))
-                    endpoints/import-entities
-                    endpoints/import-attributes)
-                  (:workspace-id props))
-       :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
-       :encType "multipart/form-data"
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :loading? :file :file-contents)
-                  (if success?
-                    (do
-                      (swap! state assoc :upload-result {:success? true})
-                      ((:on-data-imported props)))
-                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))})
+     (if-let [on-upload (:on-upload props)]
+       (on-upload (select-keys @state [:file-contents]))
+       (endpoints/call-ajax-orch
+          {:endpoint ((if (= "data" (:import-type props))
+                        endpoints/import-entities
+                        endpoints/import-attributes)
+                      (:workspace-id props))
+           :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
+           :encType "multipart/form-data"
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :loading? :file :file-contents)
+                      (if success?
+                        (do
+                          (swap! state assoc :upload-result {:success? true})
+                          ((:on-data-imported props)))
+                        (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))})))})
