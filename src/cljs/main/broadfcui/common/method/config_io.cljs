@@ -66,7 +66,7 @@
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
-                   :secondary-title (when (and entity-type? (seq (this :-get-defaultable-outputs)) (not edit-disabled?))
+                   :secondary-title (when (and entity-type? (not edit-disabled?) (seq (this :-get-defaultable-outputs)))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
                                         "Populate blank attributes with defaults"))
                    :default-hidden? default-hidden?
