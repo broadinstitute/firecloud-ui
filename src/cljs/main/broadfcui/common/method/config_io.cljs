@@ -169,7 +169,7 @@
                                          :theme {:input {:width "calc(100% - 16px)"}}}]
                                        [:span {:style (when optional? table-style/table-cell-optional)}
                                         (if-not (string/blank? value)
-                                          value
+                                          [:span {:data-test-id (str name "-display")} value]
                                           [:span {:style {:color (:text-lighter style/colors)}}
                                            (if optional? "Optional" "Required")])])])}])
                               (when invalid-values
