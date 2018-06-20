@@ -290,7 +290,7 @@
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
                                    :entity-type? entity-type?
-                                   :edit-disabled? (this :-edit-disabled?)
+                                   :can-edit? (utils/log (and (this :-can-edit?) (string/blank? (this :-edit-disabled?))))
                                    :begin-editing #(this :-begin-editing)
                                    :values (select-keys config [:inputs :outputs])
                                    :invalid-values {:inputs (:invalidInputs loaded-config)

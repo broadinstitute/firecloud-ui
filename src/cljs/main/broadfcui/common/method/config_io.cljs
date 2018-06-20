@@ -58,7 +58,7 @@
      (swap! state utils/deep-merge (:values props)))
    :render
    (fn [{:keys [props this]}]
-     (let [{:keys [default-hidden? entity-type? style edit-disabled?]} props
+     (let [{:keys [default-hidden? entity-type? style can-edit?]} props
            id (gensym "io-table-")]
        [:div {:id id :style style}
         [Collapse {:title "Inputs"
@@ -66,7 +66,7 @@
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
-                   :secondary-title (when (and entity-type? (not edit-disabled?) (seq (this :-get-defaultable-outputs)))
+                   :secondary-title (when (and entity-type? can-edit? (seq (this :-get-defaultable-outputs)))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
                                         "Populate blank attributes with defaults"))
                    :default-hidden? default-hidden?
