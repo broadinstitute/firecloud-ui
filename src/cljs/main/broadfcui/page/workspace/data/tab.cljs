@@ -98,7 +98,7 @@
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :get-toolbar-items
           (fn [table-props]
-            [(when (:selected-entity-type @state) (this :-render-download-link table-props))
+            [(when (:selected-entity-type @state) (this :-render-download-links table-props))
              [buttons/Button {:text "Import Metadata..."
                               :style {:marginLeft "auto"}
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
@@ -112,30 +112,38 @@
               (this :-render-entity entity)
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
-   :-render-download-link
+   :-render-download-links
    (fn [{:keys [props state]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
-       [:form {:target "_blank"
-               :method "POST"
-               :action (str (config/api-url-root) "/cookie-authed/workspaces/"
-                            (:namespace workspace-id) "/"
-                            (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
-        [:input {:type "hidden"
-                 :name "FCtoken"
-                 :value (user/get-access-token)}]
-        [:input {:type "hidden"
-                 :name "attributeNames"
-                 :value (->> (:columns table-props)
-                             (filter :visible?)
-                             (map :id)
-                             (string/join ","))}]
-        [:input {:data-test-id "download-metadata-button"
-                 :data-entity-type selected-entity-type
-                 :style {:border "none" :backgroundColor "transparent" :cursor "pointer"
-                         :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
-                 :type "submit"
-                 :value (str "Download '" selected-entity-type "' metadata")}]]))
+       [:span {}
+        [:form {:target "_blank"
+                :method "POST"
+                :action (str (config/api-url-root) "/cookie-authed/workspaces/"
+                             (:namespace workspace-id) "/"
+                             (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
+         [:input {:type "hidden"
+                  :name "FCtoken"
+                  :value (user/get-access-token)}]
+         [:input {:type "hidden"
+                  :name "attributeNames"
+                  :value (->> (:columns table-props)
+                              (filter :visible?)
+                              (map :id)
+                              (string/join ","))}]
+         [:input {:data-test-id "download-metadata-button"
+                  :data-entity-type selected-entity-type
+                  :style {:border "none" :backgroundColor "transparent" :cursor "pointer"
+                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
+                  :type "submit"
+                  :value (str "Download '" selected-entity-type "' metadata")}]]
+        [:a {:style {:textDecoration "none" :marginLeft "1em"}
+             :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                        (:namespace workspace-id) "/"
+                        (:name workspace-id) "/entities/" selected-entity-type "/tsv")
+             :onClick #(user/set-access-token-cookie (user/get-access-token))
+             :target "_blank"}
+         "(permalink)"]]))
    :-render-entity
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
