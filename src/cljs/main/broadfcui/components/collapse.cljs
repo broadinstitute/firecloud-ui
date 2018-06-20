@@ -11,9 +11,9 @@
      {:visible? (not (:default-hidden? props))})
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [title title-expand contents]} props
+     (let [{:keys [title title-expand contents secondary-title]} props
            {:keys [visible?]} @state]
-       [:div (dissoc props :title :title-expand :contents :default-hidden?)
+       [:div (dissoc props :title :title-expand :contents :default-hidden? :secondary-title)
         [:div {:style {:display "flex"}}
          [:div {:data-test-id "toggle"
                 :data-test-state (if visible? "expanded" "collapsed")
@@ -22,6 +22,7 @@
           (icons/render-icon {:className "fa-fw" :style {:flexShrink 0}}
                              (if visible? :disclosure-opened :disclosure-closed))
           title]
+         (when secondary-title [:div {:style {:paddingLeft "1rem" :fontSize "small" :alignSelf "center"}} secondary-title])
          (when visible? title-expand)]
         [:div {:style {:display (when-not visible? "none") :paddingLeft icons/fw-icon-width}}
          contents]]))})

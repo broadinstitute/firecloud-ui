@@ -289,6 +289,8 @@
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
+                                   :entity-type? entity-type?
+                                   :begin-editing #(this :-begin-editing)
                                    :values (select-keys config [:inputs :outputs])
                                    :invalid-values {:inputs (:invalidInputs loaded-config)
                                                     :outputs (:invalidOutputs loaded-config)}

@@ -188,13 +188,13 @@
            (if (get-in submission [:submissionEntity :entityType])
              [:div {}
               (style/create-section-header "Submission Entity")
-           (style/create-paragraph
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
-            [:div {}
-             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])])]
+              (style/create-paragraph
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
+                [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityType])]]
+               [:div {}
+                [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+                [:span {:style {:fontWeight 500}} (get-in submission [:submissionEntity :entityName])]])])]
           [:div {:style {:float "left" :width "33.33%"}}
            (style/create-section-header "Submitted by")
            (style/create-paragraph
