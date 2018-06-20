@@ -31,7 +31,7 @@
    (fn [{:keys [state]}]
      (let [{:keys [original-outputs]} @state]
        (swap! state dissoc :editing?)
-       (swap! state assoc :outputs (utils/log original-outputs))))
+       (swap! state assoc :outputs original-outputs)))
    :save
    (fn [{:keys [props state]}]
      (swap! state dissoc :editing?)
@@ -47,8 +47,10 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [begin-editing]} props
            {:keys [outputs editing?]} @state
-           defaultable-outputs (this :-get-defaultable-outputs)
-           new-outputs (merge outputs (into {} (map (fn [output] {(keyword (:name output)) (str "this." (last (string/split (:name output) ".")))}) defaultable-outputs)))]
+           new-outputs (->> (this :-get-defaultable-outputs)
+                            (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
+                            (into {})
+                            (merge outputs))]
        (when-not editing? (begin-editing))
        (swap! state update :outputs merge new-outputs)))
    :component-will-mount
@@ -64,9 +66,9 @@
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
-                   :secondary-title (when (and entity-type? (not (empty? (this :-get-defaultable-outputs))))
+                   :secondary-title (when (and entity-type? (seq (this :-get-defaultable-outputs)))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
-                                        (str "Populate blank attributes with defaults")))
+                                        "Populate blank attributes with defaults"))
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
