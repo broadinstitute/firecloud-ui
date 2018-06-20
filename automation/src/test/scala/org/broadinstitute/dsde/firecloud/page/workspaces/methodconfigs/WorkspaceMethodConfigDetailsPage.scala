@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
+import java.io.File
+
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
@@ -33,6 +35,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val modalConfirmDeleteButton = Button("modal-confirm-delete-button")
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
   private val dataModelCheckbox = Checkbox("data-model-checkbox")
+  private val populateWithJsonLink = Link("populate-with-json-link")
 
   def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
@@ -137,6 +140,17 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     elements.map(_.text).toSeq
   }
 
+  def readFieldValue(field: String): String = {
+    if (isEditing) searchField(testId(s"$field-text-input")).value
+    else find(testId(s"$field-display")).map(_.underlying.getText).getOrElse("")
+  }
+
+  def populateInputsFromJson(file: File): Unit = {
+    populateWithJsonLink.doClick()
+    val modal = await ready new PopulateFromJsonModal
+    modal.importFile(file.getAbsolutePath)
+  }
+
   def changeSnapshotId(newSnapshotId: Int): Unit = {
     editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
     await spinner "Updating..."
@@ -168,6 +182,19 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 }
 
+class PopulateFromJsonModal(implicit webDriver: WebDriver) extends OKCancelModal("upload-json-modal") {
+  private val fileInput = FileSelector("data-upload-input" inside this)
+  private val uploadButton = Button("confirm-upload-metadata-button" inside this)
+
+  override def awaitReady(): Unit = fileInput.awaitEnabled()
+
+  def importFile(file: String): Unit = {
+    fileInput.selectFile(file)
+    await condition find(query).get.underlying.getText.contains("Previewing")
+    uploadButton.doClick()
+    await notVisible query
+  }
+}
 
 /**
   * Page class for the launch analysis modal.
