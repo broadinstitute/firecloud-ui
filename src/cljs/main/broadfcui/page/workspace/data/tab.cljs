@@ -138,7 +138,7 @@
                           :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
                   :type "submit"
                   :value (str "Download '" selected-entity-type "' metadata")}]]
-        [:a {:style {:textDecoration "none" :marginLeft "1em"}
+        [:a {:style {:textDecoration "none" :color "rgb(69, 127, 210)"}
              :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                         (:namespace workspace-id) "/"
                         (:name workspace-id) "/entities/" selected-entity-type "/tsv")
