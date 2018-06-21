@@ -32,6 +32,7 @@
    :help "fa-question-circle"
    :information "fa-info-circle"
    :library "fa-book"
+   :link "fa-link"
    :lock "fa-lock"
    :move-left "fa-angle-double-left"
    :move-right "fa-angle-double-right"

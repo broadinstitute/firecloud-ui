@@ -4,11 +4,13 @@
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.foundation-tooltip :as tooltip]
    [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
@@ -16,8 +18,7 @@
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
-   [broadfcui.utils.user :as user]
-   ))
+   [broadfcui.utils.user :as user]))
 
 (react/defc- MetadataImporter
   {:get-initial-state
@@ -144,7 +145,11 @@
                         (:name workspace-id) "/entities/" selected-entity-type "/tsv")
              :onClick #(user/set-access-token-cookie (user/get-access-token))
              :target "_blank"}
-         "[permalink]"]]))
+         [tooltip/FoundationTooltip
+          {:tooltip "Right-click to save a download link for later (all columns)"
+           :style {:borderBottom "none"}
+           :data-hover-delay 0
+           :text (icons/render-icon {} :link)}]]]))
    :-render-entity
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
