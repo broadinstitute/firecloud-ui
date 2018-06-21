@@ -121,7 +121,8 @@
                 :method "POST"
                 :action (str (config/api-url-root) "/cookie-authed/workspaces/"
                              (:namespace workspace-id) "/"
-                             (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
+                             (:name workspace-id) "/entities/" selected-entity-type "/tsv")
+                :style {:display "inline"}}
          [:input {:type "hidden"
                   :name "FCtoken"
                   :value (user/get-access-token)}]
@@ -143,7 +144,7 @@
                         (:name workspace-id) "/entities/" selected-entity-type "/tsv")
              :onClick #(user/set-access-token-cookie (user/get-access-token))
              :target "_blank"}
-         "(permalink)"]]))
+         "[permalink]"]]))
    :-render-entity
    (fn [{:keys [state]} e]
      (let [entity-name (or (:name e) (:entityName e))]
