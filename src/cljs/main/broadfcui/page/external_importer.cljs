@@ -71,13 +71,12 @@
         (fn [{:keys [success? get-parsed-response]}]
           (if success?
             (swap! state assoc :wdl (:descriptor (get-parsed-response)))
-            (swap! state assoc :load-error (get-parsed-response false)))))))
+            (swap! state assoc :load-error true))))))
    :-render-error
    (fn [{:keys [state]}]
      [:div {}
       [:div {:style {:margin "0.5rem 0"}}
-       "Error loading WDL. Please verify the workflow path and version and ensure this workflow supports WDL."]
-      [comps/ErrorViewer {:error (:load-error @state)}]])
+       "Error loading WDL. Please verify the workflow path and version and ensure this workflow supports WDL."]])
    :-render-export
    (fn [{:keys [props state locals this]}]
      (let [{:keys [id]} props
