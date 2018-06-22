@@ -84,13 +84,11 @@
                             (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
                    :secondary-title (when can-edit?
-                                     [:div {}
-                                      (links/create-internal
-                                        {:data-test-id "populate-with-json-link"
-                                         :on-click #(swap! state assoc :show-upload? true)}
-                                        "Populate with a .json file...")
-                                      (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
-                                                                                              :style {:white-space "nowrap"}} "Learn more about the expected format")})])
+                                      [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
+                                                                       :on-click #(swap! state assoc :show-upload? true)}
+                                                 "Populate with a .json file...")
+                                       (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
+                                                                                                :style {:white-space "nowrap"}} "Learn more about the expected format")})])
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
