@@ -16,6 +16,19 @@
    ))
 
 (def ^:private preview-byte-count 20000)
+(def ^:private previewable-content-types #{"application/json" "text/plain"})
+
+(defn- previewable?
+  ([filename]
+    (previewable? filename "unknown"))
+  ([filename content-type]
+    (let [bam? (re-find #"\.ba[mi]$" filename)
+          img? (re-find #"\.(?:(jpe?g|png|gif|bmp|pdf))$" filename)
+          hide-preview-by-extension? (or bam? img?)
+          previewable-content-type? (contains? previewable-content-types content-type)]
+      (or
+        previewable-content-type?
+        (nil? hide-preview-by-extension?)))))
 
 (react/defc- PreviewDialog
   {:render
@@ -35,9 +48,7 @@
                           [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                           [:span {:data-test-id (test-utils/text->test-id label "content")} contents]])
                data-empty (or (= data-size "0") (string/blank? data-size))
-               bam? (re-find #"\.ba[mi]$" object)
-               img? (re-find #"\.(?:(jpe?g|png|gif|bmp))$" object)
-               hide-preview? (or bam? img?)]
+               hide-preview? (not (previewable? object))]
            [:div {:style {:width 700 :overflow "auto"}}
             (labeled "Google Bucket" bucket-name)
             (labeled "Object" object)
@@ -57,7 +68,9 @@
                        :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                :fontSize "90%" :overflowY "auto" :maxHeight 206
                                :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-                 (str (if (> data-size preview-byte-count) "...") (:preview @state))]))]
+                 (if-let [preview-content (:preview @state)]
+                   preview-content
+                   (spinner "Loading preview..."))]))]
             (when (:loading? @state)
               (spinner "Getting file info..."))
             (when data
@@ -123,18 +136,23 @@
                            :response (if success?
                                        {:data (get-parsed-response)}
                                        {:error (.-responseText xhr)
-                                        :status status-code})))})
-       (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
-                             (js/encodeURIComponent object) "?alt=media")
-                   :headers (merge (user/get-bearer-token-header)
-                                   {"Range" (str "bytes=-" preview-byte-count)})
-                   :on-done (fn [{:keys [raw-response]}]
-                              (swap! state assoc :preview raw-response
-                                     :preview-line-count (count (clojure.string/split raw-response #"\n+")))
-                              (after-update
-                               (fn []
-                                 (when-not (string/blank? (@refs "preview"))
-                                   (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))})
+                                        :status status-code}))
+                    (when success?
+                      (let [content-type (:contentType (get-parsed-response))]
+                        (when (previewable? object content-type)
+                          ;; TODO: get pet token from sam. Use pet token instead of (user/get-bearer-token-header) for
+                          ;; the following call.
+                          (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
+                                             (js/encodeURIComponent object) "?alt=media")
+                                      :headers (merge (user/get-bearer-token-header)
+                                                      {"Range" (str "bytes=-" preview-byte-count)})
+                                      :on-done (fn [{:keys [raw-response]}]
+                                                 (swap! state assoc :preview raw-response
+                                                        :preview-line-count (count (clojure.string/split raw-response #"\n+")))
+                                                 (after-update
+                                                  (fn []
+                                                    (when-not (string/blank? (@refs "preview"))
+                                                      (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))))})))})
 
 (react/defc DOSPreviewDialog
   {:component-will-mount

@@ -90,28 +90,26 @@
 (defn get-exponential-backoff-interval [attempt]
   (* (.pow js/Math 2 attempt) 1000)) ;; backoff interval in millis
 
+(defn- call-service [url-root path arg-map maybe-nil-service-prefix]
+  (let [service-prefix (or maybe-nil-service-prefix "/api")]
+    (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
+    (let [on-done (:on-done arg-map)]
+      (call (assoc arg-map
+              :url (str url-root service-prefix path)
+              :headers (merge (@get-bearer-token-header)
+                              (:headers arg-map))
+              :on-done (fn [{:keys [status-code status-text] :as m}]
+                         (update-health status-code status-text)
+                         (on-done m)))))))
 
-(defn call-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
-  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (let [on-done (:on-done arg-map)]
-    (call (assoc arg-map
-            :url (str (config/api-url-root) service-prefix path)
-            :headers (merge (@get-bearer-token-header)
-                            (:headers arg-map))
-            :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (update-health status-code status-text)
-                       (on-done m))))))
+(defn call-orch [path arg-map & {:keys [service-prefix]}]
+  (call-service (config/api-url-root) path arg-map service-prefix))
 
-(defn call-leo [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
-  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (let [on-done (:on-done arg-map)]
-    (call (assoc arg-map
-            :url (str (config/leonardo-url-root) service-prefix path)
-            :headers (merge (@get-bearer-token-header)
-                            (:headers arg-map))
-            :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (update-health status-code status-text)
-                       (on-done m))))))
+(defn call-leo [path arg-map & {:keys [service-prefix]}]
+  (call-service (config/leonardo-url-root) path arg-map service-prefix))
+
+(defn call-sam [path arg-map & {:keys [service-prefix]}]
+  (call-service (config/sam-url-root) path arg-map service-prefix))
 
 (defn call-martha [data arg-map]
   (let [on-done (:on-done arg-map)]

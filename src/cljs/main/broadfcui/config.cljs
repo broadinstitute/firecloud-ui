@@ -40,6 +40,7 @@
 
 (defn api-url-root [] (get @config "apiUrlRoot"))
 (defn leonardo-url-root [] (get @config "leonardoUrlRoot"))
+(defn sam-url-root [] (get @config "samUrlRoot"))
 (defn debug? [] (get @config "isDebug"))
 (defn google-client-id [] (get @config "googleClientId"))
 (defn tcga-namespace [] (get @config "tcgaNamespace"))
