@@ -26,6 +26,9 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
+(defn get-fence-link-href []
+  "https://google.com")
+
 (react/defc- NihLink
   {:render
    (fn [{:keys [state]}]
@@ -36,7 +39,7 @@
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            datasets (:datasetPermissions status)]
        [:div {}
-        [:h3 {} "Linked NIH Account"]
+        [:h4 {} "NIH Account"]
         (cond
           (:error-message @state) (style/create-server-error-message (:error-message @state))
           (:pending-nih-username-token @state)
@@ -106,6 +109,25 @@
               (swap! state assoc :nih-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
+(react/defc- FenceLink
+   {:render
+    (fn [{:keys [state]}]
+      (let [status (:fence-status @state)
+            username (:linkedFenceUsername status)]
+        [:div {}
+         [:h4 {} "University of Chicago Account"]
+         (cond
+           (:error-message @state) (style/create-server-error-message (:error-message @state))
+           (:pending-fence-username-token @state)
+           (spinner {:ref "pending-spinner"} "Linking UChicago account...")
+           (nil? username)
+           (links/create-external {:href (get-fence-link-href)} "Log-In to UChicago to link your account")
+           :else
+           [:div {}
+            [:div {:style {:display "flex"}}
+             [:div {:style {:flex "0 0 12rem"}} "UChicago Username:"]
+             [:div {:style {:flex "0 0 auto"}} username]]])]))})
+
 
 (react/defc- Form
   {:get-field-keys
@@ -152,10 +174,7 @@
             (flex/box {}
               (this :render-field :programLocationCity "City")
               (this :render-field :programLocationState "State/Province")
-              (this :render-field :programLocationCountry "Country"))
-            (common/clear-both)
-            (when-not (:new-registration? props)
-              [NihLink (select-keys props [:nih-token])])]
+              (this :render-field :programLocationCountry "Country"))]
            :else (spinner "Loading User Profile...")))
    :render-radio-field
    (fn [{:keys [state]} key value]
@@ -200,12 +219,20 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style style/thin-page-style}
+       [:div {:style {:minHeight 300 :paddingTop "1.5rem" :marginLeft "15rem" :marginRight "15rem"}}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
-        [Form (merge {:ref "form"}
-                     (select-keys props [:new-registration? :nih-token]))]
+          [:div {:style {:width "60%" :float "left"}}
+            [Form (merge {:ref "form"}
+                         (select-keys props [:new-registration? :nih-token]))]]
+          [:div {:style {:width "40%" :float "right"}}
+            (when-not (:new-registration? props)
+              [:div {:style {:padding "1rem 1rem 1rem 1rem"  :backgroundColor "#f4f4f4" :borderRadius 3}}
+               [:h3 {} "Identity & External Servers"]
+               [NihLink (select-keys props [:nih-token])]
+               [FenceLink (select-keys props [:nih-token])]])]
+        (common/clear-both)
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
