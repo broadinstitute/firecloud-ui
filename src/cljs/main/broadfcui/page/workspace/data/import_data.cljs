@@ -69,7 +69,7 @@
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     (if-let [{:keys [on-upload]} props]
+     (if-let [on-upload (:on-upload props)]
        (on-upload (select-keys @state [:file-contents]))
        (let [{:keys [file]} @state
              {:keys [import-type on-data-imported workspace-id]} props
