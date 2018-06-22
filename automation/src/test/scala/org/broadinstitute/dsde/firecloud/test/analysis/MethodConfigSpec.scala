@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.analysis
 
+import java.io.{File, PrintWriter}
+
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
@@ -68,5 +70,47 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         }
       }
     }
+  }
+
+  "Upload inputs.json" - {
+    "populates connection inputs" in {
+      val user = UserPool.chooseProjectOwner
+      implicit val authToken: AuthToken = user.makeAuthToken()
+      withCleanBillingProject(user) { projectName =>
+        withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          val configName = s"${SimpleMethodConfig.configName}_$workspaceName"
+          api.methodConfigurations.createMethodConfigInWorkspace(
+            projectName, workspaceName,
+            MethodData.SimpleMethod,
+            projectName, configName,
+            SimpleMethodConfig.snapshotId,
+            Map.empty, Map.empty,
+            "sample")
+
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
+
+              val field = "test.hello.name"
+              configPage.readFieldValue(field) shouldBe ""
+              configPage.isEditing shouldBe false
+              configPage.populateInputsFromJson(generateInputsJson(Map(field -> "test")))
+              configPage.readFieldValue(field) shouldBe "test"
+              configPage.isEditing shouldBe true
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private def generateInputsJson(inputs: Map[String, String]): File = {
+    val file = File.createTempFile("MethodConfigSpec_", "_inputs.json")
+    val writer = new PrintWriter(file)
+    val rows = inputs map { case (k, v) => s""""$k": "$v"""" }
+    val fileContent = s"""{\n  ${rows.mkString(",\n  ")}\n}"""
+    writer.write(fileContent)
+    writer.close()
+    file
   }
 }

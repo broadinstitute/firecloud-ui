@@ -284,8 +284,7 @@
                 [:div {:style {:padding "1rem 1rem 1rem 2rem" :font-style "italic"}} "No entities in workspace. Import some in the Data tab."])]
              [:div {:style {:flex "1 1 40%"}}
               [:div {:style {:fontWeight 500}} "FireCloud Tip"]
-              [:div {} "A Workspace Data Model is no longer required to launch a workflow."]
-              #_[:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]]))) ; This is here and ready-to-go when we add JSON upload
+              [:div {} "You can either change the inputs/outputs below or upload a pre-populated .json file. After upload you can always edit manually."]]])))
         (create-section-header "Connections")
         (create-section [IOTables {:ref "IOTables"
                                    :inputs-outputs inputs-outputs
