@@ -181,7 +181,7 @@
                   (spinner "Loading Method Configuration...")]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-load-validated-method-config))
+     (this :-render-method-config-editor))
    :component-did-update
    (fn [{:keys [state]}]
      (let [{:keys [methods loaded-config]} @state]
@@ -362,25 +362,40 @@
                                                    (dissoc :redacted?)))
                       (swap! state assoc :error-response (get-parsed-response false))))})))
 
-   :-load-validated-method-config
-   (fn [{:keys [state props]}]
+   :-render-validated-mc
+   (fn [{:keys [state props]} inputs-outputs unvalidated-mc]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response (fix-validated-method-config (get-parsed-response))
-                          fake-inputs-outputs (fn [data]
+                    (let [validated-mc (fix-validated-method-config (get-parsed-response))]
+                       (swap! state assoc :loaded-config validated-mc :inputs-outputs (get-parsed-response) :redacted? false))
+                    () ;TODO: why is get-validated-mc returning errors but get-unvalidated not??? shouldn't get here
+                    ))}))
+
+   :-render-method-config
+   (fn [{:keys [state props]} unvalidated-mc]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-inputs-outputs
+       :payload (get-in unvalidated-mc [:methodConfiguration :methodRepoMethod])
+       :headers ajax/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (this :-render-validated-mc get-parsed-response unvalidated-mc)
+                    ;if failure, method doesn't exist: use fake-inputs-outputs and flag method as redacted
+                    (let [fake-inputs-outputs (fn [data]
                                                 (let [method-config (:methodConfiguration data)]
                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
                                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-                      (endpoints/call-ajax-orch
-                       {:endpoint endpoints/get-inputs-outputs
-                        :payload (get-in response [:methodConfiguration :methodRepoMethod])
-                        :headers ajax/content-type=json
-                        :on-done (fn [{:keys [success? get-parsed-response]}]
-                                   (if success?
-                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
+                      (swap! state assoc :loaded-config unvalidated-mc :inputs-outputs (fake-inputs-outputs unvalidated-mc) :redacted? true))))}))
+
+   :-render-method-config-editor
+   (fn [{:keys [state props]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (this :-render-method-config (fix-validated-method-config (get-parsed-response)))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
