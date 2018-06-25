@@ -51,15 +51,23 @@
        (filter #(string/blank? ((keyword (:name %)) outputs))
                (:outputs inputs-outputs))))
    :-add-default-outputs
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props refs state this]}]
      (let [{:keys [begin-editing]} props
            {:keys [outputs editing?]} @state
            new-outputs (->> (this :-get-defaultable-outputs)
                             (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
-                            (into {})
-                            (merge outputs))]
+                            (into {}))]
        (when-not editing? (begin-editing))
-       (swap! state update :outputs merge new-outputs)))
+       (utils/log refs)
+       (utils/log @refs)
+       (utils/cljslog refs)
+       (utils/cljslog @refs)
+       (utils/log (str "NEW OUTPUTS " new-outputs))
+       (utils/log (@refs "something"))
+       (utils/cljslog (str "HELLO: " (map #(@refs (name (key %))) new-outputs)))
+       ;(map #((@refs (key (utils/log %))) :set-value) (val (utils/log %))) new-outputs)
+       ;(swap! state update :outputs merge new-outputs)
+       ))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
@@ -99,7 +107,7 @@
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state]} io-key]
+   (fn [{:keys [props state refs]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -142,7 +150,8 @@
                                            (str type (when optional? " (optional)")))
                                 :render
                                 (fn [{:keys [type optional?]}]
-                                  [:div {:style (clip (if optional?
+                                  [:div {:ref "something"
+                                         :style (clip (if optional?
                                                         (merge table-style/table-cell-plank-right
                                                                table-style/table-cell-optional)
                                                         table-style/table-cell-plank-right))}
@@ -156,9 +165,10 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:key name
-                                         :value value
-                                         :caching? false
+                                        {:ref name
+                                         :key (utils/log name)
+                                         :default-value value
+                                         :caching? true
                                          :data data
                                          :shouldRenderSuggestions (constantly true)
                                          :inputProps {:data-test-id (str name "-text-input")
