@@ -10,6 +10,7 @@ import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
 import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
+import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service._
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
@@ -40,12 +41,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
-  private def setUpEnabledUser(user: Credentials): Unit = {
-    implicit val authToken: AuthToken = campaignManager.makeAuthToken()
-    logger.info(s"Attempting to enable user [${user.email}] as campaign manager [${campaignManager.email}]")
-    api.trial.enableUser(user.email)
-  }
-
   private def registerCleanUpForDeleteTrialState(): Unit = {
     register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
@@ -67,9 +62,13 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should be able to see the free trial banner, enroll and get terminated" in {
         val trialAuthToken = TrialBillingAccountAuthToken()
-        withCleanBillingProject(campaignManager, userEmails = List(testUser.email)) { projectName =>
-          api.trial.adoptTrialProject(projectName)(campaignManager.makeAuthToken())
+        withCleanBillingProject(campaignManager, ownerEmails = List(trialAuthToken.buildCredential.getServiceAccountId)) { project =>
+          register cleanUp api.trial.scratchTrialProject(project)
+          registerCleanUpForDeleteTrialState()
 
+          api.trial.adoptTrialProject(project)
+          api.trial.enableUser(testUser.email)
+          removeMembersFromBillingProject(project, List(campaignManager.email), BillingProjectRole.Owner)(trialAuthToken)
           withWebDriver { implicit driver =>
             withSignIn(testUser) { _ =>
               await ready new WorkspaceListPage()
@@ -117,8 +116,8 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           val errMsg = "The trial user's billing project should have been removed from the billing account."
           assert(billingAccountUponTermination.isEmpty, errMsg)
 
-          registerCleanUpForDeleteTrialState()
-          register cleanUp api.trial.scratchTrialProject(projectName)
+          // need to re-add a project owner in order for cleanup to succeed
+          addMembersToBillingProject(project, List(campaignManager.email), BillingProjectRole.Owner)(trialAuthToken)
         }
       }
     }
