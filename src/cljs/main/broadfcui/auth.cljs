@@ -13,6 +13,9 @@
    [broadfcui.utils.user :as user]
    ))
 
+(def login-scopes ["email" "profile"])
+(def storage-scopes (conj login-scopes "https://www.googleapis.com/auth/devstorage.read_only"))
+
 (react/defc GoogleAuthLibLoader
   {:render
    (constantly nil)
@@ -24,8 +27,7 @@
      (let [{:keys [on-loaded]} props
            scopes (string/join
                    " "
-                   ["email" "profile"
-                    "https://www.googleapis.com/auth/devstorage.full_control"])
+                   login-scopes)
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js/gapi.auth2.init init-options)]
        (gapi.signin2.render "sign-in-button" #js{:width 180 :height 40 :longtitle true :theme "dark"})
