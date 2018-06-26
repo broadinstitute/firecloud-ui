@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -138,21 +139,29 @@
                                        {:error (.-responseText xhr)
                                         :status status-code}))
                     (when success?
-                      (let [content-type (:contentType (get-parsed-response))]
+                      (let [content-type (:contentType (get-parsed-response))
+                            scopes auth/storage-scopes]
                         (when (previewable? object content-type)
-                          ;; TODO: get pet token from sam. Use pet token instead of (user/get-bearer-token-header) for
-                          ;; the following call.
-                          (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
-                                             (js/encodeURIComponent object) "?alt=media")
-                                      :headers (merge (user/get-bearer-token-header)
-                                                      {"Range" (str "bytes=-" preview-byte-count)})
-                                      :on-done (fn [{:keys [raw-response]}]
-                                                 (swap! state assoc :preview raw-response
-                                                        :preview-line-count (count (clojure.string/split raw-response #"\n+")))
-                                                 (after-update
-                                                  (fn []
-                                                    (when-not (string/blank? (@refs "preview"))
-                                                      (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))))})))})
+                          (endpoints/call-ajax-sam
+                                      {:endpoint (endpoints/pet-token (:workspace-namespace props))
+                                       :payload scopes
+                                       :headers ajax/content-type=json
+                                       :on-done
+                                       (fn [{:keys [success? raw-response]}]
+                                         (if success?
+                                           (let [pet-token (subs raw-response 1 (- (count raw-response) 1))]
+                                             (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
+                                                                (js/encodeURIComponent object) "?alt=media")
+                                                         :headers {"Authorization" (str "Bearer " pet-token)
+                                                                   "Range" (str "bytes=-" preview-byte-count)}
+                                                         :on-done (fn [{:keys [raw-response]}]
+                                                                    (swap! state assoc :preview raw-response
+                                                                           :preview-line-count (count (clojure.string/split raw-response #"\n+")))
+                                                                    (after-update
+                                                                     (fn []
+                                                                       (when-not (string/blank? (@refs "preview"))
+                                                                         (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))
+                                           (swap! state assoc :preview (str "Error reading preview: " raw-response))))})))))})))})
 
 (react/defc- DOSPreviewDialog
   {:component-will-mount
