@@ -10,17 +10,15 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.broadinstitute.dsde.workbench.service.util.Retry
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.duration.DurationLong
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
 class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with Matchers {
 
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val autocompleteTextQueryPrefix: String = "cance"  // partial string of "cancer" to test autocomplete
@@ -110,7 +108,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
                   // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
                   //            Thread sleep 500
 
-                  retry[Boolean](100.milliseconds, 1.minute)({
+                  Retry.retry[Boolean](100.milliseconds, 1.minute)({
                     val libraryPage = wspage.goToDataLibrary()
                     libraryPage.doSearch(wsName)
                     if (libraryPage.hasDataset(wsName))
