@@ -369,19 +369,19 @@
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
                     (let [validated-mc (fix-validated-method-config (get-parsed-response))]
-                       (swap! state assoc :loaded-config validated-mc :inputs-outputs (get-parsed-response) :redacted? false))
+                       (swap! state assoc :loaded-config validated-mc :inputs-outputs inputs-outputs :redacted? false))
                     () ;TODO: why is get-validated-mc returning errors but get-unvalidated not??? shouldn't get here
                     ))}))
 
    :-render-method-config
-   (fn [{:keys [state props]} unvalidated-mc]
+   (fn [{:keys [state props this]} unvalidated-mc]
      (endpoints/call-ajax-orch
       {:endpoint endpoints/get-inputs-outputs
-       :payload (get-in unvalidated-mc [:methodConfiguration :methodRepoMethod])
+       :payload (get-in unvalidated-mc [:methodRepoMethod])
        :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (this :-render-validated-mc get-parsed-response unvalidated-mc)
+                    (this :-render-validated-mc (get-parsed-response) unvalidated-mc)
                     ;if failure, method doesn't exist: use fake-inputs-outputs and flag method as redacted
                     (let [fake-inputs-outputs (fn [data]
                                                 (let [method-config (:methodConfiguration data)]
@@ -390,12 +390,12 @@
                       (swap! state assoc :loaded-config unvalidated-mc :inputs-outputs (fake-inputs-outputs unvalidated-mc) :redacted? true))))}))
 
    :-render-method-config-editor
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (this :-render-method-config (fix-validated-method-config (get-parsed-response)))
+                    (this :-render-method-config (get-parsed-response))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
