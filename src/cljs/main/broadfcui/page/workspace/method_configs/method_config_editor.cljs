@@ -377,7 +377,7 @@
    (fn [{:keys [state props this]} unvalidated-mc]
      (endpoints/call-ajax-orch
       {:endpoint endpoints/get-inputs-outputs
-       :payload (get-in unvalidated-mc [:methodRepoMethod])
+       :payload (:methodRepoMethod unvalidated-mc)
        :headers ajax/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
@@ -386,8 +386,9 @@
                     (let [fake-inputs-outputs (fn [data]
                                                 (let [method-config (:methodConfiguration data)]
                                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-                      (swap! state assoc :loaded-config unvalidated-mc :inputs-outputs (fake-inputs-outputs unvalidated-mc) :redacted? true))))}))
+                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
+                          new-loaded-config {:methodConfiguration unvalidated-mc}]
+                      (swap! state assoc :loaded-config new-loaded-config :inputs-outputs (fake-inputs-outputs unvalidated-mc) :redacted? true))))}))
 
    :-render-method-config-editor
    (fn [{:keys [state props this]}]
