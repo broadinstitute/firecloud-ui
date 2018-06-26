@@ -208,7 +208,7 @@
                                {:id "value" :header (header "Value") :initial-width :auto
                                 :column-data val
                                 :as-text process-attribute-value
-                                :render (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])}
+                                :render (comp (table-utils/render-gcs-links (:workspace-bucket props) (get-in props [:workspace-id :namespace])) process-attribute-value)}])}
             :paginator :none}]]}]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]

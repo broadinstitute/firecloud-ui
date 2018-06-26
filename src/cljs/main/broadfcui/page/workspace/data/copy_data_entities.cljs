@@ -28,6 +28,7 @@
         [EntitySelector {:ref "EntitySelector"
                          :type (:type props)
                          :selected-workspace-bucket (:selected-workspace-bucket props)
+                         :workspace-namespace (get-in props [:workspace-id :namespace])
                          :left-text (str (string/capitalize (:type props)) "s in " (:namespace swid) "/" (:name swid))
                          :right-text "To be imported"
                          :id-name (:id-name props)

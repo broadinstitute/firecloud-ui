@@ -33,7 +33,7 @@
 (react/defc- PreviewDialog
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [dismiss object bucket-name]} props]
+     (let [{:keys [dismiss object bucket-name workspace-namespace]} props]
        [modals/OKCancelForm
         {:header "File Details"
          :data-test-id "preview-modal"
@@ -154,7 +154,7 @@
                                                     (when-not (string/blank? (@refs "preview"))
                                                       (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))))})))})
 
-(react/defc DOSPreviewDialog
+(react/defc- DOSPreviewDialog
   {:component-will-mount
    (fn [{:keys [state props]}]
      (let [{:keys [dos-uri]} props]
@@ -191,15 +191,15 @@
 (defn- lrm-pad [string]
   (str (gstring/unescapeEntities "&#8206;") string (gstring/unescapeEntities "&#8206;")))
 
-(react/defc GCSFilePreviewLink
+(react/defc- GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [bucket-name object workspace-bucket link-label]} props]
+     (let [{:keys [bucket-name object workspace-bucket link-label workspace-namespace]} props]
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
         (when (:showing-preview? @state)
-          [PreviewDialog (assoc (utils/restructure bucket-name object)
+          [PreviewDialog (assoc (utils/restructure bucket-name object workspace-namespace)
                            :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href (str "gs://" bucket-name "/" object)
              :onClick (fn [e]
@@ -210,7 +210,7 @@
              object
              (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
 
-(react/defc DOSFilePreviewLink
+(react/defc- DOSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
      (let [{:keys [dos-uri link-label]} props]

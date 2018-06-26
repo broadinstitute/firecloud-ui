@@ -25,10 +25,11 @@
    contents])
 
 (defn- display-value
-  ([gcs-uri] (display-value gcs-uri nil))
-  ([gcs-uri link-label]
+  ([workspace-namespace gcs-uri] (display-value workspace-namespace gcs-uri nil))
+  ([workspace-namespace gcs-uri link-label]
    (if-let [parsed (common/dos-or-gcs-uri? gcs-uri)]
      [FilePreviewLink (assoc parsed :attributes {:style {:display "inline"}}
+                                    :workspace-namespace workspace-namespace
                                     :link-label link-label)]
      (str gcs-uri))))
 
@@ -65,12 +66,13 @@
            (if (:expanded @state) "Hide" "Show"))))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-         (let [columns [{:header "Label"
+         (let [namespace (get-in props [:workspace-id :namespace])
+               columns [{:header "Label"
                          :column-data #(last (string/split (key %) #"\."))}
                         {:header "Value"
                          :initial-width :auto
                          :sortable? false
-                         :column-data #(->> % second display-value)}]
+                         :column-data #(display-value namespace (second %))}]
                task-column {:header "Task"
                             :column-data #(second (string/split (key %) #"\."))}]
            [Table
@@ -109,17 +111,17 @@
                :path "https://www.gstatic.com/charts/loader.js"}])
            [:div {:ref "chart-container" :style {:paddingTop "0.5rem"}}]])]))})
 
-(defn- backend-logs [data]
+(defn- backend-logs [data workspace-id]
   (when-let [log-map (data "backendLogs")]
     ;; Right now we only ever have a single log, so we should only ever hit the "true" case.
     ;; But in case something changes, I'll leave the general case so the UI doesn't totally bomb.
     (if (= 1 (count log-map))
       (let [log-name (last (string/split (first (vals log-map)) #"/"))]
-        (create-field "JES log" (display-value (first (vals log-map)) log-name)))
+        (create-field "JES log" (display-value (:namespace workspace-id) (first (vals log-map)) log-name)))
       [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
        (map
         (fn [[name value]]
-          (create-field name (display-value value)))
+          (create-field name (display-value (:namespace workspace-id) value)))
         log-map)])))
 
 (react/defc- Failures
@@ -237,7 +239,8 @@
    :render
    (fn [{:keys [props state]}]
      (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))
-           all-call-statuses (set (map #(get % "executionStatus") (:data props)))]
+           all-call-statuses (set (map #(get % "executionStatus") (:data props)))
+           workspace-namespace (get-in props [:workspace-id :namespace])]
        [:div {:style {:marginTop "1em"}}
         (when (:show-operation-dialog? @state)
           [OperationDialog (:operation-dialog-props @state)])
@@ -275,7 +278,7 @@
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
                 (create-field "Operation"
-                              ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
+                              ;; Note: using [:a ...] instead of style/create-link to be consistent with FilePreviewLink
                               [:a {:href    "javascript:;"
                                    :onClick (fn [_]
                                               (swap! state assoc
@@ -291,13 +294,13 @@
                 (create-field "Started" (moncommon/render-date (data "start")))
                 ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
-                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
-                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
+                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true :workspace-id (:workspace-id props)}]
                 (when-let [stdout (data "stdout")]
-                  (create-field "stdout" (display-value stdout (last (string/split stdout #"/")))))
+                  (create-field "stdout" (display-value workspace-namespace stdout (last (string/split stdout #"/")))))
                 (when-let [stderr (data "stderr")]
-                  (create-field "stderr" (display-value stderr (last (string/split stderr #"/")))))
-                (backend-logs data)
+                  (create-field "stderr" (display-value workspace-namespace stderr (last (string/split stderr #"/")))))
+                (backend-logs data (:workspace-id props))
                 (when-let [failures (data "failures")]
                   [Failures {:data failures}])]])
             (:data props)))]))})
@@ -319,10 +322,10 @@
        (create-field "Started" (moncommon/render-date start)))
      (when-let [end (workflow "end")]
        (create-field "Ended" (moncommon/render-date end)))
-     [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
-     [IODetail {:label "Outputs" :data (workflow "outputs")}]
+     [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"])) :workspace-id workspace-id}]
+     [IODetail {:label "Outputs" :data (workflow "outputs") :workspace-id workspace-id}]
      (when-let [workflowLog (workflow "workflowLog")]
-       (create-field "Workflow Log" (display-value workflowLog (str "workflow." (workflow "id") ".log"))))
+       (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))
      (when (seq (workflow "calls"))
        [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
      (when-let [failures (workflow "failures")]
