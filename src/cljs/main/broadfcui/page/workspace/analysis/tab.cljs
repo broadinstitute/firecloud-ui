@@ -26,7 +26,8 @@
            :dismiss #(swap! state dissoc :show-track-selection-dialog?)
            :tracks (:tracks @state)
            :on-ok #(swap! state assoc :tracks %))])
-      [IGVContainer {:tracks (:tracks @state)}]
+      [IGVContainer {:tracks (:tracks @state)
+                     :workspace-id (:workspace-id props)}]
       [buttons/Button {:text "Select Tracks..."
                        :style {:float "right" :marginTop "1rem"}
                        :onClick #(swap! state assoc :show-track-selection-dialog? true)}]
