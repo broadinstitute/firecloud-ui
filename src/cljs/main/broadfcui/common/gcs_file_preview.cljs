@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
-   [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -140,7 +139,7 @@
                                         :status status-code}))
                     (when success?
                       (let [content-type (:contentType (get-parsed-response))
-                            scopes auth/storage-scopes]
+                            scopes common/storage-scopes]
                         (when (previewable? object content-type)
                           (endpoints/call-ajax-sam
                                       {:endpoint (endpoints/pet-token (:workspace-namespace props))

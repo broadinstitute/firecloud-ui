@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.analysis.igv
   (:require
    [dmohs.react :as react]
-   [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
@@ -73,7 +72,7 @@
          ;; when the user DOES have tracks, get a token for the user's pet, then pass that token into the IGV tracks.
          (endpoints/call-ajax-sam
            {:endpoint (endpoints/pet-token (get-in props [:workspace-id :namespace]))
-            :payload auth/storage-scopes
+            :payload common/storage-scopes
             :headers ajax/content-type=json
             :on-done
               (fn [{:keys [success? raw-response]}]

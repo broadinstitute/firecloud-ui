@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common :refer [login-scopes]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
@@ -13,8 +14,6 @@
    [broadfcui.utils.user :as user]
    ))
 
-(def login-scopes ["email" "profile"])
-(def storage-scopes (conj login-scopes "https://www.googleapis.com/auth/devstorage.read_only"))
 
 (react/defc GoogleAuthLibLoader
   {:render
