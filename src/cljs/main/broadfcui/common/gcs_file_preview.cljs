@@ -160,7 +160,9 @@
                                                                        (when-not (string/blank? (@refs "preview"))
                                                                          (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))
                                            (let [err-code (if (string/blank? status-text) status-code status-text)
-                                                 err-message (or (:message (get-parsed-response) raw-response))]
+                                                 [error-json parsing-error] (get-parsed-response true false)
+                                                 trunc-response (subs raw-response 0 140)
+                                                 err-message (if parsing-error trunc-response (or (:message (get-parsed-response) trunc-response)))]
                                              (swap! state assoc :preview (str "Error reading preview (" err-code "): " err-message)))))})))))})))})
 
 (react/defc- DOSPreviewDialog
