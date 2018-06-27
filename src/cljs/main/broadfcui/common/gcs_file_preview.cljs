@@ -145,21 +145,23 @@
                                        :payload scopes
                                        :headers ajax/content-type=json
                                        :on-done
-                                       (fn [{:keys [success? raw-response]}]
+                                       (fn [{:keys [success? raw-response get-parsed-response status-code status-text]}]
                                          (if success?
                                            (let [pet-token (subs raw-response 1 (- (count raw-response) 1))]
                                              (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
                                                                 (js/encodeURIComponent object) "?alt=media")
                                                          :headers {"Authorization" (str "Bearer " pet-token)
                                                                    "Range" (str "bytes=-" preview-byte-count)}
-                                                         :on-done (fn [{:keys [raw-response status-text]}]
+                                                         :on-done (fn [{:keys [raw-response]}]
                                                                     (swap! state assoc :preview raw-response
                                                                            :preview-line-count (count (clojure.string/split raw-response #"\n+")))
                                                                     (after-update
                                                                      (fn []
                                                                        (when-not (string/blank? (@refs "preview"))
                                                                          (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))
-                                           (swap! state assoc :preview (str "Error reading preview (" status-text "): " raw-response))))})))))})))})
+                                           (let [err-code (if (string/blank? status-text) status-code status-text)
+                                                 err-message (or (:message (get-parsed-response) raw-response))]
+                                             (swap! state assoc :preview (str "Error reading preview (" err-code "): " err-message)))))})))))})))})
 
 (react/defc- DOSPreviewDialog
   {:component-will-mount
