@@ -188,8 +188,10 @@
           (when (:showing-preview? @state)
             (if-let [parsed (common/parse-gcs-uri data)]
               [PreviewDialog (assoc parsed
+                               :workspace-namespace (:workspace-namespace props)
                                :dismiss (:dismiss props))]
               [PreviewDialog (assoc props :error error :object ""
+                               :workspace-namespace (:workspace-namespace props)
                                :dismiss (:dismiss props))])))]))})
 
 ;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
@@ -220,10 +222,11 @@
 (react/defc- DOSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [dos-uri link-label]} props]
+     (let [{:keys [dos-uri link-label workspace-namespace]} props]
        [:div (or (:attributes props) {})
         (when (:showing-preview? @state)
           [DOSPreviewDialog (assoc props
+                              :workspace-namespace workspace-namespace
                               :dos-uri dos-uri
                               :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href dos-uri
