@@ -152,14 +152,14 @@
                                                                 (js/encodeURIComponent object) "?alt=media")
                                                          :headers {"Authorization" (str "Bearer " pet-token)
                                                                    "Range" (str "bytes=-" preview-byte-count)}
-                                                         :on-done (fn [{:keys [raw-response]}]
+                                                         :on-done (fn [{:keys [raw-response status-text]}]
                                                                     (swap! state assoc :preview raw-response
                                                                            :preview-line-count (count (clojure.string/split raw-response #"\n+")))
                                                                     (after-update
                                                                      (fn []
                                                                        (when-not (string/blank? (@refs "preview"))
                                                                          (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))
-                                           (swap! state assoc :preview (str "Error reading preview: " raw-response))))})))))})))})
+                                           (swap! state assoc :preview (str "Error reading preview (" status-text "): " raw-response))))})))))})))})
 
 (react/defc- DOSPreviewDialog
   {:component-will-mount
