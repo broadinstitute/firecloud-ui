@@ -117,7 +117,8 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends OKCancelModal("
   def importFile(file: String): Unit = {
     importFromFileButton.doClick()
     fileUploadInput.selectFile(file)
-    await condition (find(previewText).get.underlying.getText.contains("entity"))
+    fileUploadInput.awaitNotVisible()
+    await condition find(previewText).exists(_.underlying.getText.contains("entity"))
 
     confirmUploadMetadataButton.doClick()
     confirmUploadMetadataButton.awaitNotVisible()
