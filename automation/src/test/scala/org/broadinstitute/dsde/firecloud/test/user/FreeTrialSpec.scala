@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.user
 
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component.{Button, Checkbox, Label, TestId}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
@@ -62,13 +63,11 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     "Enabled" - {
       "should be able to see the free trial banner, enroll and get terminated" in {
         val trialAuthToken = TrialBillingAccountAuthToken()
-        withCleanBillingProject(campaignManager, ownerEmails = List(trialAuthToken.buildCredential.getServiceAccountId)) { project =>
+        withCleanBillingProject(FireCloudConfig.GCS.trialBillingPemFileClientId, List(), List())(() => trialAuthToken) { project =>
           register cleanUp api.trial.scratchTrialProject(project)
           registerCleanUpForDeleteTrialState()
-
           api.trial.adoptTrialProject(project)
           api.trial.enableUser(testUser.email)
-          removeMembersFromBillingProject(project, List(campaignManager.email), BillingProjectRole.Owner)(trialAuthToken)
           withWebDriver { implicit driver =>
             withSignIn(testUser) { _ =>
               await ready new WorkspaceListPage()
@@ -115,9 +114,6 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
           val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
           val errMsg = "The trial user's billing project should have been removed from the billing account."
           assert(billingAccountUponTermination.isEmpty, errMsg)
-
-          // need to re-add a project owner in order for cleanup to succeed
-          addMembersToBillingProject(project, List(campaignManager.email), BillingProjectRole.Owner)(trialAuthToken)
         }
       }
     }
