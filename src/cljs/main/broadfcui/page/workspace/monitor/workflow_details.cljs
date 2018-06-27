@@ -345,8 +345,6 @@
          (style/create-server-error-message (:response metadata-response))
          (nil? cost-response)
          (spinner "Loading workflow cost...")
-         (not (:success? cost-response))
-         (style/create-server-error-message (:response cost-response))
          :else
          ;; generate this workflow's GCS path prefix
          ;; subworkflows receive them as props from parent workflows

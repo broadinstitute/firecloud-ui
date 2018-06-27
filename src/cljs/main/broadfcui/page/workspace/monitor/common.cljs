@@ -15,12 +15,16 @@
     [:span {:style {:fontStyle "italic"}} "Pending..."]))
 
 (defn render-cost [cost]
-  (if (nil? cost)
-    [:span {}
-     "n/a"
-     (dropdown/render-info-box
-      {:text "Costs may take up to one day to populate."})]
-    (common/format-price cost)))
+  (cond
+    (nil? cost)
+      [:span {}
+       "n/a"
+       (dropdown/render-info-box
+        {:text "Costs may take up to one day to populate."})]
+    (number? cost)
+      (common/format-price cost)
+    :else
+      (style/create-inline-error-message cost)))
 
 (def wf-success-statuses #{"Succeeded"})
 (def wf-running-statuses #{"Running" "Submitted" "Queued" "Launching"})
