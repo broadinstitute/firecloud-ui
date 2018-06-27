@@ -88,8 +88,8 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
 
             val filePreview = previewModal.getFilePreview
             //file sometimes changes but is always a JSON array, so easy test...
-            filePreview should startWith("[")
-            filePreview should endWith("]")
+            eventually { filePreview should startWith("[") }
+            eventually { filePreview should endWith("]") }
             eventually { previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes." }
 
             previewModal.xOut()
