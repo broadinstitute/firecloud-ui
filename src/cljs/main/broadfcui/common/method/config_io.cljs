@@ -53,13 +53,14 @@
    :-add-default-outputs
    (fn [{:keys [after-update props locals state this]}]
      (let [{:keys [begin-editing]} props
-           {:keys [outputs editing?]} @state
+           {:keys [editing?]} @state
            new-outputs (->> (this :-get-defaultable-outputs)
                             (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
-                            (into []))]
+                            (into {}))
+           new-outputs-vector (into [] new-outputs)]
        (do (when-not editing? (begin-editing))
-           (after-update #(doseq [output new-outputs] (((key output) @locals) :set-value (val output))))
-           (swap! state update :outputs merge (into {} new-outputs)))))
+           (after-update #(doseq [output new-outputs-vector] (((key output) @locals) :set-value (val output))))
+           (swap! state update :outputs merge new-outputs))))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
@@ -81,9 +82,9 @@
                                 new-inputs (merge (:inputs @state) uploaded-inputs)
                                 new-inputs-vector (into [] new-inputs)]
                             (do (when-not editing? (begin-editing))
-                            (after-update #(doseq [input new-inputs-vector] (((key input) @locals) :set-value (val input))))
-                            (swap! state assoc :inputs new-inputs)
-                            (swap! state dissoc :show-upload?))))}]]}])
+                                (after-update #(doseq [input new-inputs-vector] (((key input) @locals) :set-value (val input))))
+                                (swap! state assoc :inputs new-inputs)
+                                (swap! state dissoc :show-upload?))))}]]}])
         [Collapse {:title "Inputs"
                    :secondary-title (when can-edit?
                                       [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
