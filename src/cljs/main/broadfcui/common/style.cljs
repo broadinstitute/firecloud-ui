@@ -129,6 +129,10 @@
   [:div {:style {:textAlign "center" :color (:state-exception colors)}}
    message])
 
+(defn create-inline-error-message [message]
+  [:span {:style {:color (:state-exception colors)}}
+   message])
+
 (defn create-validation-error-message [fails]
   [:div {:style {:color (:state-exception colors)
                  :marginBottom "0.5rem"}}

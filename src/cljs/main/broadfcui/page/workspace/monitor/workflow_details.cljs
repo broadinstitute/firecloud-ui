@@ -345,8 +345,6 @@
          (style/create-server-error-message (:response metadata-response))
          (nil? cost-response)
          (spinner "Loading workflow cost...")
-         (not (:success? cost-response))
-         (style/create-server-error-message (:response cost-response))
          :else
          ;; generate this workflow's GCS path prefix
          ;; subworkflows receive them as props from parent workflows
@@ -374,7 +372,7 @@
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (swap! state assoc :cost-response
                          {:success? success?
-                          :response (if success? (:cost (get-parsed-response)) status-text)}))}))})
+                          :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
 
 
 (defn render [props]
