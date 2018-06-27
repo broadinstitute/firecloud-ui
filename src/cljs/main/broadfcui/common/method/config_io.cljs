@@ -51,28 +51,20 @@
        (filter #(string/blank? ((keyword (:name %)) outputs))
                (:outputs inputs-outputs))))
    :-add-default-outputs
-   (fn [{:keys [props refs state this]}]
+   (fn [{:keys [after-update props locals state this]}]
      (let [{:keys [begin-editing]} props
            {:keys [outputs editing?]} @state
            new-outputs (->> (this :-get-defaultable-outputs)
                             (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
-                            (into {}))]
-       (when-not editing? (begin-editing))
-       (utils/log refs)
-       (utils/log @refs)
-       (utils/cljslog refs)
-       (utils/cljslog @refs)
-       (utils/log (str "NEW OUTPUTS " new-outputs))
-       (utils/log (@refs "something"))
-       (utils/cljslog (str "HELLO: " (map #(@refs (name (key %))) new-outputs)))
-       ;(map #((@refs (key (utils/log %))) :set-value) (val (utils/log %))) new-outputs)
-       ;(swap! state update :outputs merge new-outputs)
-       ))
+                            (into []))]
+       (do (when-not editing? (begin-editing))
+           (after-update #(doseq [output new-outputs] (((key output) @locals) :set-value (val output))))
+           (swap! state update :outputs merge (into {} new-outputs)))))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [after-update locals props state this]}]
      (let [{:keys [default-hidden? entity-type? style can-edit? begin-editing]} props
            {:keys [editing?]} @state
            id (gensym "io-table-")]
@@ -86,10 +78,12 @@
                        {:on-upload
                         (fn [{:keys [file-contents]}]
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
-                                new-inputs (merge (:inputs @state) uploaded-inputs)]
-                            (when-not editing? (begin-editing))
+                                new-inputs (merge (:inputs @state) uploaded-inputs)
+                                new-inputs-vector (into [] new-inputs)]
+                            (do (when-not editing? (begin-editing))
+                            (after-update #(doseq [input new-inputs-vector] (((key input) @locals) :set-value (val input))))
                             (swap! state assoc :inputs new-inputs)
-                            (swap! state dissoc :show-upload?)))}]]}])
+                            (swap! state dissoc :show-upload?))))}]]}])
         [Collapse {:title "Inputs"
                    :secondary-title (when can-edit?
                                       [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
@@ -107,7 +101,7 @@
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state refs]} io-key]
+   (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -150,8 +144,7 @@
                                            (str type (when optional? " (optional)")))
                                 :render
                                 (fn [{:keys [type optional?]}]
-                                  [:div {:ref "something"
-                                         :style (clip (if optional?
+                                  [:div {:style (clip (if optional?
                                                         (merge table-style/table-cell-plank-right
                                                                table-style/table-cell-optional)
                                                         table-style/table-cell-plank-right))}
@@ -165,8 +158,8 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:ref name
-                                         :key (utils/log name)
+                                        {:ref #(swap! locals assoc (keyword name) %)
+                                         :key name
                                          :default-value value
                                          :caching? true
                                          :data data
