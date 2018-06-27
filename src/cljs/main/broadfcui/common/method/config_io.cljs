@@ -56,11 +56,10 @@
            {:keys [editing?]} @state
            new-outputs (->> (this :-get-defaultable-outputs)
                             (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
-                            (into {}))
-           new-outputs-vector (into [] new-outputs)]
-       (do (when-not editing? (begin-editing))
-           (after-update #(doseq [output new-outputs-vector] (((key output) @locals) :set-value (val output))))
-           (swap! state update :outputs merge new-outputs))))
+                            (into {}))]
+       (when-not editing? (begin-editing))
+       (after-update #(doseq [[k v] (vec new-outputs)] ((k @locals) :set-value v)))
+       (swap! state update :outputs merge new-outputs)))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
@@ -79,12 +78,11 @@
                        {:on-upload
                         (fn [{:keys [file-contents]}]
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
-                                new-inputs (merge (:inputs @state) uploaded-inputs)
-                                new-inputs-vector (into [] new-inputs)]
-                            (do (when-not editing? (begin-editing))
-                                (after-update #(doseq [input new-inputs-vector] (((key input) @locals) :set-value (val input))))
-                                (swap! state assoc :inputs new-inputs)
-                                (swap! state dissoc :show-upload?))))}]]}])
+                                new-inputs (merge (:inputs @state) uploaded-inputs)]
+                            (when-not editing? (begin-editing))
+                            (after-update #(doseq [[k v] (vec new-inputs)] ((k @locals) :set-value v)))
+                            (swap! state assoc :inputs new-inputs)
+                            (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
                    :secondary-title (when can-edit?
                                       [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
