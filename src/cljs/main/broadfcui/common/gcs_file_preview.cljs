@@ -62,15 +62,14 @@
              ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
              ;; to hint to the user that they should scroll up.
              (when-not (or data-empty hide-preview?)
-               (react/create-element
-                [:div {:data-test-id "preview-pane"
-                       :ref "preview"
-                       :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
-                               :fontSize "90%" :overflowY "auto" :maxHeight 206
-                               :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-                 (if-let [preview-content (:preview @state)]
-                   preview-content
-                   (spinner "Loading preview..."))]))]
+               (let [preview-content (:preview @state)]
+                 (react/create-element
+                  [:div {:data-test-id (if preview-content "preview-pane" "loading-preview-pane")
+                         :ref "preview"
+                         :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                 :fontSize "90%" :overflowY "auto" :maxHeight 206
+                                 :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+                   (or preview-content (spinner "Loading preview..."))])))]
             (when (:loading? @state)
               (spinner "Getting file info..."))
             (when data
