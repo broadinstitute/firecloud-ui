@@ -51,20 +51,20 @@
        (filter #(string/blank? ((keyword (:name %)) outputs))
                (:outputs inputs-outputs))))
    :-add-default-outputs
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [after-update props locals state this]}]
      (let [{:keys [begin-editing]} props
-           {:keys [outputs editing?]} @state
+           {:keys [editing?]} @state
            new-outputs (->> (this :-get-defaultable-outputs)
                             (map (fn [{:keys [name]}] [(keyword name) (str "this." (-> name (string/split ".") last))]))
-                            (into {})
-                            (merge outputs))]
+                            (into {}))]
        (when-not editing? (begin-editing))
+       (after-update #(doseq [[k v] (vec new-outputs)] ((k @locals) :set-value v)))
        (swap! state update :outputs merge new-outputs)))
    :component-will-mount
    (fn [{:keys [props state]}]
      (swap! state utils/deep-merge (:values props)))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [after-update locals props state this]}]
      (let [{:keys [default-hidden? entity-type? style can-edit? begin-editing]} props
            {:keys [editing?]} @state
            id (gensym "io-table-")]
@@ -80,6 +80,7 @@
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
                                 new-inputs (merge (:inputs @state) uploaded-inputs)]
                             (when-not editing? (begin-editing))
+                            (after-update #(doseq [[k v] (vec new-inputs)] ((k @locals) :set-value v)))
                             (swap! state assoc :inputs new-inputs)
                             (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
@@ -99,7 +100,7 @@
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :outputs)}]]))
    :-render-table
-   (fn [{:keys [props state]} io-key]
+   (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (->> (io-key inputs-outputs)
@@ -156,9 +157,10 @@
                                     [:div {:style (clip table-style/default-cell-left)}
                                      (if editing?
                                        [Autosuggest
-                                        {:key name
-                                         :value value
-                                         :caching? false
+                                        {:ref #(swap! locals assoc (keyword name) %)
+                                         :key name
+                                         :default-value value
+                                         :caching? true
                                          :data data
                                          :shouldRenderSuggestions (constantly true)
                                          :inputProps {:data-test-id (str name "-text-input")
