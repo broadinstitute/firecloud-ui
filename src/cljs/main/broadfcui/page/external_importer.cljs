@@ -68,16 +68,16 @@
      (let [{:keys [id version]} props]
        (endpoints/dockstore-get-wdl
         id version
-        (fn [{:keys [success? get-parsed-response]}]
+        (fn [{:keys [success? get-parsed-response status-code status-text]}]
           (if success?
             (swap! state assoc :wdl (:descriptor (get-parsed-response)))
-            (swap! state assoc :load-error (get-parsed-response false)))))))
+            (swap! state assoc :load-error (str "(" status-code ") " status-text)))))))
    :-render-error
    (fn [{:keys [state]}]
      [:div {}
       [:div {:style {:margin "0.5rem 0"}}
        "Error loading WDL. Please verify the workflow path and version and ensure this workflow supports WDL."]
-      [comps/ErrorViewer {:error (:load-error @state)}]])
+      [:div {} "Message from Dockstore: " (:load-error @state)]])
    :-render-export
    (fn [{:keys [props state locals this]}]
      (let [{:keys [id]} props
