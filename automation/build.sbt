@@ -58,7 +58,7 @@ Test / logBuffered := false
   *  Warning: can't set too high (set at 10 would crashes OS)
   *  This is not number of threads in each JVM. That would be up to sbt.
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 4))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 6))
 
 /**
   * Forked JVM options

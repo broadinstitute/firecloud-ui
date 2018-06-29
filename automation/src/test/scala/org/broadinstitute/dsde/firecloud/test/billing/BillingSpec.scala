@@ -97,6 +97,12 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
               assert(submissionDetailsPage.verifyWorkflowSucceeded())
               //END: Test running anlysis in workspace
 
+              // BEGIN: should be able to delete method config
+              methodConfigDetailsPage.open
+              val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
+              workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
+              //END: Test delete method config
+
               //BEGIN: Test adding user to project
               billingPage.open.openBillingProject(billingProjectName)
               billingPage.addUserToBillingProject(secondUser, "User")

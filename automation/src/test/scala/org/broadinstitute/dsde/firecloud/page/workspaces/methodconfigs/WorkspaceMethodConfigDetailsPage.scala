@@ -43,14 +43,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       page.awaitReady() // check if click happened
     ) match {
       case Failure(e) => // click failed
-        // TODO remove after proving it worked
-        logger.warn(s"clickLaunchAnalysis Failure. Retrying click button: ${openLaunchAnalysisModalButton.query}")
-        // retry click
         openLaunchAnalysisModalButton.doClick()
         await ready page
       case Success(some) => // clicked
-        // TODO remove after proving it worked
-        logger.info("clickLaunchAnalysis Success")
         page
     }
   }

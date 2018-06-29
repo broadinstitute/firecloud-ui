@@ -7,6 +7,8 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
+import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.service.Rawls
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -105,6 +107,12 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     submissionAbortButton.doClick()
     val modal = await ready new ConfirmAbortModal()
     modal.clickAbortSubmissionButton
+  }
+
+  def getApiSubmissionStatus(billingProject: String, workspaceName: String, submissionId: String)(implicit token: AuthToken): String = {
+    val (status, workflows) = Rawls.submissions.getSubmissionStatus(billingProject, workspaceName, submissionId)
+    logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
+    status
   }
 
 }
