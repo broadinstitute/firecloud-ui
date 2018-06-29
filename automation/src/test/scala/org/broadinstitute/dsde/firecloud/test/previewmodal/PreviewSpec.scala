@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
-import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.broadinstitute.dsde.workbench.service.util.Retry
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
@@ -141,7 +141,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
             eventually { previewModal.getObject shouldBe s"$gObject" }
             // preview pane is only created if there's something to preview so
             // give it .1 sec
-            retry[Boolean](100.milliseconds, 1.minute)({
+            Retry.retry[Boolean](100.milliseconds, 1.minute)({
               val previewPane = previewModal.findInner("preview-pane")
               // avoids org.openqa.selenium.NoSuchElementException thrown from previewPane.webElement call
               val allElem = previewPane.findAllElements

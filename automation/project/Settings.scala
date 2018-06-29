@@ -23,8 +23,7 @@ object Settings {
     "-feature",
     "-encoding", "utf8",
     "-target:jvm-1.8",
-    "-Xmax-classfile-name", "100",
-    "-Xfatal-warnings"
+    "-Xmax-classfile-name", "100"
   )
 
   // test parameters explanation:
