@@ -23,6 +23,9 @@
      (js/gapi.load "auth2" #(this :-handle-auth2-loaded)))
    :-handle-auth2-loaded
    (fn [{:keys [props]}]
+     ;; NB: we do not override the fetch_basic_profile config option on auth2.init.
+     ;; fetch_basic_profile defaults to true, and adds "openid email profile" to the
+     ;; list of requested scopes.
      (let [{:keys [on-loaded]} props
            scopes (string/join
                    " "
