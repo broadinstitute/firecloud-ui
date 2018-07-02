@@ -78,9 +78,10 @@
                        {:on-upload
                         (fn [{:keys [file-contents]}]
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
-                                new-inputs (merge (:inputs @state) uploaded-inputs)]
+                                new-inputs (merge (:inputs @state) (into {} (map (fn [[k v]]
+                                                                                   [k (utils/->json-string v)]) uploaded-inputs)))]
                             (when-not editing? (begin-editing))
-                            (after-update #(doseq [[k v] (vec new-inputs)] ((k @locals) :set-value v)))
+                            (after-update #(doseq [[k v] (vec new-inputs)] (when (contains? @locals k) ((k @locals) :set-value v))))
                             (swap! state assoc :inputs new-inputs)
                             (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
