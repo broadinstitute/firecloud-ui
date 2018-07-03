@@ -10,6 +10,7 @@ import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
+import org.scalatest.time.{Minutes, Seconds, Span}
 
 
 class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers with WebBrowserSpec with WorkspaceFixtures
@@ -21,34 +22,6 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
   val testData = TestData()
 
-  "launch workflow and delete a workflow" in {
-    val user = FireCloudConfig.Users.owner
-    implicit val authToken: AuthToken = user.makeAuthToken()
-    withCleanBillingProject(user) { billingProject =>
-      withWorkspace(billingProject, "MethodLaunchSpec_launch_a_simple_workflow") { workspaceName =>
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-        api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
-        api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
-          SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
-
-        withWebDriver { implicit driver =>
-          withSignIn(user) { _ =>
-            val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
-
-            val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId)
-
-            submissionDetailsPage.waitUntilSubmissionCompletes()
-            submissionDetailsPage.readWorkflowStatus() shouldBe submissionDetailsPage.SUCCESS_STATUS
-
-            // should be able to delete workflow
-            methodConfigDetailsPage.open
-            val workspaceMethodConfigPage = methodConfigDetailsPage.deleteMethodConfig()
-            workspaceMethodConfigPage.hasConfig(methodConfigName) shouldBe false
-          }
-        }
-      }
-    }
-  }
 
   "launch workflow with warning" in {
     val user = UserPool.chooseProjectOwner
@@ -181,9 +154,18 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
             withSignIn(user) { _ =>
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
               val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId)
+              val submissionId = submissionDetailsPage.getSubmissionId
 
-              submissionDetailsPage.waitUntilSubmissionCompletes()
-              submissionDetailsPage.verifyWorkflowSucceeded() shouldBe true
+              implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Minutes)), interval = scaled(Span(20, Seconds)))
+
+              // test will end when api status becomes Submitted. not waiting for Done
+              eventually {
+                val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)
+                logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
+                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Waited for status Submitted") {
+                  status shouldBe "Submitted"
+                }
+              }
             }
           }
         }
@@ -211,9 +193,22 @@ class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matc
             withSignIn(user) { _ =>
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
               val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId, "", shouldUseCallCaching)
+              val submissionId = submissionDetailsPage.getSubmissionId
 
-              //TODO start the submission via API - reduce the amount of UI surface. - requires getting the submission ID
               submissionDetailsPage.abortSubmission()
+
+              implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Minutes)), interval = scaled(Span(20, Seconds)))
+
+              // wait api status becomes Aborted
+              eventually {
+                val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)
+                logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
+                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Waited for status Aborted") {
+                  status shouldBe "Aborted"
+                }
+              }
+
+              // verifiy on UI
               submissionDetailsPage.waitUntilSubmissionCompletes()
               submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
             }
