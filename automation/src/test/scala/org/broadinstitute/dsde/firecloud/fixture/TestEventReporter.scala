@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.Reporter
 import org.scalatest.events.{Event, TestFailed, TestStarting, TestSucceeded}
 
-case class ScalaTestReporter(aggregateReporter: Reporter) extends Reporter with LazyLogging {
+case class TestEventReporter(aggregateReporter: Reporter) extends Reporter with LazyLogging {
   override def apply(event: Event): Unit = {
     aggregateReporter.apply(event) // calling super apply(event)
     event match {

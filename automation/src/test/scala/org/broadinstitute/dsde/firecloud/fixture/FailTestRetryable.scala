@@ -9,7 +9,7 @@ trait FailTestRetryable extends TestSuiteMixin with LazyLogging with Retries { t
 
   abstract override def run(testName: Option[String], args: Args): Status = {
 
-    val rep = ScalaTestReporter(args.reporter)
+    val rep = TestEventReporter(args.reporter)
     val status = super.run(testName, args.copy(reporter = rep))
 
     if (status.succeeds()) {
