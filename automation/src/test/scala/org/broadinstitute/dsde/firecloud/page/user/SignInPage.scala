@@ -4,6 +4,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
+import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
@@ -103,11 +104,11 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     await enabled id("passwordNext")
     await enabled name("password")
     /*
-     * The log-in pane animation is sometimes delayed or takes while during which the password field flips between
-     * enabled and disabled. While it's not great to sleep for a fixed amount of time, we have very little ability to
-     * do anything better. From experimentation, 300ms isn't quite enough but 1000s seems to do it.
+     * The Google real SignIn: animation tranisition from username to password freezes when other web browsers are in front thus blocking animation.
+     * Wait up to 60 seconds for animation finish.
      */
-    Thread sleep 1000
+    // Thread sleep 1000
+    await condition (find(id("password")).exists(_.isDisplayed), 60)
     pwdField(name("password")).value = password
     pressKeys("\n")
   }
