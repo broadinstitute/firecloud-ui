@@ -27,7 +27,7 @@
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 (defn get-fence-link-href []
-  "https://google.com")
+  "google.com")
 
 (react/defc- NihLink
   {:render
@@ -39,7 +39,13 @@
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            datasets (:datasetPermissions status)]
        [:div {}
-        [:h4 {} "NIH Account"]
+        [:div {}
+         [:h4 {:style {:display "inline-block"}} "NIH Account"]
+         (dropdown/render-info-box
+          {:text
+           [:div {}
+            "Linking with eRA Commons will allow FireCloud to automatically determine if you can access "
+            "controlled datasets hosted in FireCloud (ex. TCGA) based on your valid dbGaP applications."]})]
         (cond
           (:error-message @state) (style/create-server-error-message (:error-message @state))
           (:pending-nih-username-token @state)
@@ -49,7 +55,7 @@
           :else
           [:div {}
            [:div {:style {:display "flex"}}
-            [:div {:style {:flex "0 0 12rem"}} "eRA Commons / NIH Username:"]
+            [:div {:style {:flex "0 0 12rem"}} "Username:"]
             [:div {:style {:flex "0 0 auto"}} username]]
            [:div {:style {:display "flex" :marginTop "1rem"}}
             [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
@@ -113,20 +119,62 @@
    {:render
     (fn [{:keys [state]}]
       (let [status (:fence-status @state)
-            username (:linkedFenceUsername status)]
+            expire-time 1000000
+            expired? true
+            username (:username status)]
         [:div {}
-         [:h4 {} "University of Chicago Account"]
+         [:h4 {} "Framework Services by University of Chicago"]
          (cond
-           (:error-message @state) (style/create-server-error-message (:error-message @state))
+           (:error-message @state)
+            (style/create-server-error-message (:error-message @state))
            (:pending-fence-username-token @state)
-           (spinner {:ref "pending-spinner"} "Linking UChicago account...")
+            (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
            (nil? username)
-           (links/create-external {:href (get-fence-link-href)} "Log-In to UChicago to link your account")
+            (links/create-external {:href (get-fence-link-href)} "Log-In to Framework Services to link your account")
            :else
            [:div {}
             [:div {:style {:display "flex"}}
-             [:div {:style {:flex "0 0 12rem"}} "UChicago Username:"]
-             [:div {:style {:flex "0 0 auto"}} username]]])]))})
+             [:div {:style {:flex "0 0 12rem"}} "Username:"]
+             [:div {:style {:flex "0 0 auto"}} username]]
+            [:div {:style {:display "flex" :marginTop "1rem"}}
+             [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
+             [:div {:style {:flex "0 0 auto"}}
+              (if expired?
+                [:span {:style {:color "red"}} "Expired"]
+                [:span {:style {:color (when true "red")}} (common/format-date 1)])
+              [:div {}
+               (links/create-external {:href (get-fence-link-href) :style {:white-space "nowrap"}} "Log-In to Framework Services to re-link your account")]]]])]))
+    :component-did-mount
+    (fn [{:keys [this props state after-update]}]
+      (let [{:keys [fence-token]} props]
+        (utils/cljslog fence-token)
+        (if-not (nil? fence-token)
+          (do
+            (utils/cljslog fence-token)
+            (swap! state assoc :pending-fence-token fence-token)
+            (after-update #(this :link-fence-account fence-token))
+            ;; Navigate to the parent (this page without the token), but replace the location so
+            ;; the back button doesn't take the user back to the token.
+            (.replace (.-location js/window) (nav/get-link :profile)))
+          (this :load-fence-status))))
+    :load-fence-status
+    (fn [{:keys [state]}]
+      (endpoints/profile-get-fence-status
+       (fn [{:keys [success? status-code status-text get-parsed-response]}]
+         (cond
+           success? (swap! state assoc :fence-status (get-parsed-response))
+           (= status-code 404) (swap! state assoc :fence-status :none)
+           :else
+           (swap! state assoc :error-message status-text)))))
+    :link-fence-account
+    (fn [{:keys [state]} token]
+      (endpoints/profile-link-fence-account
+       token
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (do (swap! state dissoc :pending-fence-token :fence-status)
+             (swap! state assoc :fence-status (get-parsed-response)))
+           (swap! state assoc :error-message "Failed to link Framework Services account")))))})
 
 
 (react/defc- Form
@@ -223,15 +271,15 @@
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
-          [:div {:style {:width "60%" :float "left"}}
+          [:div {:style {:width "50%" :float "left"}}
             [Form (merge {:ref "form"}
-                         (select-keys props [:new-registration? :nih-token]))]]
-          [:div {:style {:width "40%" :float "right"}}
+                         (select-keys props [:new-registration? :nih-token :fence-token]))]]
+          [:div {:style {:width "50%" :float "right"}}
             (when-not (:new-registration? props)
-              [:div {:style {:padding "1rem 1rem 1rem 1rem"  :backgroundColor "#f4f4f4" :borderRadius 3}}
+              [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
                [:h3 {} "Identity & External Servers"]
                [NihLink (select-keys props [:nih-token])]
-               [FenceLink (select-keys props [:nih-token])]])]
+               [FenceLink (select-keys props [:fence-token])]])]
         (common/clear-both)
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
@@ -287,4 +335,10 @@
    {:component Page
     :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
     :make-props (fn [nih-token] (utils/restructure nih-token))
+    :make-path (fn [] "profile")})
+  (nav/defpath
+   :fence-link
+   {:component Page
+    :regex #"fence-callback\?code=([^\s/&]+)?(?:.+)"
+    :make-props (fn [fence-token] (utils/restructure fence-token))
     :make-path (fn [] "profile")}))

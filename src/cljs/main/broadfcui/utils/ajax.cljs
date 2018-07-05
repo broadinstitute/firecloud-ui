@@ -119,3 +119,14 @@
             :data data
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (on-done m))))))
+
+(defn call-bond [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
+  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
+  (let [on-done (:on-done arg-map)]
+    (call (assoc arg-map
+            :url (str "https://broad-bond-dev.appspot.com" service-prefix path)
+            :headers (merge (@get-bearer-token-header)
+                            (:headers arg-map))
+            :on-done (fn [{:keys [status-code status-text] :as m}]
+                       (update-health status-code status-text)
+                       (on-done m))))))

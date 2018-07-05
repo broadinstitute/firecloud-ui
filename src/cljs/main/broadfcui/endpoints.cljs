@@ -333,7 +333,6 @@
    "/nih/status"
    {:on-done on-done}))
 
-
 (defn profile-link-nih-account [token on-done]
   (ajax/call-orch
    "/nih/callback"
@@ -341,6 +340,17 @@
     :data (utils/->json-string {:jwt token})
     :on-done on-done
     :headers ajax/content-type=json}))
+
+(defn profile-get-fence-status [on-done]
+  (ajax/call-bond
+   "/link/v1/fence"
+   {:on-done on-done}))
+
+(defn profile-link-fence-account [oauth-code on-done]
+  (ajax/call-bond
+   (str "/link/v1/fence/oauthcode?oauthcode=" oauth-code)
+   {:method :post
+    :on-done on-done}))
 
 
 (defn get-groups [on-done]
