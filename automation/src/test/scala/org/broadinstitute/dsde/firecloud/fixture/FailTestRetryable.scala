@@ -2,8 +2,6 @@ package org.broadinstitute.dsde.firecloud.fixture
 
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest._
-import org.scalatest.concurrent.Eventually.scaled
-import org.scalatest.time.{Seconds, Span}
 
 trait FailTestRetryable extends TestSuiteMixin with LazyLogging with Retries { this: TestSuite =>
 
@@ -19,14 +17,24 @@ trait FailTestRetryable extends TestSuiteMixin with LazyLogging with Retries { t
     }
   }
 
+  val maxRetries = 1
+
   abstract override def withFixture(test: NoArgTest): Outcome = {
-    super.withFixture(test) match {
-      case failed: Failed =>
-        if (isRetryable(test)) {
-          logger.warn(s"About to retry failed test -- " + test.name)
-          withRetryOnFailure(scaled(Span(30, Seconds)))(super.withFixture(test))
+    if (isRetryable(test))
+      withFixture(test, maxRetries)
+    else
+      super.withFixture(test)
+  }
+
+  def withFixture(test: NoArgTest, retryCount: Int): Outcome = {
+    val outcome = super.withFixture(test)
+    outcome match {
+      case Failed(_) | Canceled(_) =>
+        if (retryCount == 1) {
+          super.withFixture(test)
         } else {
-          super.withFixture(test) // don't retry if not tagged with `taggedAs(Retryable)` even if test failed
+          logger.warn(s"About to retry failed test -- " + test.name)
+          withFixture(test, retryCount - 1)
         }
       case other => other
     }

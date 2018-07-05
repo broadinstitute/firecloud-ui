@@ -18,7 +18,7 @@ import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
   */
 class RegistrationSpec extends FreeSpec with FailTestRetryable with BeforeAndAfter with Matchers with WebBrowserSpec with UserFixtures {
 
-  val testUser: Credentials = FireCloudConfig.Users.temp // TODO: pull from user pool and fetch correct subject ID
+  val testUser: Credentials = FireCloudConfig.Users.Temps.getUserCredential("luna")
   val subjectId: String = FireCloudConfig.Users.tempSubjectId
 
   val adminUser: Credentials = UserPool.chooseAdmin
