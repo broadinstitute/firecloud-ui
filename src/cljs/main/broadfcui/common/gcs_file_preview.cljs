@@ -41,6 +41,8 @@
          :dismiss dismiss
          :content
          (let [{:keys [data error status]} (:response @state)
+               [parsed-error _] (when error (utils/parse-json-string error true false))
+               parsed-error-message (when parsed-error (:message parsed-error))
                data-size (:size data)
                cost (:estimatedCostUSD data)
                labeled (fn [label & contents]
@@ -114,10 +116,8 @@
                (case status
                  404 "This file was not found."
                  403 "You do not have access to this file."
-                 "See details below.")
-               ;; TODO: revert this once automated testing runs are done
-               ;; (if (:show-error-details? @state)
-               (if true
+                 (or parsed-error-message "See details below."))
+               (if (:show-error-details? @state)
                  [:div {}
                   [:pre {} error]
                   (links/create-internal {:onClick #(swap! state dissoc :show-error-details?)} "Hide detail")]
