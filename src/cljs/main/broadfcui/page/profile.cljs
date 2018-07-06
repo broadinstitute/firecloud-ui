@@ -27,7 +27,12 @@
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 (defn get-fence-link-href []
-  "google.com")
+  (str "https://qa.dcf.planx-pla.net" #_(get @config/config "fenceUrlRoot")
+       "/user/oauth2/authorize?response_type=code&client_id=REPLACE_ME&redirect_uri="
+       (js/encodeURIComponent
+        (let [loc (.-location js/window)]
+          (str "https:" #_(.-protocol loc) "//" (.-host loc) "/fence-callback")))
+       "&scope=openid+google_credentials"))
 
 (react/defc- NihLink
   {:render
@@ -119,8 +124,9 @@
    {:render
     (fn [{:keys [state]}]
       (let [status (:fence-status @state)
-            expire-time 1000000
-            expired? true
+            date-issued (.getTime (js/Date. (:issued_at status)))
+            expire-time (utils/_30-days-from-date-ms date-issued)
+            expired? (< expire-time (.now js/Date))
             username (:username status)]
         [:div {}
          [:h4 {} "Framework Services by University of Chicago"]
@@ -141,7 +147,7 @@
              [:div {:style {:flex "0 0 auto"}}
               (if expired?
                 [:span {:style {:color "red"}} "Expired"]
-                [:span {:style {:color (when true "red")}} (common/format-date 1)])
+                [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
               [:div {}
                (links/create-external {:href (get-fence-link-href) :style {:white-space "nowrap"}} "Log-In to Framework Services to re-link your account")]]]])]))
     :component-did-mount
