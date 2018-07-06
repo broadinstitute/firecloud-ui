@@ -115,7 +115,9 @@
                  404 "This file was not found."
                  403 "You do not have access to this file."
                  "See details below.")
-               (if (:show-error-details? @state)
+               ;; TODO: revert this once automated testing runs are done
+               ;; (if (:show-error-details? @state)
+               (if true
                  [:div {}
                   [:pre {} error]
                   (links/create-internal {:onClick #(swap! state dissoc :show-error-details?)} "Hide detail")]
