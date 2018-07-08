@@ -22,6 +22,24 @@
 
 (def clip (partial merge table-style/clip-text))
 
+(defn get-typed [string-input input-type]
+  (utils/log (str input-type " " string-input))
+  (cond
+    (or (= input-type "int")
+        (string/includes? input-type "array")) (try (utils/parse-json-string string-input)
+                                                    (catch js/Error e string-input)) ; ask what other types it could be. Maps?
+    :else string-input))
+
+
+(defn create-typed-inputs [inputs io-fields]
+  (let [new-inputs (select-keys inputs (map (comp keyword :name) (:inputs io-fields)))
+        filtered-io-fields (filter #(not (string/blank? ((keyword (:name %)) new-inputs))) (:inputs io-fields))
+        typed-io (into {} (map (fn [o] {(keyword (:name o))
+                                        (get-typed ((keyword (:name o)) new-inputs)
+                                                   (string/lower-case (string/replace (:inputType o) "?" "")))})
+                            filtered-io-fields))]
+   typed-io))
+
 
 (react/defc IOTables
   {:start-editing
@@ -85,12 +103,20 @@
                             (swap! state assoc :inputs new-inputs)
                             (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
-                   :secondary-title (when can-edit?
-                                      [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
-                                                                       :on-click #(swap! state assoc :show-upload? true)}
-                                                 "Populate with a .json file...")
-                                       (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
-                                                                                                :style {:white-space "nowrap"}} "Learn more about the expected format")})])
+                   :secondary-title [:div {}
+                                     (when can-edit?
+                                       [:span {:style {:padding "0 1em"}} (links/create-internal {:data-test-id "populate-with-json-link"
+                                                                         :on-click #(swap! state assoc :show-upload? true)}
+                                                   "Populate with a .json file...")
+                                        (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
+                                                                                                 :style {:white-space "nowrap"}} "Learn more about the expected format")})])
+                                     (when-not editing?
+                                       [:span {:style {:borderLeft style/border-light :padding "0 1.3em"}}
+                                        [links/DownloadFromObject
+                                                 {:label "Download .json file"
+                                                  :object (utils/->json-string (create-typed-inputs (:inputs @state) (:inputs-outputs props)))
+                                                  :filename "inputs.json"
+                                                  :create-internal? true}]])]
                    :default-hidden? default-hidden?
                    :contents (this :-render-table :inputs)}]
         [Collapse {:style {:marginTop "1rem"}
