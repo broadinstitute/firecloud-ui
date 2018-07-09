@@ -22,23 +22,24 @@
 
 (def clip (partial merge table-style/clip-text))
 
+; ask what other types it could be. Maps?
 (defn get-typed [string-input input-type]
-  (utils/log (str input-type " " string-input))
-  (cond
-    (or (= input-type "int")
-        (string/includes? input-type "array")) (try (utils/parse-json-string string-input)
-                                                    (catch js/Error e string-input)) ; ask what other types it could be. Maps?
-    :else string-input))
+  (if (or (= input-type "int")
+          (string/includes? input-type "array")
+          (= input-type "string"))
+    ; if conversion to json is unsuccessful (as a result of invalid json), just return string
+    (try (utils/parse-json-string string-input)
+         (catch js/Error e string-input))
+    string-input))
 
 
 (defn create-typed-inputs [inputs io-fields]
   (let [new-inputs (select-keys inputs (map (comp keyword :name) (:inputs io-fields)))
-        filtered-io-fields (filter #(not (string/blank? ((keyword (:name %)) new-inputs))) (:inputs io-fields))
-        typed-io (into {} (map (fn [o] {(keyword (:name o))
-                                        (get-typed ((keyword (:name o)) new-inputs)
-                                                   (string/lower-case (string/replace (:inputType o) "?" "")))})
-                            filtered-io-fields))]
-   typed-io))
+        filtered-io-fields (filter #(not (string/blank? ((keyword (:name %)) new-inputs))) (:inputs io-fields))]
+    (into {} (map (fn [o] {(keyword (:name o))
+                           (get-typed ((keyword (:name o)) new-inputs)
+                                      (string/lower-case (string/replace (:inputType o) "?" "")))})
+                  filtered-io-fields))))
 
 
 (react/defc IOTables
