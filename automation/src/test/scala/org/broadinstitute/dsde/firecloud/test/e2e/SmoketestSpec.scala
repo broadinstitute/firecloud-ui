@@ -8,13 +8,12 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.Workspace
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
-import org.broadinstitute.dsde.workbench.fixture.{SimpleMethodConfig, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{SimpleMethodConfig, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
 
-class SmoketestSpec extends FreeSpec with WebBrowserSpec
-  with UserFixtures with WorkspaceFixtures with Matchers {
+class SmoketestSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with Matchers with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

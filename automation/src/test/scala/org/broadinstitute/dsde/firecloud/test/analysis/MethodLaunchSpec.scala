@@ -14,7 +14,7 @@ import org.scalatest.time.{Minutes, Seconds, Span}
 
 
 class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures {
+  with UserFixtures with MethodFixtures with BillingFixtures with TestReporterFixture {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
