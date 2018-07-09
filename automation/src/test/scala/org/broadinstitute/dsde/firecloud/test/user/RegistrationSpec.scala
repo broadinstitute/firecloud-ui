@@ -43,7 +43,7 @@ class RegistrationSpec extends FreeSpec with FailTestRetryable with BeforeAndAft
 
     "should allow a person to register" taggedAs Retryable in {
       withWebDriver { implicit driver =>
-        withSignInNewUserReal(testUser) { registrationPage =>
+        withSignInNewUser(testUser) { registrationPage =>
           registerCleanUpForDeleteUser(subjectId)
 
           registrationPage.register(
@@ -74,7 +74,7 @@ class RegistrationSpec extends FreeSpec with FailTestRetryable with BeforeAndAft
     "should show billing account instructions for a newly registered user" taggedAs Retryable in {
 
       withWebDriver { implicit driver =>
-        withSignInNewUserReal(testUser) { registrationPage =>
+        withSignInNewUser(testUser) { registrationPage =>
           registerCleanUpForDeleteUser(subjectId)
 
           registrationPage.register(
