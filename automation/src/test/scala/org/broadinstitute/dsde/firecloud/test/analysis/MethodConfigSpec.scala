@@ -121,6 +121,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                       |}
                       |""".stripMargin)
         api.methods.createMethod(method.creationAttributes)
+        register cleanUp api.methods.redact(method)
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
           val configName = s"test_JSON_populate_config_$workspaceName"
           api.methodConfigurations.createMethodConfigInWorkspace(
