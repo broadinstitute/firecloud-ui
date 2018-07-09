@@ -13,7 +13,7 @@ import org.scalatest._
 import org.scalatest.time.{Minutes, Seconds, Span}
 
 
-class MethodLaunchSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers with WebBrowserSpec with WorkspaceFixtures
+class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec with WorkspaceFixtures
   with UserFixtures with MethodFixtures with BillingFixtures {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
