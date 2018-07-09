@@ -1,14 +1,13 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces
 
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.WebDriver
 import org.scalatest.concurrent.Eventually._
@@ -64,8 +63,9 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
         assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
 
-      val date = DateTimeFormatter.ofPattern(dateFormatPatter).format(LocalDateTime.now())
-      val destFile = new File(sourcePath).getName + s".$date"
+      // val date = DateTimeFormatter.ofPattern(dateFormatPatter).format(LocalDateTime.now())
+      // val destFile = new File(sourcePath).getName + s".$date"
+      val destFile = Orchestration.uuidWithPrefix(new File(sourcePath).getName.replace(".txt","")) + ".txt"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
       logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")
