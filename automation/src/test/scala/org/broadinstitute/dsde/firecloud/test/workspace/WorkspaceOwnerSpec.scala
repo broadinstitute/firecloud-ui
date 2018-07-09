@@ -17,7 +17,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.util.Try
 
 class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matchers with WebBrowserSpec
-  with RandomUtil with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+  with RandomUtil with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

@@ -13,7 +13,8 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.collection.immutable.ListMap
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures
+  with MethodFixtures with BillingFixtures with TestReporterFixture {
 
   "input/output auto-suggest" - {
     "stays current with selected root entity type" in {

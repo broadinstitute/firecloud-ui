@@ -1,12 +1,13 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
-import org.broadinstitute.dsde.firecloud.fixture.{FailTestRetryable, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
+import org.broadinstitute.dsde.workbench.fixture.{FailedTestRetryable, TestEventReporter, TestReporterFixture}
 import org.broadinstitute.dsde.workbench.service.{Sam, Thurloe}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.tagobjects.Retryable
@@ -16,7 +17,7 @@ import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
 /**
   * Tests for new user registration scenarios.
   */
-class RegistrationSpec extends FreeSpec with FailTestRetryable with BeforeAndAfter with Matchers with WebBrowserSpec with UserFixtures {
+class RegistrationSpec extends FreeSpec with FailedTestRetryable with BeforeAndAfter with Matchers with WebBrowserSpec with UserFixtures with TestReporterFixture {
 
   val testUser: Credentials = FireCloudConfig.Users.temp // TODO: pull from user pool and fetch correct subject ID
   val subjectId: String = FireCloudConfig.Users.tempSubjectId

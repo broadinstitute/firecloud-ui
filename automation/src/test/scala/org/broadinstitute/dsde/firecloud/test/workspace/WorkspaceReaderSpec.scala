@@ -13,7 +13,7 @@ import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel
 import org.scalatest._
 
 class WorkspaceReaderSpec extends FreeSpec with ParallelTestExecution with Matchers
-  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with BillingFixtures {
+  with WebBrowserSpec with WorkspaceFixtures with UserFixtures with BillingFixtures with TestReporterFixture {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner
   val authTokenOwner: AuthToken = projectOwner.makeAuthToken()

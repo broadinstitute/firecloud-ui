@@ -4,11 +4,12 @@ import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures, Wor
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
-import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest.{FreeSpec, Matchers}
 
-class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with Matchers {
+class DataLibrarySpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures with BillingFixtures
+  with CleanUp with Matchers with TestReporterFixture {
 
   "For a dataset with consent codes" in {
     val curatorUser = UserPool.chooseCurator
