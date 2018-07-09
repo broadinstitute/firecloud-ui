@@ -12,14 +12,12 @@
                         attributes)
    contents])
 
-
 (defn create-download
-  ([label url]
-   (create-download label url nil false)) ; nil :download is fine with React
+  ([label url] (create-download label url nil false)) ; nil :download is fine with React
   ([label url filename] (create-download label url filename false))
   ([label url filename create-internal?]
    (let [attributes {:href url :download filename} ]
-     (if (utils/log create-internal?)
+     (if create-internal?
        (create-internal attributes label)
        [:a attributes label icons/download-icon]))))
 
