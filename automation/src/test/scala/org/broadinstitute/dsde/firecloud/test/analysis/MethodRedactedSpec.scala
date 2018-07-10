@@ -13,7 +13,7 @@ import org.scalatest._
 import org.scalatest.concurrent.Eventually
 
 class MethodRedactedSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures with Eventually {
+  with UserFixtures with MethodFixtures with BillingFixtures with Eventually with TestReporterFixture {
 
   val methodConfigName: String = SimpleMethodConfig.configName + "_" + UUID.randomUUID().toString
 

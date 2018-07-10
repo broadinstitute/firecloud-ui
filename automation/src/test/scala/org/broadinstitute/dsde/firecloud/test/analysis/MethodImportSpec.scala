@@ -8,7 +8,7 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 
 class MethodImportSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures {
+  with UserFixtures with MethodFixtures with BillingFixtures with TestReporterFixture {
 
   "import method config" - {
     "copy from a workspace" in {

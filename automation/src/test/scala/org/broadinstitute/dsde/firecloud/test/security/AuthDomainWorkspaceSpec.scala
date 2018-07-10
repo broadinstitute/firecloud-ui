@@ -6,13 +6,12 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummar
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.{AclEntry, Orchestration, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 import org.scalatest.concurrent.Eventually
-import org.scalatest.concurrent.Eventually.scaled
 import org.scalatest.time.{Millis, Seconds, Span}
 
 /*
@@ -25,9 +24,9 @@ import org.scalatest.time.{Millis, Seconds, Span}
  *
  * TODO: Fix Rawls group creation/deletion and run these tests in parallel
  */
-class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
-  with CleanUp with WebBrowserSpec with WorkspaceFixtures with Eventually
-  with BillingFixtures with GroupFixtures with UserFixtures {
+class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers with CleanUp
+  with WebBrowserSpec with WorkspaceFixtures with Eventually with BillingFixtures with GroupFixtures with UserFixtures
+  with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
