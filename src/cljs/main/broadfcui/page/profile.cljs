@@ -121,66 +121,66 @@
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 (react/defc- FenceLink
-   {:render
-    (fn [{:keys [state]}]
-      (let [status (:fence-status @state)
-            date-issued (.getTime (js/Date. (:issued_at status)))
-            expire-time (utils/_30-days-from-date-ms date-issued)
-            expired? (< expire-time (.now js/Date))
-            username (:username status)]
-        [:div {}
-         [:h4 {} "Framework Services by University of Chicago"]
-         (cond
-           (:error-message @state)
-            (style/create-server-error-message (:error-message @state))
-           (:pending-fence-username-token @state)
-            (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
-           (nil? username)
-            (links/create-external {:href (get-fence-link-href)} "Log-In to Framework Services to link your account")
-           :else
-           [:div {}
-            [:div {:style {:display "flex"}}
-             [:div {:style {:flex "0 0 12rem"}} "Username:"]
-             [:div {:style {:flex "0 0 auto"}} username]]
-            [:div {:style {:display "flex" :marginTop "1rem"}}
-             [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
-             [:div {:style {:flex "0 0 auto"}}
-              (if expired?
-                [:span {:style {:color "red"}} "Expired"]
-                [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
-              [:div {}
-               (links/create-external {:href (get-fence-link-href) :style {:white-space "nowrap"}} "Log-In to Framework Services to re-link your account")]]]])]))
-    :component-did-mount
-    (fn [{:keys [this props state after-update]}]
-      (let [{:keys [fence-token]} props]
-        (utils/cljslog fence-token)
-        (if-not (nil? fence-token)
-          (do
-            (utils/cljslog fence-token)
-            (swap! state assoc :pending-fence-token fence-token)
-            (after-update #(this :link-fence-account fence-token))
-            ;; Navigate to the parent (this page without the token), but replace the location so
-            ;; the back button doesn't take the user back to the token.
-            (.replace (.-location js/window) (nav/get-link :profile)))
-          (this :load-fence-status))))
-    :load-fence-status
-    (fn [{:keys [state]}]
-      (endpoints/profile-get-fence-status
-       (fn [{:keys [success? status-code status-text get-parsed-response]}]
-         (cond
-           success? (swap! state assoc :fence-status (get-parsed-response))
-           (= status-code 404) (swap! state assoc :fence-status :none)
-           :else
-           (swap! state assoc :error-message status-text)))))
-    :link-fence-account
-    (fn [{:keys [state]} token]
-      (endpoints/profile-link-fence-account
-       token
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (do (swap! state dissoc :pending-fence-token :fence-status)
-             (swap! state assoc :fence-status (get-parsed-response)))
-           (swap! state assoc :error-message "Failed to link Framework Services account")))))})
+  {:render
+   (fn [{:keys [state]}]
+     (let [status (:fence-status @state)
+           date-issued (.getTime (js/Date. (:issued_at status)))
+           expire-time (utils/_30-days-from-date-ms date-issued)
+           expired? (< expire-time (.now js/Date))
+           username (:username status)]
+       [:div {}
+        [:h4 {} "Framework Services by University of Chicago"]
+        (cond
+          (:error-message @state)
+          (style/create-server-error-message (:error-message @state))
+          (:pending-fence-username-token @state)
+          (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
+          (nil? username)
+          (links/create-external {:href (get-fence-link-href)} "Log-In to Framework Services to link your account")
+          :else
+          [:div {}
+           [:div {:style {:display "flex"}}
+            [:div {:style {:flex "0 0 12rem"}} "Username:"]
+            [:div {:style {:flex "0 0 auto"}} username]]
+           [:div {:style {:display "flex" :marginTop "1rem"}}
+            [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
+            [:div {:style {:flex "0 0 auto"}}
+             (if expired?
+               [:span {:style {:color "red"}} "Expired"]
+               [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
+             [:div {}
+              (links/create-external {:href (get-fence-link-href) :style {:white-space "nowrap"}} "Log-In to Framework Services to re-link your account")]]]])]))
+   :component-did-mount
+   (fn [{:keys [this props state after-update]}]
+     (let [{:keys [fence-token]} props]
+       (utils/cljslog fence-token)
+       (if-not (nil? fence-token)
+         (do
+           (utils/cljslog fence-token)
+           (swap! state assoc :pending-fence-token fence-token)
+           (after-update #(this :link-fence-account fence-token))
+           ;; Navigate to the parent (this page without the token), but replace the location so
+           ;; the back button doesn't take the user back to the token.
+           (.replace (.-location js/window) (nav/get-link :profile)))
+         (this :load-fence-status))))
+   :load-fence-status
+   (fn [{:keys [state]}]
+     (endpoints/profile-get-fence-status
+      (fn [{:keys [success? status-code status-text get-parsed-response]}]
+        (cond
+          success? (swap! state assoc :fence-status (get-parsed-response))
+          (= status-code 404) (swap! state assoc :fence-status :none)
+          :else
+          (swap! state assoc :error-message status-text)))))
+   :link-fence-account
+   (fn [{:keys [state]} token]
+     (endpoints/profile-link-fence-account
+      token
+      (fn [{:keys [success? get-parsed-response]}]
+        (if success?
+          (do (swap! state dissoc :pending-fence-token :fence-status)
+              (swap! state assoc :fence-status (get-parsed-response)))
+          (swap! state assoc :error-message "Failed to link Framework Services account")))))})
 
 
 (react/defc- Form
@@ -273,20 +273,20 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style {:minHeight 300 :paddingTop "1.5rem" :marginLeft "15rem" :marginRight "15rem"}}
+       [:div {:style {:minHeight 300 :maxWidth 1000 :paddingTop "1.5rem" :margin "auto"}}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
-          [:div {:style {:width "50%" :float "left"}}
-            [Form (merge {:ref "form"}
-                         (select-keys props [:new-registration? :nih-token :fence-token]))]]
-          [:div {:style {:width "50%" :float "right"}}
-            (when-not (:new-registration? props)
-              [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
-               [:h3 {} "Identity & External Servers"]
-               [NihLink (select-keys props [:nih-token])]
-               [FenceLink (select-keys props [:fence-token])]])]
-        (common/clear-both)
+        [:div {:style {:display "flex"}}
+         [:div {:style {:width "50%"}}
+          [Form (merge {:ref "form"}
+                       (select-keys props [:new-registration? :nih-token :fence-token]))]]
+         [:div {:style {:width "50%"}}
+          (when-not (:new-registration? props)
+            [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
+             [:h3 {} "Identity & External Servers"]
+             [NihLink (select-keys props [:nih-token])]
+             [FenceLink (select-keys props [:fence-token])]])]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
