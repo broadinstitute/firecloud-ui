@@ -39,6 +39,12 @@
         entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))]
     (concat entity-datums workspace-datums)))
 
+(defn- fix-validated-method-config [config]
+  (let
+   [munged-missing (map (fn [missing-input] {(keyword missing-input) "This input is declared in the method and missing in your method configuration."}) (:missingInputs config))
+    munged-extras (map (fn [extra-input] {(keyword extra-input) "This input is declared in your method configuration but not listed in the method."}) (:extraInputs config))
+    new-inputs (into (:invalidInputs config) (concat munged-missing munged-extras))]
+    (assoc config :invalidInputs new-inputs)))
 
 (react/defc- MethodDetailsViewer
   {:get-fields
@@ -175,7 +181,7 @@
                   (spinner "Loading Method Configuration...")]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-load-validated-method-config))
+     (this :-load-method-config))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -361,15 +367,46 @@
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        (build-autocomplete-list
         (utils/restructure workspace-attributes entity-types selected-entity-type))))
-   :-load-validated-method-config
+   :-load-method-config
    (fn [{:keys [state props this]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (this :-load-inputs-outputs (get-parsed-response))
+                    (swap! state assoc :error status-text)))}))
+   :-load-inputs-outputs
+   (fn [{:keys [state this]} unvalidated-mc]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/get-inputs-outputs
+       :payload (:methodRepoMethod unvalidated-mc)
+       :headers ajax/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (this :-load-validated-method-config (get-parsed-response))
+                    (let [fake-inputs-outputs (fn [data]
+                                                (let [method-config (:methodConfiguration data)]
+                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
+                          new-loaded-config {:methodConfiguration unvalidated-mc}]
+                      (swap! state assoc
+                             :loaded-config new-loaded-config
+                             :inputs-outputs (fake-inputs-outputs new-loaded-config)
+                             :redacted? true))))}))
+   :-load-validated-method-config
+   (fn [{:keys [props state this]} inputs-outputs]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [loaded-config (get-parsed-response)]
-                      (this :-load-inputs-outputs loaded-config)
-                      (this :-fetch-method-versions loaded-config))
+                    (let [validated-mc (fix-validated-method-config (get-parsed-response))]
+                      (this :-fetch-method-versions validated-mc)
+                      (swap! state assoc
+                             :loaded-config validated-mc
+                             :entity-type? (boolean (-> validated-mc :methodConfiguration :rootEntityType))
+                             :inputs-outputs inputs-outputs
+                             :redacted? false))
+                    ;TODO: why is get-validated-mc returning errors but get-unvalidated not??? shouldn't get here
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -414,27 +451,6 @@
                                                 :inputs-outputs (get-parsed-response)
                                                 :redacted? false)
                                          (swap! state assoc :error (:message (get-parsed-response))))))}))))})))
-   :-load-inputs-outputs
-   (fn [{:keys [state]} loaded-config]
-     (let [fake-inputs-outputs (fn [data]
-                                 (let [method-config (:methodConfiguration data)]
-                                   {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-                                    :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))]
-       (endpoints/call-ajax-orch
-        {:endpoint endpoints/get-inputs-outputs
-         :payload (get-in loaded-config [:methodConfiguration :methodRepoMethod])
-         :headers ajax/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      (swap! state assoc
-                             :loaded-config loaded-config
-                             :entity-type? (boolean (-> loaded-config :methodConfiguration :rootEntityType))
-                             :inputs-outputs (get-parsed-response)
-                             :redacted? false)
-                      (swap! state assoc
-                             :loaded-config loaded-config
-                             :inputs-outputs (fake-inputs-outputs loaded-config)
-                             :redacted? true)))})))
    ; Inputs loaded-config (:entities-loaded? @locals)
    ; Outputs (:methods-response @state) (:methods @state) (:error-message @state)
    :-fetch-method-versions
