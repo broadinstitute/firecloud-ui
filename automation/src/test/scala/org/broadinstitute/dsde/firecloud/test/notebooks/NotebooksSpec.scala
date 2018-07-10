@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.openqa.selenium.WebDriver
@@ -15,7 +15,8 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.Try
 
-class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with UserFixtures with BillingFixtures with MethodFixtures with Matchers with LazyLogging {
+class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with WorkspaceFixtures with UserFixtures
+  with BillingFixtures with MethodFixtures with Matchers with LazyLogging  with TestReporterFixture {
 
   val numberOfWorkersError = "Error: Google Dataproc does not support clusters with 1 non-preemptible worker. Must be 0, 2 or more."
   val noNameClusterError = "Cluster name cannot be empty"

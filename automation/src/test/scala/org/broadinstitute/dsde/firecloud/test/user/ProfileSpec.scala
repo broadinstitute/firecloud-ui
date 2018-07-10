@@ -3,12 +3,13 @@ package org.broadinstitute.dsde.firecloud.test.user
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
 import org.broadinstitute.dsde.workbench.config.UserPool
+import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers with Eventually {
+class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers with Eventually with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

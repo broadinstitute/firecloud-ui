@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.previewmodal
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
-import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.scalatest.concurrent.Eventually
@@ -13,7 +13,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 import scala.concurrent.duration.DurationLong
 
 class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures
-  with UserFixtures with MethodFixtures with BillingFixtures with Matchers with Eventually {
+  with UserFixtures with MethodFixtures with BillingFixtures with Matchers with Eventually with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

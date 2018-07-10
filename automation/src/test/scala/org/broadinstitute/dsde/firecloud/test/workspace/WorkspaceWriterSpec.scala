@@ -14,7 +14,7 @@ import org.scalatest._
   *   Cannot use `with ParalleTestExecution` because data interference. Error comes from api.methods.setMethodPermissions
   */
 
-class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec
+class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec with TestReporterFixture
   with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures with RandomUtil {
 
   val projectOwner: Credentials = UserPool.chooseProjectOwner

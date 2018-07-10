@@ -21,7 +21,7 @@ import org.scalatest.{FreeSpec, Matchers}
   * Tests related to billing accounts.
   */
 class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with CleanUp
-  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverIdLogging {
+  with Matchers with WorkspaceFixtures with BillingFixtures with WebDriverIdLogging with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

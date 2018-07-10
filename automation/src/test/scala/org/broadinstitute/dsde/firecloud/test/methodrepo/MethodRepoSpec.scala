@@ -4,13 +4,13 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodData, MethodFixtures, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.scalatest._
 
 
 class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with WorkspaceFixtures with BillingFixtures
-  with WebBrowserSpec with Matchers with CleanUp {
+  with WebBrowserSpec with Matchers with CleanUp with TestReporterFixture {
 
   val ownerUser: Credentials = UserPool.chooseProjectOwner
   implicit val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()

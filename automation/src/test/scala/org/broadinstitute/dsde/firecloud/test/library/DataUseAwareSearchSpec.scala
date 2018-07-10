@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.test.ModalUtil
 import org.broadinstitute.dsde.workbench.config.UserPool
-import org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures
+import org.broadinstitute.dsde.workbench.fixture.{TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -13,7 +13,7 @@ import org.scalatest.{FreeSpec, Matchers}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures
-  with Matchers with ModalUtil with Eventually {
+  with Matchers with ModalUtil with Eventually with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
