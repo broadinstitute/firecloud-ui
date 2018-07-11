@@ -343,6 +343,6 @@
   (nav/defpath
    :fence-link
    {:component Page
-    :regex #"\?code=([^\s/&]+)?(?:.+)\#fence-callback"
+    :regex #"fence-callback\?code=([^\s/&]+)?(?:.+)"
     :make-props (fn [fence-token] (utils/restructure fence-token))
     :make-path (fn [] "profile")}))
