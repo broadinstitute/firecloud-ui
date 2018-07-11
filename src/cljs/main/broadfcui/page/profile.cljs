@@ -27,12 +27,12 @@
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 (defn get-fence-link-href []
-  (str "https://qa.dcf.planx-pla.net" #_(get @config/config "fenceUrlRoot")
+  (str "https://dcp.bionimbus.org" #_(get @config/config "fenceUrlRoot")
        "/user/oauth2/authorize?response_type=code&client_id=REPLACE_ME&redirect_uri="
        (js/encodeURIComponent
-        (let [loc (.-location js/window)]
-          (str "https:" #_(.-protocol loc) "//" (.-host loc) "/fence-callback")))
-       "&scope=openid+google_credentials"))
+        (let [loc js/window.location]
+          (str (.-protocol loc) "//" (.-host loc) "/fence-callback")))
+       "&scope=openid+google_credentials&state=REPLACE_ME"))
 
 (react/defc- NihLink
   {:render
@@ -44,13 +44,11 @@
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            datasets (:datasetPermissions status)]
        [:div {}
-        [:div {}
-         [:h4 {:style {:display "inline-block"}} "NIH Account"]
-         (dropdown/render-info-box
-          {:text
-           [:div {}
-            "Linking with eRA Commons will allow FireCloud to automatically determine if you can access "
-            "controlled datasets hosted in FireCloud (ex. TCGA) based on your valid dbGaP applications."]})]
+         [:h4 {} "NIH Account"
+           (dropdown/render-info-box
+            {:text
+             (str "Linking with eRA Commons will allow FireCloud to automatically determine if you can access "
+              "controlled datasets hosted in FireCloud (ex. TCGA) based on your valid dbGaP applications.")})]
         (cond
           (:error-message @state) (style/create-server-error-message (:error-message @state))
           (:pending-nih-username-token @state)
@@ -273,7 +271,7 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style {:minHeight 300 :maxWidth 1000 :paddingTop "1.5rem" :margin "auto"}}
+       [:div {:style {:minHeight 300 :maxWidth 1250 :paddingTop "1.5rem" :margin "auto"}}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
@@ -345,6 +343,6 @@
   (nav/defpath
    :fence-link
    {:component Page
-    :regex #"fence-callback\?code=([^\s/&]+)?(?:.+)"
+    :regex #"\?code=([^\s/&]+)?(?:.+)\#fence-callback"
     :make-props (fn [fence-token] (utils/restructure fence-token))
     :make-path (fn [] "profile")}))
