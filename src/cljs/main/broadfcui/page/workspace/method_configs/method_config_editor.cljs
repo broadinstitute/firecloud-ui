@@ -373,7 +373,9 @@
       {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (this :-load-inputs-outputs (get-parsed-response))
+                    (let [unvalidated-mc (get-parsed-response)]
+                      (this :-fetch-method-versions {:methodConfiguration unvalidated-mc})
+                      (this :-load-inputs-outputs unvalidated-mc))
                     (swap! state assoc :error status-text)))}))
    :-load-inputs-outputs
    (fn [{:keys [state this]} unvalidated-mc]
@@ -384,23 +386,21 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (this :-load-validated-method-config (get-parsed-response))
-                    (let [fake-inputs-outputs (fn [data]
-                                                (let [method-config (:methodConfiguration data)]
-                                                  {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
-                                                   :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
-                          new-loaded-config {:methodConfiguration unvalidated-mc}]
+                    (let [fake-inputs-outputs (fn [method-config]
+                                                {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+                                                 :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))})]
                       (swap! state assoc
-                             :loaded-config new-loaded-config
-                             :inputs-outputs (fake-inputs-outputs new-loaded-config)
+                             :loaded-config {:methodConfiguration unvalidated-mc}
+                             :entity-type? (boolean (:rootEntityType unvalidated-mc))
+                             :inputs-outputs (fake-inputs-outputs unvalidated-mc)
                              :redacted? true))))}))
    :-load-validated-method-config
-   (fn [{:keys [props state this]} inputs-outputs]
+   (fn [{:keys [props state]} inputs-outputs]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
                     (let [validated-mc (fix-validated-method-config (get-parsed-response))]
-                      (this :-fetch-method-versions validated-mc)
                       (swap! state assoc
                              :loaded-config validated-mc
                              :entity-type? (boolean (-> validated-mc :methodConfiguration :rootEntityType))
