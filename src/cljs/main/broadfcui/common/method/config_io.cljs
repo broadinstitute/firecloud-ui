@@ -22,20 +22,20 @@
 
 (def clip (partial merge table-style/clip-text))
 
+(defn try-parse-json-string [json-string]
+  (try (utils/parse-json-string json-string)
+       (catch js/Error e json-string)))
 
-(defn get-typed [string-input input-type]
-  (if (or (= input-type "string")
-          (= input-type "file"))
-    string-input
-    (try (utils/parse-json-string string-input)
-         (catch js/Error e string-input))))
+(defn get-typed [string-input]
+  (cond
+    (or (string/starts-with? string-input "this.") (string/starts-with? string-input "workspace.")) (try-parse-json-string (str "$" string-input))
+    :else (try-parse-json-string string-input)))
 
 (defn create-typed-inputs [inputs io-fields]
   (let [new-inputs (select-keys inputs (map (comp keyword :name) (:inputs io-fields)))
         filtered-io-fields (filter #(not (string/blank? ((keyword (:name %)) new-inputs))) (:inputs io-fields))]
     (into {} (map (fn [o] {(keyword (:name o))
-                           (get-typed ((keyword (:name o)) new-inputs)
-                                      (string/lower-case (string/replace (:inputType o) "?" "")))})
+                           (get-typed ((keyword (:name o)) new-inputs))})
                   filtered-io-fields))))
 
 
@@ -95,7 +95,10 @@
                         (fn [{:keys [file-contents]}]
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
                                 new-inputs (merge (:inputs @state) (into {} (map (fn [[k v]]
-                                                                                   [k (utils/->json-string v)]) uploaded-inputs)))]
+                                                                                   [k (if (and (string? v)
+                                                                                               (or (string/starts-with? v "$this.") (string/starts-with? v "$workspace.")))
+                                                                                        (string/replace-first v "$" "")
+                                                                                        (utils/->json-string v))]) uploaded-inputs)))]
                             (when-not editing? (begin-editing))
                             (after-update #(doseq [[k v] (vec new-inputs)] (when (contains? @locals k) ((k @locals) :set-value v))))
                             (swap! state assoc :inputs new-inputs)
