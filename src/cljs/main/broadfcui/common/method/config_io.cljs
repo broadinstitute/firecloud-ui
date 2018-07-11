@@ -22,16 +22,13 @@
 
 (def clip (partial merge table-style/clip-text))
 
-; ask what other types it could be. Maps?
-(defn get-typed [string-input input-type]
-  (if (or (= input-type "int")
-          (string/includes? input-type "array")
-          (= input-type "string"))
-    ; if conversion to json is unsuccessful (as a result of invalid json), just return string
-    (try (utils/parse-json-string string-input)
-         (catch js/Error e string-input))
-    string-input))
 
+(defn get-typed [string-input input-type]
+  (if (or (= input-type "string")
+          (= input-type "file"))
+    string-input
+    (try (utils/parse-json-string string-input)
+         (catch js/Error e string-input))))
 
 (defn create-typed-inputs [inputs io-fields]
   (let [new-inputs (select-keys inputs (map (comp keyword :name) (:inputs io-fields)))
