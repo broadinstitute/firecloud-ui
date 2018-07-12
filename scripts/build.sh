@@ -39,7 +39,7 @@ function docker_cmd()
 
         if [ $DOCKER_CMD = "push" ]; then
             echo "pushing $PROJECT docker image..."
-            docker push $REPO:${HASH_TAGG}
+            docker push $REPO:${HASH_TAG}
             docker tag $REPO:${HASH_TAG} $REPO:${BRANCH}
             docker push $REPO:${BRANCH}
             
