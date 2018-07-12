@@ -1,7 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.security
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
-import org.broadinstitute.dsde.firecloud.page.workspaces.RequestAccessModal
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -408,6 +407,33 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
             }
           }
         }
+
+        "when the user is a billing project owner" - {
+          "can be seen but is not accessible" in {
+            val user = UserPool.chooseProjectOwner
+            implicit val authToken: AuthToken = authTokenDefault
+            withGroup("AuthDomain") { authDomainName =>
+              withGroup("AuthDomain") { authDomain2Name =>
+                withCleanBillingProject(user, userEmails = List(defaultUser.email)) { projectName =>
+                  withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName, authDomain2Name)) { workspaceName =>
+                    withWebDriver { implicit driver =>
+                      withSignIn(user) { workspaceListPage =>
+                        workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+                        eventually {
+                          workspaceListPage.showsRequestAccessModal shouldEqual true
+                        }
+                        workspaceListPage.validateLocation()
+                        // close "request access" Modal
+                        workspaceListPage.closeModal()
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
         "when not shared with them" - {
           "cannot be seen and is not accessible" in {
             val user = UserPool.chooseStudent
@@ -509,29 +535,6 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
                   }
                 }
               }
-            }
-          }
-          "when the user is a billing project owner" - {
-            "can be seen but is not accessible" in {
-              val user = UserPool.chooseProjectOwner
-              implicit val authToken: AuthToken = authTokenDefault
-              withGroup("AuthDomain") { authDomainName =>
-                withCleanBillingProject(defaultUser, List(user.email)) { projectName =>
-                  withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName)) { workspaceName =>
-                    withWebDriver { implicit driver =>
-                      withSignIn(defaultUser) { workspaceListPage =>
-                        workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                        eventually {
-                          workspaceListPage.showsRequestAccessModal shouldEqual true
-                        }
-                        workspaceListPage.validateLocation()
-                        // close "request access" Modal
-                        workspaceListPage.closeModal()
-                      }
-                    }
-                  }(user.makeAuthToken())
-                }
-              }(user.makeAuthToken())
             }
           }
         }
@@ -684,57 +687,6 @@ class AuthDomainWorkspaceSpec extends FreeSpec /*with ParallelTestExecution*/ wi
         }
       }
     }
-
-    def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
-      withWebDriver { implicit driver =>
-        withSignIn(user) { workspaceListPage =>
-          // Not in workspace list
-          workspaceListPage.hasWorkspace(projectName, workspaceName) shouldBe false
-
-          // No direct access
-          val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-          checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-        }
-      }
-    }
-
-    def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
-      withWebDriver { implicit driver =>
-        withSignIn(user) { workspaceListPage =>
-          // Looks restricted; implies in workspace list
-          eventually { workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true }
-
-          // Clicking opens request access modal
-          workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-          workspaceListPage.showsRequestAccessModal() shouldEqual true
-          // TODO: THIS IS BAD! However, the modal does some ajax loading which could cause the button to move causing the click to fail. This needs to be fixed inside RequestAccessModal.
-          Thread sleep 500
-          new RequestAccessModal().cancel()
-
-          // No direct access
-          val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-          checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-        }
-      }
-    }
-
-    def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
-      withWebDriver { implicit driver =>
-        withSignIn(user) { workspaceListPage =>
-          // Looks restricted; implies in workspace list
-          eventually { workspaceListPage.looksRestricted(projectName, workspaceName) shouldEqual true }
-
-          // Clicking opens workspace
-          workspaceListPage.enterWorkspace(projectName, workspaceName).validateLocation()
-
-          // Direct access also works
-          // Navigate somewhere else first otherwise background login status gets lost
-          workspaceListPage.open
-          new WorkspaceSummaryPage(projectName, workspaceName).open.validateLocation()
-        }
-      }
-    }
   }
+
 }
-
-
