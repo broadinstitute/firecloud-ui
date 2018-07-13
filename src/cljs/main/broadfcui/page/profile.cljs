@@ -28,11 +28,10 @@
 
 (defn get-fence-link-href []
   (str "https://dcp.bionimbus.org" #_(get @config/config "fenceUrlRoot")
-       "/user/oauth2/authorize?response_type=code&client_id=REPLACE_ME&redirect_uri="
+       "/user/oauth2/authorize?response_type=code&client_id=REPLACE_ME&scope=openid+google_credentials&redirect_uri="
        (js/encodeURIComponent
         (let [loc js/window.location]
-          (str (.-protocol loc) "//" (.-host loc) "/fence-callback")))
-       "&scope=openid+google_credentials&state=REPLACE_ME"))
+          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))))
 
 (react/defc- NihLink
   {:render
@@ -151,10 +150,8 @@
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [{:keys [fence-token]} props]
-       (utils/cljslog fence-token)
        (if-not (nil? fence-token)
          (do
-           (utils/cljslog fence-token)
            (swap! state assoc :pending-fence-token fence-token)
            (after-update #(this :link-fence-account fence-token))
            ;; Navigate to the parent (this page without the token), but replace the location so
@@ -173,7 +170,7 @@
    :link-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
-      token
+      (first (vals token))
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-fence-token :fence-status)
@@ -343,6 +340,7 @@
   (nav/defpath
    :fence-link
    {:component Page
-    :regex #"fence-callback\?code=([^\s/&]+)?(?:.+)"
-    :make-props (fn [fence-token] (utils/restructure fence-token))
-    :make-path (fn [] "profile")}))
+    :regex #"fence-callback"
+    :make-props (fn []
+                  {:fence-token (utils/restructure ((re-find #"\?code=([^\s/&]+)#fence-callback" (str (.-location js/window))) 1))})
+    :make-path (fn [] "fence-callback")}))
