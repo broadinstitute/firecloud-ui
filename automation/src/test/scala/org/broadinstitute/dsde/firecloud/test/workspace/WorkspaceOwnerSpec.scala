@@ -220,8 +220,6 @@ class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matche
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
-                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
-                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "OWNER")
                 eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
@@ -242,8 +240,6 @@ class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matche
             withWebDriver { implicit driver =>
               withSignIn(user1) { listPage =>
                 api.importMetaData(billingProject, workspaceName, "entities", TestData().participantEntity)
-                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, SimpleMethod, SimpleMethodConfig.configNamespace, s"$methodConfigName Config", 1,
-                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 val aclEditor = detailPage.openShareDialog(user2.email, "READER")
                 eventually { aclEditor.canComputeBox.isEnabled shouldBe false }
