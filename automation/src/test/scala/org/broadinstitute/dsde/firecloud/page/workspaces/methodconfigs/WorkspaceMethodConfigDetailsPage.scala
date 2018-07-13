@@ -1,6 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
@@ -9,8 +11,10 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
@@ -36,6 +40,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
   private val dataModelCheckbox = Checkbox("data-model-checkbox")
   private val populateWithJsonLink = Link("populate-with-json-link")
+  private val downloadInputsJsonLink = Link("download-link")
+  val inputsTable = Table("inputs-table")
+
 
   def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
@@ -150,6 +157,55 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     val modal = await ready new PopulateFromJsonModal
     modal.importFile(file.getAbsolutePath)
   }
+
+
+  /**
+    * Downloads the metadata currently being viewed.
+    *
+    * If downloadPath is given, the file is given a timestamped name and moved from that location
+    * into the "downloads" directory off the current working directory. This serves two purposes:
+    *
+    * 1. Archiving the file for later inspection when tests fail
+    * 2. Keeping the browser download directory clean so that it doesn't auto-rename subsequent
+    * downloads with the same filename
+    *
+    * @param downloadPath the directory where the browser saves downloaded files
+    * @return the relative path to the moved download file, or None if downloadPath was not given
+    */
+  def downloadInputsJson(downloadPath: Option[String] = None): Option[String] = synchronized {
+
+    def archiveDownloadedFile(sourcePath: String): String = {
+      // wait up to 10 seconds for file exist
+      val f = new File(sourcePath)
+      eventually {
+        assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
+      }
+
+      val date = DateTimeFormatter.ofPattern(dateFormatPatter).format(LocalDateTime.now())
+      val destFile = new File(sourcePath).getName + s".$date"
+      val destPath = s"downloads/$destFile"
+      Util.moveFile(sourcePath, destPath)
+      logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")
+      destPath
+    }
+
+    downloadInputsJsonLink.awaitEnabled()
+
+    /*
+     * Downloading a file will open another window while the download is in progress and
+     * automatically close it when the download is complete.
+     */
+    // await condition (windowHandles.size == 1, 30)
+    // .submit call takes care waiting for a new window
+    logger.info(s"form: ${form.queryString}")
+    find(form).get.underlying.submit()
+
+    archiveDownloadedFile(s"$downloadPath/inputs.json")
+  }
+
+  lazy val dateFormatPatter = "HH:mm:ss:N" // with nano seconds
+  val form = CssSelectorQuery(s"${inputsTable.query.queryString} form")
+
 
   def changeSnapshotId(newSnapshotId: Int): Unit = {
     editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
