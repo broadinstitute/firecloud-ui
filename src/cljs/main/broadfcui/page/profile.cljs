@@ -150,16 +150,15 @@
               (links/create-external {:href (get-fence-link-href) :target "_self" :style {:white-space "nowrap"}}
                                      "Log-In to Framework Services to re-link your account")]]]])]))
    :component-did-mount
-   (fn [{:keys [this props state after-update]}]
-     (let [{:keys [fence-token]} props]
-       (if-not (nil? fence-token)
+   (fn [{:keys [this locals state after-update]}]
+     (let [fence-token (subs js/window.location.search 6)]
+       (if (not-empty fence-token)
          (do
            (swap! state assoc :pending-fence-token fence-token)
            (after-update #(this :link-fence-account fence-token))
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
-           (.replace (.-location js/window) "#profile" #_(let [loc js/window.location]
-                                               (str (.-protocol loc) "//" (.-host loc) "/#profile"))))
+           (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))
          (this :load-fence-status))))
    :component-did-update
    (fn [{:keys [refs]}]
@@ -177,7 +176,7 @@
    :link-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
-      (first (vals token))
+      token
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-fence-token :fence-status)
@@ -288,7 +287,7 @@
             [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
              [:h3 {} "Identity & External Servers"]
              [NihLink (select-keys props [:nih-token])]
-             [FenceLink (select-keys props [:fence-token])]])]]
+             [FenceLink]])]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
@@ -314,7 +313,7 @@
    :save
    (fn [{:keys [props state refs]}]
      (utils/multi-swap! state (dissoc :server-error :validation-errors)
-                              (assoc :in-progress? true))
+                        (assoc :in-progress? true))
      (let [values ((@refs "form") :get-values)
            validation-errors ((@refs "form") :validation-errors)]
        (cond
@@ -332,7 +331,7 @@
                                  (assoc new-state :done? true))))))))
          :else
          (utils/multi-swap! state (dissoc :in-progress? :done?)
-                                  (assoc :validation-errors validation-errors)))))})
+                            (assoc :validation-errors validation-errors)))))})
 
 (defn render [props]
   (react/create-element Page props))
@@ -344,9 +343,6 @@
     :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
     :make-props (fn [nih-token] (utils/restructure nih-token))
     :make-path (fn [] "profile")})
-  (nav/defpath
-   :fence-link
-   {:component Page
-    :regex #"fence-callback"
-    :make-props (fn [] {:fence-token (utils/restructure ((re-find #"\?code=([^\s/&]+)#fence-callback" (str (.-location js/window))) 1))})
+  (nav/defredirect
+   {:regex #"fence-callback"
     :make-path (fn [] "profile")}))
