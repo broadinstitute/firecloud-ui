@@ -144,7 +144,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             println("with web driver")
             withSignIn(user) { _ =>
               println("with sign in")
-              val variables = ListMap(
+              val inputs = ListMap(
                 "w.t.inString" -> "\"test\"",
                 "w.t.inFloat"-> "1.5",
                 "w.t.inInt" -> "2",
@@ -154,19 +154,18 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                 "w.t.inStringArray2" -> """["say \"hi\"!"]""",
                 "w.t.inStringMap" -> """{"foo":"bar"}"""
               )
-              val unmatchedVariables = ListMap(
-                "unmatched.variable.name" -> "\"surprise!\""
-              )
 
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
               println("created a config page")
 
               configPage.isEditing shouldBe false
-              variables.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              val inputs = variables ++ unmatchedVariables map {
-                case (name, json) => (name, json)
-              }
+              println("not in edit mode")
+
+              inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
+
+              println("all inputs are empty")
+
               configPage.editMethodConfig(None, None, None, Option(inputs), None)
 
               val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get

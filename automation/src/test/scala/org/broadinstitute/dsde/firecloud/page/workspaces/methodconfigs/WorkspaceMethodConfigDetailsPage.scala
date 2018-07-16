@@ -116,11 +116,13 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
                        inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None): Unit = {
     openEditMode()
     await spinner "Loading attributes..."
-
+    println("we're in edit mode")
     if (newName.isDefined) { editMethodConfigNameInput.setText(newName.get) }
     if (newSnapshotId.isDefined) { changeSnapshotId(newSnapshotId.get) }
     if (newRootEntityType.isDefined) { editMethodConfigRootEntityTypeSelect.select(newRootEntityType.get)}
-    if (inputs.isDefined) { changeInputsOutputs(inputs.get) }
+    if (inputs.isDefined) {
+      println("we're about to add inputs")
+      changeInputsOutputs(inputs.get) }
     if (outputs.isDefined) { changeInputsOutputs(outputs.get)}
 
     saveEdits()
