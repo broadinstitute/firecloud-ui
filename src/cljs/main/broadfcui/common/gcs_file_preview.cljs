@@ -149,7 +149,8 @@
                                        :on-done
                                        (fn [{:keys [success? raw-response get-parsed-response status-code status-text]}]
                                          (if success?
-                                           (let [pet-token (subs raw-response 1 (- (count raw-response) 1))]
+                                           ;; Sam endpoint returns a quoted token; dequote it.
+                                           (let [pet-token (utils/dequote raw-response)]
                                              (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
                                                                 (js/encodeURIComponent object) "?alt=media")
                                                          :headers {"Authorization" (str "Bearer " pet-token)

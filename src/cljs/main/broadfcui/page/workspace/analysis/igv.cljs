@@ -28,6 +28,7 @@
                              {:name (str "Track " (inc index))
                               :url (common/gcs-uri->google-url track-url)
                               :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
+                              ;; we expect a pet token passed as argument to this function.
                               :headers {"Authorization" (str "Bearer " token)}
                               :displayMode "EXPANDED"
                               :height (when bam? 200)
@@ -65,7 +66,6 @@
    :refresh
    (fn [{:keys [props refs]}]
      (let [tracks (:tracks props)]
-       (utils/log tracks)
        (if (empty? tracks)
          ;; if the user hasn't specified any tracks, render the IGV shell without getting a pet token
          (.createBrowser js/igv (@refs "container") (options [] ""))
@@ -77,7 +77,8 @@
             :on-done
               (fn [{:keys [success? raw-response]}]
                 (if success?
-                  (let [pet-token (subs raw-response 1 (- (count raw-response) 1))]
+                  ;; Sam endpoint returns a quoted token; dequote it.
+                  (let [pet-token (utils/dequote raw-response)]
                     (.createBrowser js/igv (@refs "container") (options (:tracks props) pet-token)))
                   ;; TODO: better error display
                   (js/alert raw-response)))}))))})
