@@ -115,6 +115,7 @@
                                             (if-let [parsed (common/dos-or-gcs-uri? v)]
                                               {:for-sort (string/lower-case v)
                                                :for-render [FilePreviewLink (assoc parsed
+                                                                              :workspace-namespace (get-in props [:workspace-id :namespace])
                                                                               :attributes {:style {:display "inline"}}
                                                                               :link-label v)]}
                                               {:for-sort (string/lower-case (str v))

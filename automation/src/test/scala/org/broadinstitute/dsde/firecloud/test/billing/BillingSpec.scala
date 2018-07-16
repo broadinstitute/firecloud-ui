@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures, WebDriverIdLogging}
 import org.broadinstitute.dsde.firecloud.page.billing.BillingManagementPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
-import org.broadinstitute.dsde.workbench.auth.AuthToken
+import org.broadinstitute.dsde.workbench.auth.{AuthToken, AuthTokenScopes}
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
@@ -54,7 +54,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
          */
         "should be able add a new user, create a workspace, and run a method, change billing account" in {
           val user = UserPool.chooseProjectOwner
-          implicit val authToken: AuthToken = user.makeAuthToken()
+          implicit val authToken: AuthToken = user.makeAuthToken(AuthTokenScopes.billingScopes)
           val secondUser = UserPool.chooseStudent.email
           val testData = TestData()
 
@@ -64,7 +64,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
            * have seen break in the past that relied on using a brand new billing project).
            */
           withWebDriver { implicit driver =>
-            withSignIn(user) { listPage =>
+            withScopedSignIn(user, AuthTokenScopes.billingScopes) { listPage =>
               //BEGIN: Test creating billing project in UI
               val billingPage = new BillingManagementPage().open
               val billingProjectName = createNewBillingProject(user, billingPage)
@@ -131,7 +131,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     log.info(s"Creating billing project: $billingProjectName")
 
     billingPage.createBillingProject(billingProjectName, FireCloudConfig.Projects.billingAccount)
-    register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(user.makeAuthToken().value), WorkbenchUserId("0"), WorkbenchEmail(user.email), 3600))(UserPool.chooseAdmin.makeAuthToken())
+    register cleanUp Rawls.admin.deleteBillingProject(billingProjectName, UserInfo(OAuth2BearerToken(user.makeAuthToken(AuthTokenScopes.billingScopes).value), WorkbenchUserId("0"), WorkbenchEmail(user.email), 3600))(UserPool.chooseAdmin.makeAuthToken(AuthTokenScopes.billingScopes))
 
     val statusOption = billingPage.waitForCreateDone(billingProjectName)
 

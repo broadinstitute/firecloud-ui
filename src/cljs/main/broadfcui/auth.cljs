@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.common :refer [login-scopes]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
@@ -13,6 +14,7 @@
    [broadfcui.utils.user :as user]
    ))
 
+
 (react/defc GoogleAuthLibLoader
   {:render
    (constantly nil)
@@ -21,11 +23,13 @@
      (js/gapi.load "auth2" #(this :-handle-auth2-loaded)))
    :-handle-auth2-loaded
    (fn [{:keys [props]}]
+     ;; NB: we do not override the fetch_basic_profile config option on auth2.init.
+     ;; fetch_basic_profile defaults to true, and adds "openid email profile" to the
+     ;; list of requested scopes.
      (let [{:keys [on-loaded]} props
            scopes (string/join
                    " "
-                   ["email" "profile"
-                    "https://www.googleapis.com/auth/devstorage.full_control"])
+                   login-scopes)
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js/gapi.auth2.init init-options)]
        (gapi.signin2.render "sign-in-button" #js{:width 180 :height 40 :longtitle true :theme "dark"})

@@ -17,6 +17,12 @@
   (<= 0 (str-index-of s what)))
 
 
+(defn dequote [s]
+  (if (and (string/starts-with? s "\"") (string/ends-with? s "\""))
+    (subs s 1 (- (count s) 1))
+    s))
+
+
 (defn ->json-string [x]
   (js/JSON.stringify (clj->js x)))
 

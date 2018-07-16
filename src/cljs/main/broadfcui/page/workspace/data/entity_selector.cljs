@@ -54,7 +54,7 @@
                                       (if (and (map? attr-value)
                                                (= (set (keys attr-value)) #{:entityName :entityType}))
                                         (:entityName attr-value)
-                                        ((table-utils/render-gcs-links (:selected-workspace-bucket props)) attr-value)))})
+                                        ((table-utils/render-gcs-links (:selected-workspace-bucket props) (:workspace-namespace props)) attr-value)))})
                            attribute-keys)))
            data (fn [source?]
                   (replace

@@ -26,6 +26,10 @@
    (:path endpoint)
    (ajax-payload endpoint arg-map)))
 
+(defn call-ajax-sam [{:keys [endpoint] :as arg-map}]
+  (ajax/call-sam
+   (:path endpoint)
+   (ajax-payload endpoint arg-map)))
 
 (defn- id-path [id]
   (str (:namespace id) "/" (:name id)))
@@ -201,6 +205,10 @@
 (defn proxy-group [email]
   {:path (str "/proxyGroup/" email)
    :method :get})
+
+(defn pet-token [project]
+  {:path (str "/google/v1/user/petServiceAccount/" project "/token")
+   :method :post})
 
 (defn list-method-snapshots [namespace name]
   {:path (str "/methods?namespace=" namespace "&name=" name)

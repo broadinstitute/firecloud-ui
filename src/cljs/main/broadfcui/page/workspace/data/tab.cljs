@@ -106,7 +106,7 @@
                               :onClick #(swap! state assoc :show-importer? true)}]])
           :on-entity-type-selected #(utils/multi-swap! state (assoc :selected-entity-type %) (dissoc :selected-entity))
           :on-column-change #(swap! state assoc :visible-columns %)
-          :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
+          :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]) (get-in workspace [:workspace :namespace]))
           :linked-entity-renderer
           (fn [entity]
             (if (map? entity)

@@ -33,7 +33,7 @@
 (react/defc- PreviewDialog
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [dismiss object bucket-name]} props]
+     (let [{:keys [dismiss object bucket-name workspace-namespace]} props]
        [modals/OKCancelForm
         {:header "File Details"
          :data-test-id "preview-modal"
@@ -41,6 +41,8 @@
          :dismiss dismiss
          :content
          (let [{:keys [data error status]} (:response @state)
+               [parsed-error _] (when error (utils/parse-json-string error true false))
+               parsed-error-message (when parsed-error (:message parsed-error))
                data-size (:size data)
                cost (:estimatedCostUSD data)
                labeled (fn [label & contents]
@@ -62,15 +64,14 @@
              ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
              ;; to hint to the user that they should scroll up.
              (when-not (or data-empty hide-preview?)
-               (react/create-element
-                [:div {:data-test-id "preview-pane"
-                       :ref "preview"
-                       :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
-                               :fontSize "90%" :overflowY "auto" :maxHeight 206
-                               :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-                 (if-let [preview-content (:preview @state)]
-                   preview-content
-                   (spinner "Loading preview..."))]))]
+               (let [preview-content (:preview @state)]
+                 (react/create-element
+                  [:div {:data-test-id (if preview-content "preview-pane" "loading-preview-pane")
+                         :ref "preview"
+                         :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                 :fontSize "90%" :overflowY "auto" :maxHeight 206
+                                 :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+                   (or preview-content (spinner "Loading preview..."))])))]
             (when (:loading? @state)
               (spinner "Getting file info..."))
             (when data
@@ -115,7 +116,7 @@
                (case status
                  404 "This file was not found."
                  403 "You do not have access to this file."
-                 "See details below.")
+                 (or parsed-error-message "See details below."))
                (if (:show-error-details? @state)
                  [:div {}
                   [:pre {} error]
@@ -138,23 +139,36 @@
                                        {:error (.-responseText xhr)
                                         :status status-code}))
                     (when success?
-                      (let [content-type (:contentType (get-parsed-response))]
+                      (let [content-type (:contentType (get-parsed-response))
+                            scopes common/storage-scopes]
                         (when (previewable? object content-type)
-                          ;; TODO: get pet token from sam. Use pet token instead of (user/get-bearer-token-header) for
-                          ;; the following call.
-                          (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
-                                             (js/encodeURIComponent object) "?alt=media")
-                                      :headers (merge (user/get-bearer-token-header)
-                                                      {"Range" (str "bytes=-" preview-byte-count)})
-                                      :on-done (fn [{:keys [raw-response]}]
-                                                 (swap! state assoc :preview raw-response
-                                                        :preview-line-count (count (clojure.string/split raw-response #"\n+")))
-                                                 (after-update
-                                                  (fn []
-                                                    (when-not (string/blank? (@refs "preview"))
-                                                      (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))})))))})))})
+                          (endpoints/call-ajax-sam
+                                      {:endpoint (endpoints/pet-token (:workspace-namespace props))
+                                       :payload scopes
+                                       :headers ajax/content-type=json
+                                       :on-done
+                                       (fn [{:keys [success? raw-response get-parsed-response status-code status-text]}]
+                                         (if success?
+                                           ;; Sam endpoint returns a quoted token; dequote it.
+                                           (let [pet-token (utils/dequote raw-response)]
+                                             (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/"
+                                                                (js/encodeURIComponent object) "?alt=media")
+                                                         :headers {"Authorization" (str "Bearer " pet-token)
+                                                                   "Range" (str "bytes=-" preview-byte-count)}
+                                                         :on-done (fn [{:keys [raw-response]}]
+                                                                    (swap! state assoc :preview raw-response
+                                                                           :preview-line-count (count (clojure.string/split raw-response #"\n+")))
+                                                                    (after-update
+                                                                     (fn []
+                                                                       (when-not (string/blank? (@refs "preview"))
+                                                                         (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))
+                                           (let [err-code (if (string/blank? status-text) status-code status-text)
+                                                 [error-json parsing-error] (get-parsed-response true false)
+                                                 trunc-response (subs raw-response 0 140)
+                                                 err-message (if parsing-error trunc-response (or (:message (get-parsed-response) trunc-response)))]
+                                             (swap! state assoc :preview (str "Error reading preview (" err-code "): " err-message)))))})))))})))})
 
-(react/defc DOSPreviewDialog
+(react/defc- DOSPreviewDialog
   {:component-will-mount
    (fn [{:keys [state props]}]
      (let [{:keys [dos-uri]} props]
@@ -181,8 +195,10 @@
           (when (:showing-preview? @state)
             (if-let [parsed (common/parse-gcs-uri data)]
               [PreviewDialog (assoc parsed
+                               :workspace-namespace (:workspace-namespace props)
                                :dismiss (:dismiss props))]
               [PreviewDialog (assoc props :error error :object ""
+                               :workspace-namespace (:workspace-namespace props)
                                :dismiss (:dismiss props))])))]))})
 
 ;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
@@ -191,15 +207,15 @@
 (defn- lrm-pad [string]
   (str (gstring/unescapeEntities "&#8206;") string (gstring/unescapeEntities "&#8206;")))
 
-(react/defc GCSFilePreviewLink
+(react/defc- GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [bucket-name object workspace-bucket link-label]} props]
+     (let [{:keys [bucket-name object workspace-bucket link-label workspace-namespace]} props]
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
         (when (:showing-preview? @state)
-          [PreviewDialog (assoc (utils/restructure bucket-name object)
+          [PreviewDialog (assoc (utils/restructure bucket-name object workspace-namespace)
                            :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href (str "gs://" bucket-name "/" object)
              :onClick (fn [e]
@@ -210,13 +226,14 @@
              object
              (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
 
-(react/defc DOSFilePreviewLink
+(react/defc- DOSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
-     (let [{:keys [dos-uri link-label]} props]
+     (let [{:keys [dos-uri link-label workspace-namespace]} props]
        [:div (or (:attributes props) {})
         (when (:showing-preview? @state)
           [DOSPreviewDialog (assoc props
+                              :workspace-namespace workspace-namespace
                               :dos-uri dos-uri
                               :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href dos-uri

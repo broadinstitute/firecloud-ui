@@ -129,12 +129,13 @@
         (sequential? data) (string/join ", " data)
         :else (str data)))
 
-(defn render-gcs-links [workspace-bucket]
+(defn render-gcs-links [workspace-bucket workspace-namespace]
   (fn [maybe-uri]
     (if-let [parsed (common/dos-or-gcs-uri? maybe-uri)]
       [FilePreviewLink
        (assoc parsed
          :workspace-bucket workspace-bucket
+         :workspace-namespace workspace-namespace
          :attributes {:style {:direction "rtl" :marginRight "0.5em"
                               :overflow "hidden" :textOverflow "ellipsis"
                               :textAlign "left"}})]

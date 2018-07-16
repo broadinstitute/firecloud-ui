@@ -6,6 +6,7 @@ import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
+import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
 import org.broadinstitute.dsde.workbench.config.Credentials
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
@@ -23,6 +24,15 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   def withSignIn(user: Credentials)
                 (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignIn(user, new WorkspaceListPage)(testCode)
+  }
+
+  /**
+    * "Signs in" to FireCloud with an access token and the specified scopes, bypassing the Google sign-in flow.
+    * Assumes the user is already registered so hands the test code a ready WorkspaceListPage.
+    */
+  def withScopedSignIn(user: Credentials, scopes: Seq[String])
+                 (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
+    withSignIn(user, new WorkspaceListPage, scopes)(testCode)
   }
 
   /**
@@ -44,7 +54,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   }
 
 
-  private def withSignIn[T <: AuthenticatedPage](user: Credentials, page: T)
+  private def withSignIn[T <: AuthenticatedPage](user: Credentials, page: T, scopes: Seq[String] = AuthTokenScopes.userLoginScopes)
                                                 (testCode: T => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
     withSignIn(user, {
@@ -52,7 +62,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
       var counter = 0
       retry(Seq.fill(2)(1.seconds)) ({
         new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
-        executeScript(s"window.forceSignedIn('${user.makeAuthToken().value}')")
+        executeScript(s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')")
         if (counter > 0) logger.warn(s"Retrying forceSignedIn. $counter")
         counter +=1
         try {
