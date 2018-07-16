@@ -49,123 +49,123 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     register cleanUp  Try(trialKVPKeys foreach { k => Thurloe.keyValuePairs.delete(subjectId, k)})
   }
 
-  "A user whose free trial status is" - {
-
-    "Blank" - {
-      "should not see the free trial banner" in {
-        withWebDriver { implicit driver =>
-          withSignIn(testUser) { _ =>
-            await ready new WorkspaceListPage()
-            val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
-            bannerTitleElement.isVisible shouldBe false
-          }
-        }
-      }
-    }
-
-    "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" ignore {
-        setUpEnabledUserAndProject(testUser)
-        val trialAuthToken = TrialBillingAccountAuthToken()
-        api.trial.reportTrialProjects().foreach { x =>
-          register cleanUp Try(Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value),
-            WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())).recover {
-              case ex: RestException => logger.warn(s"RestException occurred in Rawls.admin.deleteBillingProject(${x.name})", ex)
-          }
-        }
-        withWebDriver { implicit driver =>
-          withSignIn(testUser) { _ =>
-            await ready new WorkspaceListPage()
-            val bannerTitleElement = Label(TestId("trial-banner-title"))
-            bannerTitleElement.isVisible shouldBe true
-            bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
-
-            val bannerButton = await ready Button(TestId("trial-banner-button"))
-            bannerButton.doClick()
-
-            val reviewButton = await ready Button(TestId("review-terms-of-service"))
-            reviewButton.doClick()
-
-            val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
-            agreeTermsCheckbox.ensureChecked()
-
-            val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
-            agreeCloudTermsCheckbox.ensureChecked()
-
-            val acceptButton = await ready Button(TestId("accept-terms-of-service"))
-            acceptButton.doClick()
-
-            await condition bannerButton.getState == "ready"
-            bannerTitleElement.getText shouldBe "Access Free Credits"
-          }
-        }
-
-        // Verify that the user has been added to the corresponding billing project
-        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
-        assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
-
-        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
-        assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
-
-        val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
-        assert(userHasTheRightBillingProject)
-
-        // Verify that the user's project is removed from the account upon termination
-        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
-        assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
-
-        api.trial.terminateUser(testUser.email)
-
-        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
-        val errMsg = "The trial user's billing project should have been removed from the billing account."
-        assert(billingAccountUponTermination.isEmpty, errMsg)
-
-        registerCleanUpForDeleteTrialState()
-      }
-    }
-
-    "Terminated" - {
-      "should see that they are inactive" in {
-        registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
-        withWebDriver { implicit driver =>
-          withSignIn(testUser) { _ =>
-            await ready new WorkspaceListPage()
-            val bannerTitleElement = Label(TestId("trial-banner-title"))
-            bannerTitleElement.isVisible shouldBe true
-            bannerTitleElement.getText shouldBe "Your free credits have expired"
-          }
-        }
-      }
-    }
-
-    "Disabled" - {
-      "should not see the free trial banner" in {
-        registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
-        withWebDriver { implicit driver =>
-          withSignIn(testUser) { _ =>
-            await ready new WorkspaceListPage()
-            val bannerTitleElement = Label(TestId("trial-banner-title"))
-            bannerTitleElement.isVisible shouldBe false
-          }
-        }
-      }
-    }
-   
-   "Finalized" - {
-      "should not see the free trial banner" in {
-        registerCleanUpForDeleteTrialState()
-        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
-        withWebDriver { implicit driver =>
-          withSignIn(testUser) { _ =>
-            await ready new WorkspaceListPage()
-            val bannerTitleElement = Label(TestId("trial-banner-title"))
-            bannerTitleElement.isVisible shouldBe false
-          }
-        }
-      }
-    }
-  }
+//  "A user whose free trial status is" - {
+//
+//    "Blank" - {
+//      "should not see the free trial banner" in {
+//        withWebDriver { implicit driver =>
+//          withSignIn(testUser) { _ =>
+//            await ready new WorkspaceListPage()
+//            val bannerTitleElement = Label(TestId("trial-banner-title")) // TODO: Define elements in page class
+//            bannerTitleElement.isVisible shouldBe false
+//          }
+//        }
+//      }
+//    }
+//
+//    "Enabled" - {
+//      "should be able to see the free trial banner, enroll and get terminated" ignore {
+//        setUpEnabledUserAndProject(testUser)
+//        val trialAuthToken = TrialBillingAccountAuthToken()
+//        api.trial.reportTrialProjects().foreach { x =>
+//          register cleanUp Try(Rawls.admin.deleteBillingProject(x.name, UserInfo(OAuth2BearerToken(trialAuthToken.value),
+//            WorkbenchUserId("0"), WorkbenchEmail("doesnt@matter.com"), 3600))(UserPool.chooseAdmin.makeAuthToken())).recover {
+//              case ex: RestException => logger.warn(s"RestException occurred in Rawls.admin.deleteBillingProject(${x.name})", ex)
+//          }
+//        }
+//        withWebDriver { implicit driver =>
+//          withSignIn(testUser) { _ =>
+//            await ready new WorkspaceListPage()
+//            val bannerTitleElement = Label(TestId("trial-banner-title"))
+//            bannerTitleElement.isVisible shouldBe true
+//            bannerTitleElement.getText shouldBe "Welcome to FireCloud!"
+//
+//            val bannerButton = await ready Button(TestId("trial-banner-button"))
+//            bannerButton.doClick()
+//
+//            val reviewButton = await ready Button(TestId("review-terms-of-service"))
+//            reviewButton.doClick()
+//
+//            val agreeTermsCheckbox = await ready Checkbox(TestId("agree-terms"))
+//            agreeTermsCheckbox.ensureChecked()
+//
+//            val agreeCloudTermsCheckbox = await ready Checkbox(TestId("agree-cloud-terms"))
+//            agreeCloudTermsCheckbox.ensureChecked()
+//
+//            val acceptButton = await ready Button(TestId("accept-terms-of-service"))
+//            acceptButton.doClick()
+//
+//            await condition bannerButton.getState == "ready"
+//            bannerTitleElement.getText shouldBe "Access Free Credits"
+//          }
+//        }
+//
+//        // Verify that the user has been added to the corresponding billing project
+//        val billingProject = Thurloe.keyValuePairs.getAll(subjectId).get("trialBillingProjectName")
+//        assert(billingProject.nonEmpty, s"No trial billing project was allocated for the user ${testUser.email}.")
+//
+//        val userBillingProjects = api.profile.getUserBillingProjects()(userAuthToken)
+//        assert(userBillingProjects.nonEmpty, s"The trial user ${testUser.email} has no billing projects.")
+//
+//        val userHasTheRightBillingProject: Boolean = userBillingProjects.exists(_.values.toList.contains(billingProject.get))
+//        assert(userHasTheRightBillingProject)
+//
+//        // Verify that the user's project is removed from the account upon termination
+//        val billingAccountUponEnrollment = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
+//        assert(billingAccountUponEnrollment.nonEmpty, s"The user's project is not associated with a billing account.")
+//
+//        api.trial.terminateUser(testUser.email)
+//
+//        val billingAccountUponTermination = Google.billing.getBillingProjectAccount(billingProject.get)(trialAuthToken)
+//        val errMsg = "The trial user's billing project should have been removed from the billing account."
+//        assert(billingAccountUponTermination.isEmpty, errMsg)
+//
+//        registerCleanUpForDeleteTrialState()
+//      }
+//    }
+//
+//    "Terminated" - {
+//      "should see that they are inactive" in {
+//        registerCleanUpForDeleteTrialState()
+//        Thurloe.keyValuePairs.set(subjectId, "trialState", "Terminated")
+//        withWebDriver { implicit driver =>
+//          withSignIn(testUser) { _ =>
+//            await ready new WorkspaceListPage()
+//            val bannerTitleElement = Label(TestId("trial-banner-title"))
+//            bannerTitleElement.isVisible shouldBe true
+//            bannerTitleElement.getText shouldBe "Your free credits have expired"
+//          }
+//        }
+//      }
+//    }
+//
+//    "Disabled" - {
+//      "should not see the free trial banner" in {
+//        registerCleanUpForDeleteTrialState()
+//        Thurloe.keyValuePairs.set(subjectId, "trialState", "Disabled")
+//        withWebDriver { implicit driver =>
+//          withSignIn(testUser) { _ =>
+//            await ready new WorkspaceListPage()
+//            val bannerTitleElement = Label(TestId("trial-banner-title"))
+//            bannerTitleElement.isVisible shouldBe false
+//          }
+//        }
+//      }
+//    }
+//
+//   "Finalized" - {
+//      "should not see the free trial banner" in {
+//        registerCleanUpForDeleteTrialState()
+//        Thurloe.keyValuePairs.set(subjectId, "trialState", "Finalized")
+//        withWebDriver { implicit driver =>
+//          withSignIn(testUser) { _ =>
+//            await ready new WorkspaceListPage()
+//            val bannerTitleElement = Label(TestId("trial-banner-title"))
+//            bannerTitleElement.isVisible shouldBe false
+//          }
+//        }
+//      }
+//    }
+//  }
 
 }

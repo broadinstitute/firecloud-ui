@@ -10,15 +10,15 @@ class GoogleSpec extends FlatSpec with Matchers with WebBrowserSpec with Paralle
 
   behavior of "Google"
 
-  it should "have a search field" in withWebDriver { implicit driver =>
-    go to new GooglePage()
-    assert(find("q").isDefined)
-    find("q") shouldBe 'defined
-  }
-
-  it should "have a 'Google Search' button" in withWebDriver { implicit driver =>
-    go to new GooglePage()
-    val button = find(xpath("//input[@value='Google Search'][@type='submit']"))
-    button shouldBe 'defined
-  }
+//  it should "have a search field" in withWebDriver { implicit driver =>
+//    go to new GooglePage()
+//    assert(find("q").isDefined)
+//    find("q") shouldBe 'defined
+//  }
+//
+//  it should "have a 'Google Search' button" in withWebDriver { implicit driver =>
+//    go to new GooglePage()
+//    val button = find(xpath("//input[@value='Google Search'][@type='submit']"))
+//    button shouldBe 'defined
+//  }
 }
