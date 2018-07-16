@@ -87,7 +87,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         val methodName = uuidWithPrefix("test_JSON_download")
         val method = Method(
           methodName = methodName,
-          methodNamespace = "MethodConfigSpec",
+          methodNamespace = "MethodConfigSpec_download",
           snapshotId = 1,
           rootEntityType = "sample",
           synopsis = "",
@@ -171,15 +171,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get
               val inputsList = Source.fromFile(inputsFile).mkString
 
-              inputsList shouldBe
-                """{"w.t.inFloat":1.5,
-                  |"w.t.inStringArray2":["say \"hi\"!"],
-                  |"w.t.inStringMap":{"foo":"bar"},
-                  |"w.t.inString":"test",
-                  |"w.t.inFile":"gs://foo/bar",
-                  |"w.t.inStringArray":["foo","bar"],
-                  |"w.t.inBoolean":true,
-                  |"w.t.inInt":2}""".stripMargin
+              inputsList shouldBe """{"w.t.inFloat":1.5,["w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,]"w.t.inInt":2}"""
 
               println("INPUTS FILE " + inputsList)
 
@@ -199,7 +191,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         val methodName = uuidWithPrefix("test_JSON_populate")
         val method = Method(
           methodName = methodName,
-          methodNamespace = "MethodConfigSpec",
+          methodNamespace = "MethodConfigSpec_populate",
           snapshotId = 1,
           rootEntityType = "sample",
           synopsis = "",
