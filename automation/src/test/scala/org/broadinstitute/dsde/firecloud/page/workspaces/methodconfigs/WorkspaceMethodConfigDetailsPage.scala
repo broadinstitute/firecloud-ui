@@ -196,11 +196,13 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
      * automatically close it when the download is complete.
      */
     // await condition (windowHandles.size == 1, 30)
-    // .submit call takes care waiting for a new window
+    // .submit call takess care waiting for a new window
     logger.info(s"form: ${form.queryString}")
     find(form).get.underlying.submit()
 
-    archiveDownloadedFile(s"$downloadPath/inputs.json")
+    for {
+      path <- downloadPath
+    } yield archiveDownloadedFile(s"$path/inputs.json")
   }
 
   lazy val dateFormatPatter = "HH:mm:ss:N" // with nano seconds

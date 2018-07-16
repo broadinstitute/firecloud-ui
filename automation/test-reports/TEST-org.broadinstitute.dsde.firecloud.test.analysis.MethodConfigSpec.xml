@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite 
+errors="0" failures="1" hostname="WM1BE-486" name="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" tests="1" time="47.046" timestamp="2018-07-15T22:33:32">
+  <properties>
+    <property name="jline.esc.timeout" value="0"/>
+    <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment">
+    </property>
+    <property 
+    name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib">
+</property>
+    <property name="java.vm.version" value="25.102-b14"/>
+    <property name="gopherProxySet" value="false"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=":"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="jna.loaded" value="true"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="jna.nosys" value="true"/>
+    <property 
+    name="java.vm.specification.name" value="Java Virtual Machine Specification">
+</property>
+    <property 
+    name="user.dir" value="/Users/ansingh/Desktop/ui-15/firecloud-ui/automation">
+</property>
+    <property name="java.runtime.version" value="1.8.0_102-b14"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment">
+    </property>
+    <property name="jsse.enableSNIExtension" value="false"/>
+    <property 
+    name="java.endorsed.dirs" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/endorsed">
+</property>
+    <property name="os.arch" value="x86_64"/>
+    <property 
+    name="java.io.tmpdir" value="/var/folders/gc/2_ft_hx95klbcglbcxz53n6sxh99v9/T/">
+</property>
+    <property name="line.separator" value=" "/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property 
+    name="jnidispatch.path" value="/var/folders/gc/2_ft_hx95klbcglbcxz53n6sxh99v9/T/jna--847807572/jna2369982817222729882.tmp">
+</property>
+    <property 
+    name="java.library.path" value="/Users/ansingh/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.">
+</property>
+    <property 
+    name="java.specification.name" value="Java Platform API Specification">
+</property>
+    <property name="java.class.version" value="52.0"/>
+    <property 
+    name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers">
+</property>
+    <property name="os.version" value="10.11.6"/>
+    <property name="user.home" value="/Users/ansingh"/>
+    <property name="user.timezone" value="America/New_York"/>
+    <property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="user.name" value="ansingh"/>
+    <property 
+    name="java.class.path" value="/usr/local/Cellar/sbt/0.13.12/libexec/sbt-launch.jar">
+</property>
+    <property name="jline.shutdownhook" value="false"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property 
+    name="java.home" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre">
+</property>
+    <property 
+    name="sun.java.command" value="/usr/local/Cellar/sbt/0.13.12/libexec/sbt-launch.jar testOnly *MethodConfigSpec -- -z &quot;Download inputs&quot;">
+</property>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_102"/>
+    <property 
+    name="java.ext.dirs" value="/Users/ansingh/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java">
+</property>
+    <property 
+    name="sun.boot.class.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/sunrsasign.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/classes">
+</property>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="file.separator" value="/"/>
+    <property 
+    name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/">
+</property>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="headless" value="false"/>
+    <property name="sun.cpu.isalist" value=""/>
+  </properties>
+  <testcase 
+  name="Download inputs.json populates connection inputs" classname="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" time="46.969">
+    <failure 
+    message="unknown error: call function result missing 'value'&amp;#010;  (Session info: chrome=67.0.3396.99)&amp;#010;  (Driver info: chromedriver=2.33.506106 (8a06c39c4582fbfbab6966dbb1c38a9173bfb1a2),platform=Mac OS X 10.11.6 x86_64) (WARNING: The server did not provide any stacktrace information)&amp;#010;Command duration or timeout: 0 milliseconds&amp;#010;Build info: version: '3.12.0', revision: '7c6e0b3', time: '2018-05-08T14:04:26.12Z'&amp;#010;System info: host: 'WM1BE-486', ip: '2601:184:4180:4390:0:0:0:2', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.11.6', java.version: '1.8.0_102'&amp;#010;Driver info: org.openqa.selenium.remote.RemoteWebDriver&amp;#010;Capabilities {acceptSslCerts: true, applicationCacheEnabled: false, browserConnectionEnabled: false, browserName: chrome, chrome: {chromedriverVersion: 2.33.506106 (8a06c39c4582fb..., userDataDir: /var/folders/gc/2_ft_hx95kl...}, cssSelectorsEnabled: true, databaseEnabled: false, handlesAlerts: true, hasTouchScreen: false, javascriptEnabled: true, locationContextEnabled: true, mobileEmulationEnabled: false, nativeEvents: true, networkConnectionEnabled: false, pageLoadStrategy: normal, platform: MAC, platformName: MAC, rotatable: false, setWindowRect: true, takesHeapSnapshot: true, takesScreenshot: true, unexpectedAlertBehaviour: , unhandledPromptBehavior: , version: 67.0.3396.99, webStorageEnabled: true}&amp;#010;Session ID: 37de42ab7a60d0ffc7907aa0a3e1ae67" type="class org.openqa.selenium.WebDriverException">
+      org.openqa.selenium.WebDriverException: unknown error: call function result missing 'value'
+  (Session info: chrome=67.0.3396.99)
+  (Driver info: chromedriver=2.33.506106 (8a06c39c4582fbfbab6966dbb1c38a9173bfb1a2),platform=Mac OS X 10.11.6 x86_64) (WARNING: The server did not provide any stacktrace information)
+Command duration or timeout: 0 milliseconds
+Build info: version: '3.12.0', revision: '7c6e0b3', time: '2018-05-08T14:04:26.12Z'
+System info: host: 'WM1BE-486', ip: '2601:184:4180:4390:0:0:0:2', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.11.6', java.version: '1.8.0_102'
+Driver info: org.openqa.selenium.remote.RemoteWebDriver
+Capabilities {acceptSslCerts: true, applicationCacheEnabled: false, browserConnectionEnabled: false, browserName: chrome, chrome: {chromedriverVersion: 2.33.506106 (8a06c39c4582fb..., userDataDir: /var/folders/gc/2_ft_hx95kl...}, cssSelectorsEnabled: true, databaseEnabled: false, handlesAlerts: true, hasTouchScreen: false, javascriptEnabled: true, locationContextEnabled: true, mobileEmulationEnabled: false, nativeEvents: true, networkConnectionEnabled: false, pageLoadStrategy: normal, platform: MAC, platformName: MAC, rotatable: false, setWindowRect: true, takesHeapSnapshot: true, takesScreenshot: true, unexpectedAlertBehaviour: , unhandledPromptBehavior: , version: 67.0.3396.99, webStorageEnabled: true}
+Session ID: 37de42ab7a60d0ffc7907aa0a3e1ae67
+      at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+      at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
+      at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+      at java.lang.reflect.Constructor.newInstance(Constructor.java:423)
+      at org.openqa.selenium.remote.ErrorHandler.createThrowable(ErrorHandler.java:214)
+      at org.openqa.selenium.remote.ErrorHandler.throwIfResponseFailed(ErrorHandler.java:166)
+      at org.openqa.selenium.remote.http.JsonHttpResponseCodec.reconstructValue(JsonHttpResponseCodec.java:40)
+      at org.openqa.selenium.remote.http.AbstractHttpResponseCodec.decode(AbstractHttpResponseCodec.java:80)
+      at org.openqa.selenium.remote.http.AbstractHttpResponseCodec.decode(AbstractHttpResponseCodec.java:44)
+      at org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.java:158)
+      at org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:543)
+      at org.openqa.selenium.remote.RemoteWebDriver.executeScript(RemoteWebDriver.java:480)
+      at org.scalatest.selenium.WebBrowser.executeScript(WebBrowser.scala:4321)
+      at org.scalatest.selenium.WebBrowser.executeScript$(WebBrowser.scala:4319)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.executeScript(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.$anonfun$withSignIn$3(UserFixtures.scala:54)
+      at org.broadinstitute.dsde.workbench.service.util.Retry$.retry(Retry.scala:21)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.$anonfun$withSignIn$1(UserFixtures.scala:52)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.withSignIn(UserFixtures.scala:79)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.withSignIn(UserFixtures.scala:49)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.withSignIn(UserFixtures.scala:25)
+      at org.broadinstitute.dsde.firecloud.fixture.UserFixtures.withSignIn$(UserFixtures.scala:23)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withSignIn(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$12(MethodConfigSpec.scala:168)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$12$adapted(MethodConfigSpec.scala:166)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.$anonfun$runLocalChrome$1(WebBrowserSpec.scala:94)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withScreenshot(WebBrowserSpec.scala:127)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withScreenshot$(WebBrowserSpec.scala:125)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withScreenshot(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.runLocalChrome(WebBrowserSpec.scala:93)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withWebDriver(WebBrowserSpec.scala:59)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withWebDriver$(WebBrowserSpec.scala:54)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withWebDriver(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withWebDriver(WebBrowserSpec.scala:43)
+      at org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec.withWebDriver$(WebBrowserSpec.scala:42)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withWebDriver(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$11(MethodConfigSpec.scala:166)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$11$adapted(MethodConfigSpec.scala:157)
+      at org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures.$anonfun$withWorkspace$1(WorkspaceFixtures.scala:40)
+      at scala.util.Try$.apply(Try.scala:209)
+      at org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures.withWorkspace(WorkspaceFixtures.scala:40)
+      at org.broadinstitute.dsde.workbench.fixture.WorkspaceFixtures.withWorkspace$(WorkspaceFixtures.scala:29)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withWorkspace(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$9(MethodConfigSpec.scala:157)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$9$adapted(MethodConfigSpec.scala:110)
+      at org.broadinstitute.dsde.workbench.fixture.BillingFixtures.$anonfun$withCleanBillingProject$2(BillingFixtures.scala:191)
+      at scala.util.Try$.apply(Try.scala:209)
+      at org.broadinstitute.dsde.workbench.fixture.BillingFixtures.withCleanBillingProject(BillingFixtures.scala:191)
+      at org.broadinstitute.dsde.workbench.fixture.BillingFixtures.withCleanBillingProject$(BillingFixtures.scala:188)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withCleanBillingProject(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.workbench.fixture.BillingFixtures.withCleanBillingProject(BillingFixtures.scala:175)
+      at org.broadinstitute.dsde.workbench.fixture.BillingFixtures.withCleanBillingProject$(BillingFixtures.scala:174)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withCleanBillingProject(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.$anonfun$new$8(MethodConfigSpec.scala:110)
+      at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:12)
+      at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+      at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+      at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+      at org.scalatest.Transformer.apply(Transformer.scala:22)
+      at org.scalatest.Transformer.apply(Transformer.scala:20)
+      at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+      at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+      at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.org$broadinstitute$dsde$workbench$service$test$CleanUp$$super$withFixture(MethodConfigSpec.scala:18)
+      at org.broadinstitute.dsde.workbench.service.test.CleanUp.$anonfun$withFixture$1(CleanUp.scala:98)
+      at scala.util.Try$.apply(Try.scala:209)
+      at org.broadinstitute.dsde.workbench.service.test.CleanUp.withFixture(CleanUp.scala:98)
+      at org.broadinstitute.dsde.workbench.service.test.CleanUp.withFixture$(CleanUp.scala:96)
+      at org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec.withFixture(MethodConfigSpec.scala:18)
+      at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+      at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+      at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+      at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+      at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+      at org.scalatest.FreeSpec.runTest(FreeSpec.scala:1739)
+      at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+      at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+      at scala.collection.immutable.List.foreach(List.scala:389)
+      at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+      at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+      at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+      at scala.collection.immutable.List.foreach(List.scala:389)
+      at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+      at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+      at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+      at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+      at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+      at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+      at org.scalatest.Suite.run(Suite.scala:1147)
+      at org.scalatest.Suite.run$(Suite.scala:1129)
+      at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+      at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+      at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+      at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+      at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+      at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+      at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+      at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+      at sbt.ForkMain$Run$2.call(ForkMain.java:301)
+      at sbt.ForkMain$Run$2.call(ForkMain.java:291)
+      at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+      at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+      at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+      at java.lang.Thread.run(Thread.java:745)
+</failure>
+</testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
