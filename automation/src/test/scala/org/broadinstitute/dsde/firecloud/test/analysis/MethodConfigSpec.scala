@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 
-import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -14,8 +14,9 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.collection.immutable.ListMap
+import scala.io.Source
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixtures
   with MethodFixtures with BillingFixtures with TestReporterFixture {
 
 
@@ -113,7 +114,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         val methodName = uuidWithPrefix("test_JSON_download")
         val method = Method(
           methodName = methodName,
-          methodNamespace = "MethodConfigSpec",
+          methodNamespace = "MethodConfigSpec_download",
           snapshotId = 1,
           rootEntityType = "sample",
           synopsis = "",
@@ -164,11 +165,13 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             Map.empty, Map.empty, "sample")
           println("created a method config")
 
-          withWebDriver { implicit driver =>
+          val downloadDir = makeTempDownloadDirectory()
+
+          withWebDriver(downloadDir) { implicit driver =>
             println("with web driver")
             withSignIn(user) { _ =>
               println("with sign in")
-              val variables = ListMap(
+              val inputs = ListMap(
                 "w.t.inString" -> "\"test\"",
                 "w.t.inFloat"-> "1.5",
                 "w.t.inInt" -> "2",
@@ -178,29 +181,27 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                 "w.t.inStringArray2" -> """["say \"hi\"!"]""",
                 "w.t.inStringMap" -> """{"foo":"bar"}"""
               )
-              val unmatchedVariables = ListMap(
-                "unmatched.variable.name" -> "\"surprise!\""
-              )
 
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
               println("created a config page")
 
               configPage.isEditing shouldBe false
-              variables.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              val inputs = variables ++ unmatchedVariables map {
-                case (name, json) => (name, json)
-              }
+              println("not in edit mode")
 
-              val downloadDir = makeTempDownloadDirectory()
-             // configPage.populateInputsFromJson(generateInputsJson(inputs))
-             configPage.downloadInputsJson(Option(downloadDir)).get
+              inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              configPage.isEditing shouldBe true
-              variables foreach {
-                case (name, expected) =>
-                  configPage.readFieldValue(name) shouldBe expected
-              }
+              println("all inputs are empty")
+
+              configPage.editMethodConfig(None, None, None, Option(inputs), None)
+
+              val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get
+              val inputsList = Source.fromFile(inputsFile).mkString
+
+              inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,]"w.t.inInt":2}"""
+
+              println("INPUTS FILE " + inputsList)
+
             }
           }
         }
@@ -217,7 +218,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
         val methodName = uuidWithPrefix("test_JSON_populate")
         val method = Method(
           methodName = methodName,
-          methodNamespace = "MethodConfigSpec",
+          methodNamespace = "MethodConfigSpec_populate",
           snapshotId = 1,
           rootEntityType = "sample",
           synopsis = "",

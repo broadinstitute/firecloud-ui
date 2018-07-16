@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.fixture.DownloadFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
@@ -20,7 +21,7 @@ import org.scalatest.selenium.Page
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadFixtures  {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
@@ -156,6 +157,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     populateWithJsonLink.doClick()
     val modal = await ready new PopulateFromJsonModal
     modal.importFile(file.getAbsolutePath)
+  }
+
+  def downloadInputsJson(downloadPath: Option[String], fileName: String): Option[String] = {
+    downloadFile(downloadPath, fileName, downloadInputsJsonLink, None)
   }
 
 

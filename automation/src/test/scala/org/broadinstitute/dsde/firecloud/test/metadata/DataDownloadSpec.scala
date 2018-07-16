@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 
-import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
@@ -18,35 +18,9 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 import scala.io.Source
 
 class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures
-  with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil with TestReporterFixture {
+  with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil with DownloadFixtures with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
-
-  private def makeTempDownloadDirectory(): String = {
-    /*
-     * This might work some day if docker permissions get straightened out... or it might not be
-     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
-    new File("chrome").mkdirs()
-    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
-    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
-    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
-    downloadPath.toString
-     */
-
-    val downloadPath = s"chrome/downloads/${makeRandomId(5)}"
-    val dir = new File(downloadPath)
-    dir.deleteOnExit()
-    dir.mkdirs()
-    val path = dir.toPath
-    logger.info(s"mkdir: $path")
-    val permissions = Set(
-      PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-      PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
-      PosixFilePermission.OTHERS_WRITE, PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE)
-    import scala.collection.JavaConverters._
-    Files.setPosixFilePermissions(path, permissions.asJava)
-    path.toString
-  }
 
   "import a participants file" in {
     val owner = UserPool.chooseProjectOwner
