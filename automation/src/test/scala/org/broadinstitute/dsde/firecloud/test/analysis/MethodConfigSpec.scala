@@ -14,6 +14,7 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 import scala.collection.immutable.ListMap
+import scala.io.Source
 
 class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
@@ -193,7 +194,10 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                 case (name, json) => (name, json)
               }
               val inputsFile = configPage.downloadInputsJson(Option(downloadDir)).get
-              println("INPUTS FILE " + inputsFile)
+              val inputsList = Source.fromFile(inputsFile).getLines().next().split('\t').toList
+
+
+              println("INPUTS FILE " + inputsList)
 
             }
           }
