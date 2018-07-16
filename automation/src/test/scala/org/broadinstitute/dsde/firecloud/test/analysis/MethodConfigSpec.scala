@@ -163,7 +163,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
             Map.empty, Map.empty, "sample")
           println("created a method config")
 
-          withWebDriver { implicit driver =>
+          val downloadDir = makeTempDownloadDirectory()
+
+          withWebDriver(downloadDir) { implicit driver =>
             println("with web driver")
             withSignIn(user) { _ =>
               println("with sign in")
@@ -190,8 +192,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val inputs = variables ++ unmatchedVariables map {
                 case (name, json) => (name, json)
               }
-
-              val downloadDir = makeTempDownloadDirectory()
               val inputsFile = configPage.downloadInputsJson(Option(downloadDir)).get
               println("INPUTS FILE " + inputsFile)
 

@@ -65,7 +65,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
 //      }
 //    }
 //  }
-
+//
 //  "Download should reflect visible columns" - {
 //    "no workspace defaults or user preferences" in {
 //      val downloadDir = makeTempDownloadDirectory()
