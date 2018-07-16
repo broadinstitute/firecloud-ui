@@ -19,32 +19,6 @@ import scala.io.Source
 class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
 
 
-  private def makeTempDownloadDirectory(): String = {
-    /*
-     * This might work some day if docker permissions get straightened out... or it might not be
-     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
-    new File("chrome").mkdirs()
-    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
-    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
-    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
-    downloadPath.toString
-     */
-
-    val downloadPath = s"chrome/downloads/${makeRandomId(5)}"
-    val dir = new File(downloadPath)
-    dir.deleteOnExit()
-    dir.mkdirs()
-    val path = dir.toPath
-    logger.info(s"mkdir: $path")
-    val permissions = Set(
-      PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-      PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
-      PosixFilePermission.OTHERS_WRITE, PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE)
-    import scala.collection.JavaConverters._
-    Files.setPosixFilePermissions(path, permissions.asJava)
-    path.toString
-  }
-
   "input/output auto-suggest" - {
     "stays current with selected root entity type" in {
       val user = UserPool.chooseProjectOwner
@@ -193,8 +167,10 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val inputs = variables ++ unmatchedVariables map {
                 case (name, json) => (name, json)
               }
-              val inputsFile = configPage.downloadInputsJson(Option(downloadDir)).get
-              val inputsList = Source.fromFile(inputsFile).getLines().next().split('\t').toList
+              configPage.editMethodConfig(None, None, None, Option(inputs), None)
+
+              val inputsFile = downloadInputsJson(Option(downloadDir), "inputs.json").get
+              val inputsList = Source.fromFile(inputsFile).mkString
 
 
               println("INPUTS FILE " + inputsList)
@@ -309,4 +285,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     writer.close()
     file
   }
+
+
 }
