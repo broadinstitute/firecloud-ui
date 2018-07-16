@@ -119,19 +119,20 @@
                                                   :filename "inputs.json"
                                                   :create-internal? true}]])]
                    :default-hidden? default-hidden?
-                   :contents (this :-render-table :inputs)}]
+                   :contents (this :-render-table :inputs "inputs-table")}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
                    :secondary-title (when (and entity-type? can-edit? (seq (this :-get-defaultable-outputs)))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
                                         "Populate blank attributes with defaults"))
                    :default-hidden? default-hidden?
-                   :contents (this :-render-table :outputs)}]]))
+                   :contents (this :-render-table :outputs "outputs-table")}]]))
    :-render-table
-   (fn [{:keys [props state locals]} io-key]
+   (fn [{:keys [props state locals]} io-key data-test-id]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
-       [Table {:data (->> (io-key inputs-outputs)
+       [Table {:data-test-id data-test-id
+               :data (->> (io-key inputs-outputs)
                           (map (fn [{:keys [name inputType outputType optional] :as item}]
                                  (let [[task variable] (take-last 2 (string/split name "."))
                                        k-name (keyword name)

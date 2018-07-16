@@ -153,7 +153,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
         }
       }
     }
-   
+
    "Finalized" - {
       "should not see the free trial banner" in {
         registerCleanUpForDeleteTrialState()
