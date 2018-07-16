@@ -1,17 +1,12 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import org.broadinstitute.dsde.workbench.service.test.RandomUtil
-
-import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.fixture.DownloadFixture
+import org.broadinstitute.dsde.firecloud.fixture.DownloadFixtures
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
@@ -24,7 +19,7 @@ import org.scalatest.selenium.Page
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadFixture {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadFixtures {
 
   override def awaitReady(): Unit = {
     await condition isLoaded

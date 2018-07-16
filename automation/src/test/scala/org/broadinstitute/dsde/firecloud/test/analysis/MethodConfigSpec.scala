@@ -1,22 +1,20 @@
 package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.io.{File, PrintWriter}
-import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermission
 
-import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixture, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
-import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
+import org.scalatest.{FreeSpec, Matchers}
 
 import scala.collection.immutable.ListMap
 import scala.io.Source
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixture with MethodFixtures with BillingFixtures {
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixtures with MethodFixtures with BillingFixtures {
 
 
   "input/output auto-suggest" - {
@@ -171,7 +169,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get
               val inputsList = Source.fromFile(inputsFile).mkString
 
-              inputsList shouldBe """{"w.t.inFloat":1.5,["w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,]"w.t.inInt":2}"""
+              inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,]"w.t.inInt":2}"""
 
               println("INPUTS FILE " + inputsList)
 

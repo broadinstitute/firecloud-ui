@@ -7,16 +7,15 @@ import java.nio.file.attribute.PosixFilePermission
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import org.broadinstitute.dsde.firecloud.component.Link
+import org.broadinstitute.dsde.firecloud.component.Clickable
 import org.broadinstitute.dsde.workbench.service.util.Util
 import org.scalatest.concurrent.Eventually
-import org.scalatest.selenium.WebBrowser.CssSelectorQuery
 import java.util.UUID
 
-import org.broadinstitute.dsde.workbench.service.test.{WebBrowserSpec, WebBrowserUtil}
+import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
 
-trait DownloadFixture extends Eventually with LazyLogging with WebBrowserUtil {
+trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
 
 
   def makeTempDownloadDirectory(): String = {
@@ -58,7 +57,7 @@ trait DownloadFixture extends Eventually with LazyLogging with WebBrowserUtil {
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadFile(downloadPath: Option[String] = None, fileName: String, downloadLink: Link, inputForm: Option[CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
+  def downloadFile(downloadPath: Option[String] = None, fileName: String, downloadClickable: Clickable, inputForm: Option[CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 10 seconds for file exist
@@ -68,15 +67,13 @@ trait DownloadFixture extends Eventually with LazyLogging with WebBrowserUtil {
         assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
 
-      val date = DateTimeFormatter.ofPattern(dateFormatPatter).format(LocalDateTime.now())
+      val date = DateTimeFormatter.ofPattern("HH:mm:ss:N").format(LocalDateTime.now())
       val destFile = new File(sourcePath).getName + s".$date"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
       logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")
       destPath
     }
-
-    downloadLink.awaitEnabled()
 
     /*
      * Downloading a file will open another window while the download is in progress and
@@ -88,7 +85,7 @@ trait DownloadFixture extends Eventually with LazyLogging with WebBrowserUtil {
     inputForm match {
       case None => {
         println("download link click")
-        downloadLink.doClick()
+        downloadClickable.doClick()
       }
       case Some(form) => {
         logger.info(s"form: ${form.queryString}")
@@ -100,6 +97,4 @@ trait DownloadFixture extends Eventually with LazyLogging with WebBrowserUtil {
       path <- downloadPath
     } yield archiveDownloadedFile(s"$path/$fileName")
   }
-
-  lazy val dateFormatPatter = "HH:mm:ss:N" // with nano seconds
 }

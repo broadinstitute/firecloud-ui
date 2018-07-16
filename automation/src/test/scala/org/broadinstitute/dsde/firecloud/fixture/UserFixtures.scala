@@ -1,14 +1,6 @@
 package org.broadinstitute.dsde.firecloud.fixture
 
-
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermission
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
-import org.broadinstitute.dsde.firecloud.component.Link
 import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
@@ -18,7 +10,6 @@ import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.openqa.selenium.WebDriver
 import org.scalatest.TestSuite
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
-import org.broadinstitute.dsde.workbench.service.util.Util
 
 import scala.concurrent.duration._
 
