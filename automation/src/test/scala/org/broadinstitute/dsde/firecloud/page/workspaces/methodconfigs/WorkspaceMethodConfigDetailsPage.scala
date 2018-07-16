@@ -199,6 +199,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     // .submit call takess care waiting for a new window
     logger.info(s"form: ${form.queryString}")
     find(form).get.underlying.submit()
+    println("download link click")
 
     for {
       path <- downloadPath
