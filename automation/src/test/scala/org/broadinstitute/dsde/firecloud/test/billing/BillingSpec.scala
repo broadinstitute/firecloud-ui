@@ -64,7 +64,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
            * have seen break in the past that relied on using a brand new billing project).
            */
           withWebDriver { implicit driver =>
-            withSignIn(user) { listPage =>
+            withScopedSignIn(user, AuthTokenScopes.billingScopes) { listPage =>
               //BEGIN: Test creating billing project in UI
               val billingPage = new BillingManagementPage().open
               val billingProjectName = createNewBillingProject(user, billingPage)
