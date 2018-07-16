@@ -177,6 +177,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 10 seconds for file exist
       val f = new File(sourcePath)
+      println("FILE: " + f.getAbsoluteFile)
       eventually {
         assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
