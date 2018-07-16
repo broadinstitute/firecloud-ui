@@ -192,14 +192,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               }
 
               val downloadDir = makeTempDownloadDirectory()
-             // configPage.populateInputsFromJson(generateInputsJson(inputs))
-             configPage.downloadInputsJson(Option(downloadDir)).get
+              val inputsFile = configPage.downloadInputsJson(Option(downloadDir)).get
+              println("INPUTS FILE " + inputsFile)
 
-              configPage.isEditing shouldBe true
-              variables foreach {
-                case (name, expected) =>
-                  configPage.readFieldValue(name) shouldBe expected
-              }
             }
           }
         }
