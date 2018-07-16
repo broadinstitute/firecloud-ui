@@ -11,20 +11,20 @@ import org.scalatest.{FreeSpec, Matchers}
 class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Matchers with Eventually {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
-//
-//  "Profile page" - {
-//    "should show the user's proxy group" in withWebDriver { implicit driver =>
-//      val user = UserPool.chooseStudent
-//      withSignIn(user) { _ =>
-//        val profilePage = new ProfilePage().open
-//
-//        val username = user.email.split("@").head
-//        /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
-//        profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
-//        */
-//        eventually { profilePage.readProxyGroupEmail should endWith ("firecloud.org") }
-//
-//      }
-//    }
-//  }
+
+  "Profile page" - {
+    "should show the user's proxy group" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseStudent
+      withSignIn(user) { _ =>
+        val profilePage = new ProfilePage().open
+
+        val username = user.email.split("@").head
+        /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
+        profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
+        */
+        eventually { profilePage.readProxyGroupEmail should endWith ("firecloud.org") }
+
+      }
+    }
+  }
 }
