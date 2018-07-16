@@ -198,7 +198,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     // await condition (windowHandles.size == 1, 30)
     // .submit call takess care waiting for a new window
     logger.info(s"form: ${form.queryString}")
-    find(form).get.underlying.submit()
+    downloadInputsJsonLink.submit()
     println("download link click")
 
     for {
