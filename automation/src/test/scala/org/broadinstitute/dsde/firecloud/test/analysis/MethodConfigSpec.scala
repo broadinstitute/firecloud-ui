@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 
-import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixture, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -16,7 +16,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 import scala.collection.immutable.ListMap
 import scala.io.Source
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with MethodFixtures with BillingFixtures {
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixture with MethodFixtures with BillingFixtures {
 
 
   "input/output auto-suggest" - {
@@ -169,7 +169,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               }
               configPage.editMethodConfig(None, None, None, Option(inputs), None)
 
-              val inputsFile = downloadInputsJson(Option(downloadDir), "inputs.json").get
+              val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get
               val inputsList = Source.fromFile(inputsFile).mkString
 
 
