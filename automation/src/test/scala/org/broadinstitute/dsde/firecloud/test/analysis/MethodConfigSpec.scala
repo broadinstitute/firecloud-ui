@@ -108,6 +108,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withCleanBillingProject(user) { projectName =>
+        println("in billing project")
         val methodName = uuidWithPrefix("test_JSON_download")
         val method = Method(
           methodName = methodName,
@@ -150,16 +151,22 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                       |}
                       |""".stripMargin)
         api.methods.createMethod(method.creationAttributes)
+        println("created Method")
         register cleanUp api.methods.redact(method)
+        println("registered a method")
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          println("in a workspace")
           val configName = s"test_JSON_populate_config_$workspaceName"
           api.methodConfigurations.createMethodConfigInWorkspace(
             projectName, workspaceName, method,
             projectName, configName, method.snapshotId,
             Map.empty, Map.empty, "sample")
+          println("created a method config")
 
           withWebDriver { implicit driver =>
+            println("with web driver")
             withSignIn(user) { _ =>
+              println("with sign in")
               val variables = ListMap(
                 "w.t.inString" -> "\"test\"",
                 "w.t.inFloat"-> "1.5",
@@ -175,6 +182,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               )
 
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
+              println("created a config page")
 
               configPage.isEditing shouldBe false
               variables.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
