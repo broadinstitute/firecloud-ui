@@ -28,7 +28,7 @@
 
 (defn get-fence-link-href []
   (str "https://dcp.bionimbus.org" #_(get @config/config "fenceUrlRoot")
-       "/user/oauth2/authorize?response_type=code&client_id=REPLACE_ME&scope=openid+google_credentials&redirect_uri="
+       "/user/oauth2/authorize?response_type=code&client_id=cYc6V4KB7QVFFB352ccdGSvaRqNTuwZjES5QJ0Ro&scope=openid+google_credentials&redirect_uri="
        (js/encodeURIComponent
         (let [loc js/window.location]
           (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))))
@@ -130,10 +130,11 @@
         (cond
           (:error-message @state)
           (style/create-server-error-message (:error-message @state))
-          (:pending-fence-username-token @state)
+          (:pending-fence-token @state)
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (links/create-external {:href (get-fence-link-href)} "Log-In to Framework Services to link your account")
+          (links/create-external {:href (get-fence-link-href) :target "_self"}
+                                 "Log-In to Framework Services to link your account")
           :else
           [:div {}
            [:div {:style {:display "flex"}}
@@ -146,7 +147,8 @@
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
              [:div {}
-              (links/create-external {:href (get-fence-link-href) :style {:white-space "nowrap"}} "Log-In to Framework Services to re-link your account")]]]])]))
+              (links/create-external {:href (get-fence-link-href) :target "_self" :style {:white-space "nowrap"}}
+                                     "Log-In to Framework Services to re-link your account")]]]])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [{:keys [fence-token]} props]
@@ -156,8 +158,13 @@
            (after-update #(this :link-fence-account fence-token))
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
-           (.replace (.-location js/window) (nav/get-link :profile)))
+           (.replace (.-location js/window) "#profile" #_(let [loc js/window.location]
+                                               (str (.-protocol loc) "//" (.-host loc) "/#profile"))))
          (this :load-fence-status))))
+   :component-did-update
+   (fn [{:keys [refs]}]
+     (when (@refs "pending-spinner")
+       (common/scroll-to-center (react/find-dom-node (@refs "pending-spinner")))))
    :load-fence-status
    (fn [{:keys [state]}]
      (endpoints/profile-get-fence-status
@@ -341,6 +348,5 @@
    :fence-link
    {:component Page
     :regex #"fence-callback"
-    :make-props (fn []
-                  {:fence-token (utils/restructure ((re-find #"\?code=([^\s/&]+)#fence-callback" (str (.-location js/window))) 1))})
-    :make-path (fn [] "fence-callback")}))
+    :make-props (fn [] {:fence-token (utils/restructure ((re-find #"\?code=([^\s/&]+)#fence-callback" (str (.-location js/window))) 1))})
+    :make-path (fn [] "profile")}))
