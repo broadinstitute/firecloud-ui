@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <testsuite 
-errors="0" failures="1" hostname="WM1BE-486" name="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" tests="1" time="47.046" timestamp="2018-07-15T22:33:32">
+errors="0" failures="1" hostname="WM1BE-486" name="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" tests="1" time="23.914" timestamp="2018-07-15T23:15:59">
   <properties>
     <property name="jline.esc.timeout" value="0"/>
     <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
@@ -43,7 +43,7 @@ errors="0" failures="1" hostname="WM1BE-486" name="org.broadinstitute.dsde.firec
     <property name="os.name" value="Mac OS X"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
     <property 
-    name="jnidispatch.path" value="/var/folders/gc/2_ft_hx95klbcglbcxz53n6sxh99v9/T/jna--847807572/jna2369982817222729882.tmp">
+    name="jnidispatch.path" value="/var/folders/gc/2_ft_hx95klbcglbcxz53n6sxh99v9/T/jna--847807572/jna7665251957985450870.tmp">
 </property>
     <property 
     name="java.library.path" value="/Users/ansingh/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.">
@@ -96,9 +96,9 @@ errors="0" failures="1" hostname="WM1BE-486" name="org.broadinstitute.dsde.firec
     <property name="sun.cpu.isalist" value=""/>
   </properties>
   <testcase 
-  name="Download inputs.json populates connection inputs" classname="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" time="46.969">
+  name="Download inputs.json populates connection inputs" classname="org.broadinstitute.dsde.firecloud.test.analysis.MethodConfigSpec" time="23.845">
     <failure 
-    message="unknown error: call function result missing 'value'&amp;#010;  (Session info: chrome=67.0.3396.99)&amp;#010;  (Driver info: chromedriver=2.33.506106 (8a06c39c4582fbfbab6966dbb1c38a9173bfb1a2),platform=Mac OS X 10.11.6 x86_64) (WARNING: The server did not provide any stacktrace information)&amp;#010;Command duration or timeout: 0 milliseconds&amp;#010;Build info: version: '3.12.0', revision: '7c6e0b3', time: '2018-05-08T14:04:26.12Z'&amp;#010;System info: host: 'WM1BE-486', ip: '2601:184:4180:4390:0:0:0:2', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.11.6', java.version: '1.8.0_102'&amp;#010;Driver info: org.openqa.selenium.remote.RemoteWebDriver&amp;#010;Capabilities {acceptSslCerts: true, applicationCacheEnabled: false, browserConnectionEnabled: false, browserName: chrome, chrome: {chromedriverVersion: 2.33.506106 (8a06c39c4582fb..., userDataDir: /var/folders/gc/2_ft_hx95kl...}, cssSelectorsEnabled: true, databaseEnabled: false, handlesAlerts: true, hasTouchScreen: false, javascriptEnabled: true, locationContextEnabled: true, mobileEmulationEnabled: false, nativeEvents: true, networkConnectionEnabled: false, pageLoadStrategy: normal, platform: MAC, platformName: MAC, rotatable: false, setWindowRect: true, takesHeapSnapshot: true, takesScreenshot: true, unexpectedAlertBehaviour: , unhandledPromptBehavior: , version: 67.0.3396.99, webStorageEnabled: true}&amp;#010;Session ID: 37de42ab7a60d0ffc7907aa0a3e1ae67" type="class org.openqa.selenium.WebDriverException">
+    message="unknown error: call function result missing 'value'&amp;#010;  (Session info: chrome=67.0.3396.99)&amp;#010;  (Driver info: chromedriver=2.33.506106 (8a06c39c4582fbfbab6966dbb1c38a9173bfb1a2),platform=Mac OS X 10.11.6 x86_64) (WARNING: The server did not provide any stacktrace information)&amp;#010;Command duration or timeout: 0 milliseconds&amp;#010;Build info: version: '3.12.0', revision: '7c6e0b3', time: '2018-05-08T14:04:26.12Z'&amp;#010;System info: host: 'WM1BE-486', ip: '2601:184:4180:4390:0:0:0:2', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.11.6', java.version: '1.8.0_102'&amp;#010;Driver info: org.openqa.selenium.remote.RemoteWebDriver&amp;#010;Capabilities {acceptSslCerts: true, applicationCacheEnabled: false, browserConnectionEnabled: false, browserName: chrome, chrome: {chromedriverVersion: 2.33.506106 (8a06c39c4582fb..., userDataDir: /var/folders/gc/2_ft_hx95kl...}, cssSelectorsEnabled: true, databaseEnabled: false, handlesAlerts: true, hasTouchScreen: false, javascriptEnabled: true, locationContextEnabled: true, mobileEmulationEnabled: false, nativeEvents: true, networkConnectionEnabled: false, pageLoadStrategy: normal, platform: MAC, platformName: MAC, rotatable: false, setWindowRect: true, takesHeapSnapshot: true, takesScreenshot: true, unexpectedAlertBehaviour: , unhandledPromptBehavior: , version: 67.0.3396.99, webStorageEnabled: true}&amp;#010;Session ID: 1c32494c503d1f02cb362d5695fd8a37" type="class org.openqa.selenium.WebDriverException">
       org.openqa.selenium.WebDriverException: unknown error: call function result missing 'value'
   (Session info: chrome=67.0.3396.99)
   (Driver info: chromedriver=2.33.506106 (8a06c39c4582fbfbab6966dbb1c38a9173bfb1a2),platform=Mac OS X 10.11.6 x86_64) (WARNING: The server did not provide any stacktrace information)
@@ -107,7 +107,7 @@ Build info: version: '3.12.0', revision: '7c6e0b3', time: '2018-05-08T14:04:26.1
 System info: host: 'WM1BE-486', ip: '2601:184:4180:4390:0:0:0:2', os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '10.11.6', java.version: '1.8.0_102'
 Driver info: org.openqa.selenium.remote.RemoteWebDriver
 Capabilities {acceptSslCerts: true, applicationCacheEnabled: false, browserConnectionEnabled: false, browserName: chrome, chrome: {chromedriverVersion: 2.33.506106 (8a06c39c4582fb..., userDataDir: /var/folders/gc/2_ft_hx95kl...}, cssSelectorsEnabled: true, databaseEnabled: false, handlesAlerts: true, hasTouchScreen: false, javascriptEnabled: true, locationContextEnabled: true, mobileEmulationEnabled: false, nativeEvents: true, networkConnectionEnabled: false, pageLoadStrategy: normal, platform: MAC, platformName: MAC, rotatable: false, setWindowRect: true, takesHeapSnapshot: true, takesScreenshot: true, unexpectedAlertBehaviour: , unhandledPromptBehavior: , version: 67.0.3396.99, webStorageEnabled: true}
-Session ID: 37de42ab7a60d0ffc7907aa0a3e1ae67
+Session ID: 1c32494c503d1f02cb362d5695fd8a37
       at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
       at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
       at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
