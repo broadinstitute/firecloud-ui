@@ -201,12 +201,6 @@
                                :workspace-namespace (:workspace-namespace props)
                                :dismiss (:dismiss props))])))]))})
 
-;; Sometimes we apply an RTL rule so that long links overflow and show ellipses on the left-hand side.
-;; Go back to LTR here so we do not reorder the object name. Both the leading and trailing instances
-;; are necessary to cover all cases. (GAWB-2495, GAWB-1912)
-(defn- lrm-pad [string]
-  (str (gstring/unescapeEntities "&#8206;") string (gstring/unescapeEntities "&#8206;")))
-
 (react/defc- GCSFilePreviewLink
   {:render
    (fn [{:keys [state props]}]
@@ -218,13 +212,13 @@
           [PreviewDialog (assoc (utils/restructure bucket-name object workspace-namespace)
                            :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href (str "gs://" bucket-name "/" object)
+             :class "ltr-marked"
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (lrm-pad
            (if (= bucket-name workspace-bucket)
              object
-             (if link-label (str link-label) (str "gs://" bucket-name "/" object))))]]))})
+             (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
 
 (react/defc- DOSFilePreviewLink
   {:render
@@ -237,10 +231,11 @@
                               :dos-uri dos-uri
                               :dismiss #(swap! state dissoc :showing-preview?))])
         [:a {:href dos-uri
+             :class "ltr-marked"
              :onClick (fn [e]
                         (.preventDefault e)
                         (swap! state assoc :showing-preview? true))}
-         (lrm-pad (if link-label (str link-label) dos-uri))]]))})
+         (if link-label (str link-label) dos-uri)]]))})
 
 (react/defc FilePreviewLink
   {:render
