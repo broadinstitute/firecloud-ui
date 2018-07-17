@@ -24,6 +24,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               |
               |task t {
               |  String inString
+              |  String inWorkspaceRef
+              |  String inThisRef
               |  Float inFloat
               |  Int inInt
               |  Boolean inBoolean
@@ -34,6 +36,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               |
               |  command {
               |    echo inString ${inString}
+              |    echo inWorkspaceRef ${inWorkspaceRef}
+              |    echo inThisRef ${inThisRef}
               |    echo inFloat ${inFloat}
               |    echo inInt ${inInt}
               |    echo inBoolean ${inBoolean}
@@ -53,6 +57,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
   val wdlInputs = ListMap(
     "w.t.inString" -> "\"test\"",
+    "w.t.inWorkspaceRef" -> """$workspace.hello""",
+    "w.t.inThisRef" -> """$this.hello""",
     "w.t.inFloat"-> "1.5",
     "w.t.inInt" -> "2",
     "w.t.inBoolean" -> "true",
