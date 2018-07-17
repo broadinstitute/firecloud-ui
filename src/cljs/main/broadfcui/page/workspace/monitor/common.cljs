@@ -81,6 +81,25 @@
           :data-test-id "status-icon" :data-test-value "unknown"}
    [icons/UnknownIcon {:size 12}]])
 
+(defn sort-order-sub-status [wf-statuses]
+  (cond
+    (contains? wf-statuses :Failed) 2
+    (contains? wf-statuses :Aborted) 3
+    (contains? wf-statuses :Succeeded) 4
+    :else (do (utils/log "Unknown submission status: " wf-statuses) 5))
+  )
+
+(defn sort-order-wf-status [status]
+  (cond
+    (contains? wf-running-statuses status) 1
+    (contains? wf-failure-statuses status) 3
+    (contains? wf-success-statuses status) 4
+    :else (do (utils/log "Unknown workflow status: " status) 5)))
+
+(defn sort-order-submission [sub-status wf-statuses]
+  (if (= "Done" sub-status)
+    (sort-order-sub-status wf-statuses)
+    (sort-order-wf-status sub-status)))
 
 (defn icon-for-wf-status [status]
   (cond
@@ -101,7 +120,9 @@
 (defn icon-for-submission [sub-status wf-statuses]
   (if (= "Done" sub-status)
     (icon-for-sub-status wf-statuses)
-    (icon-for-wf-status sub-status)))(defn icon-for-project-status [project-status]
+    (icon-for-wf-status sub-status)))
+
+(defn icon-for-project-status [project-status]
   (cond
     (= project-status "Error") (render-failure-icon)
     (= project-status "Ready") (render-success-icon)
