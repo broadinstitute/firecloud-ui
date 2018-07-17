@@ -55,10 +55,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               |}
               |""".stripMargin
 
-  val wdlInputs = ListMap(
+  val wdlInputsBase = ListMap(
     "w.t.inString" -> "\"test\"",
-    "w.t.inWorkspaceRef" -> """$workspace.hello""",
-    "w.t.inThisRef" -> """$this.hello""",
     "w.t.inFloat"-> "1.5",
     "w.t.inInt" -> "2",
     "w.t.inBoolean" -> "true",
@@ -67,6 +65,19 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     "w.t.inStringArray2" -> """["say \"hi\"!"]""",
     "w.t.inStringMap" -> """{"foo":"bar"}"""
   )
+
+  val refInputs = ListMap(
+    "w.t.inWorkspaceRef" -> """workspace.hello""",
+    "w.t.inThisRef" -> """this.hello"""
+  )
+
+  val refInputsJsonFormat = ListMap(
+    "w.t.inWorkspaceRef" -> """$workspace.hello""",
+    "w.t.inThisRef" -> """$this.hello"""
+  )
+
+  val unmatchedVariables = ListMap("unmatched.variable.name" -> "\"surprise!\"")
+
 
   "input/output auto-suggest" - {
     "stays current with selected root entity type" in {
@@ -131,7 +142,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     "populates connection inputs" in {
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
+
       withCleanBillingProject(user) { projectName =>
+        // Create a method
         val methodName = uuidWithPrefix("test_JSON_download")
         val method = Method(
           methodName = methodName,
@@ -143,7 +156,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
           wdl)
         api.methods.createMethod(method.creationAttributes)
         register cleanUp api.methods.redact(method)
+
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          // Create method config
           val configName = s"test_JSON_populate_config_$workspaceName"
           api.methodConfigurations.createMethodConfigInWorkspace(
             projectName, workspaceName, method,
@@ -154,18 +169,26 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
           withWebDriver(downloadDir) { implicit driver =>
             withSignIn(user) { _ =>
-
+              // Go to method config page
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
 
+              // We should not be in edit mode
               configPage.isEditing shouldBe false
-              wdlInputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              configPage.editMethodConfig(None, None, None, Option(wdlInputs), None)
+              val inputs = wdlInputsBase ++ refInputs
 
+              // All the input fields should be empty
+              inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
+
+              // Add values to the input fields
+              configPage.editMethodConfig(None, None, None, Option(inputs), None)
+
+              // Download the inputs
               val inputsFile = configPage.downloadInputsJson(downloadDir, "inputs.json")
-              val inputsList = Source.fromFile(inputsFile).mkString
 
-              inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,"w.t.inInt":2}"""
+              // Check the downloaded file contains the right values
+              val inputsList = Source.fromFile(inputsFile).mkString
+              inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inThisRef":"$this.hello","w.t.inWorkspaceRef":"$workspace.hello","w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,"w.t.inInt":2}"""
             }
           }
         }
@@ -178,6 +201,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     "populates connection inputs" in {
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
+
+      // Create a method
       withCleanBillingProject(user) { projectName =>
         val methodName = uuidWithPrefix("test_JSON_populate")
         val method = Method(
@@ -190,7 +215,9 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
           wdl)
         api.methods.createMethod(method.creationAttributes)
         register cleanUp api.methods.redact(method)
+
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          // Create method config
           val configName = s"test_JSON_populate_config_$workspaceName"
           api.methodConfigurations.createMethodConfigInWorkspace(
             projectName, workspaceName, method,
@@ -199,24 +226,30 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
           withWebDriver { implicit driver =>
             withSignIn(user) { _ =>
-              val unmatchedVariables = ListMap(
-                "unmatched.variable.name" -> "\"surprise!\""
-              )
-
+              // Go to method config page
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
 
+              // We should not be in edit mode
               configPage.isEditing shouldBe false
-              wdlInputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              val inputs = wdlInputs ++ unmatchedVariables map {
-                case (name, json) => (name, json)
-              }
-              configPage.populateInputsFromJson(generateInputsJson(inputs))
+              val inputs = wdlInputsBase ++ refInputsJsonFormat
 
+              // All the input fields should be empty
+              inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
+
+              // Populate input fields from a json containing all the field values and some fields that don't exist
+              configPage.populateInputsFromJson(generateInputsJson(inputs ++ unmatchedVariables))
+
+              // We should have been automatically switched to edit mode
               configPage.isEditing shouldBe true
-              wdlInputs foreach {
+
+              // for each input, (not included the fields that didn't exist), we should have the correct value
+              // for referential inputs ($this._ or $workspace._), it should have removed the "$"
+              inputs foreach {
                 case (name, expected) =>
-                  configPage.readFieldValue(name) shouldBe expected
+                  if (refInputsJsonFormat.contains(name)) {
+                    configPage.readFieldValue(name) shouldBe expected.replaceFirst("$", "")
+                  } else configPage.readFieldValue(name) shouldBe expected
               }
             }
           }
