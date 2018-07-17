@@ -124,7 +124,7 @@
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (call (assoc arg-map
-            :url (str "http://localhost:8081" service-prefix path)
+            :url (str (config/bond-url) service-prefix path)
             :headers (merge (@get-bearer-token-header)
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]

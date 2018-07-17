@@ -27,8 +27,10 @@
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 (defn get-fence-link-href []
-  (str "https://dcp.bionimbus.org" #_(get @config/config "fenceUrlRoot")
-       "/user/oauth2/authorize?response_type=code&client_id=cYc6V4KB7QVFFB352ccdGSvaRqNTuwZjES5QJ0Ro&scope=openid+google_credentials&redirect_uri="
+  (str (config/fence-url)
+       "/user/oauth2/authorize?response_type=code&client_id="
+       (config/fence-client-id)
+       "&scope=openid+google_credentials&redirect_uri="
        (js/encodeURIComponent
         (let [loc js/window.location]
           (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))))
