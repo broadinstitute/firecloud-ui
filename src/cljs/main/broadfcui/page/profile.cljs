@@ -76,7 +76,7 @@
                                 (links/create-external {:href (get-nih-link-href)} "Log-In to NIH to re-link your account")]]]
            (map
             (fn [whitelist]
-              [(str (:name whitelist) " Authorization:") [:div {:style {:flex "0 0 auto"}}
+              [(str (:name whitelist) " Authorization") [:div {:style {:flex "0 0 auto"}}
                                                           (if (:authorized whitelist)
                                                             [:span {:style {:color (:state-success style/colors)}} "Authorized"]
                                                             [:span {:style {:color (:text-light style/colors)}}
@@ -125,17 +125,17 @@
 (react/defc- FenceLink
   {:render
    (fn [{:keys [state]}]
-     (let [status (:fence-status @state)
-           date-issued (.getTime (js/Date. (:issued_at status)))
+     (let [{:keys [fence-status error-message pending-fence-token]} @state
+           date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
-           username (:username status)]
+           username (:username fence-status)]
        [:div {}
         [:h4 {} "Framework Services by University of Chicago"]
         (cond
-          (:error-message @state)
-          (style/create-server-error-message (:error-message @state))
-          (:pending-fence-token @state)
+          error-message
+          (style/create-server-error-message error-message)
+          pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
           (links/create-external {:href (get-fence-link-href) :target "_self"}
