@@ -19,6 +19,50 @@ import scala.io.Source
 class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixtures
   with MethodFixtures with BillingFixtures with TestReporterFixture {
 
+  val wdl = """
+              |workflow w {
+              |  call t
+              |}
+              |
+              |task t {
+              |  String inString
+              |  Float inFloat
+              |  Int inInt
+              |  Boolean inBoolean
+              |  File inFile
+              |  Array[String] inStringArray
+              |  Array[String] inStringArray2
+              |  Map[String,String] inStringMap
+              |
+              |  command {
+              |    echo inString ${inString}
+              |    echo inFloat ${inFloat}
+              |    echo inInt ${inInt}
+              |    echo inBoolean ${inBoolean}
+              |    echo inFile ${inFile}
+              |    echo inStringArray ${sep=" " inStringArray}
+              |    echo inStringArray2 ${sep=" " inStringArray2}
+              |    echo inStringMap ${write_map(inStringMap)}
+              |  }
+              |  output {
+              |    String out = stdout()
+              |  }
+              |  runtime {
+              |    docker: "ubuntu"
+              |  }
+              |}
+              |""".stripMargin
+
+  val wdlInputs = ListMap(
+    "w.t.inString" -> "\"test\"",
+    "w.t.inFloat"-> "1.5",
+    "w.t.inInt" -> "2",
+    "w.t.inBoolean" -> "true",
+    "w.t.inFile" -> "\"gs://foo/bar\"",
+    "w.t.inStringArray" -> """["foo","bar"]""",
+    "w.t.inStringArray2" -> """["say \"hi\"!"]""",
+    "w.t.inStringMap" -> """{"foo":"bar"}"""
+  )
 
   "input/output auto-suggest" - {
     "stays current with selected root entity type" in {
@@ -92,39 +136,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
           rootEntityType = "sample",
           synopsis = "",
           documentation = "",
-          payload = """
-                      |workflow w {
-                      |  call t
-                      |}
-                      |
-                      |task t {
-                      |  String inString
-                      |  Float inFloat
-                      |  Int inInt
-                      |  Boolean inBoolean
-                      |  File inFile
-                      |  Array[String] inStringArray
-                      |  Array[String] inStringArray2
-                      |  Map[String,String] inStringMap
-                      |
-                      |  command {
-                      |    echo inString ${inString}
-                      |    echo inFloat ${inFloat}
-                      |    echo inInt ${inInt}
-                      |    echo inBoolean ${inBoolean}
-                      |    echo inFile ${inFile}
-                      |    echo inStringArray ${sep=" " inStringArray}
-                      |    echo inStringArray2 ${sep=" " inStringArray2}
-                      |    echo inStringMap ${write_map(inStringMap)}
-                      |  }
-                      |  output {
-                      |    String out = stdout()
-                      |  }
-                      |  runtime {
-                      |    docker: "ubuntu"
-                      |  }
-                      |}
-                      |""".stripMargin)
+          wdl)
         api.methods.createMethod(method.creationAttributes)
         register cleanUp api.methods.redact(method)
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
@@ -138,26 +150,15 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
           withWebDriver(downloadDir) { implicit driver =>
             withSignIn(user) { _ =>
-              val inputs = ListMap(
-                "w.t.inString" -> "\"test\"",
-                "w.t.inFloat"-> "1.5",
-                "w.t.inInt" -> "2",
-                "w.t.inBoolean" -> "true",
-                "w.t.inFile" -> "\"gs://foo/bar\"",
-                "w.t.inStringArray" -> """["foo","bar"]""",
-                "w.t.inStringArray2" -> """["say \"hi\"!"]""",
-                "w.t.inStringMap" -> """{"foo":"bar"}"""
-              )
 
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
 
               configPage.isEditing shouldBe false
+              wdlInputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
+              configPage.editMethodConfig(None, None, None, Option(wdlInputs), None)
 
-              configPage.editMethodConfig(None, None, None, Option(inputs), None)
-
-              val inputsFile = configPage.downloadInputsJson(Option(downloadDir), "inputs.json").get
+              val inputsFile = configPage.downloadInputsJson(downloadDir, "inputs.json").get
               val inputsList = Source.fromFile(inputsFile).mkString
 
               inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,"w.t.inInt":2}"""
@@ -182,39 +183,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
           rootEntityType = "sample",
           synopsis = "",
           documentation = "",
-          payload = """
-                      |workflow w {
-                      |  call t
-                      |}
-                      |
-                      |task t {
-                      |  String inString
-                      |  Float inFloat
-                      |  Int inInt
-                      |  Boolean inBoolean
-                      |  File inFile
-                      |  Array[String] inStringArray
-                      |  Array[String] inStringArray2
-                      |  Map[String,String] inStringMap
-                      |
-                      |  command {
-                      |    echo inString ${inString}
-                      |    echo inFloat ${inFloat}
-                      |    echo inInt ${inInt}
-                      |    echo inBoolean ${inBoolean}
-                      |    echo inFile ${inFile}
-                      |    echo inStringArray ${sep=" " inStringArray}
-                      |    echo inStringArray2 ${sep=" " inStringArray2}
-                      |    echo inStringMap ${write_map(inStringMap)}
-                      |  }
-                      |  output {
-                      |    String out = stdout()
-                      |  }
-                      |  runtime {
-                      |    docker: "ubuntu"
-                      |  }
-                      |}
-                      |""".stripMargin)
+          wdl)
         api.methods.createMethod(method.creationAttributes)
         register cleanUp api.methods.redact(method)
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
@@ -226,16 +195,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
           withWebDriver { implicit driver =>
             withSignIn(user) { _ =>
-              val variables = ListMap(
-                "w.t.inString" -> "\"test\"",
-                "w.t.inFloat"-> "1.5",
-                "w.t.inInt" -> "2",
-                "w.t.inBoolean" -> "true",
-                "w.t.inFile" -> "\"gs://foo/bar\"",
-                "w.t.inStringArray" -> """["foo","bar"]""",
-                "w.t.inStringArray2" -> """["say \"hi\"!"]""",
-                "w.t.inStringMap" -> """{"foo":"bar"}"""
-              )
               val unmatchedVariables = ListMap(
                 "unmatched.variable.name" -> "\"surprise!\""
               )
@@ -243,15 +202,15 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
 
               configPage.isEditing shouldBe false
-              variables.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
+              wdlInputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              val inputs = variables ++ unmatchedVariables map {
+              val inputs = wdlInputs ++ unmatchedVariables map {
                 case (name, json) => (name, json)
               }
               configPage.populateInputsFromJson(generateInputsJson(inputs))
 
               configPage.isEditing shouldBe true
-              variables foreach {
+              wdlInputs foreach {
                 case (name, expected) =>
                   configPage.readFieldValue(name) shouldBe expected
               }
