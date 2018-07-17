@@ -57,7 +57,7 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadFile(downloadPath: Option[String] = None, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
+  def downloadFile(downloadPath: String, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 10 seconds for file exist
@@ -90,7 +90,7 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     }
 
     for {
-      path <- downloadPath
-    } yield archiveDownloadedFile(s"$path/$fileName")
+      hello <- Option("why does this work???")
+    } yield archiveDownloadedFile(s"$downloadPath/$fileName")
   }
 }
