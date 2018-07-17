@@ -159,7 +159,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     modal.importFile(file.getAbsolutePath)
   }
 
-  def downloadInputsJson(downloadPath: String, fileName: String): Option[String] = {
+  def downloadInputsJson(downloadPath: String, fileName: String): String = {
     downloadFile(downloadPath, fileName, Left(downloadInputsJsonLink))
   }
 

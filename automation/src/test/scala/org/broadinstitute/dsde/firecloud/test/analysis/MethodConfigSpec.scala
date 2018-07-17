@@ -1,8 +1,6 @@
 package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.io.{File, PrintWriter}
-import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermission
 
 import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
@@ -158,7 +156,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
               configPage.editMethodConfig(None, None, None, Option(wdlInputs), None)
 
-              val inputsFile = configPage.downloadInputsJson(downloadDir, "inputs.json").get
+              val inputsFile = configPage.downloadInputsJson(downloadDir, "inputs.json")
               val inputsList = Source.fromFile(inputsFile).mkString
 
               inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,"w.t.inInt":2}"""
