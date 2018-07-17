@@ -138,7 +138,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
               val columns = List("participant_id", "foo")
               dataTab.importFile(generateMetadataFile(columns))
               dataTab.dataTable.hideColumn("participant_id")
-              val metadataFile = dataTab.downloadMetadata(Option(downloadDir)).get
+              val metadataFile = dataTab.downloadMetadata(downloadDir).get
               eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(columns) }
             }
           }
@@ -180,14 +180,14 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
           importColumns foreach { l => dataTab.importFile(generateMetadataFile(l)) }
 
           eventually { dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns }
-          val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+          val metadataFile = dataTab.downloadMetadata(downloadPath).get
           eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns) }
         }
 
         withSignIn(owner) { _ =>
           val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
           eventually { dataTab.dataTable.readColumnHeaders shouldEqual expectedColumns }
-          val metadataFile = dataTab.downloadMetadata(Option(downloadPath)).get
+          val metadataFile = dataTab.downloadMetadata(downloadPath).get
           eventually { readHeadersFromTSV(metadataFile) shouldEqual columnsToFileHeaders(expectedColumns) }
         }
       }

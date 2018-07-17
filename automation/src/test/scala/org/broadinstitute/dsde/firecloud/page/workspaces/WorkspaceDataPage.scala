@@ -39,7 +39,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
     importFile(file.getAbsolutePath)
   }
 
-  def downloadMetadata(downloadPath: Option[String]): Option[String] = {
+  def downloadMetadata(downloadPath: String): Option[String] = {
     val entityType = find(CssSelectorQuery(downloadMetadataButton.query.queryString)).get.attribute("data-entity-type").get
     downloadFile(downloadPath, entityType + ".txt", Right(form))
   }
