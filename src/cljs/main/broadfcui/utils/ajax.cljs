@@ -1,9 +1,9 @@
 (ns broadfcui.utils.ajax
   (:require
-    [clojure.string :as string]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [clojure.string :as string]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defonce get-bearer-token-header (atom nil))
@@ -38,9 +38,9 @@
                                      :get-parsed-response
                                      (fn [& [keywordize-keys? throw-on-error?]]
                                        (utils/parse-json-string
-                                         (.-responseText xhr)
-                                         (if (some? keywordize-keys?) keywordize-keys? true)
-                                         (if (some? throw-on-error?) throw-on-error? true)))})))]
+                                        (.-responseText xhr)
+                                        (if (some? keywordize-keys?) keywordize-keys? true)
+                                        (if (some? throw-on-error?) throw-on-error? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (.addEventListener xhr "loadend" call-on-done)
@@ -54,12 +54,12 @@
 
 (defn get-google-bucket-file [filename on-done]
   (call
-    {:url (config/google-bucket-url filename)
-     :on-done (fn [{:keys [raw-response]}]
-                ;; Fails gracefully if file is missing or malformed
-                (some->> (utils/parse-json-string raw-response true false)
-                         first
-                         on-done))}))
+   {:url (config/google-bucket-url filename)
+    :on-done (fn [{:keys [raw-response]}]
+               ;; Fails gracefully if file is missing or malformed
+               (some->> (utils/parse-json-string raw-response true false)
+                        first
+                        on-done))}))
 
 
 (defonce server-down? (atom false))
@@ -88,7 +88,7 @@
               (reset! server-down? false)))))
 
 (defn get-exponential-backoff-interval [attempt]
-  (* (.pow js/Math 2 attempt) 1000)) ;; backoff interval in millis
+  (* (.pow js/Math 2 attempt) 1000))                        ;; backoff interval in millis
 
 (defn- call-service [url-root path arg-map maybe-nil-service-prefix]
   (let [service-prefix (or maybe-nil-service-prefix "/api")]
