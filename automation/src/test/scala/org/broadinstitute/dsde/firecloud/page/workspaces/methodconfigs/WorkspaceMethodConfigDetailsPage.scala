@@ -160,7 +160,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def downloadInputsJson(downloadPath: Option[String], fileName: String): Option[String] = {
-    downloadFile(downloadPath, fileName, downloadInputsJsonLink, None)
+    downloadFile(downloadPath, fileName, Left(downloadInputsJsonLink))
   }
 
 

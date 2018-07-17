@@ -57,12 +57,11 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadFile(downloadPath: Option[String] = None, fileName: String, downloadClickable: Clickable, inputForm: Option[CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
+  def downloadFile(downloadPath: Option[String] = None, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): Option[String] = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 10 seconds for file exist
       val f = new File(sourcePath)
-      println("FILE: " + f.getAbsoluteFile)
       eventually {
         assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
       }
@@ -82,14 +81,11 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     // await condition (windowHandles.size == 1, 30)
     // .submit call takess care waiting for a new window
 
-    inputForm match {
-      case None => {
-        println("download link click")
-        downloadClickable.doClick()
-      }
-      case Some(form) => {
-        logger.info(s"form: ${form.queryString}")
-        find(form).get.underlying.submit()
+    downloadThing match {
+      case Left(clickable) => clickable.doClick()
+      case Right(query) => {
+        logger.info(s"form: ${query.queryString}")
+        find(query).get.underlying.submit()
       }
     }
 
