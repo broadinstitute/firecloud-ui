@@ -84,7 +84,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
       withCleanBillingProject(user) { projectName =>
-        println("in billing project")
         val methodName = uuidWithPrefix("test_JSON_download")
         val method = Method(
           methodName = methodName,
@@ -127,24 +126,18 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                       |}
                       |""".stripMargin)
         api.methods.createMethod(method.creationAttributes)
-        println("created Method")
         register cleanUp api.methods.redact(method)
-        println("registered a method")
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
-          println("in a workspace")
           val configName = s"test_JSON_populate_config_$workspaceName"
           api.methodConfigurations.createMethodConfigInWorkspace(
             projectName, workspaceName, method,
             projectName, configName, method.snapshotId,
             Map.empty, Map.empty, "sample")
-          println("created a method config")
 
           val downloadDir = makeTempDownloadDirectory()
 
           withWebDriver(downloadDir) { implicit driver =>
-            println("with web driver")
             withSignIn(user) { _ =>
-              println("with sign in")
               val inputs = ListMap(
                 "w.t.inString" -> "\"test\"",
                 "w.t.inFloat"-> "1.5",
@@ -157,15 +150,10 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               )
 
               val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
-              println("created a config page")
 
               configPage.isEditing shouldBe false
 
-              println("not in edit mode")
-
               inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
-
-              println("all inputs are empty")
 
               configPage.editMethodConfig(None, None, None, Option(inputs), None)
 
@@ -173,9 +161,6 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               val inputsList = Source.fromFile(inputsFile).mkString
 
               inputsList shouldBe """{"w.t.inFloat":1.5,"w.t.inStringArray2":["say \"hi\"!"],"w.t.inStringMap":{"foo":"bar"},"w.t.inString":"test","w.t.inFile":"gs://foo/bar","w.t.inStringArray":["foo","bar"],"w.t.inBoolean":true,"w.t.inInt":2}"""
-
-              println("INPUTS FILE " + inputsList)
-
             }
           }
         }
