@@ -69,8 +69,6 @@ launchSubmission() {
         exit 1
     fi
 
-    echo "Note: If there is an error message below (with 'curl: (22)' and '404 Not Found') then that user needs to re-link to NIH."
-
     # check if $9 is set for 'expression'
     if [ -z ${9+x} ] ; then
         curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed
