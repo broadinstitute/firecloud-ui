@@ -271,10 +271,11 @@
                       (swap! state assoc :server-error (get-parsed-response false))))})))})
 
 (react/defc- ClusterErrorViewer
+  ; Note cluster errors are only returned on "get cluster" requests to Leo, not "list cluster" requests.
+  ; Therefore we need issue an additional ajax call to Leo before we can display the errors.
   {:component-did-mount
    (fn [{:keys [this]}]
      (this :-get-cluster-details))
-
    :render
    (fn [{:keys [state this props]}]
      (let [{:keys [cluster-to-view-details server-error]} @state
@@ -295,7 +296,6 @@
                           :fontSize "90%" :maxHeight 206
                           :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
             (:errorMessage (first (:errors cluster-to-view-details)))]])}]))
-
    :-get-cluster-details
    (fn [{:keys [props state]}]
      (let [{:keys [cluster-to-view]} props]
@@ -355,7 +355,7 @@
                    :render
                    (fn [cluster]
                      [:div {:key (when clusters (str (gensym))) ;this makes the spinners sync
-                      :style {:height table-style/table-icon-size}}
+                            :style {:height table-style/table-icon-size}}
                       (this :-render-cluster-status cluster)])}
                   (table-utils/date-column {:column-data :createdDate :style {}})
                   {:header "Master Machine Type" :initial-width 150
@@ -501,7 +501,7 @@
                         (when-not (= (:clusters @state) filtered-clusters)
                           (swap! state assoc :server-response {:clusters filtered-clusters}))
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                        ; Note this is still done for Running clusters because they may be auto-paused by Leo.
+                        ; Note the refresh is still done for Running clusters because they may be auto-paused by Leo.
                         (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting" "Running"])
                           (js/setTimeout #(this :-get-clusters-list) 10000))
                         ; If there are running clusters, call the /setCookie endpoint immediately.
