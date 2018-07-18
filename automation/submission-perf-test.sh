@@ -35,7 +35,7 @@ callbackToNIH() {
         echo "This user needs its refresh token refreshed"
         exit 1
         fi
-      curl -X POST --header "Content-Type: application/json" --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" -d "{"jwt":"eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s"}" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/nih/callback"
+      curl -X POST --header "Content-Type: application/json" --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" -d "{\"jwt\":\"eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s\"}" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/nih/callback"
     }
 launchSubmission() {
     user=$1
