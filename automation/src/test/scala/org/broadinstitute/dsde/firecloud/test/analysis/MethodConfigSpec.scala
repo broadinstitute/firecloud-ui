@@ -72,8 +72,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   )
 
   val refInputsJsonFormat = ListMap(
-    "w.t.inWorkspaceRef" -> """$workspace.hello""",
-    "w.t.inThisRef" -> """$this.hello"""
+    "w.t.inWorkspaceRef" -> "$workspace.hello",
+    "w.t.inThisRef" -> "$this.hello"
   )
 
   val unmatchedVariables = ListMap("unmatched.variable.name" -> "\"surprise!\"")
@@ -233,13 +233,19 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               // We should not be in edit mode
               configPage.isEditing shouldBe false
 
+              println(s"WDLINPUTSBASE: $wdlInputsBase")
               val inputs = wdlInputsBase ++ refInputsJsonFormat
-
+              println(s"INPUTS: $inputs")
               // All the input fields should be empty
               inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
+              val inputsWithUnmatched = inputs ++ unmatchedVariables
+              println(s"INPUTSWITHUNMATCHED: $inputsWithUnmatched")
+              val inputsJson = generateInputsJson(inputsWithUnmatched)
+              println(s"INPUTSJSON $inputsJson")
+
               // Populate input fields from a json containing all the field values and some fields that don't exist
-              configPage.populateInputsFromJson(generateInputsJson(inputs ++ unmatchedVariables))
+              configPage.populateInputsFromJson(inputsJson)
 
               // We should have been automatically switched to edit mode
               configPage.isEditing shouldBe true
@@ -262,8 +268,15 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   private def generateInputsJson(inputs: Map[String, String]): File = {
     val file = File.createTempFile("MethodConfigSpec_", "_inputs.json")
     val writer = new PrintWriter(file)
-    val rows = inputs map { case (k, v) => s""""$k": $v""" }
+    val rows = inputs map { case (k, v) => {
+        if (v.startsWith("$"))
+          s""""$k": "${v.replaceFirst("$", "")}""""
+        else s""""$k": $v"""
+      }
+    }
+    println(s"ROWS: $rows")
     val fileContent = s"""{\n  ${rows.mkString(",\n  ")}\n}"""
+    println(s"FILECONTENT: $fileContent")
     writer.write(fileContent)
     writer.close()
     file

@@ -37,162 +37,162 @@ class AuthDomainGroupSpec extends FreeSpec with ParallelTestExecution with Match
 
   // ONE-GROUP AUTH DOMAIN TESTS
 
-  "A workspace with an authorization domain" - {
-    "with one group inside of it" - {
-
-      "can be created" in {
-        val user = UserPool.chooseAuthDomainUser
-        implicit val authToken: AuthToken = authTokenDefault
-        withGroup("AuthDomain", List(user.email)) { authDomainName =>
-          withCleanUp {
-            withCleanBillingProject(user) { projectName =>
-              withWebDriver { implicit driver =>
-                withSignIn(user) { listPage =>
-                  val workspaceName = "AuthDomainSpec_create_" + randomUuid
-                  register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
-                  val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName))
-
-                  eventually {
-                    workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      "can be cloned and retain the auth domain" taggedAs Tags.SmokeTest in {
-        val user = UserPool.chooseAuthDomainUser
-        implicit val authToken: AuthToken = authTokenDefault
-        withGroup("AuthDomain", List(user.email)) { authDomainName =>
-          withCleanBillingProject(defaultUser) { projectName =>
-            Orchestration.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
-            withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-              withCleanUp {
-                withWebDriver { implicit driver =>
-                  withSignIn(user) { listPage =>
-                    val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-
-                    val cloneWorkspaceName = workspaceName + "_clone"
-                    val cloneModal = summaryPage.clickCloneButton()
-                    eventually {
-                      cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
-                    }
-
-                    register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authTokenDefault)
-
-                    val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
-                    eventually {
-                      cloneSummaryPage.validateWorkspace shouldEqual true
-                    }
-                    eventually {
-                      cloneSummaryPage.readAuthDomainGroups should include(authDomainName)
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      "when the user is not inside of the group" - {
-        "when the workspace is shared with them" - {
-
-          "can be seen but is not accessible" in {
-            val user = UserPool.chooseStudent
-            implicit val authToken: AuthToken = authTokenDefault
-            withGroup("AuthDomain") { authDomainName =>
-              withCleanBillingProject(defaultUser) { projectName =>
-                withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  withWebDriver { implicit driver =>
-                    withSignIn(user) { workspaceListPage =>
-                      workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
-                      eventually { workspaceListPage.showsRequestAccessModal shouldEqual true }
-                      workspaceListPage.validateLocation()
-                      // TODO: add assertions for the new "request access" modal
-                      // TODO: end test somewhere we can access the sign out button
-
-                      // close "request access" Modal
-                      workspaceListPage.closeModal()
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        "when the workspace is not shared with them" - {
-          "cannot be seen and is not accessible" in {
-            val user = UserPool.chooseStudent
-            implicit val authToken: AuthToken = authTokenDefault
-            withGroup("AuthDomain") { authDomainName =>
-              withCleanBillingProject(defaultUser) { projectName =>
-                withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
-                  withWebDriver { implicit driver =>
-                    withSignIn(user) { workspaceListPage =>
-                      eventually {
-                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
-                      }
-
-                      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-                      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      "when the user is inside of the group" - {
-        "when the workspace is shared with them" - {
-
-          "can be seen and is accessible" in {
-            val user = UserPool.chooseAuthDomainUser
-            implicit val authToken: AuthToken = authTokenDefault
-            withGroup("AuthDomain", List(user.email)) { authDomainName =>
-              withCleanBillingProject(defaultUser) { projectName =>
-                withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-                  withWebDriver { implicit driver =>
-                    withSignIn(user) { listPage =>
-                      val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
-                      eventually {
-                        summaryPage.readAuthDomainGroups should include(authDomainName)
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        "when the workspace is not shared with them" - {
-          "cannot be seen and is not accessible" in {
-            val user = UserPool.chooseAuthDomainUser
-            implicit val authToken: AuthToken = authTokenDefault
-            withGroup("AuthDomain", List(user.email)) { authDomainName =>
-              withCleanBillingProject(defaultUser) { projectName =>
-                withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
-                  withWebDriver { implicit driver =>
-                    withSignIn(user) { workspaceListPage =>
-                      eventually {
-                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
-                      }
-
-                      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
-                      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+//  "A workspace with an authorization domain" - {
+//    "with one group inside of it" - {
+//
+//      "can be created" in {
+//        val user = UserPool.chooseAuthDomainUser
+//        implicit val authToken: AuthToken = authTokenDefault
+//        withGroup("AuthDomain", List(user.email)) { authDomainName =>
+//          withCleanUp {
+//            withCleanBillingProject(user) { projectName =>
+//              withWebDriver { implicit driver =>
+//                withSignIn(user) { listPage =>
+//                  val workspaceName = "AuthDomainSpec_create_" + randomUuid
+//                  register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
+//                  val workspaceSummaryPage = listPage.createWorkspace(projectName, workspaceName, Set(authDomainName))
+//
+//                  eventually {
+//                    workspaceSummaryPage.readAuthDomainGroups should include(authDomainName)
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//
+//      "can be cloned and retain the auth domain" taggedAs Tags.SmokeTest in {
+//        val user = UserPool.chooseAuthDomainUser
+//        implicit val authToken: AuthToken = authTokenDefault
+//        withGroup("AuthDomain", List(user.email)) { authDomainName =>
+//          withCleanBillingProject(defaultUser) { projectName =>
+//            Orchestration.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.User)
+//            withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+//              withCleanUp {
+//                withWebDriver { implicit driver =>
+//                  withSignIn(user) { listPage =>
+//                    val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+//
+//                    val cloneWorkspaceName = workspaceName + "_clone"
+//                    val cloneModal = summaryPage.clickCloneButton()
+//                    eventually {
+//                      cloneModal.readLockedAuthDomainGroups() should contain(authDomainName)
+//                    }
+//
+//                    register cleanUp api.workspaces.delete(projectName, cloneWorkspaceName)(authTokenDefault)
+//
+//                    val cloneSummaryPage = cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+//                    eventually {
+//                      cloneSummaryPage.validateWorkspace shouldEqual true
+//                    }
+//                    eventually {
+//                      cloneSummaryPage.readAuthDomainGroups should include(authDomainName)
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//
+//      "when the user is not inside of the group" - {
+//        "when the workspace is shared with them" - {
+//
+//          "can be seen but is not accessible" in {
+//            val user = UserPool.chooseStudent
+//            implicit val authToken: AuthToken = authTokenDefault
+//            withGroup("AuthDomain") { authDomainName =>
+//              withCleanBillingProject(defaultUser) { projectName =>
+//                withWorkspace(projectName, "AuthDomainSpec_reject", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+//                  withWebDriver { implicit driver =>
+//                    withSignIn(user) { workspaceListPage =>
+//                      workspaceListPage.clickWorkspaceLink(projectName, workspaceName)
+//                      eventually { workspaceListPage.showsRequestAccessModal shouldEqual true }
+//                      workspaceListPage.validateLocation()
+//                      // TODO: add assertions for the new "request access" modal
+//                      // TODO: end test somewhere we can access the sign out button
+//
+//                      // close "request access" Modal
+//                      workspaceListPage.closeModal()
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//        "when the workspace is not shared with them" - {
+//          "cannot be seen and is not accessible" in {
+//            val user = UserPool.chooseStudent
+//            implicit val authToken: AuthToken = authTokenDefault
+//            withGroup("AuthDomain") { authDomainName =>
+//              withCleanBillingProject(defaultUser) { projectName =>
+//                withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
+//                  withWebDriver { implicit driver =>
+//                    withSignIn(user) { workspaceListPage =>
+//                      eventually {
+//                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+//                      }
+//
+//                      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+//                      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//
+//      "when the user is inside of the group" - {
+//        "when the workspace is shared with them" - {
+//
+//          "can be seen and is accessible" in {
+//            val user = UserPool.chooseAuthDomainUser
+//            implicit val authToken: AuthToken = authTokenDefault
+//            withGroup("AuthDomain", List(user.email)) { authDomainName =>
+//              withCleanBillingProject(defaultUser) { projectName =>
+//                withWorkspace(projectName, "AuthDomainSpec_share", Set(authDomainName), List(AclEntry(user.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+//                  withWebDriver { implicit driver =>
+//                    withSignIn(user) { listPage =>
+//                      val summaryPage = listPage.enterWorkspace(projectName, workspaceName)
+//                      eventually {
+//                        summaryPage.readAuthDomainGroups should include(authDomainName)
+//                      }
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//        "when the workspace is not shared with them" - {
+//          "cannot be seen and is not accessible" in {
+//            val user = UserPool.chooseAuthDomainUser
+//            implicit val authToken: AuthToken = authTokenDefault
+//            withGroup("AuthDomain", List(user.email)) { authDomainName =>
+//              withCleanBillingProject(defaultUser) { projectName =>
+//                withWorkspace(projectName, "AuthDomainSpec", Set(authDomainName)) { workspaceName =>
+//                  withWebDriver { implicit driver =>
+//                    withSignIn(user) { workspaceListPage =>
+//                      eventually {
+//                        workspaceListPage.hasWorkspace(projectName, workspaceName) shouldEqual false
+//                      }
+//
+//                      val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName).open
+//                      checkWorkspaceFailure(workspaceSummaryPage, projectName, workspaceName)
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//  }
 
 }
