@@ -156,8 +156,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def populateInputsFromJson(file: File): Unit = {
     populateWithJsonLink.doClick()
     val modal = await ready new PopulateFromJsonModal
-    println(s"FILE: $file")
-    println(s"FILEABSOLUTEPATH: ${file.getAbsoluteFile}")
     modal.importFile(file.getAbsolutePath)
   }
 
