@@ -257,7 +257,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
                   if (refInputsJsonFormat.contains(name)) {
                     println(s"NAME: $name")
                     println(s"EXPECTED: $expected")
-                    val expectedStripped = expected.replaceFirst("$", "")
+                    val expectedStripped = expected.replace("$", "")
                     println(s"EXPECTSTRIPPED: $expectedStripped")
                     configPage.readFieldValue(name) shouldBe expectedStripped
                   } else configPage.readFieldValue(name) shouldBe expected
