@@ -37,6 +37,8 @@
    :move-left "fa-angle-double-left"
    :move-right "fa-angle-double-right"
    :new-window "fa-external-link"
+   :pause "fa-pause"
+   :play "fa-play"
    :public "fa-users"
    :publish "fa-upload"
    :refresh "fa-refresh"
