@@ -32,8 +32,8 @@ callbackToNIH() {
             exit 1
         fi
     curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'Authorization: Bearer $ACCESS_TOKEN" -d '{ \
-       "jwt": "eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s" \
-     }' 'https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/nih/callback'
+       "jwt": "eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s" \}
+      "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/nih/callback"
 }
 
 launchSubmission() {
@@ -63,13 +63,14 @@ launchSubmission() {
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
     # Verify that user does not need to refresh their token
-    if curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
+    if
+        curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep "requiresRefresh": true
     then
         echo "This user needs its refresh token refreshed"
         exit 1
     fi
 
-    # check if $9 is set for 'expression'
+    # check if $9 is set for expression
     if [ -z ${9+x} ] ; then
         curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed
     else
