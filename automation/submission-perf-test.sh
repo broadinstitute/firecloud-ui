@@ -25,7 +25,7 @@ callbackToNIH() {
     Launching calback to NIH for:
     user=$1
     "
-     ACCESS_TOKEN='docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"'
+     ACCESS_TOKEN="docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py $user $JSON_CREDS"
 
     # Verify that user does not need to refresh their token
         if
@@ -64,7 +64,7 @@ launchSubmission() {
         expression=$9
     "
 
-     ACCESS_TOKEN='docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"'
+     ACCESS_TOKEN="docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py  $user $JSON_CREDS"
 
     # Verify that user does not need to refresh their token
         if
