@@ -9,10 +9,12 @@ WORKING_DIR=${3:-$PWD}
 
 # Check if $ENV is not empty
 if [[ ! ${ENV} ]]; then
-    echo "ENV is empty. Run again \`sh submission-perf-test.sh <alpha or staging>\`"
+    echo
+    "ENV is empty. Run again sh submission-perf-test.sh <alpha or staging"
     exit 1
-else echo "Starting Perf test in $ENV"; fi
-
+else
+    echo "Starting Perf test in {$ENV}"
+fi
 
 JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.pem | jq '.data'`
 
@@ -21,20 +23,22 @@ callbackToNIH() {
 
     echo "
     Launching calback to NIH for:
-        user=$1
+    user=$1
     "
      ACCESS_TOKEN='docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"'
 
     # Verify that user does not need to refresh their token
-        if curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
+        if
+        curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep "requiresRefresh": true
         then
-            echo "This user needs its refresh token refreshed"
-            exit 1
+        echo "This user needs its refresh token refreshed"
+        exit 1
         fi
-    curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'Authorization: Bearer $ACCESS_TOKEN" -d '{ \
-       "jwt": "eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s" \}
-      "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/nih/callback"
-}
+      curl -X POST --header "Content-Type: application/json" --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" -d"
+        {\"jwt": "eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s"\}
+        "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/nih/callback"
+
+    }
 
 launchSubmission() {
     user=$1
@@ -60,23 +64,23 @@ launchSubmission() {
         expression=$9
     "
 
-    ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
+     ACCESS_TOKEN='docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"'
 
     # Verify that user does not need to refresh their token
-    if
+        if
         curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/refresh-token-status"  2>&1 | grep "requiresRefresh": true
-    then
+        then
         echo "This user needs its refresh token refreshed"
         exit 1
-    fi
+        fi
 
     # check if $9 is set for expression
     if [ -z ${9+x} ] ; then
-        curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed
+        curl -f "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed
     else
-        curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache,\"expression\":\"$expression\"}" --compressed
+        curl -f "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache,\"expression\":\"$expression\"}" --compressed
     fi
-}
+    }
 
 
 if [ $ENV = "alpha" ]; then
