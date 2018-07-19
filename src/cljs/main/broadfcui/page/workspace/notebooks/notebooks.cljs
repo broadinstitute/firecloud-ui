@@ -59,18 +59,16 @@
    (spinner)])
 
 (def pause-icon
-  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"}
-          :data-test-id "status-icon" :data-test-value "unknown"}
-   (icons/render-icon {} :pause)])
+  (icons/render-icon {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                              :width table-style/table-icon-size :height table-style/table-icon-size
+                              :borderRadius 3 :margin "-4px 4px 0 0"}
+                      :data-test-id "status-icon" :data-test-value "unknown"} :pause))
 
 (def play-icon
-  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"}
-          :data-test-id "status-icon" :data-test-value "unknown"}
-   (icons/render-icon {} :play)])
+  (icons/render-icon {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                              :width table-style/table-icon-size :height table-style/table-icon-size
+                              :borderRadius 3 :margin "-4px 4px 0 0"}
+                      :data-test-id "status-icon" :data-test-value "unknown"} :play))
 
 (defn create-inline-form-label [text]
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
@@ -290,7 +288,7 @@
          (react/create-element
           [:div {:style {:width 700}}
            (when-not cluster-to-view-details (blocker "Getting error details..."))
-           (when server-error [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}])
+           [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
            [:span {} (str "Cluster " (:clusterName cluster-to-view) " failed with message:")]
            [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                           :fontSize "90%" :maxHeight 206
@@ -432,19 +430,18 @@
         [:div {:style {:margin 10 :fontSize "88%"}}
          "Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail.
           This beta feature is under active development. See documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
-        (if server-error
-          [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
-          (if clusters
-            [NotebooksTable
-             (assoc props :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
-                                                                       :text "Create Cluster..." :style {:marginRight 7}
-                                                                       :onClick #(swap! state assoc :show-create-dialog? true)}]]
-                          :clusters clusters
-                          :reload-after-delete #(this :-get-clusters-list)
-                          :stop-cluster #(this :-stop-cluster %)
-                          :start-cluster #(this :-start-cluster %)
-                          )]
-            [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")]))]))
+        [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
+        (if clusters
+          [NotebooksTable
+           (assoc props :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
+                                                                     :text "Create Cluster..." :style {:marginRight 7}
+                                                                     :onClick #(swap! state assoc :show-create-dialog? true)}]]
+                        :clusters clusters
+                        :reload-after-delete #(this :-get-clusters-list)
+                        :stop-cluster #(this :-stop-cluster %)
+                        :start-cluster #(this :-start-cluster %)
+                        )]
+          [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-get-clusters-list)
@@ -511,27 +508,31 @@
 
    :-stop-cluster
    (fn [{:keys [props state this]} cluster]
-     ; update the cluster status to Stopping immediately before waiting for a server response
-     (this :-update-cluster-status cluster "Stopping")
-     (endpoints/call-ajax-leo
-      {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (this :-get-clusters-list)
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [{:keys [server-response]} @state
+           {:keys [clusters]} server-response]
+       ; update the cluster status to Stopping immediately before waiting for a server response
+       (this :-update-cluster-status cluster "Stopping")
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false) :clusters clusters})))})))
 
    :-start-cluster
    (fn [{:keys [props state this]} cluster]
-     ; update the cluster status to Starting immediately before waiting for a server response
-     (this :-update-cluster-status cluster "Starting")
-     (endpoints/call-ajax-leo
-      {:endpoint (endpoints/start-cluster (:googleProject cluster) (:clusterName cluster))
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (this :-get-clusters-list)
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [{:keys [server-response]} @state
+           {:keys [clusters]} server-response]
+       ; update the cluster status to Starting immediately before waiting for a server response
+       (this :-update-cluster-status cluster "Starting")
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/start-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false) :clusters clusters})))})))
 
    :-update-cluster-status
    (fn [{:keys [state]} cluster-to-update new-status]
