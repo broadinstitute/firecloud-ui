@@ -58,13 +58,17 @@
           :data-test-id "status-icon" :data-test-value "unknown"}
    (spinner)])
 
-(defn icon-for-cluster-status [status]
-  (case status
-    ("Deleted" "Error") (moncommon/render-failure-icon)
-    ("Creating" "Updating" "Deleting" "Stopping" "Starting") spinner-icon
-    "Running" (moncommon/render-success-icon)
-    "Stopped" nil  ;todo: add icon for Stopped status
-    (moncommon/render-unknown-icon)))
+(def pause-icon
+  (icons/render-icon {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                              :width table-style/table-icon-size :height table-style/table-icon-size
+                              :borderRadius 3 :margin "-4px 4px 0 0"}
+                      :data-test-id "status-icon" :data-test-value "unknown"} :pause))
+
+(def play-icon
+  (icons/render-icon {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                              :width table-style/table-icon-size :height table-style/table-icon-size
+                              :borderRadius 3 :margin "-4px 4px 0 0"}
+                      :data-test-id "status-icon" :data-test-value "unknown"} :play))
 
 (defn create-inline-form-label [text]
   [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
@@ -264,25 +268,52 @@
                       (do ((:dismiss props)) ((:reload-after-delete props))) ;if success, update the table?
                       (swap! state assoc :server-error (get-parsed-response false))))})))})
 
+(react/defc- ClusterErrorViewer
+  ; Note cluster errors are only returned on "get cluster" requests to Leo, not "list cluster" requests.
+  ; Therefore we need issue an additional ajax call to Leo before we can display the errors.
+  {:component-did-mount
+   (fn [{:keys [this]}]
+     (this :-get-cluster-details))
+   :render
+   (fn [{:keys [state this props]}]
+     (let [{:keys [cluster-to-view-details server-error]} @state
+           {:keys [cluster-to-view]} props]
+       [modals/OKCancelForm
+        {:header "Cluster Error"
+         :dismiss (:dismiss props)
+         :ok-button {:text "Done"
+                     :onClick (:dismiss props)}
+         :show-cancel? false
+         :content
+         (react/create-element
+          [:div {:style {:width 700}}
+           (when-not cluster-to-view-details (blocker "Getting error details..."))
+           [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
+           [:span {} (str "Cluster " (:clusterName cluster-to-view) " failed with message:")]
+           [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                          :fontSize "90%" :maxHeight 206
+                          :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+            (:errorMessage (first (:errors cluster-to-view-details)))]])}]))
+   :-get-cluster-details
+   (fn [{:keys [props state]}]
+     (let [{:keys [cluster-to-view]} props]
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/get-cluster-details (get-in props [:workspace-id :namespace]) (:clusterName cluster-to-view))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (swap! state assoc :cluster-to-view-details (get-parsed-response))
+                      (swap! state assoc :server-error (get-parsed-response false))))})))})
+
 (react/defc- NotebooksTable
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      (let [{:keys [show-error-dialog? errored-cluster-to-show]} @state
            {:keys [clusters toolbar-items]} props]
        [:div {}
         (when show-error-dialog?
-          [modals/OKCancelForm {:header "Cluster Error"
-                                :dismiss #(swap! state assoc :show-error-dialog? false)
-                                :ok-button {:text "Done"
-                                            :onClick #(swap! state assoc :show-error-dialog? false)}
-                                :show-cancel? false
-                                :content
-                                [:div {:style {:width 700}}
-                                 [:span {} (str "Cluster " (:clusterName errored-cluster-to-show) " failed with message:")]
-                                 [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
-                                                :fontSize "90%" :maxHeight 206
-                                                :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-                                  (:errorMessage (first (:errors errored-cluster-to-show)))]]}])
+          [ClusterErrorViewer (assoc props :dismiss #(swap! state dissoc :show-error-dialog? :errored-cluster-to-show)
+                                           :cluster-to-view (:errored-cluster-to-show @state))])
         (when (:show-delete-dialog? @state)
           [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-delete-dialog?)
                                        :cluster-to-delete (:cluster-to-delete @state))])
@@ -299,7 +330,7 @@
                    :as-text :clusterName :sort-by :clusterName
                    :render
                    (fn [cluster]
-                     (if (or (= (:status cluster) "Running") (= (:status cluster) "Error"))
+                     (if (or (= (:status cluster) "Running") (= (:status cluster) "Error") (= (:status cluster) "Stopped"))
                        (links/create-internal
                          {:data-test-id (str (:clusterName cluster) "-delete-button")
                           :id (:id props)
@@ -319,18 +350,11 @@
                          clusterName)))}
                   {:header "Status" :initial-width 150
                    :as-text :status
-                   :render (fn [cluster]
-                             (let [clusterNameStatusId (str (:clusterName cluster) "-status")]
-                               [:div {:key (when clusters (str (gensym))) ;this makes the spinners sync
-                                      :style {:height table-style/table-icon-size}}
-                                (icon-for-cluster-status (:status cluster))
-                                (if (= (:status cluster) "Error")
-                                  (links/create-internal
-                                    {:data-test-id clusterNameStatusId
-                                     :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                     :onClick #(swap! state assoc :show-error-dialog? true :errored-cluster-to-show cluster)}
-                                    "View error")
-                                  [:span {:data-test-id clusterNameStatusId} (:status cluster)])]))}
+                   :render
+                   (fn [cluster]
+                     [:div {:key (when clusters (str (gensym))) ;this makes the spinners sync
+                            :style {:height table-style/table-icon-size}}
+                      (this :-render-cluster-status cluster)])}
                   (table-utils/date-column {:column-data :createdDate :style {}})
                   {:header "Master Machine Type" :initial-width 150
                    :column-data (comp :masterMachineType :machineConfig)}
@@ -360,7 +384,34 @@
                                 (name (key label))
                                 (str (name (key label)) " | " (val label) "\n\n"))])
                            (into (sorted-map) labels))])}]}
-          :toolbar {:get-items (constantly toolbar-items)}}]]))})
+          :toolbar {:get-items (constantly toolbar-items)}}]]))
+
+   :-render-cluster-status
+   (fn [{:keys [state props]} cluster]
+     (let [{:keys [clusters]} props
+           clusterNameStatusId (str (:clusterName cluster) "-status")
+           stop-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
+                                                     :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                                     :onClick #((:stop-cluster props) cluster)}
+                                                    pause-icon)
+           start-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
+                                                      :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                                      :onClick #((:start-cluster props) cluster)}
+                                                     play-icon)
+           view-error-link (links/create-internal {:data-test-id clusterNameStatusId
+                                                   :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                                   :onClick #(swap! state assoc :show-error-dialog? true :errored-cluster-to-show cluster)}
+                                                  "View error")]
+       [:div {:key (when clusters (str (gensym))) ;this makes the spinners sync
+              :style {:height table-style/table-icon-size}}
+        (case (:status cluster)
+          "Error" [:div {:style {:display "inline-flex"}} (moncommon/render-failure-icon) view-error-link]
+          ("Creating" "Updating" "Deleting" "Starting" "Stopping") spinner-icon
+          "Running" stop-cluster-link
+          "Stopped" start-cluster-link
+          (moncommon/render-unknown-icon))
+        (when-not (= (:status cluster) "Error")
+          [:span {:data-test-id clusterNameStatusId} (:status cluster)])]))})
 
 (react/defc NotebooksContainer
   {:refresh
@@ -379,16 +430,18 @@
         [:div {:style {:margin 10 :fontSize "88%"}}
          "Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail.
           This beta feature is under active development. See documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
-        (if server-error
-          [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
-          (if clusters
-            [NotebooksTable
-             (assoc props :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
-                                                                       :text "Create Cluster..." :style {:marginRight 7}
-                                                                       :onClick #(swap! state assoc :show-create-dialog? true)}]]
-                          :clusters clusters
-                          :reload-after-delete #(this :-get-clusters-list))]
-            [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")]))]))
+        [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
+        (if clusters
+          [NotebooksTable
+           (assoc props :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
+                                                                     :text "Create Cluster..." :style {:marginRight 7}
+                                                                     :onClick #(swap! state assoc :show-create-dialog? true)}]]
+                        :clusters clusters
+                        :reload-after-delete #(this :-get-clusters-list)
+                        :stop-cluster #(this :-stop-cluster %)
+                        :start-cluster #(this :-start-cluster %)
+                        )]
+          [:div {:style {:textAlign "center"}} (spinner "Loading clusters...")])]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-get-clusters-list)
@@ -445,9 +498,48 @@
                         (when-not (= (:clusters @state) filtered-clusters)
                           (swap! state assoc :server-response {:clusters filtered-clusters}))
                         ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
+                        ; Note the refresh is still done for Running clusters because they may be auto-paused by Leo.
+                        (when (contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting" "Running"])
                           (js/setTimeout #(this :-get-clusters-list) 10000))
                         ; If there are running clusters, call the /setCookie endpoint immediately.
                         (when (contains-statuses filtered-clusters ["Running"])
                           (this :-process-running-clusters)))
-                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))})
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))
+
+   :-stop-cluster
+   (fn [{:keys [props state this]} cluster]
+     (let [{:keys [server-response]} @state
+           {:keys [clusters]} server-response]
+       ; update the cluster status to Stopping immediately before waiting for a server response
+       (this :-update-cluster-status cluster "Stopping")
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false) :clusters clusters})))})))
+
+   :-start-cluster
+   (fn [{:keys [props state this]} cluster]
+     (let [{:keys [server-response]} @state
+           {:keys [clusters]} server-response]
+       ; update the cluster status to Starting immediately before waiting for a server response
+       (this :-update-cluster-status cluster "Starting")
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/start-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false) :clusters clusters})))})))
+
+   :-update-cluster-status
+   (fn [{:keys [state]} cluster-to-update new-status]
+     (let [{:keys [server-response]} @state
+           {:keys [clusters]} server-response]
+       (swap! state assoc :server-response {:clusters (map (fn [c]
+                                                             (if (= (:clusterName cluster-to-update) (:clusterName c))
+                                                               (assoc c :status new-status)
+                                                               c))
+                                                           clusters)})))})
