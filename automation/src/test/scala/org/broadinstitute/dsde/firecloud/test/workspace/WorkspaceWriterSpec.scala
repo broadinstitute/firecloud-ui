@@ -24,86 +24,86 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
   val noAccessText = "You do not have access to run analysis."
 
 
-//  "A user" - {
-//    "who has writer access" - {
-//      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
-//        val user = UserPool.chooseStudent
-//        implicit val authToken: AuthToken = authTokenOwner
-//        val testName = "WorkspaceWriterSpec_writerAccess_projectCost"
-//        withCleanBillingProject(projectOwner) { billingProject =>
-//          withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
-//            withWebDriver { implicit driver =>
-//              withSignIn(user) { listPage =>
-//                val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-//                workspacePage.hasGoogleBillingLink shouldBe false
-//                workspacePage.hasStorageCostEstimate shouldBe true
-//              }
-//            }
-//          }
-//        }
-//      }
-//
-//      "and does not have canCompute permission" - {
-//        "should see launch analysis button disabled" in {
-//          val user = UserPool.chooseStudent
-//          val testName = "WorkspaceWriterSpec_writerAccess_withoutCompute"
-//          withMethod(testName, MethodData.SimpleMethod) { methodName =>
-//            val methodConfigName = methodName + "Config"
-//            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
-//            withCleanBillingProject(projectOwner) { billingProject =>
-//              withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
-//                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)(authTokenOwner)
-//
-//                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
-//                  SimpleMethodConfig.configNamespace, methodConfigName, 1,
-//                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")(authTokenOwner)
-//
-//                withWebDriver { implicit driver =>
-//                  withSignIn(user) { listPage =>
-//                    val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-//                    val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
-//                    val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
-//                    errorModal.getMessageText shouldBe noAccessText
-//                    errorModal.clickOk()
-//                  }
-//                }
-//              }(authTokenOwner)
-//            }
-//          }(authTokenOwner)
-//        }
-//      }
-//      "and does have canCompute permission" - {
-//        "should be able to launch analysis" in {
-//          val user = UserPool.chooseStudent
-//          implicit val authToken: AuthToken = user.makeAuthToken()
-//
-//          val testName = "WorkspaceWriterSpec_writerAccess_withCompute"
-//          withMethod(testName, MethodData.SimpleMethod) { methodName =>
-//            val methodConfigName = methodName + "Config"
-//            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
-//            withCleanBillingProject(projectOwner) { billingProject =>
-//              withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
-//                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-//
-//                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
-//                  SimpleMethodConfig.configNamespace, methodConfigName, 1,
-//                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
-//
-//                withWebDriver { implicit driver =>
-//                  withSignIn(user) { listPage =>
-//                    api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-//                    val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
-//                    val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
-//                    val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
-//                    launchAnalysisModal.validateLocation shouldBe true
-//                    launchAnalysisModal.clickCancel()
-//                  }
-//                }
-//              }(authTokenOwner)
-//            }
-//          }(authTokenOwner)
-//        }
-//      }
-//    }
-//  }
+  "A user" - {
+    "who has writer access" - {
+      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
+        val user = UserPool.chooseStudent
+        implicit val authToken: AuthToken = authTokenOwner
+        val testName = "WorkspaceWriterSpec_writerAccess_projectCost"
+        withCleanBillingProject(projectOwner) { billingProject =>
+          withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+            withWebDriver { implicit driver =>
+              withSignIn(user) { listPage =>
+                val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+                workspacePage.hasGoogleBillingLink shouldBe false
+                workspacePage.hasStorageCostEstimate shouldBe true
+              }
+            }
+          }
+        }
+      }
+
+      "and does not have canCompute permission" - {
+        "should see launch analysis button disabled" in {
+          val user = UserPool.chooseStudent
+          val testName = "WorkspaceWriterSpec_writerAccess_withoutCompute"
+          withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            val methodConfigName = methodName + "Config"
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
+            withCleanBillingProject(projectOwner) { billingProject =>
+              withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)(authTokenOwner)
+
+                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
+                  SimpleMethodConfig.configNamespace, methodConfigName, 1,
+                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")(authTokenOwner)
+
+                withWebDriver { implicit driver =>
+                  withSignIn(user) { listPage =>
+                    val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+                    val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
+                    val errorModal = methodConfigDetailsPage.clickLaunchAnalysisButtonError()
+                    errorModal.getMessageText shouldBe noAccessText
+                    errorModal.clickOk()
+                  }
+                }
+              }(authTokenOwner)
+            }
+          }(authTokenOwner)
+        }
+      }
+      "and does have canCompute permission" - {
+        "should be able to launch analysis" in {
+          val user = UserPool.chooseStudent
+          implicit val authToken: AuthToken = user.makeAuthToken()
+
+          val testName = "WorkspaceWriterSpec_writerAccess_withCompute"
+          withMethod(testName, MethodData.SimpleMethod) { methodName =>
+            val methodConfigName = methodName + "Config"
+            api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
+            withCleanBillingProject(projectOwner) { billingProject =>
+              withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
+                api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+
+                api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, MethodData.SimpleMethod.copy(methodName = methodName),
+                  SimpleMethodConfig.configNamespace, methodConfigName, 1,
+                  SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, "participant")
+
+                withWebDriver { implicit driver =>
+                  withSignIn(user) { listPage =>
+                    api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+                    val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
+                    val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
+                    val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()
+                    launchAnalysisModal.validateLocation shouldBe true
+                    launchAnalysisModal.clickCancel()
+                  }
+                }
+              }(authTokenOwner)
+            }
+          }(authTokenOwner)
+        }
+      }
+    }
+  }
 }
