@@ -249,7 +249,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               inputs foreach {
                 case (name, expected) =>
                   if (refInputsJsonFormat.contains(name))
-                    configPage.readFieldValue(name) shouldBe expected.drop(4).dropRight(3)
+                    configPage.readFieldValue(name) shouldBe expected.drop(3).dropRight(2)
                   else configPage.readFieldValue(name) shouldBe expected
               }
             }
