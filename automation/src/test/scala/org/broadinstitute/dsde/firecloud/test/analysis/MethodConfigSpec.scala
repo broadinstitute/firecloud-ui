@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.analysis
 
 import java.io.{File, PrintWriter}
 
-import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadUtil, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -14,7 +14,7 @@ import org.scalatest.{FreeSpec, Matchers}
 import scala.collection.immutable.ListMap
 import scala.io.Source
 
-class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadFixtures
+class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with WorkspaceFixtures with UserFixtures with DownloadUtil
   with MethodFixtures with BillingFixtures with TestReporterFixture {
 
   val wdl = """
@@ -67,8 +67,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   )
 
   val refInputs = ListMap(
-    "w.t.inWorkspaceRef" -> """workspace.hello""",
-    "w.t.inThisRef" -> """this.hello"""
+    "w.t.inWorkspaceRef" -> "workspace.hello",
+    "w.t.inThisRef" -> "this.hello"
   )
 
   val refInputsJsonFormat = ListMap(
@@ -263,9 +263,10 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     val file = File.createTempFile("MethodConfigSpec_", "_inputs.json")
     val writer = new PrintWriter(file)
     val rows = inputs map { case (k, v) => {
-        if (v.startsWith("$"))
-          s""""$k": "${v.replaceFirst("$", "")}""""
-        else s""""$k": $v"""
+//        if (v.startsWith("$"))
+//          s""""$k": "${v.replaceFirst("$", "")}""""
+//        else
+          s""""$k": $v"""
       }
     }
     val fileContent = s"""{\n  ${rows.mkString(",\n  ")}\n}"""

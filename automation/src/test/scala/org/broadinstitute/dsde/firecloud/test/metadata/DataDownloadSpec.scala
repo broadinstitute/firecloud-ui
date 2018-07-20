@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 
-import org.broadinstitute.dsde.firecloud.fixture.{DownloadFixtures, UserFixtures}
+import org.broadinstitute.dsde.firecloud.fixture.{DownloadUtil, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
@@ -18,7 +18,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 import scala.io.Source
 
 class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures
-  with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil with DownloadFixtures with TestReporterFixture {
+  with WorkspaceFixtures with BillingFixtures with Matchers with WebBrowserUtil with DownloadUtil with TestReporterFixture {
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 

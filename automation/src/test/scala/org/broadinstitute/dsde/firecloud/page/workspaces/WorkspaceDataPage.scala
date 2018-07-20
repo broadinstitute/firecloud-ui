@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component.{Button, FileSelector, Label, Table}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
-import org.broadinstitute.dsde.firecloud.fixture.DownloadFixtures
+import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -14,7 +14,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 
 class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with DownloadFixtures with PageUtil[WorkspaceDataPage] {
+  extends WorkspacePage(namespace, name) with Page with DownloadUtil with PageUtil[WorkspaceDataPage] {
 
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
   override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
@@ -41,7 +41,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 
   def downloadMetadata(downloadPath: String): String = {
     val entityType = find(CssSelectorQuery(downloadMetadataButton.query.queryString)).get.attribute("data-entity-type").get
-    downloadFile(downloadPath, entityType + ".txt", Right(form))
+    downloadFile(downloadPath, entityType + ".txt", form)
   }
 
   def getNumberOfParticipants: Int = {

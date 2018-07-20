@@ -15,7 +15,7 @@ import java.util.UUID
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
 
-trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
+trait DownloadUtil extends Eventually with LazyLogging with WebBrowserUtil {
 
 
   def makeTempDownloadDirectory(): String = {
@@ -44,6 +44,14 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     path.toString
   }
 
+  def downloadFile(downloadPath: String, fileName: String, downloadComponent: Clickable)(implicit webDriver: WebDriver): String = {
+    downloadFile(downloadPath, fileName, Left(downloadComponent))
+  }
+
+  def downloadFile(downloadPath: String, fileName: String, downloadComponent: CssSelectorQuery)(implicit webDriver: WebDriver): String = {
+    downloadFile(downloadPath, fileName, Right(downloadComponent))
+  }
+
   /**
     * Downloads the metadata currently being viewed.
     *
@@ -57,7 +65,7 @@ trait DownloadFixtures extends Eventually with LazyLogging with WebBrowserUtil {
     * @param downloadPath the directory where the browser saves downloaded files
     * @return the relative path to the moved download file, or None if downloadPath was not given
     */
-  def downloadFile(downloadPath: String, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): String = synchronized {
+  private def downloadFile(downloadPath: String, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): String = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
       // wait up to 10 seconds for file exist

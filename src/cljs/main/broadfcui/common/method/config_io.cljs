@@ -28,7 +28,7 @@
 
 (defn get-typed [string-input]
   (cond
-    (or (string/starts-with? string-input "this.") (string/starts-with? string-input "workspace.")) (try-parse-json-string (str "$" string-input))
+    (or (string/starts-with? string-input "this.") (string/starts-with? string-input "workspace.")) (try-parse-json-string (str "${" string-input "}"))
     :else (try-parse-json-string string-input)))
 
 (defn create-typed-inputs [inputs io-fields]
@@ -96,9 +96,10 @@
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
                                 new-inputs (merge (:inputs @state) (into {} (map (fn [[k v]]
                                                                                    [k (if (and (string? v)
-                                                                                               (or (string/starts-with? v "$this.") (string/starts-with? v "$workspace.")))
-                                                                                        (string/replace-first v "$" "")
-                                                                                        (utils/->json-string v))]) uploaded-inputs)))]
+                                                                                               (re-matches (re-pattern "\\${.*}") v))
+                                                                                        (string/replace v (re-pattern "\\${(.*)}") "$1")
+                                                                                        (utils/->json-string v))]))
+                                                                                 uploaded-inputs))]
                             (when-not editing? (begin-editing))
                             (after-update #(doseq [[k v] (vec new-inputs)] (when (contains? @locals k) ((k @locals) :set-value v))))
                             (swap! state assoc :inputs new-inputs)
