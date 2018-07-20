@@ -72,8 +72,8 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   )
 
   val refInputsJsonFormat = ListMap(
-    "w.t.inWorkspaceRef" -> "$workspace.hello",
-    "w.t.inThisRef" -> "$this.hello"
+    "w.t.inWorkspaceRef" -> "\"${workspace.hello}\"",
+    "w.t.inThisRef" -> "\"${this.hello}\""
   )
 
   val unmatchedVariables = ListMap("unmatched.variable.name" -> "\"surprise!\"")
@@ -249,7 +249,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               inputs foreach {
                 case (name, expected) =>
                   if (refInputsJsonFormat.contains(name))
-                    configPage.readFieldValue(name) shouldBe expected.replace("$", "")
+                    configPage.readFieldValue(name) shouldBe expected.drop(2).dropRight(1)
                   else configPage.readFieldValue(name) shouldBe expected
               }
             }
@@ -262,13 +262,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   private def generateInputsJson(inputs: Map[String, String]): File = {
     val file = File.createTempFile("MethodConfigSpec_", "_inputs.json")
     val writer = new PrintWriter(file)
-    val rows = inputs map { case (k, v) => {
-//        if (v.startsWith("$"))
-//          s""""$k": "${v.replaceFirst("$", "")}""""
-//        else
-          s""""$k": $v"""
-      }
-    }
+    val rows = inputs map { case (k, v) => s""""$k": $v"""}
     val fileContent = s"""{\n  ${rows.mkString(",\n  ")}\n}"""
     writer.write(fileContent)
     writer.close()
