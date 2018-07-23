@@ -8,13 +8,13 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{HH:mm:ss} [%-31.31(%thread)] %highlight(%-5level) [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss} [%-35.35(%thread)] %highlight(%-5level) [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-31.31(%thread)] %-5level [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-35.35(%thread)] %-5level [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
             <outputPatternAsHeader>true</outputPatternAsHeader>
         </encoder>
         <file>${dir.name}/test-reports/TEST-${test.name}.log</file>
