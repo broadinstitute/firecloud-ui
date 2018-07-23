@@ -95,10 +95,10 @@ if [ $ENV = "alpha" ]; then
         checkToken $user
     done
 
-    if [ $NEED_TOKEN=true ]; then
+    if [ "$NEED_TOKEN"=true ]; then
        exit 1
     fi
-    
+
     # refresh user's NIH status
     for user in "${users[@]}"
     do
