@@ -19,12 +19,12 @@ fi
 JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.pem | jq '.data'`
 
 users=(
-     harry.potter@test.firecloud.org,
-     ron.weasley@test.firecloud.org,
-     mcgonagall.curator@test.firecloud.org,
-     draco.malfoy@test.firecloud.org,
-     hermione.owner@test.firecloud.org,
-     dumbledore.admin@test.firecloud.org,
+     harry.potter@test.firecloud.org
+     ron.weasley@test.firecloud.org
+     mcgonagall.curator@test.firecloud.org
+     draco.malfoy@test.firecloud.org
+     hermione.owner@test.firecloud.org
+     dumbledore.admin@test.firecloud.org
    )
 
 
