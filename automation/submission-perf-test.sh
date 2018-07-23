@@ -6,11 +6,11 @@ set -e
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
 WORKING_DIR=${3:-$PWD}
+NEED_TOKEN=false
 
 # Check if $ENV is not empty
 if [[ ! ${ENV} ]]; then
-    echo
-    "ENV is empty. Run again sh submission-perf-test.sh <alpha or staging"
+   echo "ENV is empty. Run again \`sh submission-perf-test.sh <alpha or staging>\`"
     exit 1
 else
     echo "Starting Perf test in {$ENV}"
@@ -35,8 +35,9 @@ checkToken () {
     if
         curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
     then
-        echo "This user needs its refresh token refreshed"
-        exit 1
+        echo "$user needs its refresh token refreshed"
+        NEED_TOKEN=true
+
     fi
 
 }
@@ -88,10 +89,17 @@ launchSubmission() {
 }
 
 if [ $ENV = "alpha" ]; then
-for user in "${users[@]}"
+    # check if user needs a token refresh
+    for user in "${users[@]}"
     do
         checkToken $user
     done
+
+    if [ $NEED_TOKEN=true ]; then
+       exit 1
+    fi
+    
+    # refresh user's NIH status
     for user in "${users[@]}"
     do
         callbackToNIH $user
@@ -104,10 +112,12 @@ for user in "${users[@]}"
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
 
 elif [ $ENV = "staging" ]; then
+    # check if user needs a token refresh
     for user in "${users[@]}"
     do
         checkToken $user
     done
+    # refresh user's NIH status
     for user in "${users[@]}"
     do
         callbackToNIH $user
