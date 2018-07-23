@@ -2,7 +2,6 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
-set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -118,7 +117,7 @@ elif [ $ENV = "staging" ]; then
     do
         checkToken $user
     done
-    if [ "$NEED_TOKEN"=true ]; then
+    if [ "$NEED_TOKEN" = true ]; then
        exit 1
     fi
 
