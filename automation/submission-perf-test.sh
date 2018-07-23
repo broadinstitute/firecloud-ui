@@ -2,6 +2,7 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
+set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -35,7 +36,7 @@ checkToken () {
     if
         curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
     then
-        echo "$user needs its refresh token refreshed"
+        echo "$1 needs its refresh token refreshed"
         NEED_TOKEN=true
 
     fi
@@ -117,6 +118,10 @@ elif [ $ENV = "staging" ]; then
     do
         checkToken $user
     done
+    if [ "$NEED_TOKEN"=true ]; then
+       exit 1
+    fi
+
     # refresh user's NIH status
     for user in "${users[@]}"
     do
