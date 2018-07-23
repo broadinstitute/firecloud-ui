@@ -94,8 +94,11 @@ if [ $ENV = "alpha" ]; then
 #        checkToken $user
 #        count=$(( $count + 1 ))
 #    done
-    for user in users; do
+    count=0
+    while [ "x${users[count]}" != "x" ]
+    do
         callbackToNIH $user
+        count=$(( $count + 1 ))
     done
 #    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
 #    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
