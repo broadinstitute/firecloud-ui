@@ -22,6 +22,22 @@
 
 (def clip (partial merge table-style/clip-text))
 
+(defn try-parse-json-string [json-string]
+  (try (utils/parse-json-string json-string)
+       (catch js/Error e json-string)))
+
+(defn get-typed [string-input]
+  (cond
+    (or (string/starts-with? string-input "this.") (string/starts-with? string-input "workspace.")) (try-parse-json-string (str "${" string-input "}"))
+    :else (try-parse-json-string string-input)))
+
+(defn create-typed-inputs [inputs io-fields]
+  (let [new-inputs (select-keys inputs (map (comp keyword :name) (:inputs io-fields)))
+        filtered-io-fields (filter #(not (string/blank? ((keyword (:name %)) new-inputs))) (:inputs io-fields))]
+    (into {} (map (fn [o] {(keyword (:name o))
+                           (get-typed ((keyword (:name o)) new-inputs))})
+                  filtered-io-fields))))
+
 
 (react/defc IOTables
   {:start-editing
@@ -79,32 +95,45 @@
                         (fn [{:keys [file-contents]}]
                           (let [uploaded-inputs (utils/parse-json-string file-contents true)
                                 new-inputs (merge (:inputs @state) (into {} (map (fn [[k v]]
-                                                                                   [k (utils/->json-string v)]) uploaded-inputs)))]
+                                                                                   [k (if (and (string? v)
+                                                                                               (re-matches (re-pattern "\\${.*}") v))
+                                                                                        (string/replace v (re-pattern "\\${(.*)}") "$1")
+                                                                                        (utils/->json-string v))]))
+                                                                                 uploaded-inputs))]
                             (when-not editing? (begin-editing))
                             (after-update #(doseq [[k v] (vec new-inputs)] (when (contains? @locals k) ((k @locals) :set-value v))))
                             (swap! state assoc :inputs new-inputs)
                             (swap! state dissoc :show-upload?)))}]]}])
         [Collapse {:title "Inputs"
-                   :secondary-title (when can-edit?
-                                      [:div {} (links/create-internal {:data-test-id "populate-with-json-link"
-                                                                       :on-click #(swap! state assoc :show-upload? true)}
-                                                 "Populate with a .json file...")
-                                       (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
-                                                                                                :style {:white-space "nowrap"}} "Learn more about the expected format")})])
+                   :secondary-title [:div {}
+                                     (when can-edit?
+                                       [:span {:style {:padding "0 1em"}} (links/create-internal {:data-test-id "populate-with-json-link"
+                                                                         :on-click #(swap! state assoc :show-upload? true)}
+                                                   "Populate with a .json file...")
+                                        (dropdown/render-info-box {:text (links/create-external {:href "https://software.broadinstitute.org/wdl/documentation/inputs.php"
+                                                                                                 :style {:white-space "nowrap"}} "Learn more about the expected format")})])
+                                     (when-not editing?
+                                       [:span {:style {:borderLeft style/border-light :padding "0 1.3em"}}
+                                        [links/DownloadFromObject
+                                                 {:label "Download .json file"
+                                                  :object (utils/->json-string (create-typed-inputs (:inputs @state) (:inputs-outputs props)))
+                                                  :filename "inputs.json"
+                                                  :create-internal? true}]])]
                    :default-hidden? default-hidden?
-                   :contents (this :-render-table :inputs)}]
+                   :contents (this :-render-table :inputs "inputs-table")}]
         [Collapse {:style {:marginTop "1rem"}
                    :title "Outputs"
                    :secondary-title (when (and entity-type? can-edit? (seq (this :-get-defaultable-outputs)))
                                       (links/create-internal {:onClick #(this :-add-default-outputs)}
                                         "Populate blank attributes with defaults"))
                    :default-hidden? default-hidden?
-                   :contents (this :-render-table :outputs)}]]))
+                   :contents (this :-render-table :outputs "outputs-table")}]]))
    :-render-table
-   (fn [{:keys [props state locals]} io-key]
+   (fn [{:keys [props state locals]} io-key data-test-id]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
-       [Table {:data (->> (io-key inputs-outputs)
+       [Table {:data-test-id data-test-id
+               :data (->> (io-key inputs-outputs)
                           (map (fn [{:keys [name inputType outputType optional] :as item}]
                                  (let [[task variable] (take-last 2 (string/split name "."))
                                        k-name (keyword name)

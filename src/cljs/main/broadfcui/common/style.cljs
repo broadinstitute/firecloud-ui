@@ -25,6 +25,9 @@
 (def modals-z-index (inc igv-z-index))
 
 (def standard-line (str "1px solid " (:line-default colors)))
+
+(def border-light (str "1px solid " (:border-light colors)))
+
 (def dark-line "1px solid black")
 
 (defn color-for-status [status]

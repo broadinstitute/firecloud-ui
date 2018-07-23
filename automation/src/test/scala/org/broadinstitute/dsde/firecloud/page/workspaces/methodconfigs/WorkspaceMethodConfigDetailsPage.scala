@@ -1,22 +1,27 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
+import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually {
+  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadUtil  {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
@@ -36,6 +41,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   private val snapshotRedactedLabel = Label("snapshot-redacted-title")
   private val dataModelCheckbox = Checkbox("data-model-checkbox")
   private val populateWithJsonLink = Link("populate-with-json-link")
+  private val downloadInputsJsonLink = Link("download-link")
+  val inputsTable = Table("inputs-table")
+
 
   def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
@@ -149,6 +157,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     populateWithJsonLink.doClick()
     val modal = await ready new PopulateFromJsonModal
     modal.importFile(file.getAbsolutePath)
+  }
+
+  def downloadInputsJson(downloadPath: String, fileName: String): String = {
+    downloadFile(downloadPath, fileName, downloadInputsJsonLink)
   }
 
   def changeSnapshotId(newSnapshotId: Int): Unit = {
