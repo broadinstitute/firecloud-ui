@@ -86,15 +86,14 @@
     (contains? wf-statuses :Failed) 20
     (contains? wf-statuses :Aborted) 30
     (contains? wf-statuses :Succeeded) 40
-    :else (do (utils/log "Unknown submission status: " wf-statuses) 50))
-  )
+    :else (do (utils/log "Unknown submission status: " wf-statuses) 50)))
 
 (defn sort-order-wf-status [status]
   (cond
-    (contains? wf-running-statuses status) 10
-    (contains? wf-failure-statuses status) 30
-    (contains? wf-success-statuses status) 40
-    :else (do (utils/log "Unknown workflow status: " status) 50)))
+    (contains? wf-running-statuses status) 60
+    (contains? wf-failure-statuses status) 70
+    (contains? wf-success-statuses status) 80
+    :else (do (utils/log "Unknown workflow status: " status) 90)))
 
 (defn sort-order-submission [sub-status wf-statuses]
   (if (= "Done" sub-status)
@@ -103,11 +102,14 @@
 
 (defn- icon-for-sort-index [sort-index]
   (case sort-index
-    10 (render-running-icon)
     20 (render-failure-icon)
     30 (render-failure-icon)
     40 (render-success-icon)
+    60 (render-running-icon)
+    70 (render-failure-icon)
     50 (render-unknown-icon)
+    80 (render-success-icon)
+    90 (render-unknown-icon)
     (render-unknown-icon)))
 
 (defn icon-for-wf-status [status]

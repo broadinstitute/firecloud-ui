@@ -37,8 +37,7 @@
                   "View")}
       {:header "Status"
        :sort-by (fn [submission]
-                  (moncommon/sort-order-submission
-                   (:status submission) (:workflowStatuses submission)))
+                  (moncommon/sort-order-submission (:status submission) (:workflowStatuses submission)))
        :as-text (fn [submission] (.stringify js/JSON (clj->js (:workflowStatuses submission))))
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
