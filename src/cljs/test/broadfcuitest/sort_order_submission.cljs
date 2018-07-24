@@ -70,6 +70,3 @@
     (is (= 40 (sort-order-sub-status {:Succeeded 4}))))
   (testing "status 50 when sub status unknown"
     (is (= 50 (sort-order-sub-status {:blah 1})))))
-
-(.clear js/console) ; optional
-(cljs.test/run-tests)
