@@ -16,8 +16,8 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with FailedTestRetryable w
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
 
   "A user with a registered account" - {
-
-    "should be able to log in and out as different users in same browser" taggedAs (Retryable, SignInRealTest) in {
+    
+    "should be able to log in and out as different users in same browser" taggedAs (Retryable, SignInRealTest) ignore {
       val user1 = Users.Students.getUserCredential("harry")
       withWebDriver { implicit driver =>
         withSignInReal(user1) { listPage =>
