@@ -15,8 +15,13 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with FailedTestRetryable w
 
   implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
 
+
+  /**
+    * ignoring the test. manual SignIn testing is required in release checklist.
+    * https://github.com/broadinstitute/firecloud-develop/blob/dev/release-tasks-template.md
+    */
   "A user with a registered account" - {
-    
+
     "should be able to log in and out as different users in same browser" taggedAs (Retryable, SignInRealTest) ignore {
       val user1 = Users.Students.getUserCredential("harry")
       withWebDriver { implicit driver =>
@@ -38,6 +43,5 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with FailedTestRetryable w
     }
 
   }
-
 
 }
