@@ -347,9 +347,9 @@
    "/link/v1/fence"
    {:on-done on-done}))
 
-(defn profile-link-fence-account [oauth-code on-done]
+(defn profile-link-fence-account [oauth-code redirect-uri on-done]
   (ajax/call-bond
-   (str "/link/v1/fence/oauthcode?oauthcode=" oauth-code)
+   (str "/link/v1/fence/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri)
    {:method :post
     :on-done on-done}))
 

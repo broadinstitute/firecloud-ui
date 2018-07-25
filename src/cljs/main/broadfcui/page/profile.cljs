@@ -178,6 +178,9 @@
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
       token
+      (js/encodeURIComponent
+       (let [loc js/window.location]
+         (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-fence-token :fence-status)
