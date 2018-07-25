@@ -164,7 +164,7 @@
      (this :-refresh-workspace))
    :component-will-receive-props
    (fn [{:keys [props next-props this after-update]}]
-     (when (and false (utils/any-change [:tab-name :workspace-id] props next-props))
+     (when (utils/any-change [:workspace-id] props next-props)
        (after-update this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
