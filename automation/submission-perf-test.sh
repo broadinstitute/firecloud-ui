@@ -88,8 +88,7 @@ launchSubmission() {
     fi
 }
 
-if [ $ENV = "alpha" ]; then
-    # check if user needs a token refresh
+     # check if user needs a token refresh
     for user in "${users[@]}"
     do
         checkToken $user
@@ -104,6 +103,8 @@ if [ $ENV = "alpha" ]; then
     do
         callbackToNIH $user
     done
+
+if [ $ENV = "alpha" ]; then
     launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
@@ -112,20 +113,6 @@ if [ $ENV = "alpha" ]; then
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
 
 elif [ $ENV = "staging" ]; then
-    # check if user needs a token refresh
-    for user in "${users[@]}"
-    do
-        checkToken $user
-    done
-    if [ "$NEED_TOKEN" = true ]; then
-       exit 1
-    fi
-
-    # refresh user's NIH status
-    for user in "${users[@]}"
-    do
-        callbackToNIH $user
-    done
     launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission ron.weasley@test.firecloud.org staging-submission-perf-test-b Perf-Test-B-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission mcgonagall.curator@test.firecloud.org staging-submission-perf-test-d Perf-Test-D-W_copy submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
