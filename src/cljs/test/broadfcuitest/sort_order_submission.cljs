@@ -11,7 +11,7 @@
   (let [mixed [{:status "Done" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
                {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
                {:status "Submitted"}
-               {:status "Aborting" :workflowStatuses {:blah 3}}
+               {:status "Aborting" :workflowStatuses {:Failed 3}}
                {:status "Aborted" :workflowStatuses {:Aborted 3}}
                {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
                {:status "Done" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
@@ -19,19 +19,25 @@
                {:status "Submitted"}
                {:status "Aborting" :workflowStatuses {:blah 3}}
                {:status "Aborted" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
-               {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}]
+               {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
+               {:status "Blah"}
+               {:status "Done"}
+               {:status "Done" :workflowStatuses {:blah 1}}]
         expected [{:status "Done" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
                   {:status "Done" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
                   {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
                   {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
                   {:status "Done" :workflowStatuses {:Aborted 2 :Succeeded 3}}
                   {:status "Done" :workflowStatuses {:Succeeded 3}}
+                  {:status "Done"}
+                  {:status "Done" :workflowStatuses {:blah 1}}
                   {:status "Submitted"}
                   {:status "Submitted"}
-                  {:status "Aborting" :workflowStatuses {:blah 3}}
+                  {:status "Aborting" :workflowStatuses {:Failed 3}}
                   {:status "Aborted" :workflowStatuses {:Aborted 3}}
                   {:status "Aborting" :workflowStatuses {:blah 3}}
-                  {:status "Aborted" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}]]
+                  {:status "Aborted" :workflowStatuses {:Aborted 1 :Failed 2 :Succeeded 3}}
+                  {:status "Blah"}]]
 
     (testing "mixed bag of submission statuses and underlying workflow statuses sorted"
       (is (= expected
