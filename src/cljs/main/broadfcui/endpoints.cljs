@@ -352,6 +352,15 @@
                  (on-done nil (get-parsed-response))
                  (on-done status-text nil)))}))
 
+(defn get-sharees [on-done]
+  (call-ajax-orch
+   {:endpoint {:path "/sharelog/sharees?shareType=workspace"
+               :method :get}
+    :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+               (if success?
+                 (on-done nil (get-parsed-response))
+                 (on-done status-text nil)))}))
+
 (defn get-ws-access-instructions [workspace-id on-done]
   (call-ajax-orch
    {:endpoint {:path (str "/workspaces/" (id-path workspace-id) "/accessInstructions")
