@@ -73,7 +73,8 @@
              (swap! state merge acls)
              (swap! locals assoc :initial-acl-emails (->> acls vals flatten (map :email) set)))
            (swap! state assoc :load-error (get-parsed-response false))))})
-     (endpoints/get-sharees (fn [_ sharees] (swap! state assoc :user-sharees sharees))))
+     (endpoints/get-sharees (fn [_ sharees] (swap! state assoc :user-sharees sharees)))
+     (endpoints/get-groups (fn [_ groups] (swap! state assoc :user-groups groups))))
    :-render-acl-content
    (fn [{:keys [props state]}]
      (let [{:keys [user-access-level]} props]
@@ -93,9 +94,13 @@
             [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])
           (when (common/access-greater-than-equal-to? user-access-level "OWNER")
             [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Compute"])]
-         [:datalist {:id "sharees-datalist"}
-          (when-let [sharees (:user-sharees @state)]
-            (map (fn [sharee] [:option {:value sharee}]) sharees))]
+         [:datalist {:id "acl-autocomplete"}
+          (distinct
+           (concat
+            (when-let [sharees (:user-sharees @state)]
+              (map (fn [sharee] [:option {:value sharee}]) sharees))
+            (when-let [groups (:user-groups @state)]
+              (map (fn [group] [:option {:value (:groupEmail group)}]) groups))))]
          (map-indexed
           (fn [i acl-entry]
             [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
@@ -109,7 +114,7 @@
                  :spellCheck false
                  :value (:email acl-entry)
                  :data-test-id "acl-add-email"
-                 :list "sharees-datalist"
+                 :list "acl-autocomplete"
                  :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
              (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
                    disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
