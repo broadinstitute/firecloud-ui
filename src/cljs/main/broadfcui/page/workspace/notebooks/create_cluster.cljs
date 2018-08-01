@@ -16,6 +16,7 @@
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.common.input :as input]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
    [clojure.string :as string]
    ))
 
@@ -41,9 +42,6 @@
                    "n1-highmem-64"
                    "n1-highmem-96"])
 
-(defn create-inline-form-label [text]
-  [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
-
 (react/defc ClusterCreator
   {:refresh
    (fn [])
@@ -63,7 +61,7 @@
          (react/create-element
           [:div {:style {:marginBottom -20}}
            (when creating? (blocker "Creating cluster..."))
-           [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} (str "Create a cluster to associate with notebook \"" (last (clojure.string/split (:name choose-notebook) #"/")) "\":")]
+           (notebook-utils/create-inline-form-label (str "Create a cluster to associate with notebook \"" (notebook-utils/notebook-name choose-notebook) "\":"))
            (react/create-element
             [:div {:style {:marginTop 25}}
              (style/create-form-label "Name")
@@ -78,10 +76,10 @@
                 [:div {}
                  (flex/box {}
                            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (create-inline-form-label "Master Machine Type")
+                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Machine Type")
                                                 :tooltip "Determines the number of CPUs and memory for the master VM."}]]
                            [:div {:style {:width "48%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (create-inline-form-label "Master Disk Size")
+                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Disk Size")
                                                   :tooltip "Size of the disk on the master VM. Minimum size is 100GB."}]])
                  [:div {:display "inline-block"}
                   (style/create-identity-select {:data-test-id "master-machine-type-select" :ref "masterMachineType"
@@ -89,7 +87,7 @@
                                                 machineTypes)
                   [input/TextField {:data-test-id "master-disk-size-input" :ref "masterDiskSize" :autoFocus true
                                     :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
-                  [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
+                  [:span {:style {:marginLeft "2%"}} (notebook-utils/create-inline-form-label "GB")]]
                  [:div {:style {:marginBottom "1%"}}
                   [FoundationTooltip {:text (style/create-form-label "Workers")
                                       :tooltip "Workers can be 0, 2 or more. Google Dataproc does not allow 1 worker."}]]
@@ -109,10 +107,10 @@
                                              :autoFocus true :style {:width "48%"} :defaultValue 0 :min 0 :type "number"}])
                  (flex/box {}
                            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (create-inline-form-label "Worker Machine Type")
+                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Machine Type")
                                                 :tooltip "Determines the number of CPUs and memory for each worker VM. Ignored if Workers is 0."}]]
                            [:div {:style {:width "48%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (create-inline-form-label "Worker Disk Size")
+                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Disk Size")
                                                 :tooltip "Size of the disk on each worker VM. Minimum size is 100GB. Ignored if Workers is 0."}]])
                  [:div {:display "inline-block"}
                   (style/create-identity-select {:data-test-id "worker-machine-type-select" :ref "workerMachineType"
@@ -120,7 +118,7 @@
                                                 machineTypes)
                   [input/TextField {:data-test-id "worker-disk-size-input" :ref "workerDiskSize" :autoFocus true
                                     :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
-                  [:span {:style {:marginLeft "2%"}} (create-inline-form-label "GB")]]
+                  [:span {:style {:marginLeft "2%"}} (notebook-utils/create-inline-form-label "GB")]]
 
                  [:div {:style {:marginBottom "1%"}}
                   [FoundationTooltip {:text (style/create-form-label "Extension URI")
@@ -135,8 +133,8 @@
                  (when (seq (:labels @state))
                    [:div {:key (:label-gensym @state)}
                     (flex/box {}
-                              [:span {:style {:width "50%"}} (create-inline-form-label "Key")]
-                              [:span {:style {:width "50%" :marginLeft "4%"}} (create-inline-form-label "Value")])
+                              [:span {:style {:width "50%"}} (notebook-utils/create-inline-form-label "Key")]
+                              [:span {:style {:width "50%" :marginLeft "4%"}} (notebook-utils/create-inline-form-label "Value")])
                     (map-indexed (fn [i label]
                                    (flex/box {:style {:marginBottom 10}}
                                              (links/create-internal

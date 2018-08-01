@@ -4,6 +4,7 @@
    [broadfcui.components.modals :as modals]
    [broadfcui.common.style :as style]
    [broadfcui.common.input :as input]
+   [broadfcui.page.workspace.notebooks.utils :as utils]
    ))
 
 (def kernels ["Python 2"

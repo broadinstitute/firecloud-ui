@@ -10,9 +10,10 @@
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.common.links :as links]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.page.workspace.notebooks.utils :as utils]
    ))
 
-(react/defc ChooseCluster
+(react/defc ChooseClusterViewer
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [cluster-map choose-notebook]} props
@@ -25,7 +26,7 @@
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
-           [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}} (str "Choose a cluster to associate with notebook \"" (last (clojure.string/split (:name choose-notebook) #"/")) "\":")]
+           (utils/create-inline-form-label (str "Choose a cluster to associate with notebook \"" (utils/notebook-name choose-notebook) "\":"))
            (style/create-identity-select {:data-test-id "cluster-select" :ref "clusterSelect"
                                           :style {:width "100%" :marginRight "4%" :marginTop 5}
                                           :default-value (when-not (nil? cluster-name) (cluster-menu-entry (get cluster-map cluster-name)))}
