@@ -358,7 +358,7 @@
                         ((:on-rename props) name)
                         ((@refs "methodDetailsViewer") :clear-redacted-snapshot)
                         (swap! state assoc :entity-type? (boolean (-> response :methodConfiguration :rootEntityType)))
-                        (utils/multi-swap! state (assoc :loaded-config response)
+                        (utils/multi-swap! state (assoc :loaded-config (fix-validated-method-config response))
                                                  (dissoc :redacted?)))
                       (swap! state assoc :error-response (get-parsed-response false))))})))
    :-build-autocomplete-list
