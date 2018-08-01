@@ -81,27 +81,50 @@
           :data-test-id "status-icon" :data-test-value "unknown"}
    [icons/UnknownIcon {:size 12}]])
 
+(defn sort-order-sub-status [wf-statuses]
+  (cond
+    (contains? wf-statuses :Failed) 40
+    (contains? wf-statuses :Aborted) 50
+    (contains? wf-statuses :Succeeded) 60
+    :else (do (utils/log "Unknown status: " wf-statuses) 70)))
+
+(defn sort-order-wf-status [status]
+  (cond
+    (contains? wf-running-statuses status) 10
+    (= "Aborting" status) 21
+    (= "Aborted" status) 22
+    (= "Failed" status) 23
+    (contains? wf-success-statuses status) 30
+    :else (do (utils/log "Unknown status: " status) 80)))
+
+(defn sort-order-submission [sub-status wf-statuses]
+  (if (= "Done" sub-status)
+    (sort-order-sub-status wf-statuses)
+    (sort-order-wf-status sub-status)))
+
+(defn- icon-for-sort-index [sort-index]
+  (let [index (int (Math/floor (/ sort-index 10)))]
+    (case index ; icon / submission status / workflow status
+      1 (render-running-icon) ; = / Running | Submitted | Queued | Launching / any
+      2 (render-failure-icon) ; ! / Aborting | Aborted | Failed / Any
+      3 (render-success-icon) ; ✓ / Succeeded / any
+      4 (render-failure-icon) ; ! / Done / at least one Failed
+      5 (render-failure-icon) ; ! / Done / at least one Aborted
+      6 (render-success-icon) ; ✓ / Done / at least one Succeeded
+      7 (render-unknown-icon) ; ? / Done / unknown workflow status
+      8 (render-unknown-icon) ; ? / unknown submission status / any
+      (render-unknown-icon)))) ; ? / something went wrong in the code
 
 (defn icon-for-wf-status [status]
-  (cond
-    (contains? wf-success-statuses status) (render-success-icon)
-    (contains? wf-running-statuses status) (render-running-icon)
-    (contains? wf-failure-statuses status) (render-failure-icon)
-    :else (do (utils/log "Unknown workflow status: " status)
-              (render-unknown-icon))))
+  (icon-for-sort-index (sort-order-wf-status status)))
 
 (defn icon-for-sub-status [wf-statuses]
-  (cond
-    (contains? wf-statuses :Failed) (render-failure-icon)
-    (contains? wf-statuses :Aborted) (render-failure-icon)
-    (contains? wf-statuses :Succeeded) (render-success-icon)
-    :else (do (utils/log "Unknown submission status: " wf-statuses)
-              (render-unknown-icon))))
+  (icon-for-sort-index (sort-order-sub-status wf-statuses)))
 
 (defn icon-for-submission [sub-status wf-statuses]
-  (if (= "Done" sub-status)
-    (icon-for-sub-status wf-statuses)
-    (icon-for-wf-status sub-status)))(defn icon-for-project-status [project-status]
+  (icon-for-sort-index (sort-order-submission sub-status wf-statuses)))
+
+(defn icon-for-project-status [project-status]
   (cond
     (= project-status "Error") (render-failure-icon)
     (= project-status "Ready") (render-success-icon)
