@@ -139,13 +139,21 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickAndReadSuggestions(field: String): Seq[String] = {
     val dataTestId = s"$field-text-input"
-    click on testId(dataTestId)
-    // wait for dropdown to become expanded
-    await condition (find(testId(dataTestId)).exists(_.underlying.getAttribute("aria-expanded") == "true"), 10)
-    // wait for dropdown to contain at least one WebElement
-    val xpathSelector = s"//*[@data-test-id='$field-suggestions']/*/li"
-    await condition (findAll(xpath(xpathSelector)).map(elem => elem.isDisplayed).nonEmpty, 10)
-    findAll(xpath(xpathSelector)).map(_.text).toSeq
+    val listOptionXpath = s"//div[@data-test-id='$field-suggestions']/ul[@role='listbox']/li[@role='option']"
+
+    val suggestionTextfield: Element = find(testId(dataTestId)).get
+    val expandedDropdownId = suggestionTextfield.underlying.getAttribute("aria-owns")
+
+    click on suggestionTextfield // click in textfield to invoke list dropdown
+    await condition find(testId(dataTestId)).exists(_.underlying.getAttribute("aria-expanded") == "true")
+
+    // wait for dropdown to contain at least one item
+    await condition {
+      find(xpath(s"//div[@id='$expandedDropdownId']")).exists(_.isDisplayed)
+      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
+    }
+
+    findAll(xpath(listOptionXpath)).map(_.text).toSeq
   }
 
   def readFieldValue(field: String): String = {
