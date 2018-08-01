@@ -183,14 +183,6 @@
   {:path (str "/clusters")
    :method :get})
 
-(defn stop-cluster [google-project cluster-name]
-  {:path (str "/cluster/" google-project "/" cluster-name "/stop")
-   :method :post})
-
-(defn start-cluster [google-project cluster-name]
-  {:path (str "/cluster/" google-project "/" cluster-name "/start")
-   :method :post})
-
 (defn get-cluster-details [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :get})

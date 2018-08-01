@@ -62,7 +62,7 @@
   (case status
     ("Deleted" "Error") (moncommon/render-failure-icon)
     ("Creating" "Updating" "Deleting" "Stopping" "Starting") spinner-icon
-    "Running" f
+    "Running"
     "Stopped" nil  ;todo: add icon for Stopped status
     (moncommon/render-unknown-icon)))
 
