@@ -16,14 +16,14 @@
        [modals/OKCancelForm
         {:header "Delete Cluster"
          :dismiss (:dismiss props)
-         :ok-button {:text "Delete"
-                     :onClick #(this :-delete-cluster)}
+         :ok-button {:text "Delete" :onClick #(this :-delete-cluster)}
          :content
          (react/create-element
           [:div {}
            (when deleting? (blocker "Deleting cluster..."))
-           [:div {} (str "Are you sure you want to delete cluster " cluster-to-delete "?")]
+           [:div {} (str "Are you sure you want to delete cluster \"" cluster-to-delete "\"?")]
            [comps/ErrorViewer {:error server-error}]])}]))
+
    :-delete-cluster
    (fn [{:keys [state props]}]
      (let [{:keys [cluster-to-delete]} props]
@@ -35,5 +35,7 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :deleting?)
                     (if success?
-                      (do ((:dismiss props)) ((:reload-after-delete props))) ;if success, update the table?
+                      (do
+                        ((:dismiss props))
+                        ((:reload-after-delete props)))
                       (swap! state assoc :server-error (get-parsed-response false))))})))})

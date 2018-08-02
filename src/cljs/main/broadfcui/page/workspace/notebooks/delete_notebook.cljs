@@ -18,13 +18,12 @@
        [modals/OKCancelForm
         {:header "Delete Notebook"
          :dismiss (:dismiss props)
-         :ok-button {:text "Delete"
-                     :onClick #(this :-delete-notebook)}
+         :ok-button {:text "Delete" :onClick #(this :-delete-notebook)}
          :content
          (react/create-element
           [:div {:style {:marginTop 0}}
            (when deleting? (blocker "Deleting notebook..."))
-           [:div {} (str "Are you sure you want to delete notebook " (notebook-utils/notebook-name choose-notebook) "?")]
+           [:div {} (str "Are you sure you want to delete notebook \"" (notebook-utils/notebook-name choose-notebook) "\"?")]
            [comps/ErrorViewer {:error server-error}]])}]))
 
    :-delete-notebook
@@ -34,8 +33,9 @@
        (swap! state assoc :deleting? true)
        (notebook-utils/delete-notebook bucket-name pet-token choose-notebook
          (fn [{:keys [success? raw-response]}]
+           (swap! state assoc :deleting? false)
            (if success?
              (do
-               ((:delete-notebook props))
+               ((:refresh-notebooks props))
                ((:dismiss props))))
            (swap! state assoc :server-response {:server-error raw-response})))))})

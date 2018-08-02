@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.notebooks.utils
   (:require
    [dmohs.react :as react]
+   [broadfcui.utils :as utils]
    [broadfcui.config :as config]
    [broadfcui.utils.ajax :as ajax]
    ))
@@ -12,7 +13,7 @@
   (seq (clojure.set/intersection (set statuses) (set (map :status clusters)))))
 
 (defn notebook-name [notebook]
-  (last (clojure.string/split (:name notebook) #"/")))
+  (clojure.string/replace (last (clojure.string/split (:name notebook) #"/")) ".ipynb" ""))
 
 (defn leo-notebook-url-base [cluster]
   (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster)))
@@ -27,7 +28,7 @@
               :on-done on-done}))
 
 (defn copy-notebook [bucket-name token notebook-to-copy new-name on-done]
-  (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/" (js/encodeURIComponent (:name notebook-to-copy)) "/rewriteTo/b/" bucket-name "/o/" (js/encodeURIComponent (str "notebooks/" new-name)))
+  (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/" (js/encodeURIComponent (:name notebook-to-copy)) "/rewriteTo/b/" bucket-name "/o/" (js/encodeURIComponent (str "notebooks/" new-name ".ipynb")))
               :method :post
               :headers {"Authorization" (str "Bearer " token)}
               :on-done on-done}))
@@ -36,4 +37,12 @@
   (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/" (js/encodeURIComponent (:name notebook-to-delete)))
               :method :delete
               :headers {"Authorization" (str "Bearer " token)}
+              :on-done on-done}))
+
+(defn create-notebook [bucket-name token notebook-name-to-create data on-done]
+  (ajax/call {:url (str "https://www.googleapis.com/upload/storage/v1/b/" bucket-name "/o?uploadType=media&name=" (js/encodeURIComponent (str "notebooks/" notebook-name-to-create ".ipynb")))
+              :method :post
+              :headers {"Authorization" (str "Bearer " token)
+                        "Content-Type" "application/x-ipynb+json"}
+              :data (utils/->json-string data)
               :on-done on-done}))

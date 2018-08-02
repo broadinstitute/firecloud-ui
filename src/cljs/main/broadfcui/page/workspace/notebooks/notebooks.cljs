@@ -2,37 +2,30 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.flex-utils :as flex]
-   [broadfcui.components.buttons :as buttons]
+   [broadfcui.common.links :as links]
+   [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
-   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.utils.ajax :as ajax]
-   [broadfcui.utils.user :as user]
-   [broadfcui.components.modals :as modals]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
-   [broadfcui.components.tab-bar :as tab-bar]
-   [broadfcui.common.links :as links]
-   [broadfcui.common.style :as style]
-   [broadfcui.utils.user :as user]
-   [broadfcui.components.collapse :refer [Collapse]]
-   [broadfcui.common.input :as input]
-   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.components.spinner :refer [spinner]]
+   [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.notebooks.create_notebook :refer [NotebookCreator]]
    [broadfcui.page.workspace.notebooks.create_cluster :refer [ClusterCreator]]
    [broadfcui.page.workspace.notebooks.delete_cluster :refer [ClusterDeleter]]
-   [broadfcui.page.workspace.notebooks.cluster_details :refer [ClusterDetails]]
+   [broadfcui.page.workspace.notebooks.cluster_details :refer [ClusterDetailsViewer]]
    [broadfcui.page.workspace.notebooks.choose_cluster :refer [ChooseClusterViewer]]
    [broadfcui.page.workspace.notebooks.cluster_error :refer [ClusterErrorViewer]]
    [broadfcui.page.workspace.notebooks.rename_notebook :refer [NotebookRenamer]]
    [broadfcui.page.workspace.notebooks.delete_notebook :refer [NotebookDeleter]]
    [broadfcui.page.workspace.notebooks.duplicate_notebook :refer [NotebookDuplicator]]
-   [clojure.string :as string]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
    ))
@@ -65,39 +58,32 @@
            {:keys [notebooks cluster-map pet-token toolbar-items]} props]
        [:div {}
         (when (:show-cluster-choose-dialog? @state)
-          [ChooseClusterViewer (assoc props :dismiss-cluster-chooser #(swap! state dissoc :show-cluster-choose-dialog?)
-                                            :cluster-map cluster-map
+          [ChooseClusterViewer (assoc props :dismiss #(swap! state dissoc :show-cluster-choose-dialog?)
                                             :choose-notebook choose-notebook
-                                            :choose-cluster #(this :-choose-cluster %)
-                                            :create-cluster #(swap! state assoc :show-cluster-create-dialog? true))])
+                                            :reload-after-choose #(this :-choose-cluster %)
+                                            :show-create-cluster #(swap! state assoc :show-cluster-create-dialog? true))])
         (when (:show-cluster-create-dialog? @state)
-          [ClusterCreator (assoc props :dismiss-cluster-creator #(swap! state dissoc :show-cluster-create-dialog?)
+          [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-cluster-create-dialog?)
                                        :choose-notebook choose-notebook
-                                       :choose-cluster #(this :-choose-cluster %))])
+                                       :reload-after-choose #(this :-choose-cluster %))])
         (when (:show-cluster-delete-dialog? @state)
           [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-cluster-delete-dialog?)
                                        :cluster-to-delete (:cluster-to-delete @state))])
         (when (:show-cluster-details-dialog? @state)
-          [ClusterDetails (assoc props :dismiss #(swap! state dissoc :show-cluster-details-dialog?)
+          [ClusterDetailsViewer (assoc props :dismiss #(swap! state dissoc :show-cluster-details-dialog?)
                                        :cluster-to-display-details (:cluster-to-display-details @state))])
         (when (:show-error-dialog? @state)
           [ClusterErrorViewer (assoc props :dismiss #(swap! state dissoc :show-error-dialog? :errored-cluster-to-show)
                                            :cluster-to-view (:errored-cluster-to-show @state))])
         (when (:show-notebook-rename-dialog? @state)
           [NotebookRenamer (assoc props :dismiss #(swap! state dissoc :show-notebook-rename-dialog?)
-                                        :choose-notebook choose-notebook
-                                        :pet-token pet-token
-                                        :rename-notebook #((:refresh-notebooks props)))])
+                                        :choose-notebook choose-notebook)])
         (when (:show-notebook-duplicate-dialog? @state)
           [NotebookDuplicator (assoc props :dismiss #(swap! state dissoc :show-notebook-duplicate-dialog?)
-                                           :choose-notebook choose-notebook
-                                           :pet-token pet-token
-                                           :duplicate-notebook #((:refresh-notebooks props)))])
+                                           :choose-notebook choose-notebook)])
         (when (:show-notebook-delete-dialog? @state)
           [NotebookDeleter (assoc props :dismiss #(swap! state dissoc :show-notebook-delete-dialog?)
-                                        :choose-notebook choose-notebook
-                                        :pet-token pet-token
-                                        :delete-notebook #((:refresh-notebooks props)))])
+                                        :choose-notebook choose-notebook)])
         [Table
          {:data-test-id "notebooks-table" :data notebooks
           :body
@@ -219,11 +205,12 @@
        [:div {:display "inline-flex"}
         (when show-create-dialog?
           [NotebookCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                        :reload-after-create #(this :-get-pet-token))])
+                                        :pet-token (:pet-token @state)
+                                        :notebooks notebooks
+                                        :refresh-notebooks #(this :-refresh-notebooks))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
         [:div {:style {:margin 10 :fontSize "88%"}} "These are your actual notebooks in the workspace"]
         [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
-        ;  (js/alert (str "notebooks is " notebooks))
         (if notebooks
           [NotebooksTable
            (assoc props
@@ -291,8 +278,6 @@
            {:keys [server-response]} @state
            {:keys [notebooks]} server-response
            filtered-notebooks (filter (comp (partial = (:clusterName cluster)) :cluster-name) notebooks)]
-       ;  (js/alert (str "calling localize for cluster " (:clusterName cluster) " and " (count filtered-notebooks) " notebooks"))
-       ;  (js/alert (reduce merge (conj (map (partial this :-localize-entry) filtered-notebooks) (this :-delocalize-json))))
        (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
                                     ;(this :-delocalize-json)
                                     (reduce merge (conj (map (partial this :-localize-entry) filtered-notebooks) (this :-delocalize-json)))
@@ -316,7 +301,6 @@
 
    :-stop-cluster
    (fn [{:keys [props state this]} cluster]
-     ;  (js/alert (str "in stop cluster with clsuter " (:googleProject cluster) (:clusterName cluster)))
      (swap! state assoc :cluster-map (assoc (:cluster-map @state) (:clusterName cluster) (assoc cluster :status "Stopping")))
      (endpoints/call-ajax-leo
       {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))

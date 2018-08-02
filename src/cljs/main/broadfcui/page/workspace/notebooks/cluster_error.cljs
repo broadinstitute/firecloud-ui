@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.blocker :refer [blocker]]
-   [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.common.components :as comps]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils.ajax :as ajax]
@@ -22,8 +21,7 @@
        [modals/OKCancelForm
         {:header "Cluster Error"
          :dismiss (:dismiss props)
-         :ok-button {:text "Done"
-                     :onClick (:dismiss props)}
+         :ok-button {:text "Done" :onClick (:dismiss props)}
          :show-cancel? false
          :content
          (react/create-element
@@ -35,6 +33,7 @@
                           :fontSize "90%" :maxHeight 206
                           :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
             (:errorMessage (first (:errors cluster-to-view-details)))]])}]))
+
    :-get-cluster-details
    (fn [{:keys [props state]}]
      (let [{:keys [cluster-to-view]} props]

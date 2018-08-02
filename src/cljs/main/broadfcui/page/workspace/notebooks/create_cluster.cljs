@@ -9,7 +9,6 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.components.modals :as modals]
-   [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -55,7 +54,7 @@
            {:keys [choose-notebook]} props]
        [modals/OKCancelForm
         {:header "Create Cluster"
-         :dismiss (:dismiss-cluster-creator props)
+         :dismiss (:dismiss props)
          :ok-button {:onClick #(this :-create-cluster)}
          :content
          (react/create-element
@@ -185,8 +184,8 @@
                           (swap! state dissoc :creating?)
                           (if success?
                             (do
-                              ((:choose-cluster props) clusterNameCreate)
-                              ((:dismiss-cluster-creator props)))
+                              ((:reload-after-choose props) clusterNameCreate)
+                              ((:dismiss props)))
                             (swap! state assoc :server-error (get-parsed-response false))))})))))
    :-process-labels
    (fn [{:keys [state]}]
