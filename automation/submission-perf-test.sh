@@ -108,7 +108,7 @@ monitorSubmission() {
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
     submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq '.status')
-
+    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq '.workflows[] | .status')
 }
 
 # check if user needs a token refresh
@@ -134,6 +134,7 @@ if [ $ENV = "alpha" ]; then
     #launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
     #launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
+
     #Monitor the progress of the perf test
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
@@ -145,15 +146,16 @@ if [ $ENV = "alpha" ]; then
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             echo "$submissionStatus"
+            echo "$workflowsStatus"
             i++
         done
       done
 
-      if ["$submissionStatus" == "Done"]; then
+      if ["$submissionStatus" == "Done"] && ["$workflowsStatus" == "Succeeded" ]; then
         echo "One-off workflow finished within 2 hours"
         exit 0
       else
-        echo "failing with submission status $submissionStatus"
+        echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
         exit 1
       fi
 
