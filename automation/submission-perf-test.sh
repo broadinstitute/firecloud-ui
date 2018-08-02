@@ -2,6 +2,7 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
+set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -143,7 +144,7 @@ if [ $ENV = "alpha" ]; then
       do
         while [ "$submissionStatus" != "Done" ]
         do
-            sleep 10m
+            sleep 1m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             echo "$submissionStatus"
             echo "$workflowsStatus"
