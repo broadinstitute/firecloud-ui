@@ -144,6 +144,7 @@ if [ $ENV = "alpha" ]; then
         do
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+            echo "$submissionStatus"
             i++
         done
       done
