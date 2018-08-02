@@ -148,7 +148,7 @@ if [ $ENV = "alpha" ]; then
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             echo "$submissionStatus"
             echo "$workflowsStatus"
-            i++
+            ((i++))
         done
       done
 
