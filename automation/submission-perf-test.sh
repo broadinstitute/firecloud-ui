@@ -141,7 +141,7 @@ if [ $ENV = "alpha" ]; then
     echo "$submissionStatus"
     for i in {1..12}
       do
-        while ["$submissionStatus" != "Done"]
+        while [ "$submissionStatus" != "Done" ]
         do
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
@@ -151,8 +151,8 @@ if [ $ENV = "alpha" ]; then
         done
       done
 
-      if ["$submissionStatus" == "Done"] && ["$workflowsStatus" == "Succeeded" ]; then
-        echo "One-off workflow finished within 2 hours"
+      if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+        echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
         exit 0
       else
         echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
