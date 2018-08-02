@@ -151,10 +151,9 @@ if [ $ENV = "alpha" ]; then
 
       if ["$submissionStatus" == "Done"]; then
         echo "One-off workflow finished within 2 hours"
-
         exit 0
       else
-        echo "$submissionStatus"
+        echo "failing with submission status $submissionStatus"
         exit 1
       fi
 
