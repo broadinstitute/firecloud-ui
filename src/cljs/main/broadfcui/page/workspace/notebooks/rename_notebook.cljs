@@ -40,12 +40,10 @@
            [new-notebook-name & fails] (input/get-and-validate refs "newNotebookName")]
        (if fails
          (swap! state assoc :validation-errors fails)
-         ; no-op if the name is unchanged
          (if (= (notebook-utils/notebook-name choose-notebook) new-notebook-name)
-           ((:dismiss props))
-           ; fail if a notebook already exists with the same name
+           ((:dismiss props)) ; no-op if the name is unchanged
            (if (some (comp (partial = new-notebook-name) #(notebook-utils/notebook-name %)) notebooks)
-             (swap! state assoc :validation-errors [(str "Notebook with name \"" new-notebook-name "\" already exists")])
+             (swap! state assoc :validation-errors [(str "Notebook with name \"" new-notebook-name "\" already exists")]) ; fail if a notebook already exists with the same name
              (do
                (swap! state assoc :renaming? true)
                ; a rename is a copy plus a delete

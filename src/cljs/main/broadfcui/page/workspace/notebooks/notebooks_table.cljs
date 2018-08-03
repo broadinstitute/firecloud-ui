@@ -1,4 +1,4 @@
-(ns broadfcui.page.workspace.notebooks.notebooks
+(ns broadfcui.page.workspace.notebooks.notebooks_table
   (:require
    [dmohs.react :as react]
    [broadfcui.utils :as utils]
@@ -210,8 +210,8 @@
                                         :refresh-notebooks #(this :-refresh-notebooks))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
         [:div {:style {:margin 10 :fontSize "88%"}}
-         "List of Jupyter notebooks in your workspace. Launch an interactive analysis environment based on Spark
-          and Hail to open your notebook. See online documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
+         "Create a Jupyter notebook and launch an interactive analysis environment based on Spark and Hail.
+         See online documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
         [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
         (if notebooks
           [NotebooksTable
@@ -219,6 +219,7 @@
              :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
                                                           :text "Create Notebook..." :style {:marginRight 1}
                                                           :onClick #(swap! state assoc :show-create-dialog? true)}]
+                             ; TODO: upload notebook not yet implemented
                              [:div {} [buttons/Button {:data-test-id "upload-modal-button"
                                                        :text "Upload Notebook..." :style {:marginRight 1}}]]]
              :choose-cluster #(this :-assoc-cluster-with-notebook %1 %2)
