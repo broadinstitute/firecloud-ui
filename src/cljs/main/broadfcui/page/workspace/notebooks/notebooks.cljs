@@ -217,8 +217,10 @@
           [NotebooksTable
            (assoc props
              :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
-                                                          :text "Create Notebook..." :style {:marginRight 7}
-                                                          :onClick #(swap! state assoc :show-create-dialog? true)}]]
+                                                          :text "Create Notebook..." :style {:marginRight 1}
+                                                          :onClick #(swap! state assoc :show-create-dialog? true)}]
+                             [:div {} [buttons/Button {:data-test-id "upload-modal-button"
+                                                       :text "Upload Notebook..." :style {:marginRight 1}}]]]
              :choose-cluster #(this :-assoc-cluster-with-notebook %1 %2)
              :stop-cluster #(this :-stop-cluster %)
              :start-cluster #(this :-start-cluster %)
