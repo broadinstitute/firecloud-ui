@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.components :as comps]
    [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
    ))
 
@@ -25,7 +26,9 @@
            (when renaming? (blocker "Renaming notebook..."))
            [comps/ErrorViewer {:error server-error}]
 
-           [:div {:style {:marginBottom "1em"}} (str "Enter new name for notebook \"" (notebook-utils/notebook-name choose-notebook) \"":")]
+           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
+                                :tooltip (str "Enter new name for notebook \"" (notebook-utils/notebook-name choose-notebook) \""")}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue (notebook-utils/notebook-name choose-notebook) :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
            (style/create-validation-error-message validation-errors)])}]))

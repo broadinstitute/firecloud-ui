@@ -46,3 +46,17 @@
                         "Content-Type" "application/x-ipynb+json"}
               :data (utils/->json-string data)
               :on-done on-done}))
+
+(defn get-notebook-config-in-bucket [bucket-name token on-done]
+  (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/" (js/encodeURIComponent "notebooks/.notebook_config.json") "?alt=media")
+              :method :get
+              :headers {"Authorization" (str "Bearer " token)}
+              :on-done on-done}))
+
+(defn update-notebook-config-in-bucket [bucket-name token data on-done]
+  (ajax/call {:url (str "https://www.googleapis.com/upload/storage/v1/b/" bucket-name "/o?uploadType=media&name=" (js/encodeURIComponent (str "notebooks/.notebook_config.json")))
+              :method :post
+              :headers {"Authorization" (str "Bearer " token)
+                        "Content-Type" "application/json"}
+              :data (utils/->json-string data)
+              :on-done on-done}))

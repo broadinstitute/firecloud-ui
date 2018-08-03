@@ -27,12 +27,12 @@
                                           :style {:width "100%" :marginRight "4%" :marginTop 5}
                                           :default-value (when-not (nil? cluster-name) (cluster-menu-entry (get cluster-map cluster-name)))}
                                          (map cluster-menu-entry (vals cluster-map)))
-           (notebook-utils/create-inline-form-label
-            (links/create-internal
-             {:data-test-id "cluster-creator"
-              :style {:textDecoration "none" :color (:button-primary style/colors)}
-              :onClick #(this :-create-cluster)}
-             "Or, create a new cluster."))])}]))
+           [:div {}
+           [:span {:style {:marginBottom "0.16667em" :fontSize "88%"}}
+            "Or, " (links/create-internal {:data-test-id "cluster-creator"
+                                           :style {:textDecoration "none" :color (:button-primary style/colors)}
+                                           :onClick #(this :-create-cluster)}
+                                          "create a new cluster.")]]])}]))
 
    :-choose-cluster
    (fn [{:keys [props refs]}]

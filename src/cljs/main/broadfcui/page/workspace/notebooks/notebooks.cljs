@@ -209,7 +209,9 @@
                                         :notebooks notebooks
                                         :refresh-notebooks #(this :-refresh-notebooks))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
-        [:div {:style {:margin 10 :fontSize "88%"}} "These are your actual notebooks in the workspace"]
+        [:div {:style {:margin 10 :fontSize "88%"}}
+         "List of Jupyter notebooks in your workspace. Launch an interactive analysis environment based on Spark
+          and Hail to open your notebook. See online documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
         [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
         (if notebooks
           [NotebooksTable
@@ -257,6 +259,7 @@
            (this :-process-running-clusters))
          (js/setTimeout #(this :-schedule-cookie-refresh) 120000))))
 
+   ; For all Running clusters, calls /setCookie and localizes associated notebooks.
    :-process-running-clusters
    (fn [{:keys [props state this]}]
      (let [cluster-map (:cluster-map @state)
@@ -279,7 +282,6 @@
            {:keys [notebooks]} server-response
            filtered-notebooks (filter (comp (partial = (:clusterName cluster)) :cluster-name) notebooks)]
        (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
-                                    ;(this :-delocalize-json)
                                     (reduce merge (conj (map (partial this :-localize-entry) filtered-notebooks) (this :-delocalize-json)))
                                     (fn [{:keys [success? get-parsed-response]}]
                                       (when-not success?
@@ -335,8 +337,7 @@
                       ; Update the state with the current cluster list
                       (this :-update-cluster-map filtered-cluster-map)
                       ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                      ; Note the refresh is still done for Running clusters because they may be auto-paused by Leo.
-                      (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting" "Running"])
+                      (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
                         (js/setTimeout #(this :-get-clusters-list) 10000))
                       ; If there are running clusters, call the /setCookie endpoint immediately.
                       (when (notebook-utils/contains-statuses filtered-clusters ["Running"])
@@ -358,6 +359,7 @@
                       (this :-get-notebooks))
                     (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
 
+   ; Gets notebooks from GCS
    :-get-notebooks
    (fn [{:keys [props state this]}]
      (let [bucket-name (get-in props [:workspace :workspace :bucketName])]
@@ -366,6 +368,7 @@
            (if success?
              (let [json-response (utils/parse-json-string raw-response true)
                    notebooks (filter (comp #(clojure.string/ends-with? % ".ipynb") :name) (:items json-response))]
+               (this :-load-notebook-cluster-association notebooks)
                (swap! state assoc :server-response {:notebooks notebooks}))
              (swap! state assoc :server-response {:server-error raw-response}))))))
 
@@ -390,10 +393,48 @@
    :-assoc-cluster-with-notebook
    (fn [{:keys [state props this]} notebook cluster-name]
      (let [{:keys [server-response]} @state
-           {:keys [notebooks]} server-response]
+           {:keys [notebooks]} server-response
+           updated-notebooks (map (fn [n]
+                                    (if (= (:name n) (:name notebook))
+                                      (merge n {:cluster-name cluster-name})
+                                      n))
+                                  notebooks)]
        (this :-get-clusters-list)
-       (swap! state assoc :server-response {:notebooks (map (fn [n]
-                                                              (if (= (:name n) (:name notebook))
-                                                                (merge n {:cluster-name cluster-name})
-                                                                n))
-                                                            notebooks)})))})
+       (swap! state assoc :server-response {:notebooks updated-notebooks})
+       (this :-persist-notebook-cluster-association updated-notebooks)))
+
+   ; Persists the notebook-cluster associations in a special config file in GCS so they persist between page loads.
+   :-persist-notebook-cluster-association
+   (fn [{:keys [state props this]} notebooks]
+     (let [{:keys [notebook-config cluster-map]} @state
+           bucket-name (get-in props [:workspace :workspace :bucketName])
+           notebook-config-to-add (reduce conj (map (fn [n]
+                                                      (if-let [cluster-name (:cluster-name n)]
+                                                        {(notebook-utils/notebook-name n) [cluster-name]}
+                                                        {}))
+                                                    notebooks))
+           new-notebook-config (merge-with (fn [a b] (into (filter #(not (contains? cluster-map %)) a) b)) notebook-config notebook-config-to-add)
+           json (utils/->json-string new-notebook-config)]
+       (notebook-utils/update-notebook-config-in-bucket bucket-name (:pet-token @state) json
+         (fn [{:keys [success? raw-response]}]
+           (when-not success?
+             (swap! state assoc :server-response {:server-error raw-response}))))))
+
+   ; Loads the notebook-cluster association preferences from GCS.
+   :-load-notebook-cluster-association
+   (fn [{:keys [state props this]} notebooks]
+     (let [bucket-name (get-in props [:workspace :workspace :bucketName])
+           {:keys [cluster-map]} @state]
+       (notebook-utils/get-notebook-config-in-bucket bucket-name (:pet-token @state)
+         (fn [{:keys [success? raw-response]}]
+           (if success?
+             (let [unescaped-json (utils/parse-json-string raw-response false)
+                   notebook-config (utils/parse-json-string unescaped-json false)
+                   new-notebooks (map (fn [n]
+                                        (if-let [nc (get notebook-config (notebook-utils/notebook-name n))]
+                                          (merge n {:cluster-name (first (filter (partial contains? cluster-map) nc))})
+                                          n))
+                                      notebooks)]
+               (swap! state assoc :notebook-config notebook-config)
+               (swap! state assoc :server-response {:notebooks new-notebooks}))
+             (swap! state assoc :notebook-config {}))))))})

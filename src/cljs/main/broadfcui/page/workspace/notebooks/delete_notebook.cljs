@@ -23,7 +23,7 @@
          (react/create-element
           [:div {:style {:marginTop 0}}
            (when deleting? (blocker "Deleting notebook..."))
-           [:div {} (str "Are you sure you want to delete notebook \"" (notebook-utils/notebook-name choose-notebook) "\"?")]
+           [:div {} (str "Are you sure you want to delete notebook \"" (notebook-utils/notebook-name choose-notebook) "\"? This operation cannot be undone.")]
            [comps/ErrorViewer {:error server-error}]])}]))
 
    :-delete-notebook

@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.components :as comps]
    [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
    ))
 
@@ -76,10 +77,14 @@
            (when creating? (blocker "Creating notebook..."))
            [comps/ErrorViewer {:error server-error}]
 
-           (style/create-form-label "Name")
+           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
+                               :tooltip "The name of the notebook. Does not need to include .ipynb. This can be changed later."}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue "" :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
-           (style/create-form-label "Kernel")
+           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Kernel")
+                                :tooltip "The notebook kernel. This can be changed later."}]]
            (style/create-identity-select {:data-test-id "kernel-select" :ref "newNotebookKernel"
                                           :style {:width "100%"} :defaultValue "Python 3"}
                                          (keys kernel-map))
