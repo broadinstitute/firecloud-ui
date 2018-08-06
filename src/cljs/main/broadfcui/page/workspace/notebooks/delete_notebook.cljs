@@ -32,10 +32,10 @@
            bucket-name (get-in props [:workspace :workspace :bucketName])]
        (swap! state assoc :deleting? true)
        (notebook-utils/delete-notebook bucket-name pet-token choose-notebook
-         (fn [{:keys [success? raw-response]}]
-           (swap! state assoc :deleting? false)
-           (if success?
-             (do
-               ((:refresh-notebooks props))
-               ((:dismiss props))))
-           (swap! state assoc :server-response {:server-error raw-response})))))})
+                                       (fn [{:keys [success? raw-response]}]
+                                         (swap! state assoc :deleting? false)
+                                         (if success?
+                                           (do
+                                             ((:refresh-notebooks props))
+                                             ((:dismiss props))))
+                                         (swap! state assoc :server-response {:server-error raw-response})))))})

@@ -28,7 +28,7 @@
 
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
             [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
-                                :tooltip (str "Enter new name for notebook \"" (notebook-utils/notebook-name choose-notebook) \""")}]]
+                                :tooltip (str "Enter new name for notebook \"" (notebook-utils/notebook-name choose-notebook) \" "")}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue (notebook-utils/notebook-name choose-notebook) :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
            (style/create-validation-error-message validation-errors)])}]))
@@ -48,14 +48,14 @@
                (swap! state assoc :renaming? true)
                ; a rename is a copy plus a delete
                (notebook-utils/copy-notebook bucket-name pet-token choose-notebook new-notebook-name
-                 (fn [{:keys [success? raw-response]}]
-                   (if success?
-                     (notebook-utils/delete-notebook bucket-name pet-token choose-notebook
-                       (fn [{:keys [success? raw-response]}]
-                         (swap! state assoc :renaming? false)
-                         (if success?
-                           (do
-                             ((:refresh-notebooks props))
-                             ((:dismiss props)))
-                           (swap! state assoc :server-response {:server-error raw-response}))))
-                     (swap! state assoc :server-response {:server-error raw-response}))))))))))})
+                                             (fn [{:keys [success? raw-response]}]
+                                               (if success?
+                                                 (notebook-utils/delete-notebook bucket-name pet-token choose-notebook
+                                                                                 (fn [{:keys [success? raw-response]}]
+                                                                                   (swap! state assoc :renaming? false)
+                                                                                   (if success?
+                                                                                     (do
+                                                                                       ((:refresh-notebooks props))
+                                                                                       ((:dismiss props)))
+                                                                                     (swap! state assoc :server-response {:server-error raw-response}))))
+                                                 (swap! state assoc :server-response {:server-error raw-response}))))))))))})

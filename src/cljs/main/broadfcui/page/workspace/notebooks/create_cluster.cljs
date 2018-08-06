@@ -74,16 +74,16 @@
                (react/create-element
                 [:div {}
                  (flex/box {}
-                           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Machine Type")
-                                                :tooltip "Determines the number of CPUs and memory for the master VM."}]]
-                           [:div {:style {:width "48%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Disk Size")
-                                                  :tooltip "Size of the disk on the master VM. Minimum size is 100GB."}]])
+                   [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Machine Type")
+                                        :tooltip "Determines the number of CPUs and memory for the master VM."}]]
+                   [:div {:style {:width "48%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Master Disk Size")
+                                        :tooltip "Size of the disk on the master VM. Minimum size is 100GB."}]])
                  [:div {:display "inline-block"}
                   (style/create-identity-select {:data-test-id "master-machine-type-select" :ref "masterMachineType"
                                                  :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
-                                                machineTypes)
+                    machineTypes)
                   [input/TextField {:data-test-id "master-disk-size-input" :ref "masterDiskSize" :autoFocus true
                                     :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
                   [:span {:style {:marginLeft "2%"}} (notebook-utils/create-inline-form-label "GB")]]
@@ -93,28 +93,28 @@
                  [input/TextField {:data-test-id "workers-input" :ref "numberOfWorkers" :autoFocus true
                                    :style {:width "100%"} :defaultValue 0 :min 0 :type "number"}]
                  (flex/box {}
-                           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (style/create-form-label "Worker Local SSDs")
-                                                :tooltip "The number of local solid state disks for workers. Ignored if Workers is 0."}]]
-                           [:div {:style {:width "48%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (style/create-form-label "Preemptible Workers")
-                                                :tooltip "Ignored if Workers is 0."}]])
+                   [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (style/create-form-label "Worker Local SSDs")
+                                        :tooltip "The number of local solid state disks for workers. Ignored if Workers is 0."}]]
+                   [:div {:style {:width "48%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (style/create-form-label "Preemptible Workers")
+                                        :tooltip "Ignored if Workers is 0."}]])
                  (flex/box {}
-                           [input/TextField {:data-test-id "worker-local-ssds-input" :ref "numberOfWorkerLocalSSDs" :autoFocus true
-                                             :style {:width "48%" :marginRight "4%"} :defaultValue 0 :min 0 :type "number"}]
-                           [input/TextField {:data-test-id "preemptible-workers-input" :ref "numberOfPreemptibleWorkers"
-                                             :autoFocus true :style {:width "48%"} :defaultValue 0 :min 0 :type "number"}])
+                   [input/TextField {:data-test-id "worker-local-ssds-input" :ref "numberOfWorkerLocalSSDs" :autoFocus true
+                                     :style {:width "48%" :marginRight "4%"} :defaultValue 0 :min 0 :type "number"}]
+                   [input/TextField {:data-test-id "preemptible-workers-input" :ref "numberOfPreemptibleWorkers"
+                                     :autoFocus true :style {:width "48%"} :defaultValue 0 :min 0 :type "number"}])
                  (flex/box {}
-                           [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Machine Type")
-                                                :tooltip "Determines the number of CPUs and memory for each worker VM. Ignored if Workers is 0."}]]
-                           [:div {:style {:width "48%" :marginBottom "1%"}}
-                            [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Disk Size")
-                                                :tooltip "Size of the disk on each worker VM. Minimum size is 100GB. Ignored if Workers is 0."}]])
+                   [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Machine Type")
+                                        :tooltip "Determines the number of CPUs and memory for each worker VM. Ignored if Workers is 0."}]]
+                   [:div {:style {:width "48%" :marginBottom "1%"}}
+                    [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Worker Disk Size")
+                                        :tooltip "Size of the disk on each worker VM. Minimum size is 100GB. Ignored if Workers is 0."}]])
                  [:div {:display "inline-block"}
                   (style/create-identity-select {:data-test-id "worker-machine-type-select" :ref "workerMachineType"
                                                  :style {:width "48%" :marginRight "4%"} :defaultValue "n1-standard-4"}
-                                                machineTypes)
+                    machineTypes)
                   [input/TextField {:data-test-id "worker-disk-size-input" :ref "workerDiskSize" :autoFocus true
                                     :style {:width "41%"} :defaultValue 500 :min 0 :type "number"}]
                   [:span {:style {:marginLeft "2%"}} (notebook-utils/create-inline-form-label "GB")]]
@@ -132,35 +132,35 @@
                  (when (seq (:labels @state))
                    [:div {:key (:label-gensym @state)}
                     (flex/box {}
-                              [:span {:style {:width "50%"}} (notebook-utils/create-inline-form-label "Key")]
-                              [:span {:style {:width "50%" :marginLeft "4%"}} (notebook-utils/create-inline-form-label "Value")])
+                      [:span {:style {:width "50%"}} (notebook-utils/create-inline-form-label "Key")]
+                      [:span {:style {:width "50%" :marginLeft "4%"}} (notebook-utils/create-inline-form-label "Value")])
                     (map-indexed (fn [i label]
                                    (flex/box {:style {:marginBottom 10}}
-                                             (links/create-internal
-                                              {:style {:color (:text-light style/colors)
-                                                       :marginLeft -20
-                                                       :minHeight 20 :minWidth 20
-                                                       }
-                                               :href "javascript:;"
-                                               :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                                 (update :labels utils/delete i))))}
-                                              (icons/render-icon {:style {:marginTop "35%"}} :remove))
-                                             [input/TextField {:data-test-id (str "key-" i "-input")
-                                                               :style {:ref (str "key" i) :marginBottom 0 :width "48%" :marginRight "4%"}
-                                                               :defaultValue (first label)
-                                                               :onChange #(swap! state update-in [:labels i]
-                                                                                 assoc 0 (-> % .-target .-value))}]
-                                             [input/TextField {:data-test-id (str "value-" i "-input")
-                                                               :style {:ref (str "val" i) :marginBottom 0 :width "48%"}
-                                                               :defaultValue (last label)
-                                                               :onChange #(swap! state update-in [:labels i]
-                                                                                 assoc 1 (-> % .-target .-value))}]))
+                                     (links/create-internal
+                                       {:style {:color (:text-light style/colors)
+                                                :marginLeft -20
+                                                :minHeight 20 :minWidth 20
+                                                }
+                                        :href "javascript:;"
+                                        :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
+                                                                          (update :labels utils/delete i))))}
+                                       (icons/render-icon {:style {:marginTop "35%"}} :remove))
+                                     [input/TextField {:data-test-id (str "key-" i "-input")
+                                                       :style {:ref (str "key" i) :marginBottom 0 :width "48%" :marginRight "4%"}
+                                                       :defaultValue (first label)
+                                                       :onChange #(swap! state update-in [:labels i]
+                                                                         assoc 0 (-> % .-target .-value))}]
+                                     [input/TextField {:data-test-id (str "value-" i "-input")
+                                                       :style {:ref (str "val" i) :marginBottom 0 :width "48%"}
+                                                       :defaultValue (last label)
+                                                       :onChange #(swap! state update-in [:labels i]
+                                                                         assoc 1 (-> % .-target .-value))}]))
                                  (:labels @state))])
-                  [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10} :data-test-id "add-label-button"
-                                   :onClick (fn []
-                                              (swap! state #(-> %
-                                                                (update :labels conj ["" ""])
-                                                                (assoc :label-gensym (gensym)))))}]])}]])
+                 [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10} :data-test-id "add-label-button"
+                                  :onClick (fn []
+                                             (swap! state #(-> %
+                                                               (update :labels conj ["" ""])
+                                                               (assoc :label-gensym (gensym)))))}]])}]])
            [comps/ErrorViewer {:error server-error}]
            (style/create-validation-error-message validation-errors)])}]))
 

@@ -57,10 +57,10 @@
                                          :version "3.3.3"}}}))
 
 (def kernel-map {"Python 2" python2-notebook
-              "Python 3" python3-notebook
-              "R" r-notebook
-              "Hail 0.1" hail01-notebook
-              "Hail 0.2" hail02-notebook})
+                 "Python 3" python3-notebook
+                 "R" r-notebook
+                 "Hail 0.1" hail01-notebook
+                 "Hail 0.2" hail02-notebook})
 
 (react/defc NotebookCreator
   {:render
@@ -79,7 +79,7 @@
 
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
             [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
-                               :tooltip "The name of the notebook. Does not need to include .ipynb. This can be changed later."}]]
+                                :tooltip "The name of the notebook. Does not need to include .ipynb. This can be changed later."}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue "" :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
@@ -87,7 +87,7 @@
                                 :tooltip "The notebook kernel. This can be changed later."}]]
            (style/create-identity-select {:data-test-id "kernel-select" :ref "newNotebookKernel"
                                           :style {:width "100%"} :defaultValue "Python 3"}
-                                         (keys kernel-map))
+             (keys kernel-map))
            (style/create-validation-error-message validation-errors)])}]))
 
    :-create-notebook
@@ -104,12 +104,12 @@
            (do
              (swap! state assoc :creating? true)
              (notebook-utils/create-notebook bucket-name pet-token new-notebook-name (get kernel-map new-notebook-kernel)
-               (fn [{:keys [success? raw-response]}]
-                 (swap! state assoc :creating? false)
-                 (if success?
-                   (do
-                     ((:refresh-notebooks props))
-                     ((:dismiss props)))
-                   (swap! state assoc :server-response {:server-error raw-response})))))))))})
+                                             (fn [{:keys [success? raw-response]}]
+                                               (swap! state assoc :creating? false)
+                                               (if success?
+                                                 (do
+                                                   ((:refresh-notebooks props))
+                                                   ((:dismiss props)))
+                                                 (swap! state assoc :server-response {:server-error raw-response})))))))))})
 
 
