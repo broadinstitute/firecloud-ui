@@ -15,6 +15,9 @@
 (defn notebook-name [notebook]
   (clojure.string/replace (last (clojure.string/split (:name notebook) #"/")) ".ipynb" ""))
 
+(defn notebook-name-with-suffix [notebook]
+  (last (clojure.string/split (:name notebook) #"/")))
+
 (defn leo-notebook-url-base [cluster]
   (str (config/leonardo-url-root) "/notebooks/" (:googleProject cluster) "/" (:clusterName cluster)))
 

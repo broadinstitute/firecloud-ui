@@ -142,17 +142,26 @@
              :as-text :name :sort-by :name :sort-initial :asc
              :render
              (fn [notebook]
+               ; If there is an associated cluster, display it.
                (if-let [cluster (get cluster-map (:cluster-name notebook))]
+                 ; If the associated cluster is Running, display the name as a link.
                  (if (= (:status cluster) "Running")
                    (let [workspace-name (get-in props [:workspace :workspace :name])]
                      (links/create-external {:data-test-id (str (:clusterName cluster) "-link")
                                              :href (notebook-utils/leo-notebook-url cluster workspace-name notebook)} (:clusterName cluster)))
                    (:clusterName cluster))
-                 (links/create-internal
-                   {:data-test-id (str (:name notebook) "-chooser")
-                    :style {:textDecoration "none" :color (:button-primary style/colors)}
-                    :onClick #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
-                   "Choose...")))}
+                 ; If there are no clusters, display a Create link. Otherwise, display a Choose link.
+                 (if (empty? cluster-map)
+                   (links/create-internal
+                     {:data-test-id (str (:name notebook) "-creator")
+                      :style {:textDecoration "none" :color (:button-primary style/colors)}
+                      :onClick #(swap! state assoc :show-cluster-create-dialog? true :choose-notebook notebook)}
+                     "Create...")
+                   (links/create-internal
+                     {:data-test-id (str (:name notebook) "-chooser")
+                      :style {:textDecoration "none" :color (:button-primary style/colors)}
+                      :onClick #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
+                   "Choose..."))))}
             {:header "Status" :initial-width 150
              :as-text :name :sort-by :name
              :render
@@ -447,14 +456,18 @@
 
    :-upload-notebook
    (fn [{:keys [state props this]} name text]
-     (if (clojure.string/ends-with? name ".ipynb")
-       (let [bucket-name (get-in props [:workspace :workspace :bucketName])]
-         (notebook-utils/create-notebook bucket-name (:pet-token @state) name text
-                                         (fn [{:keys [success? raw-response]}]
-                                           (if success?
-                                             (this :-get-notebooks)
-                                             (swap! state assoc :server-response {:server-error raw-response})))))
-       (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb."))))
+     (let [{:keys [server-response]} @state
+           {:keys [notebooks]} server-response
+           bucket-name (get-in props [:workspace :workspace :bucketName])]
+       (if (clojure.string/ends-with? name ".ipynb")
+         (if (some (comp (partial = name) #(notebook-utils/notebook-name-with-suffix %)) notebooks)
+           (notebook-utils/create-notebook bucket-name (:pet-token @state) name text
+                                           (fn [{:keys [success? raw-response]}]
+                                             (if success?
+                                               (this :-get-notebooks)
+                                               (swap! state assoc :server-response {:server-error raw-response}))))
+           (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": notebook already exists in this workspace.")))
+         (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb.")))))
 
    ; Persists the notebook-cluster associations in a special config file in GCS so they persist between page loads.
    :-persist-notebook-cluster-association
