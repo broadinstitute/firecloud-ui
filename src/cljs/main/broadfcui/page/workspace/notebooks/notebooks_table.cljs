@@ -16,6 +16,7 @@
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.notebooks.create_notebook :refer [NotebookCreator]]
@@ -119,7 +120,7 @@
              :as-text :name :sort-by :name
              :render
              (fn [notebook]
-               (when (contains? notebook :cluster-name)
+               (when (contains? cluster-map (get notebook :cluster-name))
                  (dropdown/render-dropdown-menu
                   {:label
                    (icons/render-icon {} :settings)
@@ -205,7 +206,7 @@
 
    :render
    (fn [{:keys [props state this refs]}]
-     (let [{:keys [server-response cluster-map file-contents file upload-result show-create-dialog?]} @state
+     (let [{:keys [server-response cluster-map file-name file-contents show-create-dialog? upload-error]} @state
            {:keys [notebooks server-error]} server-response]
        [:div {:display "inline-flex"}
         (when show-create-dialog?
@@ -218,32 +219,34 @@
          "Create a Jupyter notebook and launch an interactive analysis environment based on Spark and Hail.
          See online documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
         [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
-        [:input {:data-test-id "notebook-upload-input"
-                 :type "file" :name "notebooks" :ref "notebooks"
+
+        ;; Upload notebook
+        ;; This key is changed every time a file is selected causing React to completely replace the
+        ;; element. Otherwise, if a user selects the same file (even after having modified it), the
+        ;; browser will not fire the onChange event.
+        [:input {:key (:file-input-key @state)
+                 :type "file"
+                 :ref "notebook-uploader"
                  :style {:display "none"}
                  :onChange (fn [e]
                              (let [file (-> e .-target .-files (aget 0))
                                    reader (js/FileReader.)]
                                (when file
-                                 (swap! state dissoc :upload-result)
                                  (set! (.-onload reader)
-                                       #(swap! state assoc
-                                               :file file
-                                               :file-contents (.-result reader)
-                                               :file-input-key (gensym "file-input-")))
+                                       #(let [name (.-name file)
+                                              text (.-result reader)]
+                                          (swap! state assoc :file-input-key (gensym "notebook-uploader-"))
+                                          (this :-upload-notebook name text)))
                                  (.readAsText reader file))))}]
-        (when upload-result
-          (js/alert upload-result))
         (if notebooks
           [NotebooksTable
            (assoc props
              :toolbar-items [flex/spring [buttons/Button {:data-test-id "create-modal-button"
                                                           :text "Create Notebook..." :style {:marginRight 1}
                                                           :onClick #(swap! state assoc :show-create-dialog? true)}]
-                             ; TODO: upload notebook not yet implemented
                              [:div {} [buttons/Button {:data-test-id "upload-modal-button"
                                                        :text "Upload Notebook..." :style {:marginRight 1}
-                                                       :onClick #(-> (@refs "notebooks") .click)}]]]
+                                                       :onClick #(-> (@refs "notebook-uploader") .click)}]]]
              :choose-cluster #(this :-assoc-cluster-with-notebook %1 %2)
              :stop-cluster #(this :-stop-cluster %)
              :start-cluster #(this :-start-cluster %)
@@ -252,7 +255,21 @@
              :notebooks notebooks
              :pet-token (:pet-token @state)
              :refresh-notebooks #(this :-refresh-notebooks))]
-          [:div {:style {:textAlign "center"}} (spinner "Loading notebooks...")])]))
+          [:div {:style {:textAlign "center"}} (spinner "Loading notebooks...")])
+        (when upload-error
+          (let [dismiss #(swap! state dissoc :upload-error)]
+            [modals/OKCancelForm
+             {:header "Upload Error"
+              :dismiss dismiss
+              :ok-button {:text "Close" :onClick dismiss}
+              :show-cancel? false
+              :content
+              (react/create-element
+               (style/create-flexbox {}
+                                     [:span {:style {:paddingRight "0.5rem"}}
+                                      (icons/render-icon {:style {:color (:state-exception style/colors)}}
+                                                         :warning)]
+                                     upload-error))}]))]))
 
    :component-did-mount
    (fn [{:keys [this]}]
@@ -427,6 +444,17 @@
        (this :-get-clusters-list)
        (swap! state assoc :server-response {:notebooks updated-notebooks})
        (this :-persist-notebook-cluster-association updated-notebooks)))
+
+   :-upload-notebook
+   (fn [{:keys [state props this]} name text]
+     (if (clojure.string/ends-with? name ".ipynb")
+       (let [bucket-name (get-in props [:workspace :workspace :bucketName])]
+         (notebook-utils/create-notebook bucket-name (:pet-token @state) name text
+                                         (fn [{:keys [success? raw-response]}]
+                                           (if success?
+                                             (this :-get-notebooks)
+                                             (swap! state assoc :server-response {:server-error raw-response})))))
+       (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb."))))
 
    ; Persists the notebook-cluster associations in a special config file in GCS so they persist between page loads.
    :-persist-notebook-cluster-association
