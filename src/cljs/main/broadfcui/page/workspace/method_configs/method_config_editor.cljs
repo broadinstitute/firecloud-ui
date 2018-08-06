@@ -303,9 +303,6 @@
                                    :data (:autocomplete-list @locals)}])]))
    :-begin-editing
    (fn [{:keys [state locals refs this]}]
-     (if-not (:entities-loaded? @locals)
-       (when (this :-load-entities)
-         (this :-begin-editing))
        (let [{:keys [loaded-config inputs-outputs redacted? entity-type? entity-types]} @state
              {:keys [toggle-entity-type?]} @locals
              new-entity-type? (if-not toggle-entity-type? entity-type? (not entity-type?))
@@ -320,7 +317,7 @@
                 :original-inputs-outputs inputs-outputs
                 :original-redacted? redacted?
                 :original-entity-type? entity-type?)
-         (swap! locals assoc :toggle-entity-type? false))))
+         (swap! locals assoc :toggle-entity-type? false)))
    :-cancel-editing
    (fn [{:keys [state refs]}]
      ((@refs "IOTables") :cancel-editing)
@@ -469,8 +466,7 @@
                                  :methods {[methodNamespace methodName] (mapv :snapshotId response)})
                           ;; FIXME: :error-message is unused
                           (swap! state assoc :methods {} :error-message status-text)))
-                      (if-not (:entities-loaded? @locals)
-                        (this :-load-entities)))})
+                      )})
          "dockstore"
          (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
            (endpoints/dockstore-get-versions
@@ -480,7 +476,9 @@
                 (swap! state assoc
                        ;; vector only used when checking redaction, N/A for Dockstore
                        :methods {[nil nil] (mapv :name (get-parsed-response))})
-                (swap! state assoc :methods {} :error-message status-text))))))))
+                (swap! state assoc :methods {} :error-message status-text))))))
+       (if-not (:entities-loaded? @locals)
+         (this :-load-entities))))
    ; Inputs (:workspace-id props) (:workspace props) (:loaded-config @state)
    ; Outputs (:entity-types @state) (:entities-loaded? @locals) (:blocker @state) (:data-attribute-load-error @state)
    :-load-entities
