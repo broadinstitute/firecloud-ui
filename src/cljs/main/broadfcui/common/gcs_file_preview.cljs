@@ -38,8 +38,7 @@
            {:keys [data error status]} response
            {:keys [md5Hash size updated timeCreated]} data
            object (or object (:name data))
-           bucket-name (or bucket-name (:bucket data))
-           ]
+           bucket-name (or bucket-name (:bucket data))]
        [modals/OKCancelForm
         {:header "File Details"
          :data-test-id "preview-modal"
