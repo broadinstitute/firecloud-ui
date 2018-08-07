@@ -215,7 +215,7 @@
 
    :render
    (fn [{:keys [props state this refs]}]
-     (let [{:keys [server-response cluster-map file-name file-contents show-create-dialog? upload-error]} @state
+     (let [{:keys [server-response cluster-map file-name file-contents show-create-dialog? uploading? upload-error]} @state
            {:keys [notebooks server-error]} server-response]
        [:div {:display "inline-flex"}
         (when show-create-dialog?
@@ -245,6 +245,7 @@
                                        #(let [name (.-name file)
                                               text (.-result reader)]
                                           (swap! state assoc :file-input-key (gensym "notebook-uploader-"))
+                                          (swap! state assoc :uploading? true)
                                           (this :-upload-notebook name text)))
                                  (.readAsText reader file))))}]
         (if notebooks
@@ -265,6 +266,9 @@
              :pet-token (:pet-token @state)
              :refresh-notebooks #(this :-refresh-notebooks))]
           [:div {:style {:textAlign "center"}} (spinner "Loading notebooks...")])
+
+        (when uploading?
+          (blocker "Uploading notebook..."))
         (when upload-error
           (let [dismiss #(swap! state dissoc :upload-error)]
             [modals/OKCancelForm
@@ -460,11 +464,13 @@
            {:keys [notebooks]} server-response
            bucket-name (get-in props [:workspace :workspace :bucketName])]
        (if (clojure.string/ends-with? name ".ipynb")
-         (if (some (comp (partial = name) #(notebook-utils/notebook-name-with-suffix %)) notebooks)
+         (if (not-any? (comp (partial = name) #(notebook-utils/notebook-name-with-suffix %)) notebooks)
            (notebook-utils/create-notebook bucket-name (:pet-token @state) name text
                                            (fn [{:keys [success? raw-response]}]
                                              (if success?
-                                               (this :-get-notebooks)
+                                               (do
+                                                 (swap! state dissoc :uploading?)
+                                                 (this :-get-notebooks))
                                                (swap! state assoc :server-response {:server-error raw-response}))))
            (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": notebook already exists in this workspace.")))
          (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb.")))))
