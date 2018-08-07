@@ -36,7 +36,7 @@ module.exports = {
         igv: "./src/js/igv-deps.js",
         markdown: "./src/js/markdown-deps.js"
         // TODO: address transitive vulnerability before re-enabling
-        // pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
+        // epam/pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
         // pipeline: "./src/js/pipeline-deps.js"
     },
     output: {
