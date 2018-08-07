@@ -18,6 +18,7 @@
    :clone "fa-clone"
    :close "fa-close"
    :collapse "fa-minus-square-o"
+   :comment "fa-comment"
    :delete "fa-trash"
    :disclosure-closed "fa-caret-right"
    :disclosure-opened "fa-caret-down"
