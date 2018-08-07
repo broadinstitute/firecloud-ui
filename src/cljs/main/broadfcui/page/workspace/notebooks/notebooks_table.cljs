@@ -465,7 +465,7 @@
            bucket-name (get-in props [:workspace :workspace :bucketName])]
        (if (clojure.string/ends-with? name ".ipynb")
          (if (not-any? (comp (partial = name) #(notebook-utils/notebook-name-with-suffix %)) notebooks)
-           (notebook-utils/create-notebook bucket-name (:pet-token @state) (clojure.string/replace name ".ipynb" "") text
+           (notebook-utils/upload-notebook bucket-name (:pet-token @state) name text
                                            (fn [{:keys [success? raw-response]}]
                                              (if success?
                                                (do

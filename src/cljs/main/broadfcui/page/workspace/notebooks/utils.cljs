@@ -50,6 +50,14 @@
               :data (utils/->json-string data)
               :on-done on-done}))
 
+(defn upload-notebook [bucket-name token notebook-name-to-upload data on-done]
+  (ajax/call {:url (str "https://www.googleapis.com/upload/storage/v1/b/" bucket-name "/o?uploadType=media&name=" (js/encodeURIComponent (str "notebooks/" notebook-name-to-upload)))
+              :method :post
+              :headers {"Authorization" (str "Bearer " token)
+                        "Content-Type" "application/x-ipynb+json"}
+              :data data
+              :on-done on-done}))
+
 (defn get-notebook-config-in-bucket [bucket-name token on-done]
   (ajax/call {:url (str "https://www.googleapis.com/storage/v1/b/" bucket-name "/o/" (js/encodeURIComponent "notebooks/.notebook_config.json") "?alt=media")
               :method :get
