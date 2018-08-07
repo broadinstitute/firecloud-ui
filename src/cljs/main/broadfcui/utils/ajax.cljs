@@ -114,7 +114,7 @@
 (defn call-martha [uri arg-map]
   (call (assoc arg-map
           :method "POST"
-          :url (config/martha-url)
+          :url (config/martha-file-summary-url)
           :headers (merge (@get-bearer-token-header) content-type=json)
           :data (str "{\"uri\": \"" uri "\"}"))))
 
