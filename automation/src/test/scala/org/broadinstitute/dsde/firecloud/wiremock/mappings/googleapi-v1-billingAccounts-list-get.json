@@ -1,0 +1,24 @@
+{
+  "id" : "9fc13ad7-c748-37fa-8f10-21154f89f8bd",
+  "request" : {
+    "url" : "/v1/billingAccounts",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-googleapi-v1-billingAccounts-list-get.json",
+    "headers" : {
+      "Content-Type" : "application/json; charset=UTF-8",
+      "Vary" : [ "Origin", "X-Origin", "Referer" ],
+      "Date" : "Tue, 31 Jul 2018 18:04:46 GMT",
+      "Server" : "ESF",
+      "Cache-Control" : "private",
+      "X-XSS-Protection" : "1; mode=block",
+      "X-Frame-Options" : "SAMEORIGIN",
+      "X-Content-Type-Options" : "nosniff",
+      "Alt-Svc" : "quic=\":443\"; ma=2592000; v=\"44,43,39,35\"",
+      "Transfer-Encoding" : "chunked"
+    }
+  },
+  "uuid" : "9fc13ad7-c748-37fa-8f10-21154f89f8bd"
+}

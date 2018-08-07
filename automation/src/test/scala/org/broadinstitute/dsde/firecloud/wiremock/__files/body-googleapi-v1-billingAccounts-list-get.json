@@ -1,0 +1,32 @@
+{
+  "billingAccounts": [
+    {
+      "name": "billingAccounts/008AD9-8CE0E6-950ED7",
+      "open": true,
+      "displayName": "PMI Data and Research Center"
+    },
+    {
+      "name": "billingAccounts/014D91-FCB792-33D2C0",
+      "open": true,
+      "displayName": "PMI DRC Workbench Testing"
+    },
+    {
+      "name": "billingAccounts/00708C-45D19D-27AAFA",
+      "open": true,
+      "displayName": "Broad Institute - 8201528",
+      "masterBillingAccount": "billingAccounts/001AC2-2B914D-822931"
+    },
+    {
+      "name": "billingAccounts/000CCF-F7C8D8-53173C",
+      "open": true,
+      "displayName": "Broad Institute - 8201537",
+      "masterBillingAccount": "billingAccounts/001AC2-2B914D-822931"
+    },
+    {
+      "name": "billingAccounts/001A68-D1B344-975E93",
+      "open": true,
+      "displayName": "Broad Institute - 5000503",
+      "masterBillingAccount": "billingAccounts/001AC2-2B914D-822931"
+    }
+  ]
+}

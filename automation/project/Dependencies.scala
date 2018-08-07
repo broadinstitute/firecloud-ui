@@ -28,6 +28,8 @@ object Dependencies {
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+    "com.github.tomakehurst" % "wiremock" % "2.18.0" % "test",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.13.4",
 
     workbenchServiceTest,
 
