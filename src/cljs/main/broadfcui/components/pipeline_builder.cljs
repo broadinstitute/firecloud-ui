@@ -9,6 +9,8 @@
 
 (defonce ^:private pipeline-constructor (atom false))
 
+; TODO: address transitive vulnerability before re-enabling
+; epam/pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
 (react/defc PipelineBuilder
   {:component-will-receive-props
    (fn [{:keys [this next-props]}]
