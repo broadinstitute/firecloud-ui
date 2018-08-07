@@ -74,20 +74,13 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
 
       implicit val token: AuthToken = creator.makeAuthToken()
 
-      withCleanBillingProject(creator) { projectName =>
-        withCleanUp {
-          api.billing.addUserToBillingProject(projectName, user.email, BillingProjectRole.Owner)
-          register cleanUp Try(api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)).recover {
-            case _: RestException =>
-          }
+      withCleanBillingProject(creator, ownerEmails = List(user.email)) { projectName =>
+        withGroup("AuthDomain", List(user.email)) { groupName =>
+          withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
+            checkVisibleAndAccessible(user, projectName, workspaceName)
 
-          withGroup("AuthDomain", List(user.email)) { groupName =>
-            withWorkspace(projectName, "AuthDomainSpec_revoke", Set(groupName)) { workspaceName =>
-              checkVisibleAndAccessible(user, projectName, workspaceName)
-
-              api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
-              checkNoAccess(user, projectName, workspaceName)
-            }
+            api.billing.removeUserFromBillingProject(projectName, user.email, BillingProjectRole.Owner)
+            checkNoAccess(user, projectName, workspaceName)
           }
         }
       }
