@@ -140,15 +140,14 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
 
-    for i in {1..12}
-      do
-        while [ "$submissionStatus" != "Done" ]
-        do
+   i = 0
+   while [ "$submissionStatus" != "Done" ] && [ i <= 12 ]
+    do
+            echo $i
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             ((i++))
-        done
-      done
+    done
 
       if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
         echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
