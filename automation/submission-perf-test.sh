@@ -144,7 +144,7 @@ if [ $ENV = "alpha" ]; then
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 12 ]
     do
             echo $i
-            sleep 10m
+            sleep 10s
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             ((i++))
     done
