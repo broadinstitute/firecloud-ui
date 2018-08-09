@@ -129,18 +129,18 @@ monitorSubmission() {
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
+    #launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
+    #launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
+    #launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
+    #launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W qamethods sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
+    #launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W alex_methods sleep_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
 
     #Monitor the progress of the perf test
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
 
-   i = 0
+   i=1
    while [ "$submissionStatus" != "Done" ] && [ i <= 12 ]
     do
             echo $i
@@ -149,13 +149,13 @@ if [ $ENV = "alpha" ]; then
             ((i++))
     done
 
-      if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-        echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
-        exit 0
-      else
-        echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-        exit 1
-      fi
+    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+      echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
+      exit 0
+    else
+      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+      exit 1
+    fi
 
 elif [ $ENV = "staging" ]; then
     launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
