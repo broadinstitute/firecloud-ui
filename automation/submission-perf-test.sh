@@ -2,7 +2,6 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
-set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
