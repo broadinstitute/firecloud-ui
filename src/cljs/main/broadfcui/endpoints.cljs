@@ -342,10 +342,30 @@
     :on-done on-done
     :headers ajax/content-type=json}))
 
+(defn profile-get-fence-status [on-done]
+  (ajax/call-bond
+   "/link/v1/fence"
+   {:on-done on-done}))
+
+(defn profile-link-fence-account [oauth-code redirect-uri on-done]
+  (ajax/call-bond
+   (str "/link/v1/fence/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri)
+   {:method :post
+    :on-done on-done}))
+
 
 (defn get-groups [on-done]
   (call-ajax-orch
    {:endpoint {:path "/groups"
+               :method :get}
+    :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+               (if success?
+                 (on-done nil (get-parsed-response))
+                 (on-done status-text nil)))}))
+
+(defn get-sharees [on-done]
+  (call-ajax-orch
+   {:endpoint {:path "/sharelog/sharees?shareType=workspace"
                :method :get}
     :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                (if success?

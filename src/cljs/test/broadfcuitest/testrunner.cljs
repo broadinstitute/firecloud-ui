@@ -8,6 +8,7 @@
    broadfcuitest.config
    broadfcuitest.duration
    broadfcuitest.strip-comment-leaders
+   broadfcuitest.sort-order-submission
    broadfcuitest.style
    broadfcuitest.utils
    ))
@@ -20,4 +21,5 @@
   (cljs.test/run-tests 'broadfcuitest.components.buttons)
   (cljs.test/run-tests 'broadfcuitest.components.research-purpose)
   (cljs.test/run-tests 'broadfcuitest.strip-comment-leaders)
+  (cljs.test/run-tests 'broadfcuitest.sort-order-submission)
   )

@@ -2,6 +2,7 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
+set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -138,6 +139,7 @@ if [ $ENV = "alpha" ]; then
     #Monitor the progress of the perf test
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+
 
    i=1
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 12 ]

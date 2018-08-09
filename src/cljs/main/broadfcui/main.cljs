@@ -12,6 +12,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
+   [broadfcui.components.script-loader :refer [ScriptLoader]]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
@@ -95,6 +96,7 @@
                                                     :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
            (header/create-account-dropdown)]]]
         (let [original-destination (aget js/window "location" "hash")
+              {:keys [survey-loaded?]} @state
               on-done (fn [fall-through]
                         (when (empty? original-destination)
                           (nav/go-to-path fall-through))
@@ -112,7 +114,14 @@
                                  :on-done #(on-done :workspaces)})
             :registered
             (if component
-              [component (make-props)]
+              [:div {}
+                (when-not survey-loaded?
+                  [ScriptLoader {
+                    :path "npssurvey.js"
+                    :allow-cache? true
+                    :on-error (swap! state assoc :survey-loaded? true) ;; we fail silently if we can't load the survey
+                    :on-load (swap! state assoc :survey-loaded? true)}])
+                [component (make-props)]]
               [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
