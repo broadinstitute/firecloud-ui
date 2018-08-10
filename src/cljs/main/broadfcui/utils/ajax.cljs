@@ -97,6 +97,7 @@
       (call (assoc arg-map
               :url (str url-root service-prefix path)
               :headers (merge (@get-bearer-token-header)
+                              {"X-App-Id" "FireCloud"}
                               (:headers arg-map))
               :on-done (fn [{:keys [status-code status-text] :as m}]
                          (update-health status-code status-text)
