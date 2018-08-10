@@ -12,6 +12,8 @@
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 
+(def app-id {"X-App-Id" "FireCloud"})
+
 (defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 2000)
 
@@ -97,7 +99,7 @@
       (call (assoc arg-map
               :url (str url-root service-prefix path)
               :headers (merge (@get-bearer-token-header)
-                              {"X-App-Id" "FireCloud"}
+                              app-id
                               (:headers arg-map))
               :on-done (fn [{:keys [status-code status-text] :as m}]
                          (update-health status-code status-text)
