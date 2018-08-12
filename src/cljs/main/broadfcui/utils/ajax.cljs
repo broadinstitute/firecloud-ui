@@ -118,6 +118,7 @@
   (let [on-done (:on-done arg-map)]
     (call (assoc arg-map
             :url (config/martha-url)
+            :headers (merge app-id (:headers arg-map))
             :method "POST"
             :data data
             :on-done (fn [{:keys [status-code status-text] :as m}]
@@ -129,6 +130,7 @@
     (call (assoc arg-map
             :url (str (config/bond-url) service-prefix path)
             :headers (merge (@get-bearer-token-header)
+                            app-id
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (update-health status-code status-text)
