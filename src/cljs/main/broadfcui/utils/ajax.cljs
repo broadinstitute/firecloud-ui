@@ -12,7 +12,7 @@
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 
-(def app-id {"X-App-Id" "FireCloud"})
+(def app-id {"X-App-ID" "FireCloud"})
 
 (defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 2000)
