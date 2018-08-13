@@ -101,16 +101,16 @@
                               (links/create-external {:href "https://cloud.google.com/storage/docs/gsutil"} "here")]]))
                  (when-not data-empty
                    (labeled "Estimated download fee"
-                            (common/format-price (* size 1.1175870895385742e-10)) ; not actually a magic number, calculated from google...
+                            (common/format-price (* size 1.1175870895385742e-10)) ; not actually a magic number, calculated from Google based on basic cost per byte (in cents)
                             [:span {:style {:marginLeft "1em"}}
                              [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                               " (non-US destinations may be higher)"]]))
                  (when (or timeCreated updated md5Hash)
                    (if show-details?
                      [:div {}
-                      (when timeCreated (labeled "Created" (common/format-date timeCreated)))
-                      (when updated (labeled "Updated" (common/format-date updated)))
-                      (when md5Hash (labeled "MD5" md5Hash))
+                      (some->> timeCreated common/format-date (labeled "Created"))
+                      (some->> updated common/format-date (labeled "Updated"))
+                      (some->> md5Hash (labeled "MD5"))
                       (links/create-internal {:onClick #(swap! state dissoc :show-details?)} "Collapse")]
                      (links/create-internal {:onClick #(swap! state assoc :show-details? true)} "More info")))])
               (when error

@@ -116,7 +116,7 @@
           :method "POST"
           :url (config/martha-file-summary-url)
           :headers (merge (@get-bearer-token-header) content-type=json)
-          :data (str "{\"uri\": \"" uri "\"}"))))
+          :data (utils/->json-string {:uri uri}))))
 
 (defn call-bond [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
