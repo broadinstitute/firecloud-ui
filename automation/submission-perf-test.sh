@@ -140,23 +140,23 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
 
-    for i in {1..12}
-      do
-        while [ "$submissionStatus" != "Done" ]
-        do
+
+   i=1
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 12 ]
+    do
+            echo $i
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             ((i++))
-        done
-      done
+    done
 
-      if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-        echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
-        exit 0
-      else
-        echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-        exit 1
-      fi
+    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+      echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
+      exit 0
+    else
+      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+      exit 1
+    fi
 
 elif [ $ENV = "staging" ]; then
     launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
