@@ -71,7 +71,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
     }
   }
 
-  "Preview Modal should work correctly for gcs link" in {
+  "Preview Modal should work correctly for gcs link" ignore {
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -124,7 +124,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
     }
   }
 
-  "Preview Modal should display correct message and preview when file is accessible for dos:// link" in {
+  "Preview Modal should display correct message and preview when file is accessible for dos:// link" ignore {
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
     val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/preview_dos.json"
