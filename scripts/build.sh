@@ -137,7 +137,7 @@ function docker_cmd()
 
             if [[ -n $GCR_REGISTRY ]]; then
                 docker tag $DOCKERHUB_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${HASH_TAG}
-                docker push $GCR_REGISTRY:${HASH_TAG}
+                gcloud docker -- push $GCR_REGISTRY:${HASH_TAG}
             fi
         fi
     else
