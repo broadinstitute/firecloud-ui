@@ -42,7 +42,7 @@ GCR_REGISTRY=""
 ENV=${ENV:-""}
 SERVICE_ACCT_KEY_FILE=""
 
-MAKE_JAR=false
+BUILD_CLJ=false
 RUN_DOCKER=false
 PRINT_HELP=false
 
@@ -53,8 +53,8 @@ if [ -z "$1" ]; then
 fi
 while [ "$1" != "" ]; do
     case $1 in
-        jar)
-            MAKE_JAR=true
+        compile)
+            BUILD_CLJ=true
             ;;
         -d | --docker)
             shift
@@ -153,8 +153,8 @@ function docker_cmd()
     fi
 }
 
-if $MAKE_JAR; then
-    make_jar
+if $BUILD_CLJ; then
+    clj_build
 fi
 
 if $RUN_DOCKER; then
