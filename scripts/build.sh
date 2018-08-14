@@ -12,8 +12,8 @@ IFS=$'\n\t'
 set -exo pipefail
 
 HELP_TEXT="$(cat <<EOF
- Build jar and docker images.
-   jar : build jar
+ Compile and build docker images.
+   compile : compile clojurescript
    -d | --docker : (default: no action) provide either "build" or "push" to
            build or push a docker image.  "push" will also perform build.
    -g | --gcr-registry: If this flag is set, will push to the specified GCR repository.
@@ -23,9 +23,9 @@ HELP_TEXT="$(cat <<EOF
    -h | --help: print help text.
  Examples:
    Jenkins build job should run with all options, for example,
-     ./docker/build.sh jar -d push
-   To build the jar, the image, and push it to a gcr repository.
-     ./docker/build.sh jar -d build -r gcr --project "my-awesome-project"
+     ./docker/build.sh compile -d push
+   To build the compile, the image, and push it to a gcr repository.
+     ./docker/build.sh compile -d build -r gcr --project "my-awesome-project"
 \t
 EOF
 )"
