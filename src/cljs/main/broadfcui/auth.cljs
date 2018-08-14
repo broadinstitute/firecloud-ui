@@ -224,7 +224,7 @@
            [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (ajax/call-orch "/me"
+     (ajax/call-orch "/me?onlyUserDetails=true"
                      {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
                                  (if success?
                                    ((:on-success props))
