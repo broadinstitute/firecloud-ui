@@ -465,8 +465,7 @@
                                  :methods-response response
                                  :methods {[methodNamespace methodName] (mapv :snapshotId response)})
                           ;; FIXME: :error-message is unused
-                          (swap! state assoc :methods {} :error-message status-text)))
-                      )})
+                          (swap! state assoc :methods {} :error-message status-text))))})
          "dockstore"
          (let [path (get-in loaded-config [:methodConfiguration :methodRepoMethod :methodPath])]
            (endpoints/dockstore-get-versions
