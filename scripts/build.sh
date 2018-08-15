@@ -144,7 +144,8 @@ function docker_cmd()
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
     fi
 }
- function cleanup()
+
+function cleanup()
 {
     echo "cleaning up..."
     if [[ -n $SERVICE_ACCT_KEY_FILE ]]; then
