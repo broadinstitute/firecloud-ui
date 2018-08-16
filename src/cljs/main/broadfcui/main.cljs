@@ -34,6 +34,7 @@
    [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
+   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    [broadfcui.utils.user :as user]
@@ -42,6 +43,8 @@
 
 (injections/setup)
 
+
+(def ^:private nps-persistence-key "nps-surveymonkey-done")
 
 (defn- init-nav-paths []
   (nav/clear-paths)
@@ -96,7 +99,10 @@
                                                     :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
            (header/create-account-dropdown)]]]
         (let [original-destination (aget js/window "location" "hash")
-              {:keys [survey-loaded?]} @state
+              {:keys [survey-interested?]} @state
+              survey-done? (persistence/try-restore
+                            {:key nps-persistence-key
+                             :initial (constantly false)})
               on-done (fn [fall-through]
                         (when (empty? original-destination)
                           (nav/go-to-path fall-through))
@@ -115,13 +121,24 @@
             :registered
             (if component
               [:div {}
-                (when-not survey-loaded?
-                  [ScriptLoader {
-                    :path "npssurvey.js"
-                    :allow-cache? true
-                    :on-error (swap! state assoc :survey-loaded? true) ;; we fail silently if we can't load the survey
-                    :on-load (swap! state assoc :survey-loaded? true)}])
-                [component (make-props)]]
+               [component (make-props)]
+               (when-not survey-done?
+                 [:div {:style {:position "fixed" :bottom 20 :right 0 :padding 10
+                                :borderRadius "0.25rem 0 0 0.25rem"
+                                :backgroundColor (:button-primary style/colors) :opacity 0.8
+                                :cursor "pointer"}
+                        :title "Give feedback"
+                        :className "fa-stack"
+                        :onClick #(swap! state assoc :survey-interested? true)}
+                  (icons/render-icon {:className "fa-stack-2x" :style {:color "white"}} :comment)
+                  (icons/render-icon {:className "fa-stack-1x" :style {:color (:button-primary style/colors)}} :add-new)
+                  (when survey-interested?
+                    [ScriptLoader {:path "npssurvey.js"
+                                   :allow-cache? true
+                                   :on-error identity ;; we fail silently if we can't load the survey
+                                   :on-load #(do
+                                               (swap! state dissoc :survey-interested?)
+                                               (persistence/save-value nps-persistence-key true))}])])]
               [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
@@ -215,9 +232,9 @@
                                          (swap! state update :user-status
                                                 #(-> %
                                                      ((if signed-in? conj disj)
-                                                       :signed-in)
+                                                      :signed-in)
                                                      ((if token-saved? conj disj)
-                                                       :refresh-token-saved))))}]
+                                                      :refresh-token-saved))))}]
            (when (and config-loaded? (not auth2))
              [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
 
@@ -228,9 +245,9 @@
                              (swap! state assoc :config-loaded? true)
                              (when (config/debug?)
                                (.addEventListener
-                                 js/window "error"
-                                 (fn [e]
-                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
+                                js/window "error"
+                                (fn [e]
+                                  (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -254,21 +271,21 @@
                                           :severity :info} nil)))
          (when (:showing-js-error-dialog? @state)
            (render-js-exception
-             (:js-error @state)
-             #(swap! state dissoc :showing-js-error-dialog? :js-error)))
+            (:js-error @state)
+            #(swap! state dissoc :showing-js-error-dialog? :js-error)))
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [state this refs locals]}]
      ;; Show system status banner at the first 503, hide it at the first success
      (add-watch
-       ajax/server-down? :server-watcher
-       (fn [_ _ _ down-now?]
-         (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
+      ajax/server-down? :server-watcher
+      (fn [_ _ _ down-now?]
+        (swap! state assoc :showing-system-down-banner? down-now? :maintenance-mode? false)))
      (add-watch
-       ajax/maintenance-mode? :server-watcher
-       (fn [_ _ _ maintenance-now?]
-         (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
+      ajax/maintenance-mode? :server-watcher
+      (fn [_ _ _ maintenance-now?]
+        (swap! state assoc :showing-system-down-banner? maintenance-now? :maintenance-mode? true)))
      (swap! locals assoc :hash-change-listener (partial this :handle-hash-change))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"
