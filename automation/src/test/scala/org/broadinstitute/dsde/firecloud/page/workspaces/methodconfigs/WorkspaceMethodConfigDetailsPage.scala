@@ -144,6 +144,8 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     val suggestionTextfield: Element = find(testId(dataTestId)).get
     val expandedDropdownId = suggestionTextfield.underlying.getAttribute("aria-owns")
 
+    click on find(testId("test.hello.response-text-input")).get // force page scrolls down
+
     click on suggestionTextfield // click in textfield to invoke list dropdown
     await condition find(testId(dataTestId)).exists(_.underlying.getAttribute("aria-expanded") == "true")
 
