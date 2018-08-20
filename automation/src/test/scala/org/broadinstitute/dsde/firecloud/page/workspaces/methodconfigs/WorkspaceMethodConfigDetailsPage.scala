@@ -1,8 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
@@ -12,10 +10,8 @@ import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
@@ -140,6 +136,8 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def clickAndReadSuggestions(field: String): Seq[String] = {
     val dataTestId = s"$field-text-input"
     val listOptionXpath = s"//div[@data-test-id='$field-suggestions']/ul[@role='listbox']/li[@role='option']"
+
+    click on find(testId("test.hello.response-text-input")).get // force page scrolls down
 
     val suggestionTextfield: Element = find(testId(dataTestId)).get
     val expandedDropdownId = suggestionTextfield.underlying.getAttribute("aria-owns")

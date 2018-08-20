@@ -90,7 +90,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
                                                         (implicit webDriver: WebDriver): Unit = {
     signIn
     await ready page
-    logger.info(s"Login user: ${user.email}. URL: ${page}")
+    logger.info(s"Login: ${user.email}. URL: ${page}")
 
     // Don't try/finally here to prevent sign-out before capturing a failure screenshot
     testCode(page)
