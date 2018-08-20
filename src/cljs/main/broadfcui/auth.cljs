@@ -225,9 +225,7 @@
              :component-did-mount
              (fn [{:keys [props state]}]
                (ajax/call-orch "/me?userDetailsOnly=true"
-                 {:endpoint {:path "/me"
-                             :method :options}
-                  :on-done (fn [{:keys [success? status-code get-parsed-response]}]
+                 {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
                               (if success?
                                 ((:on-success props))
                                 (case status-code
