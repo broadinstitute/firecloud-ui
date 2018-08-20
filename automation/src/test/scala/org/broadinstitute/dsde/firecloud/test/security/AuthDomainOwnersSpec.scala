@@ -16,16 +16,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.util.Try
 
-/*
- * This test SHOULD be able to run with ParallelTestExecution. However, Rawls
- * currently has database deadlock problems when creating and deleting managed
- * groups because they involve 3 operations across 2 tables. My initial
- * attempt to retry the deadlock failed because Rawls also creates the groups
- * in Google inside the transaction; attempts to retry the transaction result
- * in 409 Conflict errors from Google.
- *
- * TODO: Fix Rawls group creation/deletion and run these tests in parallel
- */
+
 class AuthDomainOwnersSpec extends FreeSpec with ParallelTestExecution with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures with Eventually
   with BillingFixtures with GroupFixtures with UserFixtures with TestReporterFixture {
