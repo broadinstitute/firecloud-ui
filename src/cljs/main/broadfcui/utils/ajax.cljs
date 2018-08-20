@@ -12,6 +12,8 @@
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 
+(def app-id {"X-App-ID" "FireCloud"})
+
 (defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 2000)
 
@@ -97,6 +99,7 @@
       (call (assoc arg-map
               :url (str url-root service-prefix path)
               :headers (merge (@get-bearer-token-header)
+                              app-id
                               (:headers arg-map))
               :on-done (fn [{:keys [status-code status-text] :as m}]
                          (update-health status-code status-text)
@@ -115,7 +118,7 @@
   (call (assoc arg-map
           :method "POST"
           :url (config/martha-file-summary-url)
-          :headers (merge (@get-bearer-token-header) content-type=json)
+          :headers (merge (@get-bearer-token-header) content-type=json app-id)
           :data (utils/->json-string {:uri uri}))))
 
 (defn call-bond [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
@@ -124,6 +127,7 @@
     (call (assoc arg-map
             :url (str (config/bond-url) service-prefix path)
             :headers (merge (@get-bearer-token-header)
+                            app-id
                             (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (update-health status-code status-text)

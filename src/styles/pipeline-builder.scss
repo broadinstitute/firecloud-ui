@@ -1,4 +1,6 @@
-@import '~pipeline-builder/dist/pipeline.css';
+// TODO: address transitive vulnerability before re-enabling
+// epam/pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
+// @import '~pipeline-builder/dist/pipeline.css';
 
 .read-only {
 

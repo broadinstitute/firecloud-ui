@@ -259,6 +259,39 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     }
   }
 
+
+  "With dockstore method config" - {
+    "edit goes into edit mode" in {
+      // written for GAWB-3712
+      val user = UserPool.chooseProjectOwner
+      implicit val authToken: AuthToken = user.makeAuthToken()
+
+      withCleanBillingProject(user) { projectName =>
+
+        withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          // Create method config
+          val configName = s"test_JSON_populate_dockstore_config_$workspaceName"
+          api.methodConfigurations.createDockstoreMethodConfigInWorkspace(
+            projectName, workspaceName, DockstoreMethodData.dockstoreMethod,
+            projectName, configName)
+
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              // Go to method config page
+              val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
+
+              // We should not be in edit mode
+              configPage.isEditing shouldBe false
+              configPage.openEditMode()
+              configPage.isEditing shouldBe true
+
+            }
+          }
+        }
+      }
+    }
+  }
+
   private def generateInputsJson(inputs: Map[String, String]): File = {
     val file = File.createTempFile("MethodConfigSpec_", "_inputs.json")
     val writer = new PrintWriter(file)
