@@ -8,7 +8,7 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{HH:mm:ss.SSS} %-50([%t]) %-25.25logger{25}%-15(:%M) %highlight(%-5level) %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %magenta(%-50([%t])) %cyan(%-25.25logger{25}%-15(:%M)) %highlight(%-5level) %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -30,7 +30,6 @@
         <appender-ref ref="CONSOLE" />
     </appender>
 
-    <!--  not used -->
     <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>500</queueSize>
         <discardingThreshold>0</discardingThreshold>
