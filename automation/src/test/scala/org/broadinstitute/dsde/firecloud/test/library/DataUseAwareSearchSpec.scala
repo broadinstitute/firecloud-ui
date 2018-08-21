@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.concurrent.Eventually
-import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with Matchers with ModalUtil with Eventually with TestReporterFixture {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(60, Seconds)), interval = scaled(Span(1, Seconds)))
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
@@ -52,24 +52,21 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         researchPurposeModal.selectCheckbox("disease-focused-research")
 
         // Disease 1
+        val ffiSuggestionText = "fatal familial insomnia"
         val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
         val ffiTagId = "doid:0050433-tag"
 
-        researchPurposeModal.enterOntologySearchText("fatal")
-
-        eventually { researchPurposeModal.isSuggestionVisible(ffiSuggestionId) shouldBe true }
+        researchPurposeModal.enterOntologySearchText("fatal").exists(_.contains(ffiSuggestionText)) shouldBe true
 
         researchPurposeModal.selectSuggestion(ffiSuggestionId)
-
         eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true }
 
         // Disease 2
-        val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846" // bruxism
+        val brxSuggestionText = "bruxism"
+        val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846"
         val brxTagId = "doid:2846-tag"
 
-        researchPurposeModal.enterOntologySearchText("brux")
-
-        eventually { researchPurposeModal.isSuggestionVisible(brxSuggestionId) shouldBe true }
+        researchPurposeModal.enterOntologySearchText("brux").exists(_.contains(brxSuggestionText)) shouldBe true
 
         researchPurposeModal.selectSuggestion(brxSuggestionId)
 
