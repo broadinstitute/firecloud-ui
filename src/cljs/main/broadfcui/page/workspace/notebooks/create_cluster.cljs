@@ -1,22 +1,22 @@
-(ns broadfcui.page.workspace.notebooks.create_cluster
+(ns broadfcui.page.workspace.notebooks.create-cluster
   (:require
    [dmohs.react :as react]
-   [broadfcui.utils :as utils]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.components.buttons :as buttons]
+   [clojure.string :as string]
    [broadfcui.common.components :as comps]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.utils.ajax :as ajax]
-   [broadfcui.components.modals :as modals]
-   [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.collapse :refer [Collapse]]
-   [broadfcui.common.input :as input]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
-   [clojure.string :as string]
+   [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (def machineTypes ["n1-standard-1"
@@ -50,17 +50,18 @@
       :label-gensym (gensym)})
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [creating? server-error validation-errors]} @state
-           {:keys [choose-notebook]} props]
+     (let [{:keys [creating? server-error validation-errors labels label-gensym]} @state
+           {:keys [choose-notebook dismiss]} props]
        [modals/OKCancelForm
         {:header "Create Cluster"
-         :dismiss (:dismiss props)
+         :dismiss dismiss
          :ok-button {:onClick #(this :-create-cluster)}
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
            (when creating? (blocker "Creating cluster..."))
-           (notebook-utils/create-inline-form-label (str "Create a cluster to associate with notebook \"" (notebook-utils/notebook-name choose-notebook) "\":"))
+           (notebook-utils/create-inline-form-label
+            (str "Create a cluster to associate with notebook \"" (notebook-utils/notebook-name choose-notebook) "\":"))
            (react/create-element
             [:div {:style {:marginTop 25}}
              (style/create-form-label "Name")
@@ -129,8 +130,8 @@
                   [FoundationTooltip {:text (style/create-form-label "Custom Script URI")
                                       :tooltip "The GCS URI of a bash script you wish to run on your cluster before it starts up."}]]
                  [input/TextField {:data-test-id "custom-script-uri-input" :ref "userScriptURI" :autoFocus true :style {:width "100%"}}]
-                 (when (seq (:labels @state))
-                   [:div {:key (:label-gensym @state)}
+                 (when (seq labels)
+                   [:div {:key label-gensym}
                     (flex/box {}
                       [:span {:style {:width "50%"}} (notebook-utils/create-inline-form-label "Key")]
                       [:span {:style {:width "50%" :marginLeft "4%"}} (notebook-utils/create-inline-form-label "Value")])
@@ -142,8 +143,7 @@
                                                 :minHeight 20 :minWidth 20
                                                 }
                                         :href "javascript:;"
-                                        :onClick (fn [] (swap! state #(-> % (assoc :label-gensym (gensym))
-                                                                          (update :labels utils/delete i))))}
+                                        :onClick #(utils/multi-swap! state (assoc :label-gensym (gensym)) (update :labels utils/delete i))}
                                        (icons/render-icon {:style {:marginTop "35%"}} :remove))
                                      [input/TextField {:data-test-id (str "key-" i "-input")
                                                        :style {:ref (str "key" i) :marginBottom 0 :width "48%" :marginRight "4%"}
@@ -155,12 +155,9 @@
                                                        :defaultValue (last label)
                                                        :onChange #(swap! state update-in [:labels i]
                                                                          assoc 1 (-> % .-target .-value))}]))
-                                 (:labels @state))])
+                                 labels)])
                  [buttons/Button {:text "Add Label" :icon :add-new :style {:marginBottom 10} :data-test-id "add-label-button"
-                                  :onClick (fn []
-                                             (swap! state #(-> %
-                                                               (update :labels conj ["" ""])
-                                                               (assoc :label-gensym (gensym)))))}]])}]])
+                                  :onClick #(utils/multi-swap! state (update :labels conj ["" ""]) (assoc :label-gensym (gensym)))}]])}]])
            [comps/ErrorViewer {:error server-error}]
            (style/create-validation-error-message validation-errors)])}]))
 
@@ -169,7 +166,8 @@
      (swap! state dissoc :server-error :validation-errors)
      (let [[clusterNameCreate extensionURI userScriptURI & fails] (input/get-and-validate refs "clusterNameCreate" "extensionURI" "userScriptURI")
            payload {:labels (this :-process-labels)}
-           machineConfig (this :-process-machine-config)]
+           machineConfig (this :-process-machine-config)
+           {:keys [reload-after-choose dismiss]} props]
        (if fails
          (swap! state assoc :validation-errors fails)
          (do (swap! state assoc :creating? true)
@@ -184,8 +182,8 @@
                           (swap! state dissoc :creating?)
                           (if success?
                             (do
-                              ((:reload-after-choose props) clusterNameCreate)
-                              ((:dismiss props)))
+                              (reload-after-choose clusterNameCreate)
+                              (dismiss))
                             (swap! state assoc :server-error (get-parsed-response false))))})))))
    :-process-labels
    (fn [{:keys [state]}]

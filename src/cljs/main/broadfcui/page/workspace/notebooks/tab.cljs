@@ -1,7 +1,7 @@
 (ns broadfcui.page.workspace.notebooks.tab
   (:require
    [dmohs.react :as react]
-   [broadfcui.page.workspace.notebooks.notebooks_table :refer [NotebooksContainer]]
+   [broadfcui.page.workspace.notebooks.notebooks-table :refer [NotebooksContainer]]
    [broadfcui.utils :as utils]
    ))
 

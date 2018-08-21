@@ -1,10 +1,11 @@
-(ns broadfcui.page.workspace.notebooks.cluster_error
+(ns broadfcui.page.workspace.notebooks.cluster-error
   (:require
    [dmohs.react :as react]
-   [broadfcui.components.modals :as modals]
-   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.common.components :as comps]
+   [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    ))
 
@@ -17,11 +18,11 @@
    :render
    (fn [{:keys [state this props]}]
      (let [{:keys [cluster-to-view-details server-error]} @state
-           {:keys [cluster-to-view]} props]
+           {:keys [cluster-to-view dismiss]} props]
        [modals/OKCancelForm
         {:header "Cluster Error"
-         :dismiss (:dismiss props)
-         :ok-button {:text "Done" :onClick (:dismiss props)}
+         :dismiss dismiss
+         :ok-button {:text "Done" :onClick dismiss}
          :show-cancel? false
          :content
          (react/create-element

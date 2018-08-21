@@ -132,16 +132,3 @@
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (update-health status-code status-text)
                        (on-done m))))))
-
-(defn call-sam [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
-  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (let [on-done (:on-done arg-map)]
-    (call (assoc arg-map
-            :url (str (config/sam-url-root) service-prefix path)
-            :headers (merge (@get-bearer-token-header)
-                            app-id
-                            (:headers arg-map))
-            :on-done (fn [{:keys [status-code status-text] :as m}]
-                       (update-health status-code status-text)
-                       (on-done m))))))
-

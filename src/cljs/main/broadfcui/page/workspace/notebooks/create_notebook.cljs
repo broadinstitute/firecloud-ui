@@ -1,13 +1,14 @@
-(ns broadfcui.page.workspace.notebooks.create_notebook
+(ns broadfcui.page.workspace.notebooks.create-notebook
   (:require
    [dmohs.react :as react]
-   [broadfcui.components.modals :as modals]
-   [broadfcui.common.style :as style]
-   [broadfcui.common.input :as input]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.style :as style]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.foundation-tooltip :refer [FoundationTooltip]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
+   [broadfcui.utils :as utils]
    ))
 
 (def base-notebook
@@ -66,10 +67,11 @@
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [creating? server-response validation-errors]} @state
-           {:keys [server-error]} server-response]
+           {:keys [server-error]} server-response
+           {:keys [dismiss]} props]
        [modals/OKCancelForm
         {:header "Create New Notebook"
-         :dismiss (:dismiss props)
+         :dismiss dismiss
          :ok-button {:text "Create" :onClick #(this :-create-notebook)}
          :content
          (react/create-element
@@ -92,14 +94,14 @@
 
    :-create-notebook
    (fn [{:keys [props state this refs]}]
-     (let [{:keys [pet-token notebooks]} props
+     (let [{:keys [pet-token notebooks refresh-notebooks dismiss]} props
            bucket-name (get-in props [:workspace :workspace :bucketName])
            [new-notebook-name & fails] (input/get-and-validate refs "newNotebookName")
            new-notebook-kernel (.-value (@refs "newNotebookKernel"))]
        (if fails
          (swap! state assoc :validation-errors fails)
          ; fail if a notebook already exists with the same name
-         (if (some (comp (partial = new-notebook-name) #(notebook-utils/notebook-name %)) notebooks)
+         (if (some (comp (partial = new-notebook-name) notebook-utils/notebook-name) notebooks)
            (swap! state assoc :validation-errors [(str "Notebook with name \"" new-notebook-name "\" already exists")])
            (do
              (swap! state assoc :creating? true)
@@ -108,8 +110,6 @@
                                                (swap! state assoc :creating? false)
                                                (if success?
                                                  (do
-                                                   ((:refresh-notebooks props))
-                                                   ((:dismiss props)))
+                                                   (refresh-notebooks)
+                                                   (dismiss))
                                                  (swap! state assoc :server-response {:server-error raw-response})))))))))})
-
-

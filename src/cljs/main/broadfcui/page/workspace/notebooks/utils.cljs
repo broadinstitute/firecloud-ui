@@ -1,8 +1,8 @@
 (ns broadfcui.page.workspace.notebooks.utils
   (:require
    [dmohs.react :as react]
-   [broadfcui.utils :as utils]
    [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    ))
 

@@ -1,34 +1,34 @@
-(ns broadfcui.page.workspace.notebooks.notebooks_table
+(ns broadfcui.page.workspace.notebooks.notebooks-table
   (:require
    [dmohs.react :as react]
-   [broadfcui.utils :as utils]
-   [broadfcui.utils.ajax :as ajax]
-   [broadfcui.utils.user :as user]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
-   [broadfcui.config :as config]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.workspace.notebooks.create_notebook :refer [NotebookCreator]]
-   [broadfcui.page.workspace.notebooks.create_cluster :refer [ClusterCreator]]
-   [broadfcui.page.workspace.notebooks.delete_cluster :refer [ClusterDeleter]]
-   [broadfcui.page.workspace.notebooks.cluster_details :refer [ClusterDetailsViewer]]
-   [broadfcui.page.workspace.notebooks.choose_cluster :refer [ChooseClusterViewer]]
-   [broadfcui.page.workspace.notebooks.cluster_error :refer [ClusterErrorViewer]]
-   [broadfcui.page.workspace.notebooks.rename_notebook :refer [NotebookRenamer]]
-   [broadfcui.page.workspace.notebooks.delete_notebook :refer [NotebookDeleter]]
-   [broadfcui.page.workspace.notebooks.duplicate_notebook :refer [NotebookDuplicator]]
+   [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.page.workspace.notebooks.choose-cluster :refer [ChooseClusterViewer]]
+   [broadfcui.page.workspace.notebooks.cluster-details :refer [ClusterDetailsViewer]]
+   [broadfcui.page.workspace.notebooks.cluster-error :refer [ClusterErrorViewer]]
+   [broadfcui.page.workspace.notebooks.create-cluster :refer [ClusterCreator]]
+   [broadfcui.page.workspace.notebooks.create-notebook :refer [NotebookCreator]]
+   [broadfcui.page.workspace.notebooks.delete-cluster :refer [ClusterDeleter]]
+   [broadfcui.page.workspace.notebooks.delete-notebook :refer [NotebookDeleter]]
+   [broadfcui.page.workspace.notebooks.duplicate-notebook :refer [NotebookDuplicator]]
+   [broadfcui.page.workspace.notebooks.rename-notebook :refer [NotebookRenamer]]
    [broadfcui.page.workspace.notebooks.utils :as notebook-utils]
    ))
 
@@ -56,36 +56,31 @@
 (react/defc NotebooksTable
   {:render
    (fn [{:keys [state props this]}]
-     (let [{:keys [choose-notebook]} @state
+     (let [{:keys [choose-notebook choose-cluster]} @state
            {:keys [notebooks cluster-map pet-token toolbar-items]} props]
        [:div {}
-        (when (:show-cluster-choose-dialog? @state)
-          [ChooseClusterViewer (assoc props :dismiss #(swap! state dissoc :show-cluster-choose-dialog?)
-                                            :choose-notebook choose-notebook
+        (modals/show-modals
+         state
+         {:show-cluster-choose-dialog?
+          [ChooseClusterViewer (assoc props :choose-notebook choose-notebook
                                             :reload-after-choose #(this :-choose-cluster %)
-                                            :show-create-cluster #(swap! state assoc :show-cluster-create-dialog? true))])
-        (when (:show-cluster-create-dialog? @state)
-          [ClusterCreator (assoc props :dismiss #(swap! state dissoc :show-cluster-create-dialog?)
-                                       :choose-notebook choose-notebook
-                                       :reload-after-choose #(this :-choose-cluster %))])
-        (when (:show-cluster-delete-dialog? @state)
-          [ClusterDeleter (assoc props :dismiss #(swap! state dissoc :show-cluster-delete-dialog?)
-                                       :cluster-to-delete (:cluster-to-delete @state))])
-        (when (:show-cluster-details-dialog? @state)
-          [ClusterDetailsViewer (assoc props :dismiss #(swap! state dissoc :show-cluster-details-dialog?)
-                                             :cluster-to-display-details (:cluster-to-display-details @state))])
-        (when (:show-error-dialog? @state)
-          [ClusterErrorViewer (assoc props :dismiss #(swap! state dissoc :show-error-dialog? :errored-cluster-to-show)
-                                           :cluster-to-view (:errored-cluster-to-show @state))])
-        (when (:show-notebook-rename-dialog? @state)
-          [NotebookRenamer (assoc props :dismiss #(swap! state dissoc :show-notebook-rename-dialog?)
-                                        :choose-notebook choose-notebook)])
-        (when (:show-notebook-duplicate-dialog? @state)
-          [NotebookDuplicator (assoc props :dismiss #(swap! state dissoc :show-notebook-duplicate-dialog?)
-                                           :choose-notebook choose-notebook)])
-        (when (:show-notebook-delete-dialog? @state)
-          [NotebookDeleter (assoc props :dismiss #(swap! state dissoc :show-notebook-delete-dialog?)
-                                        :choose-notebook choose-notebook)])
+                                            :show-create-cluster #(swap! state assoc :show-cluster-create-dialog? true))]
+          :show-cluster-create-dialog?
+          [ClusterCreator (assoc props :choose-notebook choose-notebook
+                                       :reload-after-choose #(this :-choose-cluster %))]
+          :show-cluster-delete-dialog?
+          [ClusterDeleter (assoc props :cluster-to-delete choose-cluster)]
+          :show-cluster-details-dialog?
+          [ClusterDetailsViewer (assoc props :cluster-to-display-details choose-cluster)]
+          :show-error-dialog?
+          [ClusterErrorViewer (assoc props :cluster-to-view choose-cluster)]
+          :show-notebook-rename-dialog?
+          [NotebookRenamer (assoc props :choose-notebook choose-notebook)]
+          :show-notebook-duplicate-dialog?
+          [NotebookDuplicator (assoc props :choose-notebook choose-notebook)]
+          :show-notebook-delete-dialog?
+          [NotebookDeleter (assoc props :choose-notebook choose-notebook)]})
+
         [Table
          {:data-test-id "notebooks-table" :data notebooks
           :body
@@ -113,7 +108,7 @@
                    :dismiss #(swap! state assoc :show-notebook-delete-dialog? true :choose-notebook notebook)}]}))}
             {:header "Name" :initial-width 250
              :as-text :name :sort-by :name :sort-initial :asc
-             :render #(notebook-utils/notebook-name %)}
+             :render notebook-utils/notebook-name}
             (table-utils/date-column {:header "Last Modified" :column-data :updated :style {}})
             {:id "cluster-menu" :initial-width 30
              :resizable? false :sortable? false :filterable? false :hidden? true
@@ -130,14 +125,14 @@
                    (filter (comp not nil?)
                            ; Details - always displayed when there is an associated cluster
                            [{:text [:span {:style {:display "inline-flex"}} "Details"]
-                             :dismiss #(swap! state assoc :show-cluster-details-dialog? true :cluster-to-display-details (:cluster-name notebook))}
+                             :dismiss #(swap! state assoc :show-cluster-details-dialog? true :choose-cluster (:cluster-name notebook))}
                             ; Choose - always displayed when there is an associated cluster
                             {:text [:span {:style {:display "inline-flex"}} "Choose..."]
                              :dismiss #(swap! state assoc :show-cluster-choose-dialog? true :choose-notebook notebook)}
                             ; Delete - displayed when the associated cluster is in Running or Stopped status
                             (when (notebook-utils/contains-statuses [(get cluster-map (:cluster-name notebook))] ["Running" "Error" "Stopped"])
                               {:text [:span {:style {:display "inline-flex"}} "Delete"]
-                               :dismiss #(swap! state assoc :show-cluster-delete-dialog? true :cluster-to-delete (:cluster-name notebook))})])})))}
+                               :dismiss #(swap! state assoc :show-cluster-delete-dialog? true :choose-cluster (:cluster-name notebook))})])})))}
             {:header "Cluster" :initial-width 150
              :as-text :name :sort-by :name :sort-initial :asc
              :render
@@ -173,18 +168,18 @@
    :-render-cluster-status
    (fn [{:keys [state props]} cluster]
      (let [clusterNameStatusId (str (:clusterName cluster) "-status")
-           cluster-map (:cluster-map props)
+           {:keys [cluster-map stop-cluster start-cluster]} props
            stop-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
                                                      :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                                     :onClick #((:stop-cluster props) cluster)}
+                                                     :onClick #(stop-cluster cluster)}
                                pause-icon)
            start-cluster-link (links/create-internal {:data-test-id clusterNameStatusId
                                                       :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                                      :onClick #((:start-cluster props) cluster)}
+                                                      :onClick #(start-cluster cluster)}
                                 play-icon)
            view-error-link (links/create-internal {:data-test-id clusterNameStatusId
                                                    :style {:textDecoration "none" :color (:button-primary style/colors)}
-                                                   :onClick #(swap! state assoc :show-error-dialog? true :errored-cluster-to-show cluster)}
+                                                   :onClick #(swap! state assoc :show-error-dialog? true :choose-cluster cluster)}
                              "View error")]
        [:div {:key (when cluster-map (str (gensym))) ;this makes the spinners sync
               :style {:height table-style/table-icon-size}}
@@ -199,8 +194,9 @@
 
    :-choose-cluster
    (fn [{:keys [state props]} selected-cluster]
-     (let [{:keys [choose-notebook]} @state]
-       ((:choose-cluster props) choose-notebook selected-cluster)))})
+     (let [{:keys [choose-notebook]} @state
+           {:keys [choose-cluster]} props]
+       (choose-cluster choose-notebook selected-cluster)))})
 
 (react/defc NotebooksContainer
   {:get-initial-state
@@ -215,12 +211,12 @@
 
    :render
    (fn [{:keys [props state this refs]}]
-     (let [{:keys [server-response cluster-map file-name file-contents show-create-dialog? uploading? upload-error]} @state
+     (let [{:keys [server-response cluster-map show-create-dialog? uploading? upload-error pet-token file-input-key]} @state
            {:keys [notebooks server-error]} server-response]
        [:div {:display "inline-flex"}
         (when show-create-dialog?
           [NotebookCreator (assoc props :dismiss #(swap! state dissoc :show-create-dialog?)
-                                        :pet-token (:pet-token @state)
+                                        :pet-token pet-token
                                         :notebooks notebooks
                                         :refresh-notebooks #(this :-refresh-notebooks))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
@@ -233,7 +229,7 @@
         ;; This key is changed every time a file is selected causing React to completely replace the
         ;; element. Otherwise, if a user selects the same file (even after having modified it), the
         ;; browser will not fire the onChange event.
-        [:input {:key (:file-input-key @state)
+        [:input {:key file-input-key
                  :type "file"
                  :ref "notebook-uploader"
                  :style {:display "none"}
@@ -245,7 +241,6 @@
                                        #(let [name (.-name file)
                                               text (.-result reader)]
                                           (swap! state assoc :file-input-key (gensym "notebook-uploader-"))
-                                          (swap! state assoc :uploading? true)
                                           (this :-upload-notebook name text)))
                                  (.readAsText reader file))))}]
         (if notebooks
@@ -263,7 +258,7 @@
              :reload-after-delete #(this :-get-clusters-list %)
              :cluster-map cluster-map
              :notebooks notebooks
-             :pet-token (:pet-token @state)
+             :pet-token pet-token
              :refresh-notebooks #(this :-refresh-notebooks))]
           [:div {:style {:textAlign "center"}} (spinner "Loading notebooks...")])
 
@@ -308,7 +303,7 @@
 
    :-schedule-cookie-refresh
    (fn [{:keys [state locals this]}]
-     (let [{{:keys [cluster-map]} :server-response} @state]
+     (let [{:keys [cluster-map]} @state]
        (when-not (:dead? @locals)
          (when (notebook-utils/contains-statuses (vals cluster-map) ["Running"])
            (this :-process-running-clusters))
@@ -317,7 +312,7 @@
    ; For all Running clusters, calls /setCookie and localizes associated notebooks.
    :-process-running-clusters
    (fn [{:keys [props state this]}]
-     (let [cluster-map (:cluster-map @state)
+     (let [{:keys [cluster-map]} @state
            running-clusters (filter (comp (partial = "Running") :status) (vals cluster-map))]
        (doseq [cluster running-clusters]
          (this :-localize-notebooks cluster)
@@ -332,7 +327,7 @@
 
    :-localize-notebooks
    (fn [{:keys [props state this]} cluster]
-     (let [workspaceName (:workspaceName props)
+     (let [{:keys [workspsaceName]} props
            {:keys [server-response]} @state
            {:keys [notebooks]} server-response
            filtered-notebooks (filter (comp (partial = (:clusterName cluster)) :cluster-name) notebooks)]
@@ -358,25 +353,27 @@
 
    :-stop-cluster
    (fn [{:keys [props state this]} cluster]
-     (swap! state assoc :cluster-map (assoc (:cluster-map @state) (:clusterName cluster) (assoc cluster :status "Stopping")))
-     (endpoints/call-ajax-leo
-      {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (this :-get-clusters-list)
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [{:keys [cluster-map]} @state]
+       (swap! state assoc :cluster-map (assoc cluster-map (:clusterName cluster) (assoc cluster :status "Stopping")))
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/stop-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))
 
    :-start-cluster
    (fn [{:keys [props state this]} cluster]
-     (swap! state assoc :cluster-map (assoc (:cluster-map @state) (:clusterName cluster) (assoc cluster :status "Starting")))
-     (endpoints/call-ajax-leo
-      {:endpoint (endpoints/start-cluster (:googleProject cluster) (:clusterName cluster))
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (this :-get-clusters-list)
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [{:keys [cluster-map]} @state]
+       (swap! state assoc :cluster-map (assoc cluster-map (:clusterName cluster) (assoc cluster :status "Starting")))
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/start-cluster (:googleProject cluster) (:clusterName cluster))
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (this :-get-clusters-list)
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))
 
    :-get-clusters-list
    (fn [{:keys [props state this]}]
@@ -417,8 +414,9 @@
    ; Gets notebooks from GCS
    :-get-notebooks
    (fn [{:keys [props state this]}]
-     (let [bucket-name (get-in props [:workspace :workspace :bucketName])]
-       (notebook-utils/get-notebooks-in-bucket bucket-name (:pet-token @state)
+     (let [bucket-name (get-in props [:workspace :workspace :bucketName])
+           {:keys [pet-token]} @state]
+       (notebook-utils/get-notebooks-in-bucket bucket-name pet-token
                                                (fn [{:keys [success? raw-response]}]
                                                  (if success?
                                                    (let [json-response (utils/parse-json-string raw-response true)
@@ -429,9 +427,9 @@
 
    :-update-cluster-map
    (fn [{:keys [state props this]} new-cluster-map]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response cluster-map]} @state
            {:keys [notebooks]} server-response]
-       (when-not (= (:cluster-map @state) new-cluster-map)
+       (when-not (= cluster-map new-cluster-map)
          (swap! state assoc :cluster-map new-cluster-map)
          (when notebooks
            (swap! state assoc :server-response {:notebooks (map (fn [n]
@@ -460,25 +458,26 @@
 
    :-upload-notebook
    (fn [{:keys [state props this]} name text]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response pet-token]} @state
            {:keys [notebooks]} server-response
            bucket-name (get-in props [:workspace :workspace :bucketName])]
        (if (clojure.string/ends-with? name ".ipynb")
          (if (not-any? (comp (partial = name) #(notebook-utils/notebook-name-with-suffix %)) notebooks)
-           (notebook-utils/upload-notebook bucket-name (:pet-token @state) name text
-                                           (fn [{:keys [success? raw-response]}]
-                                             (if success?
-                                               (do
-                                                 (swap! state dissoc :uploading?)
-                                                 (this :-get-notebooks))
-                                               (swap! state assoc :server-response {:server-error raw-response}))))
+           (do
+             (swap! state assoc :uploading? true)
+             (notebook-utils/upload-notebook bucket-name pet-token name text
+                                             (fn [{:keys [success? raw-response]}]
+                                               (swap! state dissoc :uploading?)
+                                               (if success?
+                                                 (this :-get-notebooks)
+                                                 (swap! state assoc :server-response {:server-error raw-response})))))
            (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": notebook already exists in this workspace.")))
          (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb.")))))
 
    ; Persists the notebook-cluster associations in a special config file in GCS so they persist between page loads.
    :-persist-notebook-cluster-association
    (fn [{:keys [state props this]} notebooks]
-     (let [{:keys [notebook-config cluster-map]} @state
+     (let [{:keys [notebook-config cluster-map pet-token]} @state
            bucket-name (get-in props [:workspace :workspace :bucketName])
            notebook-config-to-add (reduce conj (map (fn [n]
                                                       (if-let [cluster-name (:cluster-name n)]
@@ -487,7 +486,7 @@
                                                     notebooks))
            new-notebook-config (merge-with (fn [a b] (into (filter #(not (contains? cluster-map %)) a) b)) notebook-config notebook-config-to-add)
            json (utils/->json-string new-notebook-config)]
-       (notebook-utils/update-notebook-config-in-bucket bucket-name (:pet-token @state) json
+       (notebook-utils/update-notebook-config-in-bucket bucket-name pet-token json
                                                         (fn [{:keys [success? raw-response]}]
                                                           (when-not success?
                                                             (swap! state assoc :server-response {:server-error raw-response}))))))
@@ -496,8 +495,8 @@
    :-load-notebook-cluster-association
    (fn [{:keys [state props this]} notebooks]
      (let [bucket-name (get-in props [:workspace :workspace :bucketName])
-           {:keys [cluster-map]} @state]
-       (notebook-utils/get-notebook-config-in-bucket bucket-name (:pet-token @state)
+           {:keys [cluster-map pet-token]} @state]
+       (notebook-utils/get-notebook-config-in-bucket bucket-name pet-token
                                                      (fn [{:keys [success? raw-response]}]
                                                        (if success?
                                                          (let [unescaped-json (utils/parse-json-string raw-response false)
@@ -507,6 +506,5 @@
                                                                                       (merge n {:cluster-name (first (filter (partial contains? cluster-map) nc))})
                                                                                       n))
                                                                                   notebooks)]
-                                                           (swap! state assoc :notebook-config notebook-config)
-                                                           (swap! state assoc :server-response {:notebooks new-notebooks}))
+                                                           (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks})))
                                                          (swap! state assoc :notebook-config {}))))))})

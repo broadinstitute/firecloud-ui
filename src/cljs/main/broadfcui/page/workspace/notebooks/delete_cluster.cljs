@@ -1,10 +1,11 @@
-(ns broadfcui.page.workspace.notebooks.delete_cluster
+(ns broadfcui.page.workspace.notebooks.delete-cluster
   (:require
    [dmohs.react :as react]
-   [broadfcui.components.modals :as modals]
-   [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.common.components :as comps]
+   [broadfcui.components.blocker :refer [blocker]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
    ))
 
@@ -12,10 +13,10 @@
   {:render
    (fn [{:keys [state this props]}]
      (let [{:keys [deleting? server-error]} @state
-           {:keys [cluster-to-delete]} props]
+           {:keys [cluster-to-delete dismiss]} props]
        [modals/OKCancelForm
         {:header "Delete Cluster"
-         :dismiss (:dismiss props)
+         :dismiss dismiss
          :ok-button {:text "Delete" :onClick #(this :-delete-cluster)}
          :content
          (react/create-element
@@ -26,9 +27,8 @@
 
    :-delete-cluster
    (fn [{:keys [state props]}]
-     (let [{:keys [cluster-to-delete]} props]
-       (swap! state assoc :deleting? true)
-       (swap! state dissoc :server-error)
+     (let [{:keys [cluster-to-delete reload-after-delete dismiss]} props]
+       (utils/multi-swap! state (assoc :deleting? true) (dissoc :server-error))
        (endpoints/call-ajax-leo
         {:endpoint (endpoints/delete-cluster (get-in props [:workspace-id :namespace]) cluster-to-delete)
          :headers ajax/content-type=json
@@ -36,6 +36,6 @@
                     (swap! state dissoc :deleting?)
                     (if success?
                       (do
-                        ((:dismiss props))
-                        ((:reload-after-delete props)))
+                        (dismiss)
+                        (reload-after-delete))
                       (swap! state assoc :server-error (get-parsed-response false))))})))})
