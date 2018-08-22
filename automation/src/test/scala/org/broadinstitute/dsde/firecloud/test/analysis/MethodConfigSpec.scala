@@ -261,6 +261,33 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
 
   "With dockstore method config" - {
+    "defaults to run without entity model" in {
+      // written for GAWB-3695
+      val user = UserPool.chooseProjectOwner
+      implicit val authToken: AuthToken = user.makeAuthToken()
+
+      withCleanBillingProject(user) { projectName =>
+
+        withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
+          // Create method config
+          val configName = s"test_dockstore_config_no_model$workspaceName"
+          api.methodConfigurations.createDockstoreMethodConfigInWorkspace(
+            projectName, workspaceName, DockstoreMethodData.dockstoreMethod,
+            projectName, configName)
+
+          withWebDriver { implicit driver =>
+            withSignIn(user) { _ =>
+              // Go to method config page
+              val configPage = new WorkspaceMethodConfigDetailsPage(projectName, workspaceName, projectName, configName).open
+
+              // We should not be using the entity data model
+              configPage.isUsingDataModel() shouldBe false
+
+            }
+          }
+        }
+      }
+    }
     "edit goes into edit mode" in {
       // written for GAWB-3712
       val user = UserPool.chooseProjectOwner
@@ -270,7 +297,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
 
         withWorkspace(projectName, "MethodConfigSpec", attributes = Some(Map("foo" -> "bar"))) { workspaceName =>
           // Create method config
-          val configName = s"test_JSON_populate_dockstore_config_$workspaceName"
+          val configName = s"test_dockstore_config_edit_$workspaceName"
           api.methodConfigurations.createDockstoreMethodConfigInWorkspace(
             projectName, workspaceName, DockstoreMethodData.dockstoreMethod,
             projectName, configName)
