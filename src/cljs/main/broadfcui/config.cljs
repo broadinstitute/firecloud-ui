@@ -57,6 +57,7 @@
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
 (defn martha-url [] (get @config "marthaUrl"))
+(defn martha-file-summary-url [] (get @config "marthaFileSummaryUrl"))
 (defn fence-url [] (get @config "fenceUrl"))
 (defn bond-url [] (get @config "bondUrl"))
 (defn fence-client-id [] (get @config "fenceClientId"))
