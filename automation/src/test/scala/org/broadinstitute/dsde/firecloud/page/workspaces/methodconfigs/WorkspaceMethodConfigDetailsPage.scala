@@ -119,6 +119,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     saveEdits()
   }
 
+  def isUsingDataModel(): Boolean = {
+    dataModelCheckbox.isChecked
+  }
+
   def toggleDataModel(): Boolean = {
     if (dataModelCheckbox.isChecked) dataModelCheckbox.ensureUnchecked()
     else dataModelCheckbox.ensureChecked()
