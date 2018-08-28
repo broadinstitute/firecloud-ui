@@ -256,6 +256,8 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+               (not (contains? user-status :tos))
+               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          (when (:showing-system-down-banner? @state)
