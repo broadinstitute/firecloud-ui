@@ -221,8 +221,8 @@
                                         :refresh-notebooks #(this :-refresh-notebooks))])
         [:div {} [:span {:data-test-id "notebooks-title" :style {:fontSize "125%" :fontWeight 500 :paddingBottom 10 :marginLeft 10}} "Notebooks"]]
         [:div {:style {:margin 10 :fontSize "88%"}}
-         "Create a Jupyter notebook and launch an interactive analysis environment based on Spark and Hail.
-         See online documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
+         "Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail.
+          This beta feature is under active development. See documentation " [:a {:href (config/user-notebooks-guide-url) :target "_blank"} "here" icons/external-link-icon]]
         [comps/ErrorViewer {:data-test-id "notebooks-error" :error server-error}]
 
         ;; Upload notebook
