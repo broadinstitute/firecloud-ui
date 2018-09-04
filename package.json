@@ -22,7 +22,7 @@
   "devDependencies": {
     "ajv": "^6.0.0",
     "copy-webpack-plugin": "^4.3.1",
-    "css-loader": "^0.28.9",
+    "css-loader": "^1.0.0",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.6",
     "git-revision-webpack-plugin": "^3.0.3",
@@ -32,7 +32,7 @@
     "style-loader": "^0.19.1",
     "uglifyjs-webpack-plugin": "^1.1.6",
     "url-loader": "^0.6.2",
-    "webpack": "^3.10.0"
+    "webpack": "^4.17.2"
   },
   "scripts": {
     "postinstall": "rebuild-node-sass",
