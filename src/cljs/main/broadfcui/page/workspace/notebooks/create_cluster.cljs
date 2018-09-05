@@ -172,7 +172,7 @@
          (swap! state assoc :validation-errors fails)
          (do (swap! state assoc :creating? true)
              (endpoints/call-ajax-leo
-              {:endpoint (endpoints/create-cluster (get-in props [:workspace-id :namespace]) clusterNameCreate)
+              {:endpoint (endpoints/create-cluster-v2 (get-in props [:workspace-id :namespace]) clusterNameCreate)
                :payload (merge payload
                                {:machineConfig machineConfig}
                                (when-not (string/blank? extensionURI) {:jupyterExtensionUri extensionURI})

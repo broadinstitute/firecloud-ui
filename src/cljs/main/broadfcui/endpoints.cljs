@@ -163,8 +163,13 @@
    :method :get})
 
 
+;; deprecated
 (defn create-cluster [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name)
+   :method :put})
+
+(defn create-cluster-v2 [google-project cluster-name]
+  {:path (str "/cluster/v2/" google-project "/" cluster-name)
    :method :put})
 
 (defn delete-cluster [google-project cluster-name]
