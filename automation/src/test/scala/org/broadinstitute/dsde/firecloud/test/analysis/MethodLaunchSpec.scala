@@ -220,7 +220,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
     }
   }
 
-  "reader cannot abort a launched submission" in {
+  "reader does not see an abort button for a launched submission" in {
     val owner = FireCloudConfig.Users.owner
     val reader = UserPool.chooseStudent
     implicit val ownerAuthToken: AuthToken = owner.makeAuthToken()
