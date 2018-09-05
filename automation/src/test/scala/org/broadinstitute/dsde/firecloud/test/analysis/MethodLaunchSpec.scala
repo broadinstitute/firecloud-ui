@@ -263,6 +263,12 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
                 // the UI shows the abort button for the following statuses:
                 List("Accepted", "Evaluating", "Submitting", "Submitted") should contain (status)
               }
+
+              // test the page's display of the submission ID against the tests' knowledge of the ID. This verifies
+              // we have landed on the right page. Without this test, the next assertion on the abort button's visibility
+              // is a weak assertion - we could be on the wrong page, which means the abort button would also not be visible.
+              submissionDetailsPage.getSubmissionId shouldBe submissionId
+
               // is the abort button visible?
               submissionDetailsPage should not be 'abortButtonVisible
             }
