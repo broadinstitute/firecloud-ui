@@ -119,7 +119,12 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     */
   def enterOntologySearchText(text: String): Seq[String] = {
     ontologySearch.setText(s"$text ") // appends a whitespace
-    Thread sleep 500 // micro sleep before checking for visibility
+
+    // Thread sleep 500 // micro sleep before checking for visibility
+
+    // wait for the dropdown to be displayed
+    await condition ontologySearch.query.element.underlying.isDisplayed
+
     val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText dropdownId is [$dropdownId]")
