@@ -61,7 +61,7 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
     }
 
     "Enabled" - {
-      "should be able to see the free trial banner, enroll and get terminated" in {
+      "should be able to see the free trial banner, enroll and get terminated" ignore {
         val trialAuthToken = TrialBillingAccountAuthToken()
         withCleanBillingProject(FireCloudConfig.GCS.trialBillingPemFileClientId, List(), List())(() => trialAuthToken) { project =>
           register cleanUp api.trial.scratchTrialProject(project)
