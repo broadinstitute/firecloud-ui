@@ -53,25 +53,22 @@ Test / logBuffered := false
 
 /**
   * Control the number of forked JVM allowed to run at the same time by
-  *  setting the limit on Tags.ForkedTestGroup tag, which is 1 by default.
+  *  setting the limit on Tags.ForkedTestGroup tag, 1 is default.
   *
-  *  Warning: can't set too high (set at 10 would crashes OS)
+  *  Warning: can't set too high (parallel execution - tests become flaky)
   *  This is not number of threads in each JVM. That would be up to sbt.
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 5))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 3))
 
 /**
   * Forked JVM options
   */
-Test / javaOptions ++= Seq("-Xmx2G")
+Test / javaOptions ++= Seq("-Xmx6G")
 
 /**
  * copy system properties to forked JVM
   */
 Test / javaOptions ++= propertiesAsScalaMap(System.getProperties).map{ case (key,value) => "-D" + key + "=" +value }.toSeq
-
-// only show stack traces up to the first sbt stack frame
-traceLevel := 0
 
 /*
  * This works only in SBT version pre 1.x release. Save this until we're certain we don't need it.

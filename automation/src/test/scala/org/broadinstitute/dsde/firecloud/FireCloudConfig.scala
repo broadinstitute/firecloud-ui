@@ -34,4 +34,6 @@ object FireCloudConfig extends CommonConfig {
     val methodConfigNamespace = methodsConfig.getString("methodConfigNamespace")
     val snapshotID: Int = methodsConfig.getString("snapshotID").toInt
   }
+
+  object GCS extends CommonGCS
 }
