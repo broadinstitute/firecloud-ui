@@ -169,7 +169,7 @@
                                :color (color-for-submission submission)
                                :icon (icon-for-submission submission)}]
            (when (and
-                   contains? moncommon/sub-running-statuses (:status submission)
+                   (contains? moncommon/sub-running-statuses (:status submission))
                    (common/access-greater-than-equal-to? (:user-access-level props) "WRITER"))
              [AbortButton
               {:on-abort (fn []
