@@ -213,6 +213,10 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
               // verifiy on UI
               submissionDetailsPage.waitUntilSubmissionCompletes()
               submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
+
+              // once aborted, the abort button should no longer be visible
+              submissionDetailsPage should not be 'abortButtonVisible
+
             }
           }
         }
