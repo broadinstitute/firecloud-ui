@@ -10,13 +10,11 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with Matchers with ModalUtil with Eventually with TestReporterFixture {
 
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(60, Seconds)), interval = scaled(Span(1, Seconds)))
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   // We are only testing UI mechanics because the business logic of RP matching is extensively tested lower in the stack.
   "Data Library" - {

@@ -151,7 +151,7 @@ class CreateClusterModal(implicit webDriver: WebDriver) extends OKCancelModal("c
 
 class DeleteClusterModal(clusterName: String)(implicit webDriver: WebDriver) extends OKCancelModal("delete-cluster-modal") {
   def deleteCluster() = {
-    submit
+    submit()
   }
 }
 

@@ -4,7 +4,7 @@ import sbt.Keys._
 object Dependencies {
   val jacksonV = "2.9.0"
 
-  val serviceTestV = "0.12-fca0c5b"
+  val serviceTestV = "0.12-7b3f0d6"
 
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$scalaBinaryVersion"),
@@ -24,7 +24,7 @@ object Dependencies {
     "com.fasterxml.jackson.module" % "jackson-module-scala_2.12" % jacksonV,
 
     "org.scalatest"       %%  "scalatest"       % "3.0.5"   % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "3.12.0"  % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "3.14.0"  % "test",
     "org.slf4j" % "slf4j-api" % "1.7.25" % "test",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",

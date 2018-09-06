@@ -17,7 +17,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.util.Try
 
 
-class AuthDomainOwnersSpec extends FreeSpec with ParallelTestExecution with Matchers
+class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures with Eventually
   with BillingFixtures with GroupFixtures with UserFixtures with TestReporterFixture {
 

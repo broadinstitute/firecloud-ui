@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import org.broadinstitute.dsde.firecloud.{ReadyComponent, SignalsReadiness, Stateful}
+import org.broadinstitute.dsde.firecloud.{ReadyComponent, SignalsReadiness}
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
 import org.openqa.selenium.WebDriver
 
@@ -9,8 +9,8 @@ abstract class Modal(id: String)(implicit val webDriver: WebDriver) extends Comp
 
   override val readyComponent: Awaiter = xButton
 
-  def awaitDismissed(): Unit = {
-    await condition (invisibleSpinner, 45)
+  def awaitDismissed(timeOutInSeconds: Long = 60): Unit = {
+    await condition (invisibleSpinner, timeOutInSeconds)
     xButton.awaitNotVisible()
   }
 
@@ -37,6 +37,11 @@ class OKCancelModal(id: String)(override implicit val webDriver: WebDriver) exte
 
   def clickOk(): Unit = {
     okButton.doClick()
+    try {
+      await notVisible (spinner, 30)
+    } catch {
+      case _: Exception => // ignore exception
+    }
   }
 
   def clickCancel(): Unit = {

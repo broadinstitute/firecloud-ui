@@ -16,7 +16,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with BillingFixtures with Matchers with TestReporterFixture {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val methodConfigName: String = randomIdWithPrefix(SimpleMethodConfig.configName)
   val testData = TestData()
