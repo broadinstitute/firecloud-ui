@@ -142,7 +142,8 @@ if [ $ENV = "alpha" ]; then
 
 
    i=1
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 12 ]
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 
+
     do
             echo $i
             sleep 10m
