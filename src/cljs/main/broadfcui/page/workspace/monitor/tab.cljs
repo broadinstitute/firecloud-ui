@@ -101,10 +101,12 @@
    :render
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props
-           bucketName (get-in (:workspace props) [:workspace :bucketName])]
+           bucketName (get-in (:workspace props) [:workspace :bucketName])
+           user-access-level (:accessLevel (:workspace props))]
        [:div {:style {:padding "1rem 1.5rem"}}
         (if submission-id
           [submission-details/Page {:key submission-id
+                                    :user-access-level user-access-level
                                     :workspace-id workspace-id
                                     :bucketName bucketName
                                     :submission-id submission-id
