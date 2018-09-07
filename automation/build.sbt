@@ -12,10 +12,6 @@ version := "1.0"
 // clean the Console at the the start of each run
 triggeredMessage in ThisBuild := Watched.clearWhenTriggered
 
-// Can use CTRL-C without exiting SBT
-cancelable in Global := true
-
-
 /**
   * sbt forking JVM -- sbt provides 2 testing modes: forked vs not forked.
   * -- forked: each task (test class) runs in a new forked JVM.
@@ -58,7 +54,7 @@ Test / logBuffered := false
   *  Warning: can't set too high (parallel execution - tests become flaky)
   *  This is not number of threads in each JVM. That would be up to sbt.
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 3))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 6))
 
 /**
   * Forked JVM options

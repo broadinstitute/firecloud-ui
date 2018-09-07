@@ -9,14 +9,11 @@ import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
-
 
 class UnpublishedWorkspaceSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures
   with WorkspaceFixtures with BillingFixtures with Matchers with TestReporterFixture {
 
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val autocompleteTextQueryPrefix: String = "cance"  // partial string of "cancer" to test autocomplete
   val minNumOfResults: Int = 5

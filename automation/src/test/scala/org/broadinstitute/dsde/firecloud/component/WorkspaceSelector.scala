@@ -19,6 +19,7 @@ case class WorkspaceSelector()(implicit webDriver: WebDriver) extends Component(
     dropdown.select("Create new workspace...")
 
     workspaceNameField.awaitVisible()
+    await notVisible (cssSelector("[data-test-id=spinner]"), 60) // slow to load up billing project and AuthDomain groups
 
     workspaceNameField.setText(name)
     billingProjectSelect.select(project)
