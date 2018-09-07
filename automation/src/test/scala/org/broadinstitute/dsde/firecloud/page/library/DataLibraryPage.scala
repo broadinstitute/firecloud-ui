@@ -129,6 +129,14 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText uel is ${uel.getTagName} : ${uel.toString}")
 
+    import org.openqa.selenium.JavascriptExecutor
+    val executor = webDriver.asInstanceOf[JavascriptExecutor]
+
+
+    val uelAttrs = executor.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", uel)
+
+    logger.warn(s"==========>>>>>>>>>> enterOntologySearchText uelAttrs is $uelAttrs")
+
     val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText dropdownId is [$dropdownId]")
