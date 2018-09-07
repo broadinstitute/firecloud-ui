@@ -120,14 +120,29 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
   def enterOntologySearchText(text: String): Seq[String] = {
     ontologySearch.setText(s"$text ") // appends a whitespace
 
-    // Thread sleep 500 // micro sleep before checking for visibility
-
-    // wait for the dropdown to be displayed
-    await condition ontologySearch.query.element.underlying.isDisplayed
-
     val uel = ontologySearch.query.element.underlying
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText uel is ${uel.getTagName} : ${uel.toString}")
+
+    // Thread sleep 500 // micro sleep before checking for visibility
+
+    // wait for the dropdown to be displayed
+    await condition uel.isDisplayed
+
+    // and wait for it to be expanded
+    await condition uel.getAttribute("aria-expanded") == "true"
+
+    // look for the "aria-owns" or "aria-controls" attributes. Either could be populated.
+    val ownedId = Option(uel.getAttribute("aria-owns"))
+    val controlledId = Option(uel.getAttribute("aria-controls"))
+
+    val dropdownIdOption = (ownedId ++ controlledId).headOption
+
+    logger.warn(s"==========>>>>>>>>>> enterOntologySearchText ownedId is $ownedId : controlledId is $controlledId")
+
+    assert(dropdownIdOption.nonEmpty, s"Could not determine dropdownId from aria-owns [$ownedId] : aria-controls [$controlledId]")
+
+    val dropdownId = dropdownIdOption.get // safe given the previous assert
 
     import org.openqa.selenium.JavascriptExecutor
     val executor = webDriver.asInstanceOf[JavascriptExecutor]
@@ -137,11 +152,8 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText uelAttrs is $uelAttrs")
 
-    val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
-
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText dropdownId is [$dropdownId]")
 
-    await condition ontologySearch.query.element.underlying.getAttribute("aria-expanded") == "true"
 
     val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
     // wait for dropdown to contain at least one option
