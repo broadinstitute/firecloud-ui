@@ -130,7 +130,7 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     await condition uel.isDisplayed
 
     // and wait for it to be expanded
-    await condition uel.getAttribute("aria-expanded") == "true"
+    // await condition uel.getAttribute("aria-expanded") == "true"
 
     // look for the "aria-owns" or "aria-controls" attributes. Either could be populated.
     val ownedId = Option(uel.getAttribute("aria-owns"))
