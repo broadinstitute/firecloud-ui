@@ -125,6 +125,10 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     // wait for the dropdown to be displayed
     await condition ontologySearch.query.element.underlying.isDisplayed
 
+    val uel = ontologySearch.query.element.underlying
+
+    logger.warn(s"==========>>>>>>>>>> enterOntologySearchText uel is ${uel.getTagName} : ${uel.toString}")
+
     val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
 
     logger.warn(s"==========>>>>>>>>>> enterOntologySearchText dropdownId is [$dropdownId]")
