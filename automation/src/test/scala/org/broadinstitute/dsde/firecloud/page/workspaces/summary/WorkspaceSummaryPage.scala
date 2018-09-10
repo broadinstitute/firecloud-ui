@@ -62,6 +62,93 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
     noBucketAccess.isVisible && noBucketAccess.getText.contains("unavailable")
   }
 
+  private val sidebar = new Component(TestId("sidebar")) with Stateful {
+    override def awaitReady(): Unit = {
+      awaitState("ready")
+    }
+
+    val editButton = Button("edit-button" inside this)
+    val saveButton = Button("save-button" inside this)
+    val cancelButton = Button("cancel-editing-button" inside this)
+
+    val cloneButton = Button("open-clone-workspace-modal-button" inside this)
+    val deleteWorkspaceButton = Button("delete-workspace-button" inside this)
+    val publishButton = Button("publish-button" inside this)
+    val unpublishButton = Button("unpublish-button" inside this)
+    val shareWorkspaceButton = Button("share-workspace-button" inside this)
+
+    def clickEdit(): Unit = {
+      editButton.doClick()
+      saveButton.awaitEnabledState()
+      WorkspaceSummaryPage.this.awaitReady()
+    }
+
+    def clickSave(): Unit = {
+      saveButton.doClick()
+      WorkspaceSummaryPage.this.awaitReady()
+    }
+
+    def clickCancel(): Unit = {
+      cancelButton.doClick()
+      WorkspaceSummaryPage.this.awaitReady()
+    }
+
+    def clickClone(): CloneWorkspaceModal = {
+      cloneButton.doClick()
+      await ready new CloneWorkspaceModal()
+    }
+
+    def clickDeleteWorkspace(): DeleteWorkspaceModal = {
+      deleteWorkspaceButton.doClick()
+      await ready new DeleteWorkspaceModal()
+    }
+
+    def clickPublish(): Unit = {
+      publishButton.doClick()
+      WorkspaceSummaryPage.this.awaitReady()
+    }
+
+    def clickUnpublish(): MessageModal = {
+      unpublishButton.doClick()
+      await ready new MessageModal()
+    }
+
+    def clickShareWorkspaceButton(): AclEditor = {
+      shareWorkspaceButton.doClick()
+      await ready new AclEditor()
+    }
+
+  }
+
+  private val storageCostEstimate = new Label("storage-cost-estimate") with Stateful {
+    override def awaitReady(): Unit = awaitState("ready")
+  }
+
+  private val submissionCounter = new Label("submission-counter") with Stateful {
+    override def awaitReady(): Unit = awaitState("ready")
+  }
+
+  private val workspaceAttributesArea = Collapse("attribute-editor", new FireCloudView {
+    override def awaitReady(): Unit = {
+      table.awaitReady()
+    }
+
+    val newButton = Button("add-new-button")
+    val table = Table("workspace-attributes")
+
+    def clickNewButton(): Unit = {
+      newButton.doClick()
+      awaitReady()
+    }
+
+    def clickForPreviewPane(link: String): PreviewModal = {
+      click on LinkTextQuery(link)
+      await ready new PreviewModal("preview-modal")
+    }
+
+  })
+  import scala.language.reflectiveCalls
+
   /**
     * Dictionary of access level labels displayed in the web UI.
     */
