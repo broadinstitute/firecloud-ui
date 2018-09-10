@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const copyWebpackPlugin = new CopyWebpackPlugin([{
@@ -16,16 +15,7 @@ const copyWebpackPlugin = new CopyWebpackPlugin([{
     }
 }]);
 
-const definePlugin = new webpack.DefinePlugin({
-    'process.env': {
-        NODE_ENV: JSON.stringify(process.env.NODE_ENV) // to make sure it's parseable
-    }
-});
-
 const plugins = [copyWebpackPlugin];
-if (process.env.NODE_ENV !== 'production') {
-    plugins.push(definePlugin);
-}
 
 module.exports = {
     mode: process.env.NODE_ENV || 'development',
