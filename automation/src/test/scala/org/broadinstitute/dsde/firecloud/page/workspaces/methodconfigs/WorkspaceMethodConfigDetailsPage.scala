@@ -1,8 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs
 
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.{FireCloudConfig, FireCloudView}
@@ -12,10 +10,8 @@ import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.broadinstitute.dsde.workbench.service.util.Util
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
@@ -123,6 +119,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     saveEdits()
   }
 
+  def isUsingDataModel(): Boolean = {
+    dataModelCheckbox.isChecked
+  }
+
   def toggleDataModel(): Boolean = {
     if (dataModelCheckbox.isChecked) dataModelCheckbox.ensureUnchecked()
     else dataModelCheckbox.ensureChecked()
@@ -139,13 +139,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickAndReadSuggestions(field: String): Seq[String] = {
     val dataTestId = s"$field-text-input"
-    click on testId(dataTestId)
-    // wait for dropdown to become expanded
-    await condition (find(testId(dataTestId)).exists(_.underlying.getAttribute("aria-expanded") == "true"), 10)
-    // wait for dropdown to contain at least one WebElement
-    val xpathSelector = s"//*[@data-test-id='$field-suggestions']/*/li"
-    await condition (findAll(xpath(xpathSelector)).map(elem => elem.isDisplayed).nonEmpty, 10)
-    findAll(xpath(xpathSelector)).map(_.text).toSeq
+    click on find(testId("test.hello.response-text-input")).get // force page scrolls down
+
+    val suggestionTextfield = TextField(TestId(dataTestId))
+    click on suggestionTextfield.query.element.underlying // activate the suggestions
+    suggestionTextfield.getSuggestions()
   }
 
   def readFieldValue(field: String): String = {

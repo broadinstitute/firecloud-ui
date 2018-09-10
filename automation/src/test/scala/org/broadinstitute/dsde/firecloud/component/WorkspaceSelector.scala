@@ -15,10 +15,11 @@ case class WorkspaceSelector()(implicit webDriver: WebDriver) extends Component(
   def selectExisting(project: String, name: String): Unit = dropdown.select(s"$project/$name")
 
   // TODO: dedupe this and create/clone workspace
-  def selectNew(project: String, name: String, description: String = "", authDomain: Set[String] = Set.empty): Unit = {
+  def selectNew(project: String, name: String, description: String = "test automation workspace", authDomain: Set[String] = Set.empty): Unit = {
     dropdown.select("Create new workspace...")
 
     workspaceNameField.awaitVisible()
+    await notVisible (cssSelector("[data-test-id=spinner]"), 60) // slow to load up billing project and AuthDomain groups
 
     workspaceNameField.setText(name)
     billingProjectSelect.select(project)

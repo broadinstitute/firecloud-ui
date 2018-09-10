@@ -36,7 +36,8 @@
                                         :href (nav/get-link :workspace-submission workspace-id %)}
                   "View")}
       {:header "Status"
-       :sort-by (fn [submission] (:status submission))
+       :sort-by (fn [submission]
+                  (moncommon/sort-order-submission (:status submission) (:workflowStatuses submission)))
        :as-text (fn [submission] (.stringify js/JSON (clj->js (:workflowStatuses submission))))
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
@@ -100,10 +101,12 @@
    :render
    (fn [{:keys [props]}]
      (let [{:keys [submission-id workspace-id]} props
-           bucketName (get-in (:workspace props) [:workspace :bucketName])]
+           bucketName (get-in (:workspace props) [:workspace :bucketName])
+           user-access-level (:accessLevel (:workspace props))]
        [:div {:style {:padding "1rem 1.5rem"}}
         (if submission-id
           [submission-details/Page {:key submission-id
+                                    :user-access-level user-access-level
                                     :workspace-id workspace-id
                                     :bucketName bucketName
                                     :submission-id submission-id

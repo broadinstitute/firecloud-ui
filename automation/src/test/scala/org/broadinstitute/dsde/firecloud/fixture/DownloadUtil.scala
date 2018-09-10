@@ -4,8 +4,6 @@ import com.typesafe.scalalogging.LazyLogging
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 import org.broadinstitute.dsde.firecloud.component.Clickable
 import org.broadinstitute.dsde.workbench.service.util.Util
@@ -14,6 +12,8 @@ import java.util.UUID
 
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
+import org.scalatest.concurrent.PatienceConfiguration.{Interval, Timeout}
+import org.scalatest.time.{Seconds, Span}
 
 trait DownloadUtil extends Eventually with LazyLogging with WebBrowserUtil {
 
@@ -68,14 +68,16 @@ trait DownloadUtil extends Eventually with LazyLogging with WebBrowserUtil {
   private def downloadFile(downloadPath: String, fileName: String, downloadThing: Either[Clickable, CssSelectorQuery])(implicit webDriver: WebDriver): String = synchronized {
 
     def archiveDownloadedFile(sourcePath: String): String = {
-      // wait up to 10 seconds for file exist
+      // wait up to 30 seconds for file exist
       val f = new File(sourcePath)
-      eventually {
-        assert(f.exists(), s"Timed out (10 seconds) waiting for file $f")
+      val time = Timeout(scaled(Span(30, Seconds)))
+      val pollInterval = Interval(scaled(Span(2, Seconds)))
+      eventually(time, pollInterval) {
+        assert(f.exists(), s"Timed out (30 seconds) waiting for download file $f")
       }
 
-      val date = DateTimeFormatter.ofPattern("HH:mm:ss:N").format(LocalDateTime.now())
-      val destFile = new File(sourcePath).getName + s".$date"
+      val randomUuid = UUID.randomUUID().toString.take(6).mkString.toLowerCase
+      val destFile = new File(sourcePath).getName + s".$randomUuid"
       val destPath = s"downloads/$destFile"
       Util.moveFile(sourcePath, destPath)
       logger.info(s"Moved file. sourcePath: $sourcePath, destPath: $destPath")

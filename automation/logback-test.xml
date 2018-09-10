@@ -8,33 +8,48 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{HH:mm:ss} [%-35.35(%thread)] %highlight(%-5level) [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
+            <pattern>%highlight([%-5level]) %d{HH:mm:ss.SSS} %magenta(%-60.60([%t])) %cyan(%-30(%logger{0}:%M)) - %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-35.35(%thread)] %-5level [%-25.25logger{25}%-15(:%method)] - %msg%n</pattern>
+            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-30(%logger{0}:%M) - %msg%n</pattern>
             <outputPatternAsHeader>true</outputPatternAsHeader>
         </encoder>
         <file>${dir.name}/test-reports/TEST-${test.name}.log</file>
         <append>false</append>
-        <immediateFlush>true</immediateFlush>
+        <!-- immediateFlush>true</immediateFlush -->
     </appender>
 
-    <!--  not used - https://logback.qos.ch/manual/appenders.html#AsyncAppender -->
+    <!-- https://logback.qos.ch/manual/appenders.html#AsyncAppender -->
     <appender name="ASYNCCONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
         <appender-ref ref="CONSOLE" />
     </appender>
 
-    <!--  not used -->
     <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
         <appender-ref ref="FILE" />
     </appender>
 
-    <root level="DEBUG">
+    <logger name="org.broadinstitute.dsde" level="INFO" additivity="false">
+        <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE" />
+    </logger>
+
+    <logger name="akka" level="INFO" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <root level="WARN">
+        <appender-ref ref="ASYNCCONSOLE"/>
+        <appender-ref ref="ASYNCFILE" />
     </root>
 
 </configuration>

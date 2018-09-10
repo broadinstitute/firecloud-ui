@@ -129,7 +129,6 @@
         {:endpoint (endpoints/post-workspace-method-config workspace-id)
          :payload {:namespace namespace
                    :name name
-                   :rootEntityType (first common/root-entity-types)
                    :inputs {} :outputs {} :prerequisites {}
                    :methodRepoMethod {:sourceRepo "dockstore"
                                       :methodPath (:id props)

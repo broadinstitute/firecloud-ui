@@ -3,7 +3,9 @@
    [dmohs.react :as react]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.style :as style]
-   [broadfcui.components.pipeline-builder :refer [PipelineBuilder]]
+   ; TODO: address transitive vulnerability before re-enabling
+   ; epam/pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
+   ;[broadfcui.components.pipeline-builder :refer [PipelineBuilder]]
    [broadfcui.components.split-pane :refer [SplitPane]]
    [broadfcui.utils :as utils]
    ))

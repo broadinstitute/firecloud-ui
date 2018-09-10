@@ -1,9 +1,9 @@
 (ns broadfcui.utils.ajax
   (:require
-    [clojure.string :as string]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [clojure.string :as string]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defonce get-bearer-token-header (atom nil))
@@ -11,6 +11,8 @@
 
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
+
+(def app-id {"X-App-ID" "FireCloud"})
 
 (defonce ^:private recent-ajax-calls (atom #{}))
 (def ^:private double-call-threshold 2000)
@@ -38,9 +40,9 @@
                                      :get-parsed-response
                                      (fn [& [keywordize-keys? throw-on-error?]]
                                        (utils/parse-json-string
-                                         (.-responseText xhr)
-                                         (if (some? keywordize-keys?) keywordize-keys? true)
-                                         (if (some? throw-on-error?) throw-on-error? true)))})))]
+                                        (.-responseText xhr)
+                                        (if (some? keywordize-keys?) keywordize-keys? true)
+                                        (if (some? throw-on-error?) throw-on-error? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (.addEventListener xhr "loadend" call-on-done)
@@ -54,12 +56,12 @@
 
 (defn get-google-bucket-file [filename on-done]
   (call
-    {:url (config/google-bucket-url filename)
-     :on-done (fn [{:keys [raw-response]}]
-                ;; Fails gracefully if file is missing or malformed
-                (some->> (utils/parse-json-string raw-response true false)
-                         first
-                         on-done))}))
+   {:url (config/google-bucket-url filename)
+    :on-done (fn [{:keys [raw-response]}]
+               ;; Fails gracefully if file is missing or malformed
+               (some->> (utils/parse-json-string raw-response true false)
+                        first
+                        on-done))}))
 
 
 (defonce server-down? (atom false))
@@ -97,6 +99,7 @@
       (call (assoc arg-map
               :url (str url-root service-prefix path)
               :headers (merge (@get-bearer-token-header)
+                              app-id
                               (:headers arg-map))
               :on-done (fn [{:keys [status-code status-text] :as m}]
                          (update-health status-code status-text)
@@ -111,11 +114,21 @@
 (defn call-sam [path arg-map & {:keys [service-prefix]}]
   (call-service (config/sam-url-root) path arg-map service-prefix))
 
-(defn call-martha [data arg-map]
+(defn call-martha [uri arg-map]
+  (call (assoc arg-map
+          :method "POST"
+          :url (config/martha-file-summary-url)
+          :headers (merge (@get-bearer-token-header) content-type=json app-id)
+          :data (utils/->json-string {:uri uri}))))
+
+(defn call-bond [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
+  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (call (assoc arg-map
-            :url (config/martha-url)
-            :method "POST"
-            :data data
+            :url (str (config/bond-url) service-prefix path)
+            :headers (merge (@get-bearer-token-header)
+                            app-id
+                            (:headers arg-map))
             :on-done (fn [{:keys [status-code status-text] :as m}]
+                       (update-health status-code status-text)
                        (on-done m))))))

@@ -8,10 +8,13 @@
 (defn generate-persistence-key [key]
   (keyword (str "state:" (user/get-id) ":" key)))
 
+(defn save-value [key value]
+  (utils/local-storage-write (generate-persistence-key key) value))
+
 (defn save [{:keys [key state except only]}]
   (assert (not (and except only)) "Specify EITHER except OR only")
-  (utils/local-storage-write
-   (generate-persistence-key key)
+  (save-value
+   key
    (cond except (apply dissoc @state except)
          only (select-keys @state only)
          :else @state)))

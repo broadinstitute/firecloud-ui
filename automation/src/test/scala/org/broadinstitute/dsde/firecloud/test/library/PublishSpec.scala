@@ -5,24 +5,22 @@ import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
 import org.broadinstitute.dsde.workbench.service.Orchestration
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
-import org.broadinstitute.dsde.firecloud.test.Tags
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
-import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.broadinstitute.dsde.workbench.service.util.Retry
+import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.duration.DurationLong
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
 class PublishSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with BillingFixtures with Matchers {
 
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
 
   "For a user with publish permissions" - {
@@ -65,7 +63,7 @@ class PublishSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
                 // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
                 //            Thread sleep 500
 
-                retry[Boolean](100.milliseconds, 1.minute)({
+                Retry.retry[Boolean](100.milliseconds, 1.minute)({
                   val libraryPage = wspage.goToDataLibrary()
                   libraryPage.doSearch(wsName)
                   if (libraryPage.hasDataset(wsName))

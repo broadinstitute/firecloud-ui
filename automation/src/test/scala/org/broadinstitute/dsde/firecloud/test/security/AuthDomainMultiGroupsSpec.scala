@@ -13,11 +13,11 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 
 
-class AuthDomainMultiGroupsSpec extends FreeSpec with ParallelTestExecution with Matchers with CleanUp
+class AuthDomainMultiGroupsSpec extends FreeSpec /*with ParallelTestExecution*/ with Matchers with CleanUp
   with WebBrowserSpec with WorkspaceFixtures with Eventually with BillingFixtures with GroupFixtures with UserFixtures
   with TestReporterFixture {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   /*
    * Unless otherwise declared, this auth token will be used for API calls.
@@ -167,12 +167,14 @@ class AuthDomainMultiGroupsSpec extends FreeSpec with ParallelTestExecution with
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { groupOneName =>
           withGroup("AuthDomain", List(user.email)) { groupTwoName =>
-            withCleanUp {
-              withCleanBillingProject(user) { projectName =>
+            withCleanBillingProject(user) { projectName =>
+              withCleanUp {
                 withWebDriver { implicit driver =>
                   withSignIn(user) { workspaceListPage =>
                     val workspaceName = "AuthDomainSpec_create_" + randomUuid
                     register cleanUp api.workspaces.delete(projectName, workspaceName)(user.makeAuthToken())
+
+                    logger.info(s"Creating workspace: $projectName/$workspaceName. authDomain: $groupOneName and groupTwoName")
                     val workspaceSummaryPage = workspaceListPage.createWorkspace(projectName, workspaceName, Set(groupOneName, groupTwoName))
 
                     eventually {

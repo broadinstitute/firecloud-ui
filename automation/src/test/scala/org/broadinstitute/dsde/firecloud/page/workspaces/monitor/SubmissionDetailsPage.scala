@@ -109,6 +109,8 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     modal.clickAbortSubmissionButton
   }
 
+  def abortButtonVisible: Boolean = submissionAbortButton.isVisible
+
   def getApiSubmissionStatus(billingProject: String, workspaceName: String, submissionId: String)(implicit token: AuthToken): String = {
     val (status, workflows) = Rawls.submissions.getSubmissionStatus(billingProject, workspaceName, submissionId)
     logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")

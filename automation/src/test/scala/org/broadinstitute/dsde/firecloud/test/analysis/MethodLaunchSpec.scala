@@ -5,9 +5,11 @@ import java.util.UUID
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture._
+import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest._
 import org.scalatest.time.{Minutes, Seconds, Span}
@@ -211,7 +213,70 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
               // verifiy on UI
               submissionDetailsPage.waitUntilSubmissionCompletes()
               submissionDetailsPage.getSubmissionStatus shouldBe submissionDetailsPage.ABORTED_STATUS
+
+              // once aborted, the abort button should no longer be visible
+              submissionDetailsPage should not be 'abortButtonVisible
+
             }
+          }
+        }
+      }
+    }
+  }
+
+  "reader does not see an abort button for a launched submission" in {
+    val owner = FireCloudConfig.Users.owner
+    val reader = UserPool.chooseStudent
+    implicit val ownerAuthToken: AuthToken = owner.makeAuthToken()
+    val readerAuthToken: AuthToken = reader.makeAuthToken()
+
+    withCleanBillingProject(owner) { billingProject =>
+      withWorkspace(billingProject, "MethodLaunchSpec_reader_cannot_abort_submission", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)(ownerAuthToken)
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)(readerAuthToken)
+
+        val shouldUseCallCaching = false
+        api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
+
+        withMethod("MethodLaunchSpec_abort_reader", MethodData.SimpleMethod) { methodName =>
+          val method = MethodData.SimpleMethod.copy(methodName = methodName)
+          api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName,
+            method, SimpleMethodConfig.configNamespace, methodName, 1,
+            SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
+
+          withWebDriver { implicit driver =>
+
+            // TODO: avoid using var?
+            var submissionId: String = ""
+
+            // as owner, launch a submission
+            withSignIn(owner) { _ =>
+              val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
+              val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId, "", shouldUseCallCaching)
+              submissionId = submissionDetailsPage.getSubmissionId
+            }
+
+            // as reader, view submission details and validate the abort button doesn't appear
+            withSignIn(reader) { _ =>
+              withClue("submissionId as returned by owner block: ") {
+                submissionId should not be ""
+              }
+              val submissionDetailsPage = new SubmissionDetailsPage(billingProject, workspaceName, submissionId).open
+              val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)(readerAuthToken)
+              withClue("When the reader views the owner's submission, the submission status: ") {
+                // the UI shows the abort button for the following statuses:
+                List("Accepted", "Evaluating", "Submitting", "Submitted") should contain (status)
+              }
+
+              // test the page's display of the submission ID against the tests' knowledge of the ID. This verifies
+              // we have landed on the right page. Without this test, the next assertion on the abort button's visibility
+              // is a weak assertion - we could be on the wrong page, which means the abort button would also not be visible.
+              submissionDetailsPage.getSubmissionId shouldBe submissionId
+
+              // is the abort button visible?
+              submissionDetailsPage should not be 'abortButtonVisible
+            }
+
           }
         }
       }

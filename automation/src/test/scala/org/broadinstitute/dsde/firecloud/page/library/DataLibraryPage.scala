@@ -10,7 +10,6 @@ import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
-import scala.util.{Failure, Success, Try}
 
 /**
   * Page class for the Data Library page.
@@ -113,29 +112,14 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     checkboxByCode(code).ensureChecked()
   }
 
-  def enterOntologySearchText(text: String): Unit = {
+  /**
+    *
+    * @param text
+    * @return Search textfield's dropdown element id
+    */
+  def enterOntologySearchText(text: String): Seq[String] = {
     ontologySearch.setText(s"$text ") // appends a whitespace
-    Thread sleep 100 // micro sleep before look for spinner
-    val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
-    await visible id(dropdownId)
-    Try{
-      await condition invisibleSpinner
-    } match {
-      case Success(_) =>
-      case Failure(_) =>
-        logger.warn(s"Retrying enterOntologySearchText($text)")
-        ontologySearch.query.element.underlying.clear()
-        ontologySearch.setText(text) // try setText again
-    }
-  }
-
-  def isSuggestionVisible(suggestionTestId: String): Boolean = {
-    Try {
-      Link(suggestionTestId inside this).awaitVisible()
-    } match {
-      case Success(_) => Link(suggestionTestId inside this).isVisible
-      case Failure(_) => false
-    }
+    ontologySearch.getSuggestions
   }
 
   def selectSuggestion(suggestionTestId: String): Unit = {
