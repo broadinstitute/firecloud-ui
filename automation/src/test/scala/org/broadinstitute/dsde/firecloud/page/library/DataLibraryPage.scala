@@ -119,7 +119,18 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     */
   def enterOntologySearchText(text: String): Seq[String] = {
     ontologySearch.setText(s"$text ") // appends a whitespace
-    ontologySearch.getSuggestions
+    Thread sleep 500 // micro sleep before checking for visibility
+    val dropdownId = ontologySearch.query.element.underlying.getAttribute("aria-owns")
+    await condition ontologySearch.query.element.underlying.getAttribute("aria-expanded") == "true"
+
+    val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
+    // wait for dropdown to contain at least one option
+    await condition {
+      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
+      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
+    }
+
+    findAll(xpath(listOptionXpath)).map(_.text).toSeq
   }
 
   def selectSuggestion(suggestionTestId: String): Unit = {
