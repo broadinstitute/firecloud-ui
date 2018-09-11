@@ -330,11 +330,19 @@
      (let [{:keys [workspsaceName]} props
            {:keys [server-response]} @state
            {:keys [notebooks]} server-response
-           filtered-notebooks (filter (comp (partial = (:clusterName cluster)) :cluster-name) notebooks)]
+           notebooks-to-localize (filter (every-pred (comp (partial = (:clusterName cluster)) :cluster-name)
+                                                     (comp false? :localized?))
+                                         notebooks)]
        (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
-                                    (reduce merge (conj (map (partial this :-localize-entry) filtered-notebooks) (this :-delocalize-json)))
+                                    (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
                                     (fn [{:keys [success? get-parsed-response]}]
-                                      (when-not success?
+                                      (if success?
+                                        ; flip :localized? to true so we don't re-localize notebooks to this cluster
+                                        (swap! state assoc :server-response {:notebooks (map (fn [n]
+                                                                                               (if (= (:cluster-name n) (:clusterName cluster))
+                                                                                                 (merge n {:localized? true})
+                                                                                                 n))
+                                                                                             notebooks)})
                                         (js/setTimeout #(this :-localize-notebooks cluster) 10000))))))
 
    :-delocalize-json
@@ -449,7 +457,7 @@
            {:keys [notebooks]} server-response
            updated-notebooks (map (fn [n]
                                     (if (= (:name n) (:name notebook))
-                                      (merge n {:cluster-name cluster-name})
+                                      (merge n {:cluster-name cluster-name :localized? false})
                                       n))
                                   notebooks)]
        (this :-get-clusters-list)
