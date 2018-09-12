@@ -10,7 +10,7 @@ import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.openqa.selenium.{TimeoutException, WebDriver}
+import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
 
@@ -155,7 +155,15 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
       findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
     }
 
-    findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    Try[Seq[String]] {
+      findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    } match {
+      case Success(value) => value
+      case Failure(exception) if (exception.isInstanceOf[StaleElementReferenceException]) =>
+        Thread sleep 1000
+        findAll(xpath(listOptionXpath)).map(_.text).toSeq // retry if encountered StaleElementReferenceException
+    }
+
   }
 
   def readFieldValue(field: String): String = {
