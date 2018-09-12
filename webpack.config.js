@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
