@@ -18,7 +18,9 @@ trait Suggest extends LazyLogging { this: Component =>
         try {
           texts
         } catch {
-          case e: StaleElementReferenceException => throw e
+          case e: StaleElementReferenceException =>
+            logger.warn("getSuggestions",e) // log stacktrace to help troubleshooting in case wait time exhausted
+            throw e
         }
       }
     }
@@ -61,6 +63,10 @@ trait Suggest extends LazyLogging { this: Component =>
 
     // return the value of the options text
     val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
+    await condition {
+      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed) &&
+        findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty
+    }
     findAll(xpath(listOptionXpath)).map(_.text).toSeq
   }
 
