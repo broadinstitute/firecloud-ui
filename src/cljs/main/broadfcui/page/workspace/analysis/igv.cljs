@@ -36,10 +36,11 @@
                          tracks)}))
 
 (react/defc IGVContainer
-  {:component-will-mount
-   (fn []
-     (when-not @igv-styles-loaded?
-       (load-igv-styles)))
+  {
+   ;; :component-will-mount
+   ;; (fn []
+   ;;   (when-not @igv-styles-loaded?
+   ;;     (load-igv-styles)))
    :render
    (fn [{:keys [this state]}]
      (let [{:keys [deps-loaded? error?]} @state]
@@ -47,24 +48,29 @@
         [:div {:ref "container"}]
         (cond
           error? (style/create-server-error-message "Unable to load IGV.")
-          deps-loaded? [ScriptLoader
+          :else [ScriptLoader
+          ;; deps-loaded? [ScriptLoader
                         {:key "igv"
                          :on-error #(swap! state assoc :error? true)
                          :on-load #(do
                                      (swap! state assoc :igv-loaded? true)
                                      (this :refresh))
-                         :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}]
-          :else [ScriptLoader
-                 {:key "igv-deps"
-                  :on-error #(swap! state assoc :error? true)
-                  :on-load #(swap! state assoc :deps-loaded? true)
-                  :path "igv-deps.bundle.js"}])]))
+                         :path "https://igv.org/web/release/2.0.0-rc5/dist/igv.min.js"}]
+          
+          ;; :else [ScriptLoader
+          ;;       {:key "igv-deps"
+          ;;        :on-error #(swap! state assoc :error? true)
+          ;;        :on-load #(swap! state assoc :deps-loaded? true)
+          ;;        :path "igv-deps.bundle.js"}]
+                  
+                  )]))
    :component-did-update
    (fn [{:keys [props state prev-props this]}]
      (when (and (not= (:tracks props) (:tracks prev-props)) (:igv-loaded? @state))
        (this :refresh)))
    :refresh
    (fn [{:keys [props refs]}]
+     (set! (.-innerHTML (@refs "container")) "")
      (let [tracks (:tracks props)]
        (if (empty? tracks)
          ;; if the user hasn't specified any tracks, render the IGV shell without getting a pet token
