@@ -1,7 +1,9 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * Mix in for Components (ex. SearchField or TextField) which supply dropdown autosuggestions
@@ -52,7 +54,15 @@ trait Suggests extends LazyLogging { this: Component =>
     }
 
     // return the value of the options text
-    findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    // retry on StaleElementReferenceException
+    Try[Seq[String]] {
+      findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    } match {
+      case Success(value) => value
+      case Failure(_:StaleElementReferenceException) =>
+        Thread sleep 1000
+        findAll(xpath(listOptionXpath)).map(_.text).toSeq // retry if encountered StaleElementReferenceException
+    }
   }
 
 }
