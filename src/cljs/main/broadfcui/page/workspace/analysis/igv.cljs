@@ -44,7 +44,7 @@
    (fn [{:keys [this state]}]
      (let [{:keys [deps-loaded? error?]} @state]
        [:div {}
-        [:div {:ref "container"}]
+        [:div {:ref "container" :data-test-id "igv-container"}]
         (cond
           error? (style/create-server-error-message "Unable to load IGV.")
           :else [ScriptLoader
