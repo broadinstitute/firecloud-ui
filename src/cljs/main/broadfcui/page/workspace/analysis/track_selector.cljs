@@ -17,6 +17,13 @@
 
 
 (def ^:private supported-file-types [".bam" ".vcf" ".bed"])
+;; IGV.js supports:
+;;
+;; annotation: bed, gff, gff3, gtf
+;; wig: wig, bigWig, bedGraph
+;; alignment: bam
+;; variant: vcf
+;; seg: seg
 
 (react/defc- Left
   {:render

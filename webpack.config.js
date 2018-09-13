@@ -38,7 +38,6 @@ module.exports = {
     entry: {
         base: "./src/js/base-deps.js",
         codemirror: "./src/js/codemirror-deps.js",
-        igv: "./src/js/igv-deps.js",
         markdown: "./src/js/markdown-deps.js"
         // TODO: address transitive vulnerability before re-enabling
         // epam/pipeline-builder 0.3.10-dev.264 depends on lodash 3.10.1
