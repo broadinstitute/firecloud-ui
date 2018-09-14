@@ -7,7 +7,7 @@ trait InputField {
   def getText: String
 }
 
-case class TextField(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) with InputField {
+case class TextField(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) with InputField with Suggest {
   def setText(text: String): Unit = {
     textField(query).value = text
   }
