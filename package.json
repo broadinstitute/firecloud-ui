@@ -25,6 +25,7 @@
     "css-loader": "^0.28.9",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.6",
+    "git-revision-webpack-plugin": "^3.0.3",
     "node-sass": "4.6.1",
     "rebuild-node-sass": "^1.1.0",
     "sass-loader": "^6.0.6",

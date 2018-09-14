@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
@@ -10,6 +11,8 @@ const definePlugin = new webpack.DefinePlugin({
     }
 });
 
+const gitRevisionPlugin = new GitRevisionPlugin();
+
 const copyWebpackPlugin = new CopyWebpackPlugin([{
     context: 'src/static',
     from: {
@@ -17,10 +20,23 @@ const copyWebpackPlugin = new CopyWebpackPlugin([{
         dot: false
     },
     transform: function (content, path) {
-        if (path.endsWith('.html'))
-            return content.toString().replace(/{{vtag}}/g, Date.now());
-        else
+        if (path.endsWith('.html')) {
+            let version = "n/a";
+            let hash = "n/a";
+            try {
+                version = gitRevisionPlugin.version();
+                hash = gitRevisionPlugin.commithash();
+            } catch (err) {
+                // noop - likely executing in a local docker container without a .git directory
+            }
+
+            return content.toString()
+                .replace(/{{vtag}}/g, Date.now())
+                .replace(/{{gitversion}}/g, version)
+                .replace(/{{githash}}/g, hash);
+        } else {
             return content;
+        }
     }
 }]);
 
