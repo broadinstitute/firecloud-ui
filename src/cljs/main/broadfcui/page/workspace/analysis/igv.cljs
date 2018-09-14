@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.analysis.igv
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.components.script-loader :refer [ScriptLoader]]
@@ -10,61 +11,58 @@
    [broadfcui.utils.user :as user]
    ))
 
-(defonce ^:private igv-styles-loaded? (atom false))
-
-(defn- load-igv-styles []
-  (.. (js/$ "head") ; IGV uses jQuery, so I'm using it here too.
-      (append "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://igv.org/web/release/1.0.1/igv-1.0.1.css\">"))
-  (reset! igv-styles-loaded? true))
-
 (defn- options [tracks token]
   (clj->js
-   {:genome "hg19"
-    :trackDefaults {:palette ["#00A0B0" "#6A4A3C" "#CC333F" "#EB6841"]
-                    :bam {:coverageThreshold 0.2
-                          :coverageQualityWeight true}}
+   {
+    ;; TODO: should we set hg38 as the default?
+    :genome "hg19"
+    :oauthToken token
     :tracks (map-indexed (fn [index {:keys [track-url index-url]}]
-                           (let [bam? (.endsWith track-url ".bam")]
+                           (let [track-filename (first (string/split track-url #"[\#\?]")) ;; remove any querystring or hash
+                                 file-extension (string/lower-case (last (string/split track-filename ".")))]
                              {:name (str "Track " (inc index))
-                              :url (common/gcs-uri->google-url track-url)
-                              :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
-                              ;; we expect a pet token passed as argument to this function.
-                              :headers {"Authorization" (str "Bearer " token)}
-                              :displayMode "EXPANDED"
-                              :height (when bam? 200)
-                              :autoHeight (when bam? false)}))
+                              ;; NB: IGV knows how to infer the track type from its url - but this doesn't work for sourceType="gcs"
+                              ;; so we will set the track type explicitly.
+                              :sourceType "gcs"
+                              :type (case file-extension
+                                      "bam" "alignment"
+                                      "bed" "annotation"
+                                      "vcf" "variant")
+                              :url track-url
+                              :indexURL (when (string? @index-url) @index-url)
+                              ;; NB: we'd love to skip setting indexURL and set indexed=true instead, which allows IGV to search
+                              ;; for indexes by naming convention, similar (but more lazily-loaded than) our track selector modal.
+                              ;; However, IGV's naming convention only supports (filename + ".bai"), e.g. my.bam.bai, whereas
+                              ;; sometimes we also want (filename.replace(".bam", ".bai")), e.g. my.bai.
+                              ;; So, we have keep our own track selector with index-finder.
+                              }))
                          tracks)}))
 
 (react/defc IGVContainer
-  {:component-will-mount
-   (fn []
-     (when-not @igv-styles-loaded?
-       (load-igv-styles)))
+  {
    :render
    (fn [{:keys [this state]}]
      (let [{:keys [deps-loaded? error?]} @state]
        [:div {}
-        [:div {:ref "container"}]
+        [:div {:ref "container" :data-test-id "igv-container"}]
         (cond
           error? (style/create-server-error-message "Unable to load IGV.")
-          deps-loaded? [ScriptLoader
-                        {:key "igv"
-                         :on-error #(swap! state assoc :error? true)
-                         :on-load #(do
-                                     (swap! state assoc :igv-loaded? true)
-                                     (this :refresh))
-                         :path "https://igv.org/web/release/1.0.6/igv-1.0.6.min.js"}]
           :else [ScriptLoader
-                 {:key "igv-deps"
-                  :on-error #(swap! state assoc :error? true)
-                  :on-load #(swap! state assoc :deps-loaded? true)
-                  :path "igv-deps.bundle.js"}])]))
+                  {:key "igv"
+                   :on-error #(swap! state assoc :error? true)
+                   :on-load #(do
+                               (swap! state assoc :igv-loaded? true)
+                               (this :refresh))
+                   :path "https://igv.org/web/release/2.0.0-rc5/dist/igv.min.js"}])]))
    :component-did-update
    (fn [{:keys [props state prev-props this]}]
      (when (and (not= (:tracks props) (:tracks prev-props)) (:igv-loaded? @state))
        (this :refresh)))
    :refresh
    (fn [{:keys [props refs]}]
+     ;; .createBrowser returns a Promise that we should be using to add/remove tracks. For now, we do it brute-force:
+     ;; empty the container, then create a new IGV browser each time we change tracks.
+     (set! (.-innerHTML (@refs "container")) "")
      (let [tracks (:tracks props)]
        (if (empty? tracks)
          ;; if the user hasn't specified any tracks, render the IGV shell without getting a pet token

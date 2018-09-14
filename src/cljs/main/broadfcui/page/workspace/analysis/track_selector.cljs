@@ -17,6 +17,18 @@
 
 
 (def ^:private supported-file-types [".bam" ".vcf" ".bed"])
+;; FireCloud supports the above subset of file types in IGV. We do this to limit surface area of testing
+;; and reduce risk of bugs.
+;;
+;; IGV.js itself supports:
+;;
+;; annotation: bed, gff, gff3, gtf
+;; wig: wig, bigWig, bedGraph
+;; alignment: bam
+;; variant: vcf
+;; seg: seg
+;;
+;; if FireCloud were to support additional types, we'd need updates to igv_utils.cljs and possibly elsewhere.
 
 (react/defc- Left
   {:render
