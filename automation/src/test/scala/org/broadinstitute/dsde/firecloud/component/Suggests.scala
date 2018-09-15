@@ -4,7 +4,7 @@ import java.time.Duration
 
 import com.typesafe.scalalogging.LazyLogging
 import org.openqa.selenium.support.ui.FluentWait
-import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
+import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
 
 
 /**
@@ -19,6 +19,7 @@ trait Suggests extends LazyLogging { this: Component =>
         .pollingEvery(Duration.ofMillis(600))
         .withMessage("Reading autoSuggestions")
         .ignoring(classOf[StaleElementReferenceException])
+        .ignoring(classOf[TimeoutException])
     wait until ((driver: WebDriver) => readSuggestionText )
   }
 
