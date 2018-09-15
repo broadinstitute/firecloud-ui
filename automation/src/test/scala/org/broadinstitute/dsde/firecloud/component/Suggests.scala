@@ -1,15 +1,30 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
+import org.openqa.selenium.support.ui.WebDriverWait
 import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
 
-import scala.util.{Failure, Success, Try}
 
 /**
   * Mix in for Components (ex. SearchField or TextField) which supply dropdown autosuggestions
   * based on user input.
   */
 trait Suggests extends LazyLogging { this: Component =>
+
+  def getSuggestions()(implicit webDriver: WebDriver): Seq[String] = {
+    val wait = new WebDriverWait(webDriver, 10)
+    wait until new java.util.function.Function[WebDriver, Seq[String]] {
+      override def apply(d: WebDriver): Seq[String] = {
+        try {
+          readSuggestionText
+        } catch {
+          case e: StaleElementReferenceException => // retry on StaleElementReferenceException
+            logger.warn("",e) // help with troubleshooting
+            throw e
+        }
+      }
+    }
+  }
 
   /**
     * get the values of the suggestions displayed to the user. Requires the test code that calls
@@ -19,7 +34,7 @@ trait Suggests extends LazyLogging { this: Component =>
     * @param webDriver
     * @return
     */
-  def getSuggestions()(implicit webDriver: WebDriver): Seq[String] = {
+  private def readSuggestionText(implicit webDriver: WebDriver): Seq[String] = {
     // find the DOM element representing the input component
     val uel = query.element.underlying
 
@@ -49,20 +64,12 @@ trait Suggests extends LazyLogging { this: Component =>
     // wait for dropdown to contain at least one option
     val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
     await condition {
-      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed) &&
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
+      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty&&
+        find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
     }
 
     // return the value of the options text
-    // retry on StaleElementReferenceException
-    Try[Seq[String]] {
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq
-    } match {
-      case Success(value) => value
-      case Failure(_:StaleElementReferenceException) =>
-        Thread sleep 1000
-        findAll(xpath(listOptionXpath)).map(_.text).toSeq // retry if encountered StaleElementReferenceException
-    }
+    findAll(xpath(listOptionXpath)).map(_.text).toSeq
   }
 
 }
