@@ -1,7 +1,9 @@
 package org.broadinstitute.dsde.firecloud.component
 
+import java.time.Duration
+
 import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.support.ui.WebDriverWait
+import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
 
 
@@ -12,18 +14,12 @@ import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
 trait Suggests extends LazyLogging { this: Component =>
 
   def getSuggestions()(implicit webDriver: WebDriver): Seq[String] = {
-    val wait = new WebDriverWait(webDriver, 10)
-    wait until new java.util.function.Function[WebDriver, Seq[String]] {
-      override def apply(d: WebDriver): Seq[String] = {
-        try {
-          readSuggestionText
-        } catch {
-          case e: StaleElementReferenceException => // retry on StaleElementReferenceException
-            logger.warn("",e) // help with troubleshooting
-            throw e
-        }
-      }
-    }
+    val wait = new FluentWait[WebDriver](webDriver)
+        .withTimeout(Duration.ofSeconds(10))
+        .pollingEvery(Duration.ofMillis(600))
+        .withMessage("Reading autoSuggestions")
+        .ignoring(classOf[StaleElementReferenceException])
+    wait until ((driver: WebDriver) => readSuggestionText )
   }
 
   /**
@@ -60,12 +56,16 @@ trait Suggests extends LazyLogging { this: Component =>
       case None => throw new Exception(s"Could not determine dropdownId from aria-owns [$ownedId] : aria-controls [$controlledId]." +
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
+    // wait for dropdown visible
+    await condition {
+      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
+    }
 
-    // wait for dropdown to contain at least one option
+    // wait for dropdown contains at least one option and every option text is visible
     val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
     await condition {
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty&&
-        find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
+      val options = findAll(xpath(listOptionXpath))
+      options.map(_.text).toSeq.nonEmpty && options.forall { elem: Element => elem.isDisplayed }
     }
 
     // return the value of the options text
