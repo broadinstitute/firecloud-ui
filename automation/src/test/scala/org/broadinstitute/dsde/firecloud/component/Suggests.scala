@@ -1,15 +1,27 @@
 package org.broadinstitute.dsde.firecloud.component
 
-import com.typesafe.scalalogging.LazyLogging
-import org.openqa.selenium.{StaleElementReferenceException, WebDriver}
+import java.time.Duration
 
-import scala.util.{Failure, Success, Try}
+import com.typesafe.scalalogging.LazyLogging
+import org.openqa.selenium.support.ui.FluentWait
+import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
+
 
 /**
   * Mix in for Components (ex. SearchField or TextField) which supply dropdown autosuggestions
   * based on user input.
   */
 trait Suggests extends LazyLogging { this: Component =>
+
+  def getSuggestions()(implicit webDriver: WebDriver): Seq[String] = {
+    val wait = new FluentWait[WebDriver](webDriver)
+        .withTimeout(Duration.ofSeconds(10))
+        .pollingEvery(Duration.ofMillis(600))
+        .withMessage("Reading autoSuggestions")
+        .ignoring(classOf[StaleElementReferenceException])
+        .ignoring(classOf[TimeoutException])
+    wait until ((driver: WebDriver) => readSuggestionText )
+  }
 
   /**
     * get the values of the suggestions displayed to the user. Requires the test code that calls
@@ -19,7 +31,7 @@ trait Suggests extends LazyLogging { this: Component =>
     * @param webDriver
     * @return
     */
-  def getSuggestions()(implicit webDriver: WebDriver): Seq[String] = {
+  private def readSuggestionText(implicit webDriver: WebDriver): Seq[String] = {
     // find the DOM element representing the input component
     val uel = query.element.underlying
 
@@ -45,24 +57,20 @@ trait Suggests extends LazyLogging { this: Component =>
       case None => throw new Exception(s"Could not determine dropdownId from aria-owns [$ownedId] : aria-controls [$controlledId]." +
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
+    // wait for dropdown visible
+    await condition {
+      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
+    }
 
-    // wait for dropdown to contain at least one option
+    // wait for dropdown contains at least one option and every option text is visible
     val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
     await condition {
-      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed) &&
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
+      val options = findAll(xpath(listOptionXpath))
+      options.map(_.text).toSeq.nonEmpty && options.forall { elem: Element => elem.isDisplayed }
     }
 
     // return the value of the options text
-    // retry on StaleElementReferenceException
-    Try[Seq[String]] {
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq
-    } match {
-      case Success(value) => value
-      case Failure(_:StaleElementReferenceException) =>
-        Thread sleep 1000
-        findAll(xpath(listOptionXpath)).map(_.text).toSeq // retry if encountered StaleElementReferenceException
-    }
+    findAll(xpath(listOptionXpath)).map(_.text).toSeq
   }
 
 }
