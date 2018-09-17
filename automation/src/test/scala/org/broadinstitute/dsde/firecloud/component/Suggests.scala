@@ -57,16 +57,12 @@ trait Suggests extends LazyLogging { this: Component =>
       case None => throw new Exception(s"Could not determine dropdownId from aria-owns [$ownedId] : aria-controls [$controlledId]." +
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
-    // wait for dropdown visible
-    await condition {
-      find(xpath(s"//div[@id='$dropdownId']")).exists(_.isDisplayed)
-    }
 
     // wait for dropdown contains at least one option and every option text is visible
-    val listOptionXpath = s"//div[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
+    val listOptionXpath = s"//*[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
     await condition {
       val options = findAll(xpath(listOptionXpath))
-      options.map(_.text).toSeq.nonEmpty && options.forall { elem: Element => elem.isDisplayed }
+      options.map(_.text).toSeq.nonEmpty && options.forall {_.isDisplayed}
     }
 
     // return the value of the options text
