@@ -76,7 +76,11 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
     "w.t.inThisRef" -> "\"${this.hello}\""
   )
 
-  val unmatchedVariables = ListMap("unmatched.variable.name" -> "\"surprise!\"")
+  // exercises two things: unmatched variables are silently ignored
+  // and input JSON files larger than 4K are handled (fc-app issue #168)
+  lazy val unmatchedVariables: Map[String, String] = {
+    (1 to 100).map { i => s"unmatched.variable.name.$i" -> "\"surprise!\"" }
+  }.toMap
 
 
   "input/output auto-suggest" - {
@@ -238,7 +242,7 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               // All the input fields should be empty
               inputs.keys.foreach(name => configPage.readFieldValue(name) shouldBe "")
 
-              // Populate input fields from a json containing all the field values and some fields that don't exist
+              // Populate input fields from a large (>4K) JSON containing all the field values and some fields that don't exist
               configPage.populateInputsFromJson(generateInputsJson(inputs ++ unmatchedVariables))
 
               // We should have been automatically switched to edit mode
