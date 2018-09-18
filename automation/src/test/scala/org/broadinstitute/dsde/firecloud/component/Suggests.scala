@@ -43,6 +43,7 @@ trait Suggests extends LazyLogging { this: Component =>
     // see https://www.w3.org/WAI/PF/aria-1.1/states_and_properties#attrs_relationships for info on aria-owns/aria-controls.
     //
     // wait for the aria-owns/aria-controls attribute to exist:
+    logger.debug(s"autosuggestion: check aria-owns or aria-controls is nonEmpty")
     await condition {
       Option(uel.getAttribute("aria-owns")).nonEmpty ||
       Option(uel.getAttribute("aria-controls")).nonEmpty
@@ -50,6 +51,7 @@ trait Suggests extends LazyLogging { this: Component =>
 
     // reduce the value of the "aria-owns" or "aria-controls" attributes - either could be populated - into
     // the DOM id that contains the suggestions.
+    logger.debug(s"autosuggestion: determine dropdownId")
     val ownedId = Option(uel.getAttribute("aria-owns"))
     val controlledId = Option(uel.getAttribute("aria-controls"))
     val dropdownId = (ownedId ++ controlledId).headOption match {
@@ -60,13 +62,16 @@ trait Suggests extends LazyLogging { this: Component =>
 
     // wait for dropdown contains at least one option and every option text is visible
     val listOptionXpath = s"//*[@id='$dropdownId']/ul[@role='listbox']/li[@role='option']"
+    logger.debug(s"autosuggestion: dropdownId: $dropdownId")
     await condition {
       val options = findAll(xpath(listOptionXpath))
       options.map(_.text).toSeq.nonEmpty && options.forall {_.isDisplayed}
     }
-
+    logger.debug(s"autosuggestion: texts are visible and dropdown is nonEmpty")
     // return the value of the options text
-    findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    val li = findAll(xpath(listOptionXpath)).map(_.text).toSeq
+    logger.debug(s"autosuggestion: dropdown contains: $li")
+    li
   }
 
 }
