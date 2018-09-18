@@ -35,10 +35,10 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
 
           withWebDriver { implicit driver =>
             withSignIn(owner) { _ =>
+              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               val headers1 = List("participant_id")
               eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1 }
-              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
               val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()
