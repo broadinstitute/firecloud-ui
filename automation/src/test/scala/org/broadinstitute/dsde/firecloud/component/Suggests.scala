@@ -71,7 +71,7 @@ trait Suggests extends LazyLogging { this: Component =>
       empty && displayed
     }
     logger.debug(s"autosuggestion: texts are visible and dropdown is nonEmpty")
-    
+
     // return the value of the options text
     val li = findAll(xpath(listOptionXpath)).map(_.text).toSeq
     logger.debug(s"autosuggestion: dropdown contains: $li")
