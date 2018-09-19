@@ -47,7 +47,7 @@
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <root level="WARN">
+    <root level="DEBUG">
         <appender-ref ref="ASYNCCONSOLE"/>
         <appender-ref ref="ASYNCFILE" />
     </root>
