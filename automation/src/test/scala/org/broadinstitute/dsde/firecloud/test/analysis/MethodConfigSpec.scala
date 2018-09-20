@@ -264,8 +264,11 @@ class MethodConfigSpec extends FreeSpec with Matchers with WebBrowserSpec with W
   }
 
 
+  // TODO(RT): temporarily ignoring Dockstore test because their staging enviornment is down
+  // (https://staging.dockstore.org:8443) causing all our builds to fail. 
+  // See GAWB-3822 for the long-term fix. 
   "With dockstore method config" - {
-    "not using data model and edit goes into edit mode" in {
+    "not using data model and edit goes into edit mode" ignore {
       // written for GAWB-3695 and GAWB-3712
       val user = UserPool.chooseProjectOwner
       implicit val authToken: AuthToken = user.makeAuthToken()
