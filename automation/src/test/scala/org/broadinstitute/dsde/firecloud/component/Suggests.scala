@@ -20,6 +20,7 @@ trait Suggests extends LazyLogging { this: Component =>
         .withMessage("Reading autoSuggestions")
         .ignoring(classOf[StaleElementReferenceException])
         .ignoring(classOf[TimeoutException])
+        .ignoring(classOf[NoSuchElementException])
     wait until ((driver: WebDriver) => readSuggestionText )
   }
 
@@ -34,6 +35,8 @@ trait Suggests extends LazyLogging { this: Component =>
   private def readSuggestionText(implicit webDriver: WebDriver): Seq[String] = {
     // find the DOM element representing the input component
     val uel = query.element.underlying
+    click on uel // activate the suggestions
+
 
     // the  autocomplete JavaScript will add either an aria-owns or an aria-controls attribute to the input element.
     // It's unclear which attribute is used under which conditions by the third-party autocomplete JavaScript,
@@ -61,17 +64,21 @@ trait Suggests extends LazyLogging { this: Component =>
     }
 
     // wait for dropdown contains at least one option and every option text is visible
+    var notEmpty = false
     val listOptionXpath = s"#$dropdownId li"
     logger.info(s"(remove) autosuggestion: dropdownId: $dropdownId")
     await condition {
       val options = findAll(cssSelector(listOptionXpath))
+      notEmpty = options.nonEmpty
       val displayed = options.forall {_.isDisplayed}
-      logger.info(s"(remove) autosuggestion: texts displayed: $displayed")
-      displayed
+      logger.info(s"(remove) autosuggestion: texts displayed: $displayed. notEmpty: $notEmpty")
+      displayed && notEmpty
     }
 
-    // return the value of the options text
-    val li = findAll(cssSelector(listOptionXpath)).map(_.text).toSeq
+    // return the value of the options text. filter out empty string
+    val li = findAll(cssSelector(listOptionXpath)).map(_.text).filter(_.nonEmpty).toSeq
+    if (li.isEmpty) throw new NoSuchElementException
+
     logger.info(s"(remove) autosuggestion: dropdown list contains ${li.size} li: $li")
     li
   }
