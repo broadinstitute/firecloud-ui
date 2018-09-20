@@ -10,7 +10,7 @@ import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
 
@@ -142,7 +142,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     click on find(testId("test.hello.response-text-input")).get // force page scrolls down
 
     val suggestionTextfield = TextField(TestId(dataTestId))
-    click on suggestionTextfield.query.element.underlying // activate the suggestions
     suggestionTextfield.getSuggestions()
   }
 
