@@ -164,7 +164,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
     }
   }
 
-  "Preview Modal should display correct message when file not previewable for dos:// link" ignore {
+  "Preview Modal should display correct message when file not previewable for dos:// link" in {
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
     val bucket = "broad-public-datasets"
