@@ -61,7 +61,7 @@
               [:div {:style {:marginTop "1em"}}
                [:div {:data-test-id "preview-message"}
                 (if hide-preview?
-                  "Preview is not supported for this filetype."
+                  (str "Preview is not supported for " (if dos-uri "DOS objects" "this file type") ".")
                   "Previews may not be supported for some filetypes.")]
                (when (and (not hide-preview?) (> size preview-byte-count))
                  (str "Last " preview-line-count " lines are shown. Use link below to view entire file."))
