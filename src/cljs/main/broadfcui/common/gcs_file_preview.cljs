@@ -54,7 +54,7 @@
                             [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                             [:span {:data-test-id (test-utils/text->test-id label "content")} contents]])
                  data-empty (= size 0)
-                 hide-preview? (or error (not (previewable? object)))]
+                 hide-preview? (or dos-uri error (not (previewable? object)))]
              [:div {:style {:width 700 :overflow "auto"}}
               (labeled "Google Bucket" bucket-name)
               (labeled "Object" object)
