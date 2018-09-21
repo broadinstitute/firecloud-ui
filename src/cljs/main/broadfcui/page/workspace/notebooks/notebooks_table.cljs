@@ -489,10 +489,10 @@
            bucket-name (get-in props [:workspace :workspace :bucketName])
            notebook-config-to-add (reduce conj (map (fn [n]
                                                       (if-let [cluster-name (:cluster-name n)]
-                                                        {(notebook-utils/notebook-name n) [cluster-name]}
+                                                        {(notebook-utils/notebook-name n) [(select-keys n [:cluster-name :localized?])]}
                                                         {}))
                                                     notebooks))
-           new-notebook-config (merge-with (fn [a b] (into (filter #(not (contains? cluster-map %)) a) b)) notebook-config notebook-config-to-add)
+           new-notebook-config (merge-with (fn [a b] (into (filter #(not (contains? cluster-map (:cluster-name %))) a) b)) notebook-config notebook-config-to-add)
            json (utils/->json-string new-notebook-config)]
        (notebook-utils/update-notebook-config-in-bucket bucket-name pet-token json
                                                         (fn [{:keys [success? raw-response]}]
@@ -511,7 +511,10 @@
                                                                notebook-config (utils/parse-json-string unescaped-json false)
                                                                new-notebooks (map (fn [n]
                                                                                     (if-let [nc (get notebook-config (notebook-utils/notebook-name n))]
-                                                                                      (merge n {:cluster-name (first (filter (partial contains? cluster-map) nc))})
+                                                                                      (let [associated-cluster (first (filter (comp (partial contains? cluster-map) #(get % "cluster-name")) nc))
+                                                                                            cluster-name (get associated-cluster "cluster-name")
+                                                                                            localized? (get associated-cluster "localized?")]
+                                                                                        (merge n {:cluster-name cluster-name :localized? localized?}))
                                                                                       n))
                                                                                   notebooks)]
                                                            (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks})))

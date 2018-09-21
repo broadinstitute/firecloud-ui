@@ -61,7 +61,9 @@
                  "Python 3" python3-notebook
                  "R" r-notebook
                  "Hail 0.1" hail01-notebook
-                 "Hail 0.2" hail02-notebook})
+                 ; TODO Hail 0.2 not supported in Leo yet
+                 ; "Hail 0.2" hail02-notebook
+                 })
 
 (react/defc NotebookCreator
   {:render
