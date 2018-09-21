@@ -71,3 +71,8 @@
                         "Content-Type" "application/json"}
               :data (utils/->json-string data)
               :on-done on-done}))
+
+(defn parse-gcs-error [raw-response]
+  (let [parsed (utils/parse-json-string raw-response false)
+        error (get parsed "error")]
+    error))

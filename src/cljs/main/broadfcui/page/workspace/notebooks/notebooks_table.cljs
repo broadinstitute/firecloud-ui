@@ -431,7 +431,7 @@
                                                          notebooks (filter (comp #(clojure.string/ends-with? % ".ipynb") :name) (:items json-response))]
                                                      (this :-load-notebook-cluster-association notebooks)
                                                      (swap! state assoc :server-response {:notebooks notebooks}))
-                                                   (swap! state assoc :server-response {:server-error raw-response}))))))
+                                                   (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))))
 
    :-update-cluster-map
    (fn [{:keys [state props this]} new-cluster-map]
@@ -478,7 +478,7 @@
                                                (swap! state dissoc :uploading?)
                                                (if success?
                                                  (this :-get-notebooks)
-                                                 (swap! state assoc :server-response {:server-error raw-response})))))
+                                                 (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)})))))
            (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": notebook already exists in this workspace.")))
          (swap! state assoc :upload-error (str "Error uploading notebook \"" name "\": file name must end with .ipynb.")))))
 
@@ -497,7 +497,7 @@
        (notebook-utils/update-notebook-config-in-bucket bucket-name pet-token json
                                                         (fn [{:keys [success? raw-response]}]
                                                           (when-not success?
-                                                            (swap! state assoc :server-response {:server-error raw-response}))))))
+                                                            (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))))
 
    ; Loads the notebook-cluster association preferences from GCS.
    :-load-notebook-cluster-association

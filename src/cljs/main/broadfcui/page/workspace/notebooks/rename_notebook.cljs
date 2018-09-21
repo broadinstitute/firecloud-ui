@@ -23,16 +23,15 @@
          :ok-button {:text "Rename" :onClick #(this :-rename-notebook)}
          :content
          (react/create-element
-          [:div {:style {:marginTop 0}}
+          [:div {:style {:marginTop 0 :width 500}}
            (when renaming? (blocker "Renaming notebook..."))
-           [comps/ErrorViewer {:error server-error}]
-
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
             [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
                                 :tooltip (str "Enter new name for notebook \"" (notebook-utils/notebook-name choose-notebook) \" "")}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue (notebook-utils/notebook-name choose-notebook) :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
-           (style/create-validation-error-message validation-errors)])}]))
+           (style/create-validation-error-message validation-errors)
+           [comps/ErrorViewer {:error server-error}]])}]))
 
    :-rename-notebook
    (fn [{:keys [props state this refs]}]
@@ -58,5 +57,7 @@
                                                                                      (do
                                                                                        (refresh-notebooks)
                                                                                        (dismiss))
-                                                                                     (swap! state assoc :server-response {:server-error raw-response}))))
-                                                 (swap! state assoc :server-response {:server-error raw-response}))))))))))})
+                                                                                     (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))
+                                                 (do
+                                                   (swap! state assoc :renaming? false)
+                                                   (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)})))))))))))})
