@@ -115,7 +115,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
 
             eventually { previewModal.getBucket shouldBe bucket }
             eventually { previewModal.getObject shouldBe gObject }
-            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype." }
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this file type." }
 
             previewModal.xOut()
           }
