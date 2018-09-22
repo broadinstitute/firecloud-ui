@@ -54,14 +54,14 @@
                             [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                             [:span {:data-test-id (test-utils/text->test-id label "content")} contents]])
                  data-empty (= size 0)
-                 hide-preview? (or error (not (previewable? object)))]
+                 hide-preview? (or dos-uri error (not (previewable? object)))]
              [:div {:style {:width 700 :overflow "auto"}}
               (labeled "Google Bucket" bucket-name)
               (labeled "Object" object)
               [:div {:style {:marginTop "1em"}}
                [:div {:data-test-id "preview-message"}
                 (if hide-preview?
-                  "Preview is not supported for this filetype."
+                  (str "Preview is not supported for " (if dos-uri "DOS objects" "this file type") ".")
                   "Previews may not be supported for some filetypes.")]
                (when (and (not hide-preview?) (> size preview-byte-count))
                  (str "Last " preview-line-count " lines are shown. Use link below to view entire file."))
