@@ -355,14 +355,14 @@
     :on-done on-done
     :headers ajax/content-type=json}))
 
-(defn profile-get-fence-status [on-done]
+(defn profile-get-fence-status [provider on-done]
   (ajax/call-bond
-   "/link/v1/fence"
+   (str "/link/v1/" provider)
    {:on-done on-done}))
 
-(defn profile-link-fence-account [oauth-code redirect-uri on-done]
+(defn profile-link-fence-account [provider oauth-code redirect-uri on-done]
   (ajax/call-bond
-   (str "/link/v1/fence/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri)
+   (str "/link/v1/" provider "/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri)
    {:method :post
     :on-done on-done}))
 
