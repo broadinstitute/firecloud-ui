@@ -503,6 +503,7 @@
    :-load-notebook-cluster-association
    (fn [{:keys [state props this]} notebooks]
      (let [bucket-name (get-in props [:workspace :workspace :bucketName])
+           google-project (get-in props [:workspace-id :namespace])
            {:keys [cluster-map pet-token]} @state]
        (notebook-utils/get-notebook-config-in-bucket bucket-name pet-token
                                                      (fn [{:keys [success? raw-response]}]
@@ -516,6 +517,9 @@
                                                                                             localized? (get associated-cluster "localized?")]
                                                                                         (merge n {:cluster-name cluster-name :localized? localized?}))
                                                                                       n))
-                                                                                  notebooks)]
-                                                           (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks})))
+                                                                                  notebooks)
+                                                               cluster-name-set (set (filter (comp not nil?) (map :cluster-name new-notebooks)))]
+                                                           (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks}))
+                                                           (doseq [cluster cluster-name-set]
+                                                             (this :-localize-notebooks {:clusterName cluster :googleProject google-project})))
                                                          (swap! state assoc :notebook-config {}))))))})
