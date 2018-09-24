@@ -61,7 +61,9 @@
                  "Python 3" python3-notebook
                  "R" r-notebook
                  "Hail 0.1" hail01-notebook
-                 "Hail 0.2" hail02-notebook})
+                 ; TODO Hail 0.2 not supported in Leo yet
+                 ; "Hail 0.2" hail02-notebook
+                 })
 
 (react/defc NotebookCreator
   {:render
@@ -75,10 +77,8 @@
          :ok-button {:text "Create" :onClick #(this :-create-notebook)}
          :content
          (react/create-element
-          [:div {:style {:marginTop 0}}
+          [:div {:style {:marginTop 0 :width 500}}
            (when creating? (blocker "Creating notebook..."))
-           [comps/ErrorViewer {:error server-error}]
-
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
             [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
                                 :tooltip "The name of the notebook. Does not need to include .ipynb. This can be changed later."}]]
@@ -90,7 +90,8 @@
            (style/create-identity-select {:data-test-id "kernel-select" :ref "newNotebookKernel"
                                           :style {:width "100%"} :defaultValue "Python 3"}
              (keys kernel-map))
-           (style/create-validation-error-message validation-errors)])}]))
+           (style/create-validation-error-message validation-errors)
+           [comps/ErrorViewer {:error server-error}]])}]))
 
    :-create-notebook
    (fn [{:keys [props state this refs]}]
@@ -112,4 +113,4 @@
                                                  (do
                                                    (refresh-notebooks)
                                                    (dismiss))
-                                                 (swap! state assoc :server-response {:server-error raw-response})))))))))})
+                                                 (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)})))))))))})
