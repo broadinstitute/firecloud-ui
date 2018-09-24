@@ -36,7 +36,6 @@
        (notebook-utils/delete-notebook bucket-name pet-token choose-notebook
                                        (fn [{:keys [success? raw-response]}]
                                          (swap! state assoc :deleting? false)
-                                         ; (js/alert (get raw-response "message"))
                                          (if success?
                                            (do
                                              (refresh-notebooks)

@@ -337,12 +337,19 @@
                                     (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
                                     (fn [{:keys [success? get-parsed-response]}]
                                       (if success?
-                                        ; flip :localized? to true so we don't re-localize notebooks to this cluster
-                                        (swap! state assoc :server-response {:notebooks (map (fn [n]
-                                                                                               (if (= (:cluster-name n) (:clusterName cluster))
-                                                                                                 (merge n {:localized? true})
-                                                                                                 n))
-                                                                                             notebooks)})
+                                        (let [updated-notebooks (map (fn [n]
+                                                                       (if (= (:cluster-name n) (:clusterName cluster))
+                                                                         (merge n {:localized? true})
+                                                                         n))
+                                                                     notebooks)]
+                                          ; flip :localized? to true so we don't re-localize notebooks to this cluster
+                                          (swap! state assoc :server-response
+                                                 {:notebooks (map (fn [n]
+                                                                    (if (= (:cluster-name n) (:clusterName cluster))
+                                                                      (merge n {:localized? true})
+                                                                      n))
+                                                                  notebooks)})
+                                          (this :-persist-notebook-cluster-association updated-notebooks))
                                         (js/setTimeout #(this :-localize-notebooks cluster) 10000))))))
 
    :-delocalize-json
@@ -494,10 +501,11 @@
                                                     notebooks))
            new-notebook-config (merge-with (fn [a b] (into (filter #(not (contains? cluster-map (:cluster-name %))) a) b)) notebook-config notebook-config-to-add)
            json (utils/->json-string new-notebook-config)]
-       (notebook-utils/update-notebook-config-in-bucket bucket-name pet-token json
-                                                        (fn [{:keys [success? raw-response]}]
-                                                          (when-not success?
-                                                            (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))))
+       (when pet-token
+         (notebook-utils/update-notebook-config-in-bucket bucket-name pet-token json
+                                                          (fn [{:keys [success? raw-response]}]
+                                                            (when-not success?
+                                                              (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)})))))))
 
    ; Loads the notebook-cluster association preferences from GCS.
    :-load-notebook-cluster-association
@@ -505,21 +513,21 @@
      (let [bucket-name (get-in props [:workspace :workspace :bucketName])
            google-project (get-in props [:workspace-id :namespace])
            {:keys [cluster-map pet-token]} @state]
-       (notebook-utils/get-notebook-config-in-bucket bucket-name pet-token
-                                                     (fn [{:keys [success? raw-response]}]
-                                                       (if success?
-                                                         (let [unescaped-json (utils/parse-json-string raw-response false)
-                                                               notebook-config (utils/parse-json-string unescaped-json false)
-                                                               new-notebooks (map (fn [n]
-                                                                                    (if-let [nc (get notebook-config (notebook-utils/notebook-name n))]
-                                                                                      (let [associated-cluster (first (filter (comp (partial contains? cluster-map) #(get % "cluster-name")) nc))
-                                                                                            cluster-name (get associated-cluster "cluster-name")
-                                                                                            localized? (get associated-cluster "localized?")]
-                                                                                        (merge n {:cluster-name cluster-name :localized? localized?}))
-                                                                                      n))
-                                                                                  notebooks)
-                                                               cluster-name-set (set (filter (comp not nil?) (map :cluster-name new-notebooks)))]
-                                                           (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks}))
-                                                           (doseq [cluster cluster-name-set]
-                                                             (this :-localize-notebooks {:clusterName cluster :googleProject google-project})))
-                                                         (swap! state assoc :notebook-config {}))))))})
+       (when pet-token
+         (notebook-utils/get-notebook-config-in-bucket bucket-name pet-token
+                                                       (fn [{:keys [success? raw-response]}]
+                                                         (if success?
+                                                           (let [unescaped-json (utils/parse-json-string raw-response false)
+                                                                 notebook-config (utils/parse-json-string unescaped-json false)
+                                                                 new-notebooks (map (fn [n]
+                                                                                      (if-let [nc (get notebook-config (notebook-utils/notebook-name n))]
+                                                                                        (let [associated-cluster (first (filter (comp (partial contains? cluster-map) #(get % "cluster-name")) nc))
+                                                                                              cluster-name (get associated-cluster "cluster-name")
+                                                                                              localized? (get associated-cluster "localized?")]
+                                                                                          (merge n {:cluster-name cluster-name :localized? localized?})) n))
+                                                                                    notebooks)
+                                                                 cluster-name-set (set (filter (comp not nil?) (map :cluster-name new-notebooks)))]
+                                                             (utils/multi-swap! state (assoc :notebook-config notebook-config) (assoc :server-response {:notebooks new-notebooks}))
+                                                             (doseq [cluster cluster-name-set]
+                                                               (this :-localize-notebooks {:clusterName cluster :googleProject google-project})))
+                                                           (swap! state assoc :notebook-config {})))))))})
