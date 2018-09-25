@@ -54,7 +54,7 @@
                  :padding "0 1.5rem" :justifyContent "space-between"}}
 
    [:div {:data-test-id (or data-test-id "tabs")
-          :style {:display "flex"}}
+          :style {:display "flex" :flexWrap "wrap"}}
     (map-indexed
      (fn [index [label link-key]]
        (make-tab (merge {:first? (zero? index)
