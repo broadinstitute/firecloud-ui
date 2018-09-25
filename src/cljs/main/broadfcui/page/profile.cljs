@@ -35,14 +35,23 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn get-fence-oauth-href [oauth_host client_id]
+(defn get-param [param-name]
+  (.get (js/URLSearchParams. js/window.location.search) param-name))
+
+(defn build-state [state-map]
+      ; TODO: BASE64 encode the state
+      ; (encode (.getBytes (utils/->json-string state-map))))
+  (:provider state-map))
+
+(defn get-fence-oauth-href [oauth_host client_id provider]
   (str oauth_host
        "/user/oauth2/authorize?response_type=code&client_id="
        client_id
        "&scope=openid+google_credentials&redirect_uri="
        (js/encodeURIComponent
         (let [loc js/window.location]
-          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))))
+          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
+       "&state=" (build-state {:provider provider})))
 
 (react/defc- NihLink
   {:render
@@ -125,42 +134,43 @@
 (react/defc- DcfFenceLink
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [fence-status error-message pending-fence-token]} @state
-           date-issued (.getTime (js/Date. (:issued_at fence-status)))
-           expire-time (utils/_30-days-from-date-ms date-issued)
-           expired? (< expire-time (.now js/Date))
-           username (:username fence-status)]
+     (let [{:keys [dcf-fence-status dcf-error-message pending-dcf-fence-token]} @state
+           dcf-date-issued (.getTime (js/Date. (:issued_at dcf-fence-status)))
+           dcf-expire-time (utils/_30-days-from-date-ms dcf-date-issued)
+           dcf-expired? (< dcf-expire-time (.now js/Date))
+           dcf-username (:username dcf-fence-status)]
        [:div {}
         [:h4 {} "DCF Framework Services by University of Chicago"]
         (cond
-         error-message
-         (style/create-server-error-message error-message)
-         pending-fence-token
+         dcf-error-message
+         (style/create-server-error-message dcf-error-message)
+         pending-dcf-fence-token
          (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
-         (nil? username)
-         (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id)) :target "_self"}
+         (nil? dcf-username)
+         (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id) "dcf-fence") :target "_self"}
                                 "Log-In to Framework Services to link your account")
          :else
          (build-identity-table
-          ["Username" username]
+          ["Username" dcf-username]
           ["Link Expiration" [:div {}
-                              (if expired?
+                              (if dcf-expired?
                                 [:span {:style {:color "red"}} "Expired"]
-                                [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
+                                [:span {:style {:color (:state-success style/colors)}} (common/format-date dcf-expire-time)])
                               [:div {}
-                               (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id)) :target "_self" :style {:white-space "nowrap"}}
+                               (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id) "dcf-fence") :target "_self" :style {:white-space "nowrap"}}
                                                       "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
    (fn [{:keys [this locals state after-update]}]
-     (let [fence-token (subs js/window.location.search 6)]
-       (if (not-empty fence-token)
-         (do
-           (swap! state assoc :pending-fence-token fence-token)
-           (after-update #(this :link-fence-account fence-token))
-           ;; Navigate to the parent (this page without the token), but replace the location so
-           ;; the back button doesn't take the user back to the token.
-           (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))
-         (this :load-fence-status))))
+     (if (= "dcf-fence" (get-param "state"))
+       (let [dcf-fence-token (get-param "code")]
+         (if (not-empty dcf-fence-token)
+           (do
+             (swap! state assoc :pending-dcf-fence-token dcf-fence-token)
+             (after-update #(this :link-dcf-fence-account dcf-fence-token))
+             ;; Navigate to the parent (this page without the token), but replace the location so
+             ;; the back button doesn't take the user back to the token.
+             (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
+     (this :load-fence-status))
    :component-did-update
    (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
@@ -171,11 +181,11 @@
       "dcf-fence"
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
-         success? (swap! state assoc :fence-status (get-parsed-response))
-         (= status-code 404) (swap! state assoc :fence-status :none)
+         success? (swap! state assoc :dcf-fence-status (get-parsed-response))
+         (= status-code 404) (swap! state assoc :dcf-fence-status :none)
          :else
-         (swap! state assoc :error-message status-text)))))
-   :link-fence-account
+         (swap! state assoc :dcf-error-message status-text)))))
+   :link-dcf-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
       "dcf-fence"
@@ -185,14 +195,14 @@
          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
-          (do (swap! state dissoc :pending-fence-token :fence-status)
-            (swap! state assoc :fence-status (get-parsed-response)))
-          (swap! state assoc :error-message "Failed to link Framework Services account")))))})
+          (do (swap! state dissoc :pending-dcf-fence-token :dcf-fence-status)
+            (swap! state assoc :dcf-fence-status (get-parsed-response)))
+          (swap! state assoc :dcf-error-message "Failed to link Framework Services account")))))})
 
 (react/defc- DcpFenceLink
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [fence-status error-message pending-fence-token]} @state
+     (let [{:keys [fence-status error-message pending-dcp-fence-token]} @state
            date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
@@ -202,10 +212,10 @@
         (cond
           error-message
           (style/create-server-error-message error-message)
-          pending-fence-token
+          pending-dcp-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id)) :target "_self"}
+          (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id) "fence") :target "_self"}
                                  "Log-In to Framework Services to link your account")
           :else
           (build-identity-table
@@ -215,19 +225,20 @@
                                  [:span {:style {:color "red"}} "Expired"]
                                  [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
                                [:div {}
-                                (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id)) :target "_self" :style {:white-space "nowrap"}}
+                                (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id) "fence") :target "_self" :style {:white-space "nowrap"}}
                                                        "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
    (fn [{:keys [this locals state after-update]}]
-     (let [fence-token (subs js/window.location.search 6)]
-       (if (not-empty fence-token)
-         (do
-           (swap! state assoc :pending-fence-token fence-token)
-           (after-update #(this :link-fence-account fence-token))
-           ;; Navigate to the parent (this page without the token), but replace the location so
-           ;; the back button doesn't take the user back to the token.
-           (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))
-         (this :load-fence-status))))
+     (if (= "fence" (get-param "state"))
+       (let [fence-token (get-param "code")]
+         (if (not-empty fence-token)
+           (do
+             (swap! state assoc :pending-dcp-fence-token fence-token)
+             (after-update #(this :link-dcp-fence-account fence-token))
+             ;; Navigate to the parent (this page without the token), but replace the location so
+             ;; the back button doesn't take the user back to the token.
+             (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
+     (this :load-fence-status))
    :component-did-update
    (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
@@ -242,17 +253,17 @@
           (= status-code 404) (swap! state assoc :fence-status :none)
           :else
           (swap! state assoc :error-message status-text)))))
-   :link-fence-account
+   :link-dcp-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
-      "dcp"
+      "fence"
       token
       (js/encodeURIComponent
        (let [loc js/window.location]
          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
-          (do (swap! state dissoc :pending-fence-token :fence-status)
+          (do (swap! state dissoc :pending-dcp-fence-token :fence-status)
             (swap! state assoc :fence-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link Framework Services account")))))})
 
