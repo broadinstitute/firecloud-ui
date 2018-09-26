@@ -35,7 +35,7 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn get-param [param-name]
+(defn get-url-search-param [param-name]
   (.get (js/URLSearchParams. js/window.location.search) param-name))
 
 (defn build-state [state-map]
@@ -131,91 +131,23 @@
             (swap! state assoc :nih-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
-(react/defc- DcfFenceLink
+(react/defc- FenceLink
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [fence-status error-message pending-fence-token]} @state
            date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
            username (:username fence-status)]
        [:div {}
-        [:h4 {} "DCF Framework Services by University of Chicago"]
-        (cond
-         error-message
-         (style/create-server-error-message error-message)
-         pending-fence-token
-         (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
-         (nil? username)
-         (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id) "dcf-fence") :target "_self"}
-                                "Log-In to Framework Services to link your account")
-         :else
-         (build-identity-table
-          ["Username" username]
-          ["Link Expiration" [:div {}
-                              (if expired?
-                                [:span {:style {:color "red"}} "Expired"]
-                                [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
-                              [:div {}
-                               (links/create-external {:href (get-fence-oauth-href (config/dcf-fence-url) (config/dcf-fence-client-id) "dcf-fence") :target "_self" :style {:white-space "nowrap"}}
-                                                      "Log-In to Framework Services to re-link your account")]]]))]))
-   :component-did-mount
-   (fn [{:keys [this locals state after-update]}]
-     (if (= "dcf-fence" (get-param "state"))
-       (let [fence-token (get-param "code")]
-         (if (not-empty fence-token)
-           (do
-             (swap! state assoc :pending-fence-token fence-token)
-             (after-update #(this :link-fence-account fence-token))
-             ;; Navigate to the parent (this page without the token), but replace the location so
-             ;; the back button doesn't take the user back to the token.
-             (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
-     (this :load-fence-status))
-   :component-did-update
-   (fn [{:keys [refs]}]
-     (when (@refs "pending-spinner")
-           (common/scroll-to-center (react/find-dom-node (@refs "pending-spinner")))))
-   :load-fence-status
-   (fn [{:keys [state]}]
-     (endpoints/profile-get-fence-status
-      "dcf-fence"
-      (fn [{:keys [success? status-code status-text get-parsed-response]}]
-        (cond
-         success? (swap! state assoc :fence-status (get-parsed-response))
-         (= status-code 404) (swap! state assoc :fence-status :none)
-         :else
-         (swap! state assoc :error-message status-text)))))
-   :link-fence-account
-   (fn [{:keys [state]} token]
-     (endpoints/profile-link-fence-account
-      "dcf-fence"
-      token
-      (js/encodeURIComponent
-       (let [loc js/window.location]
-         (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
-      (fn [{:keys [success? get-parsed-response]}]
-        (if success?
-          (do (swap! state dissoc :pending-fence-token :fence-status)
-            (swap! state assoc :fence-status (get-parsed-response)))
-          (swap! state assoc :error-message "Failed to link Framework Services account")))))})
-
-(react/defc- DcpFenceLink
-  {:render
-   (fn [{:keys [state]}]
-     (let [{:keys [fence-status error-message pending-fence-token]} @state
-           date-issued (.getTime (js/Date. (:issued_at fence-status)))
-           expire-time (utils/_30-days-from-date-ms date-issued)
-           expired? (< expire-time (.now js/Date))
-           username (:username fence-status)]
-       [:div {}
-        [:h4 {} "DCP Framework Services by University of Chicago"]
+        [:h4 {} (:display-name props)]
         (cond
           error-message
           (style/create-server-error-message error-message)
           pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id) "fence") :target "_self"}
+          (links/create-external {:href (get-fence-oauth-href (:oauth-url props) (:oauth-client-id props) (:provider props)) :target "_self"}
                                  "Log-In to Framework Services to link your account")
           :else
           (build-identity-table
@@ -225,12 +157,12 @@
                                  [:span {:style {:color "red"}} "Expired"]
                                  [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
                                [:div {}
-                                (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id) "fence") :target "_self" :style {:white-space "nowrap"}}
+                                (links/create-external {:href (get-fence-oauth-href (:oauth-url props) (:oauth-client-id props) (:provider props)) :target "_self" :style {:white-space "nowrap"}}
                                                        "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
-   (fn [{:keys [this locals state after-update]}]
-     (if (= "fence" (get-param "state"))
-       (let [fence-token (get-param "code")]
+   (fn [{:keys [this props locals state after-update]}]
+     (if (= (:provider props) (get-url-search-param "state"))
+       (let [fence-token (get-url-search-param "code")]
          (if (not-empty fence-token)
            (do
              (swap! state assoc :pending-fence-token fence-token)
@@ -244,9 +176,9 @@
      (when (@refs "pending-spinner")
        (common/scroll-to-center (react/find-dom-node (@refs "pending-spinner")))))
    :load-fence-status
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      (endpoints/profile-get-fence-status
-      "fence"
+      (:provider props)
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
           success? (swap! state assoc :fence-status (get-parsed-response))
@@ -254,9 +186,9 @@
           :else
           (swap! state assoc :error-message status-text)))))
    :link-fence-account
-   (fn [{:keys [state]} token]
+   (fn [{:keys [props state]} token]
      (endpoints/profile-link-fence-account
-      "fence"
+      (:provider props)
       token
       (js/encodeURIComponent
        (let [loc js/window.location]
@@ -371,8 +303,14 @@
             [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
              [:h3 {} "Identity & External Servers"]
              [NihLink (select-keys props [:nih-token])]
-             [DcpFenceLink]
-             [DcfFenceLink]])]]
+             [FenceLink {:provider "fence"
+                         :display-name "DCP Framework Services by University of Chicago"
+                         :oauth-url (config/dcp-fence-url)
+                         :oauth-client-id (config/dcp-fence-client-id)}]
+             [FenceLink {:provider "dcf-fence"
+                         :display-name "DCF Framework Services by University of Chicago"
+                         :oauth-url (config/dcf-fence-url)
+                         :oauth-client-id (config/dcf-fence-client-id)}]])]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
