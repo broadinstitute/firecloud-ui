@@ -38,10 +38,11 @@
 (defn get-url-search-param [param-name]
   (.get (js/URLSearchParams. js/window.location.search) param-name))
 
-(defn build-state [state-map]
-      ; TODO: BASE64 encode the state
-      ; (encode (.getBytes (utils/->json-string state-map))))
-  (:provider state-map))
+(defn decode-base64-json [b64string]
+  (utils/parse-json-string (js/window.atob b64string) true))
+
+(defn encode-base64-json [map]
+  (js/window.btoa (utils/->json-string map)))
 
 (defn get-fence-oauth-href [oauth_host client_id provider]
   (str oauth_host
@@ -51,7 +52,7 @@
        (js/encodeURIComponent
         (let [loc js/window.location]
           (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
-       "&state=" (build-state {:provider provider})))
+       "&state=" (encode-base64-json {:provider provider})))
 
 (react/defc- NihLink
   {:render
@@ -161,15 +162,16 @@
                                                        "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
    (fn [{:keys [this props locals state after-update]}]
-     (if (= (:provider props) (get-url-search-param "state"))
-       (let [fence-token (get-url-search-param "code")]
-         (if (not-empty fence-token)
-           (do
-             (swap! state assoc :pending-fence-token fence-token)
-             (after-update #(this :link-fence-account fence-token))
-             ;; Navigate to the parent (this page without the token), but replace the location so
-             ;; the back button doesn't take the user back to the token.
-             (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
+     (let [fence-token (get-url-search-param "code")
+           base64-oauth-state (get-url-search-param "state")
+           oauth-state (if (not-empty base64-oauth-state) (decode-base64-json base64-oauth-state))]
+       (if (and (= (:provider props) (:provider oauth-state)) (not-empty fence-token))
+         (do
+           (swap! state assoc :pending-fence-token fence-token)
+           (after-update #(this :link-fence-account fence-token))
+           ;; Navigate to the parent (this page without the token), but replace the location so
+           ;; the back button doesn't take the user back to the token.
+           (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))))
      (this :load-fence-status))
    :component-did-update
    (fn [{:keys [refs]}]
