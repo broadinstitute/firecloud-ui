@@ -166,7 +166,7 @@
          (if (not-empty fence-token)
            (do
              (swap! state assoc :pending-fence-token fence-token)
-             (after-update #(this :link-dcf-fence-account fence-token))
+             (after-update #(this :link-fence-account fence-token))
              ;; Navigate to the parent (this page without the token), but replace the location so
              ;; the back button doesn't take the user back to the token.
              (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
@@ -185,7 +185,7 @@
          (= status-code 404) (swap! state assoc :fence-status :none)
          :else
          (swap! state assoc :error-message status-text)))))
-   :link-dcf-fence-account
+   :link-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
       "dcf-fence"
@@ -202,7 +202,7 @@
 (react/defc- DcpFenceLink
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [fence-status error-message pending-dcp-fence-token]} @state
+     (let [{:keys [fence-status error-message pending-fence-token]} @state
            date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
@@ -212,7 +212,7 @@
         (cond
           error-message
           (style/create-server-error-message error-message)
-          pending-dcp-fence-token
+          pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
           (links/create-external {:href (get-fence-oauth-href (config/dcp-fence-url) (config/dcp-fence-client-id) "fence") :target "_self"}
@@ -233,8 +233,8 @@
        (let [fence-token (get-param "code")]
          (if (not-empty fence-token)
            (do
-             (swap! state assoc :pending-dcp-fence-token fence-token)
-             (after-update #(this :link-dcp-fence-account fence-token))
+             (swap! state assoc :pending-fence-token fence-token)
+             (after-update #(this :link-fence-account fence-token))
              ;; Navigate to the parent (this page without the token), but replace the location so
              ;; the back button doesn't take the user back to the token.
              (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile)))))))
@@ -253,7 +253,7 @@
           (= status-code 404) (swap! state assoc :fence-status :none)
           :else
           (swap! state assoc :error-message status-text)))))
-   :link-dcp-fence-account
+   :link-fence-account
    (fn [{:keys [state]} token]
      (endpoints/profile-link-fence-account
       "fence"
@@ -263,7 +263,7 @@
          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
-          (do (swap! state dissoc :pending-dcp-fence-token :fence-status)
+          (do (swap! state dissoc :pending-fence-token :fence-status)
             (swap! state assoc :fence-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link Framework Services account")))))})
 
@@ -368,11 +368,11 @@
                        (select-keys props [:new-registration? :nih-token :fence-token]))]]
          [:div {:style {:width "50%"}}
           (when-not (:new-registration? props)
-                    [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
-                     [:h3 {} "Identity & External Servers"]
-                     [NihLink (select-keys props [:nih-token])]
-                     [DcpFenceLink]
-                     [DcfFenceLink]])]]
+            [:div {:style {:padding "1rem" :borderRadius 5 :backgroundColor (:background-light style/colors)}}
+             [:h3 {} "Identity & External Servers"]
+             [NihLink (select-keys props [:nih-token])]
+             [DcpFenceLink]
+             [DcfFenceLink]])]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
