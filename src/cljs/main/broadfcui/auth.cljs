@@ -5,6 +5,7 @@
    [broadfcui.common :refer [login-scopes]]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
@@ -212,7 +213,7 @@
                [:div {:style {:padding "40px 0"}}
                 (case (:error @state)
                   nil (spinner "Loading user information...")
-                  :not-active [:div {:style {:color (:exception-reds style/colors)}}
+                  :not-active [:div {:style {:color (:state-exception style/colors)}}
                                "Thank you for registering. Your account is currently inactive."
                                " You will be contacted via email when your account is activated."]
                   [:div {}
@@ -243,46 +244,65 @@
 
 (react/defc TermsOfService
   {:render
-   (fn [{:keys [state]}]
-     [:div {:style {:padding "40px 0"}}
-      (case (:error @state)
-        nil (spinner "Loading Terms of Service information...")
-        :declined [:div {:style {:color (:exception-reds style/colors)}}
-                     "You declined the Terms of Service."]
-        :not-agreed [:div {:style {:color (:exception-reds style/colors)}}
-                     "You must accept the Terms of Service."]
-        [:div {}
-         [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
-          "Error loading Terms of Service information. Please try again later."]
-         [:table {:style {:color (:text-lighter style/colors)}}
-          [:tbody {:style {}}
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
+   (fn [{:keys [state this]}]
+     (let [{:keys [error]} @state
+           update-status #(this :-get-status)
+           declined? (= error :declined)
+           accept-tos [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"
+                                     :padding "2rem" :margin "5rem auto" :maxWidth 600
+                                     :border style/standard-line}}
+                       [:h2 {:style {:margin "0 0 0.5rem"}}
+                        (when declined? [:div {} "You declined the Terms of Service."])
+                        "You must accept the Terms of Service to use FireCloud."]
+                       (links/create-external
+                         {:style {:marginBottom "2rem"}
+                          :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
+                         "Please read the Terms here.")
+                       [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly"}}
+                        [buttons/Button {:text "Accept" :onClick #(ajax/set-tos-status true update-status)}]
+                        (when-not declined? [buttons/Button {:text "Decline" :onClick #(ajax/set-tos-status false update-status)}])]]]
+       [:div {}
+        (links/create-internal {:style {:position "absolute" :right "1rem" :top "1rem"}
+                                :onClick #(.signOut @user/auth2-atom)}
+          "Sign Out")
+        (case error
+          nil (spinner "Loading Terms of Service information...")
+          (:declined :not-agreed) accept-tos
+          [:div {}
+           [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
+            "Error loading Terms of Service information. Please try again later."]
+           [:table {:style {:color (:text-lighter style/colors)}}
+            [:tbody {:style {}}
+             [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message error)]]
+             [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode error)]]]]])]))
    :component-did-mount
+   (fn [{:keys [this]}]
+     (this :-get-status))
+   :-get-status
    (fn [{:keys [props state]}]
-     (ajax/call-service "https://us-central1-broad-dsde-dev.cloudfunctions.net/tos" "/v1/user/response?appid=FireCloud&tosversion=20180815.1"
-                     {:method "GET"
-                       :on-done (fn [{:keys [success? status-code get-parsed-response]}]
-                                 (if success?
-                                   ((:on-success props))
-                                   (case status-code
-                                     ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-                                     403 (swap! state assoc :error :declined)
-                                     ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                                     404 (swap! state assoc :error :not-agreed)
-                                     ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
-                                     ;; exceptions because they are useless ("Unexpected token T in JSON...")
-                                     (let [[error-json parsing-error] (get-parsed-response true false)]
-                                       (swap! state assoc :error (if (= 0 status-code)
-                                                                    ;; status code 0 typically happens when CORS preflight fails/rejects
-                                                                    {:message "Ajax error."
-                                                                     :statusCode 0}
-                                                                    (if parsing-error
-                                                                      {:message (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
-                                                                       :statusCode status-code}
-                                                                      {:message (get-parsed-response)
-                                                                       :statusCode status-code})))))))}
-                     ""))})
+     (let [{:keys [on-success]} props]
+       (ajax/get-tos-status
+        (fn [{:keys [success? status-code get-parsed-response]}]
+          (if success?
+            (on-success)
+            (case status-code
+              ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
+              403 (swap! state assoc :error :declined)
+              ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
+              404 (swap! state assoc :error :not-agreed)
+              ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
+              ;; exceptions because they are useless ("Unexpected token T in JSON...")
+              (let [[_ parsing-error] (get-parsed-response true false)]
+                (swap! state assoc :error
+                       (if (= 0 status-code)
+                         ;; status code 0 typically happens when CORS preflight fails/rejects
+                         {:message "Ajax error."
+                          :statusCode 0}
+                         (if parsing-error
+                           {:message (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
+                            :statusCode status-code}
+                           {:message (get-parsed-response)
+                            :statusCode status-code}))))))))))})
 
 (react/defc RefreshCredentials
   {:get-initial-state

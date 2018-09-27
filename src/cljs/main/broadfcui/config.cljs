@@ -63,4 +63,7 @@
 (defn fence-client-id [] (get @config "fenceClientId"))
 (defn dockstore-api-url [] (get @config "dockstoreApiUrl"))
 (defn dockstore-web-url [] (get @config "dockstoreWebUrl"))
+(defn tos-url [] (get @config "tosUrl"))
+(defn tos-application-name [] (get @config "tosApplicationName"))
+(defn tos-version [] (get @config "tosVersion"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")
