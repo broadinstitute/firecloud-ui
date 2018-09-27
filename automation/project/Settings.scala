@@ -23,7 +23,8 @@ object Settings {
     "-feature",
     "-encoding", "utf8",
     "-target:jvm-1.8",
-    "-Xmax-classfile-name", "100"
+    "-Xmax-classfile-name", "100",
+    "-language:postfixOps"
     //"-Xfatal-warnings"
   )
 
@@ -41,7 +42,7 @@ object Settings {
   val commonSettings =
     commonBuildSettings ++ testSettings ++ List(
     organization  := "org.broadinstitute.dsde.firecloud",
-    scalaVersion  := "2.12.4",
+    scalaVersion  := "2.12.6",
     resolvers ++= commonResolvers,
     scalacOptions ++= commonCompilerSettings
   )

@@ -207,39 +207,39 @@
                                                (on-change signed-in? true))))}))))))})
 
 (react/defc UserStatus
-  {:render
-   (fn [{:keys [state]}]
-     [:div {:style {:padding "40px 0"}}
-      (case (:error @state)
-        nil (spinner "Loading user information...")
-        :not-active [:div {:style {:color (:exception-reds style/colors)}}
-                     "Thank you for registering. Your account is currently inactive."
-                     " You will be contacted via email when your account is activated."]
-        [:div {}
-         [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
-          "Error loading user information. Please try again later."]
-         [:table {:style {:color (:text-lighter style/colors)}}
-          [:tbody {:style {}}
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (ajax/call-orch "/me"
-                     {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
-                                 (if success?
-                                   ((:on-success props))
-                                   (case status-code
-                                     403 (swap! state assoc :error :not-active)
-                                     ;; 404 means "not yet registered"
-                                     404 ((:on-success props))
-                                     ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
-                                     ;; exceptions because they are useless ("Unexpected token T in JSON...")
-                                     (let [[error-json parsing-error] (get-parsed-response true false)]
-                                       (swap! state assoc :error (if parsing-error
-                                                                   {:message (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
-                                                                    :statusCode status-code}
-                                                                   error-json))))))}
-                     :service-prefix ""))})
+            {:render
+             (fn [{:keys [state]}]
+               [:div {:style {:padding "40px 0"}}
+                (case (:error @state)
+                  nil (spinner "Loading user information...")
+                  :not-active [:div {:style {:color (:exception-reds style/colors)}}
+                               "Thank you for registering. Your account is currently inactive."
+                               " You will be contacted via email when your account is activated."]
+                  [:div {}
+                   [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
+                    "Error loading user information. Please try again later."]
+                   [:table {:style {:color (:text-lighter style/colors)}}
+                    [:tbody {:style {}}
+                     [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
+                     [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
+             :component-did-mount
+             (fn [{:keys [props state]}]
+               (ajax/call-orch "/me?userDetailsOnly=true"
+                 {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
+                              (if success?
+                                ((:on-success props))
+                                (case status-code
+                                  403 (swap! state assoc :error :not-active)
+                                  ;; 404 means "not yet registered"
+                                  404 ((:on-success props))
+                                  ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
+                                  ;; exceptions because they are useless ("Unexpected token T in JSON...")
+                                  (let [[error-json parsing-error] (get-parsed-response true false)]
+                                    (swap! state assoc :error (if parsing-error
+                                                                {:message    (str "Cannot reach the API server. The API server or one of its subsystems may be down.")
+                                                                 :statusCode status-code}
+                                                                error-json))))))}
+             :service-prefix ""))})
 
 (react/defc TermsOfService
   {:render

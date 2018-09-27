@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
-import org.broadinstitute.dsde.workbench.service.util.Retry.retry
+import org.broadinstitute.dsde.workbench.service.util.Retry
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
@@ -15,7 +15,7 @@ import scala.concurrent.duration.DurationLong
 class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with WorkspaceFixtures
   with UserFixtures with MethodFixtures with BillingFixtures with Matchers with Eventually with TestReporterFixture {
 
-  implicit override val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val gsLink = "gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam"
   val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/dos.json"
@@ -115,7 +115,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
 
             eventually { previewModal.getBucket shouldBe bucket }
             eventually { previewModal.getObject shouldBe gObject }
-            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype." }
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this file type." }
 
             previewModal.xOut()
           }
@@ -124,7 +124,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
     }
   }
 
-  "Preview Modal should display correct message and preview when file is accessible for dos:// link" ignore {
+  "Preview Modal should hide preview even when dos:// link resolves to an otherwise previewable file" in {
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
     val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/preview_dos.json"
@@ -139,9 +139,14 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
             val previewModal = detailPage.clickForPreview(dosLink)
             eventually { previewModal.getBucket shouldBe s"$bucket" }
             eventually { previewModal.getObject shouldBe s"$gObject" }
+
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for DOS objects." }
+
+            /* uncomment this block, and remove the assert just above this, when/if we support preview for DOS objects.
+
             // preview pane is only created if there's something to preview so
             // give it .1 sec
-            retry[Boolean](100.milliseconds, 1.minute)({
+            Retry.retry[Boolean](100.milliseconds, 1.minute)({
               val previewPane = previewModal.findInner("preview-pane")
               // avoids org.openqa.selenium.NoSuchElementException thrown from previewPane.webElement call
               val allElem = previewPane.findAllElements
@@ -156,6 +161,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
             //file sometimes changes but is always a JSON array, so easy test...
             eventually { previewPane.webElement.getText shouldBe "This file is for test purposes." }
             eventually { previewModal.getPreviewMessage shouldBe "Previews may not be supported for some filetypes." }
+            */
 
             previewModal.xOut()
           }
@@ -179,7 +185,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
             val previewModal = detailPage.clickForPreview(dosLink)
             eventually { previewModal.getBucket shouldBe s"$bucket" }
             eventually { previewModal.getObject shouldBe s"$gObject" }
-            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for this filetype." }
+            eventually { previewModal.getPreviewMessage shouldBe "Preview is not supported for DOS objects." }
 
             previewModal.xOut()
           }

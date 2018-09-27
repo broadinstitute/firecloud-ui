@@ -47,7 +47,7 @@ class NotebooksSpec extends FreeSpec with WebBrowserSpec with CleanUp with Works
             logger.info("Attempting to create dataproc cluster")
             val createModal = notebooksPage.openCreateClusterModal
             createModal.createCluster(clusterName)
-            createModal.awaitDismissed
+            createModal.awaitDismissed()
             assert(notebooksPage.getClusterStatus(clusterName) == "Creating")
             logger.info("Creating dataproc cluster " + clusterName)
             notebooksPage.waitUntilClusterIsRunning(clusterName)

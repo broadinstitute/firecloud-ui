@@ -8,13 +8,13 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{HH:mm:ss.SSS} %magenta(%-50([%t])) %cyan(%-30(%logger{0}:%M)) %highlight(%-5level) %msg%n</pattern>
+            <pattern>%highlight([%-5level]) %d{HH:mm:ss.SSS} %magenta(%-60.60([%t])) %cyan(%-30(%logger{0}:%M)) - %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-30(%logger{0}:%M) %-5level %msg%n</pattern>
+            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-30(%logger{0}:%M) - %msg%n</pattern>
             <outputPatternAsHeader>true</outputPatternAsHeader>
         </encoder>
         <file>${dir.name}/test-reports/TEST-${test.name}.log</file>
@@ -36,6 +36,16 @@
         <includeCallerData>true</includeCallerData>
         <appender-ref ref="FILE" />
     </appender>
+
+    <logger name="org.broadinstitute.dsde" level="INFO" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="akka" level="INFO" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
 
     <root level="DEBUG">
         <appender-ref ref="ASYNCCONSOLE"/>

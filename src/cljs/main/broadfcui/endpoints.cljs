@@ -163,17 +163,18 @@
    :method :get})
 
 
+;; deprecated
 (defn create-cluster [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name)
+   :method :put})
+
+(defn create-cluster-v2 [google-project cluster-name]
+  {:path (str "/cluster/v2/" google-project "/" cluster-name)
    :method :put})
 
 (defn delete-cluster [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :delete})
-
-(def get-clusters-list
-  {:path (str "/clusters")
-   :method :get})
 
 (defn stop-cluster [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name "/stop")
@@ -183,9 +184,21 @@
   {:path (str "/cluster/" google-project "/" cluster-name "/start")
    :method :post})
 
+(def get-clusters-list
+  {:path (str "/clusters")
+   :method :get})
+
 (defn get-cluster-details [google-project cluster-name]
   {:path (str "/cluster/" google-project "/" cluster-name)
    :method :get})
+
+(defn localize-notebook [google-project cluster-name payload on-done]
+  (ajax/call-leo
+   (str "/" google-project "/" cluster-name "/api/localize")
+   {:method :post
+    :data (utils/->json-string payload)
+    :on-done on-done}
+   :service-prefix "/notebooks"))
 
 (defn create-submission [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions")

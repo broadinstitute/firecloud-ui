@@ -48,7 +48,8 @@
            (case last-crumb-id
              :file-import
              [import-data/Page
-              (select-keys props [:workspace-id :import-type :on-data-imported])]
+              (merge (select-keys props [:workspace-id :import-type :on-data-imported])
+                     {:truncate-preview? true})]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-auth-domain :on-data-imported])

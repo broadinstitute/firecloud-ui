@@ -19,7 +19,7 @@
    (fn []
      {:file-input-key (gensym "file-input-")})
    :render
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [props state refs this]}]
      (let [{:keys [loading? file-input-key file-contents file upload-result]} @state]
        [:div {:style {:textAlign "center"} :data-test-id "data-upload-container"}
         (when loading?
@@ -41,7 +41,9 @@
                                                :file file
                                                :file-contents (.-result reader)
                                                :file-input-key (gensym "file-input-")))
-                                 (.readAsText reader (.slice file 0 preview-limit)))))}]
+                                 (.readAsText reader (if (:truncate-preview? props)
+                                                       (.slice file 0 preview-limit)
+                                                       file)))))}]
         ws-common/PHI-warning
         [buttons/Button {:data-test-id "choose-file-button"
                          :text (if (:upload-result @state) "Choose another file..." "Choose file...")
@@ -52,7 +54,9 @@
            [:div {:style {:overflow "auto" :maxHeight 200
                           :paddingBottom "0.5em" :textAlign "left"}}
             [:pre {} (clojure.string/replace file-contents #"\r(?!\n)" "\r\n")] ; negative lookahead - match any \r except \r\n
-            (when (> (.-size file) preview-limit)
+            (when (and
+                   (:truncate-preview? props)
+                   (> (.-size file) preview-limit))
               [:em {} "(file truncated for preview)"])]])
         (when (and file (not upload-result))
           [buttons/Button {:data-test-id "confirm-upload-metadata-button"
