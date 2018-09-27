@@ -8,6 +8,7 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.external-importer :as external-importer]
    [broadfcui.utils :as utils]
@@ -259,8 +260,8 @@
                           :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
                          "Please read the Terms here.")
                        [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly"}}
-                        [buttons/Button {:text "Accept" :onClick #(ajax/set-tos-status true update-status)}]
-                        (when-not declined? [buttons/Button {:text "Decline" :onClick #(ajax/set-tos-status false update-status)}])]]]
+                        [buttons/Button {:text "Accept" :onClick #(endpoints/set-tos-status true update-status)}]
+                        (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/set-tos-status false update-status)}])]]]
        [:div {}
         (links/create-internal {:style {:position "absolute" :right "1rem" :top "1rem"}
                                 :onClick #(.signOut @user/auth2-atom)}
@@ -281,7 +282,7 @@
    :-get-status
    (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
-       (ajax/get-tos-status
+       (endpoints/get-tos-status
         (fn [{:keys [success? status-code get-parsed-response]}]
           (if success?
             (on-success)

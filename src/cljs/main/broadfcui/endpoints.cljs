@@ -534,3 +534,21 @@
 (def import-status
   {:path "/profile/importstatus"
    :method :get})
+
+
+(defn get-tos-status [on-done]
+  (ajax/call
+   {:method "GET"
+    :url (str (config/tos-url) "/v1/user/response?appid=" (config/tos-application-name) "&tosversion=" (config/tos-version))
+    :headers (merge (@get-bearer-token-header) content-type=json)
+    :on-done on-done}))
+
+(defn set-tos-status [accepted? on-done]
+  (ajax/call
+   {:method "POST"
+    :url (str (config/tos-url) "/v1/user/response")
+    :headers (merge (@get-bearer-token-header) content-type=json app-id)
+    :on-done on-done
+    :data (utils/->json-string {:appid (config/tos-application-name)
+                                :tosversion (config/tos-version)
+                                :accepted accepted?})}))
