@@ -260,8 +260,8 @@
                           :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
                          "Please read the Terms here.")
                        [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly"}}
-                        [buttons/Button {:text "Accept" :onClick #(endpoints/set-tos-status true update-status)}]
-                        (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/set-tos-status false update-status)}])]]]
+                        [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]
+                        (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/tos-set-status false update-status)}])]]]
        [:div {}
         (links/create-internal {:style {:position "absolute" :right "1rem" :top "1rem"}
                                 :onClick #(.signOut @user/auth2-atom)}
@@ -282,7 +282,7 @@
    :-get-status
    (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
-       (endpoints/get-tos-status
+       (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response]}]
           (if success?
             (on-success)

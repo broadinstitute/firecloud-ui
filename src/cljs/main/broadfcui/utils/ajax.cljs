@@ -132,3 +132,10 @@
             :on-done (fn [{:keys [status-code status-text] :as m}]
                        (update-health status-code status-text)
                        (on-done m))))))
+
+(defn call-tos
+  ([arg-map] (call-tos nil arg-map))
+  ([query arg-map]
+   (call (assoc arg-map
+           :url (str (config/tos-url) "/v1/user/response" query)
+           :headers (merge (@get-bearer-token-header) content-type=json)))))
