@@ -223,8 +223,9 @@
         {:endpoint (endpoints/get-agora-method namespace name snapshot-id)
          :on-done (net/handle-ajax-response
                    (fn [{:keys [success? parsed-response]}]
+                     (swap! state assoc :loading-snapshot? false)
                      (if success?
-                       (swap! state assoc :selected-snapshot parsed-response :loading-snapshot? false)
+                       (swap! state assoc :selected-snapshot parsed-response)
                        (swap! state assoc :method-error (:message parsed-response)))))})))})
 
 (defn- method-path [{:keys [namespace name snapshot-id]}]
