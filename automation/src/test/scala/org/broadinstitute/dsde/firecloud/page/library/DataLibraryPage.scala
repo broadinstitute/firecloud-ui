@@ -123,7 +123,7 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
   }
 
   def selectSuggestion(suggestionTestId: String): Unit = {
-    Link(suggestionTestId inside this).doClick()
+    ontologySearch.selectSuggestion(suggestionTestId)
     // selecting something should clear out the search field:
     await condition { ontologySearch.getText == "" }
   }

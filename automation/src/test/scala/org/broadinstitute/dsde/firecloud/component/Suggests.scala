@@ -24,6 +24,38 @@ trait Suggests extends LazyLogging { this: Component =>
     wait until ((driver: WebDriver) => readSuggestionText )
   }
 
+  def selectSuggestion(suggestionTestId: String)(implicit webDriver: WebDriver): Unit = {
+    val wait = new FluentWait[WebDriver](webDriver)
+      .withTimeout(Duration.ofSeconds(30))
+      .pollingEvery(Duration.ofMillis(1000))
+      .withMessage("Select autoSuggestion")
+      .ignoring(classOf[StaleElementReferenceException])
+      .ignoring(classOf[TimeoutException])
+      .ignoring(classOf[NoSuchElementException])
+    val ele: Element = wait until ((driver: WebDriver) => getSuggestionByTestId(suggestionTestId) )
+    logger.info(s"Select dropdown autoSuggestion: ${ele.text}")
+    click on ele
+  }
+
+  private def getSuggestionByTestId(suggestionTestId: String)(implicit webDriver: WebDriver): Element = {
+    val uel = query.element.underlying
+
+    logger.info(s"(remove) getSuggestionByTestId: determine dropdownId")
+    val ownedId = Option(uel.getAttribute("aria-owns"))
+    val controlledId = Option(uel.getAttribute("aria-controls"))
+    val dropdownId = (ownedId ++ controlledId).headOption match {
+      case Some(id) => id
+      case None => throw new Exception(s"Could not determine dropdownId from aria-owns [$ownedId] : aria-controls [$controlledId]." +
+        " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
+    }
+
+    val listOptionXpath = s"#$dropdownId li [data-test-id='$suggestionTestId']"
+    val li = find(cssSelector(listOptionXpath)).head
+
+    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains ${li.size} li: $li")
+    li
+  }
+
   /**
     * get the values of the suggestions displayed to the user. Requires the test code that calls
     * this function to enter text into/click on the relevant field, in order to activate the

@@ -136,12 +136,23 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
     val statusOption = billingPage.waitForCreateDone(billingProjectName)
 
     statusOption match {
-      case None | Some("failure") if trials > 1 =>
-        log.info(s"failure or timeout creating project $billingProjectName, retrying ${trials-1} more times")
+      case None if trials > 1 =>
+        log.info(s"timeout creating project $billingProjectName, retrying ${trials-1} more times")
+        createNewBillingProject(user, billingPage, trials-1)
+      case Some("failure") if trials > 1 =>
+        log.info(s"failure creating project $billingProjectName, retrying ${trials-1} more times")
         createNewBillingProject(user, billingPage, trials-1)
       case None =>
         fail(s"timed out waiting billing project $billingProjectName to be ready")
       case Some(status) =>
+        if (status.equals("failure") || status.equals("unknown")) {
+          try {
+            // click to view failure error
+            find(xpath(s"//div[@data-test-id='$billingProjectName-row']//span[@data-test-id='status-icon']")).get.underlying.click()
+          } catch {
+            case _: Exception => // ignore error when click failed
+          }
+        }
         withClue(s"Creating billing project: $billingProjectName") {
           status shouldEqual "success"
         }
