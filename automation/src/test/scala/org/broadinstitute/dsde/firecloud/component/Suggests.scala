@@ -49,7 +49,6 @@ trait Suggests extends LazyLogging { this: Component =>
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
 
-    var notEmpty = false
     val listOptionXpath = s"#$dropdownId li [data-test-id='$suggestionTestId']"
     val li = find(cssSelector(listOptionXpath)).head
 
