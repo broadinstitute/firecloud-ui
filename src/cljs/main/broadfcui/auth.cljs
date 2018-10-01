@@ -211,7 +211,7 @@
 ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
 ;; exceptions because they are useless ("Unexpected token T in JSON...")
 (defn- handle-server-error [get-parsed-response]
-  (let [[parsing-error] (get-parsed-response true)]
+  (let [[_ parsing-error] (get-parsed-response true)]
     (if (= 0 status-code)
       ;; status code 0 typically happens when CORS preflight fails/rejects
       {:message "Ajax error."
