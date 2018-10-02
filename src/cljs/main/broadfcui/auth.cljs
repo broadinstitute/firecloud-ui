@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common :refer [login-scopes]]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.spinner :refer [spinner]]
@@ -210,7 +211,7 @@
 
 ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
 ;; exceptions because they are useless ("Unexpected token T in JSON...")
-(defn- handle-server-error [get-parsed-response]
+(defn- handle-server-error [status-code get-parsed-response]
   (let [[_ parsing-error] (get-parsed-response true)]
     (if (= 0 status-code)
       ;; status code 0 typically happens when CORS preflight fails/rejects
@@ -249,13 +250,13 @@
                                        403 (swap! state assoc :error :not-active)
                                        ;; 404 means "not yet registered"
                                        404 (on-success)
-                                       (swap! state assoc :error (handle-server-error get-parsed-response)))))}
+                                       (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))}
                        :service-prefix "")))})
 
 (react/defc TermsOfService
   {:render
    (fn [{:keys [state this]}]
-     (let [{:keys [error]} @state
+     (let [{:keys [error tos]} @state
            update-status #(this :-get-status)
            declined? (= error :declined)]
        [:div {}
@@ -267,16 +268,16 @@
           (:declined :not-agreed) [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"
                                                  :padding "2rem" :margin "5rem auto" :maxWidth 600
                                                  :border style/standard-line}}
-                                   [:h2 {:style {:margin "0 0 0.5rem"}}
+                                   [:h2 {:style {:marginTop 0}}
                                     (when declined? [:div {} "You declined the Terms of Service."])
                                     "You must accept the Terms of Service to use FireCloud."]
-                                   (links/create-external
-                                     {:style {:marginBottom "2rem"}
-                                      :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
-                                     "Please read the Terms here.")
-                                   [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly"}}
-                                    [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]
-                                    (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/tos-set-status false update-status)}])]]
+                                   (if tos
+                                     [:div {}
+                                      [markdown/MarkdownView {:text tos}]
+                                      [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly"}}
+                                       [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]
+                                       (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/tos-set-status false update-status)}])]]
+                                     (spinner "Loading Terms of Service..."))]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -285,7 +286,8 @@
              [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message error)]]
              [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode error)]]]]])]))
    :component-did-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [state this]}]
+     (ajax/get-google-bucket-file "tos" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
      (this :-get-status))
    :-get-status
    (fn [{:keys [props state]}]
@@ -299,7 +301,7 @@
               403 (swap! state assoc :error :declined)
               ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
               404 (swap! state assoc :error :not-agreed)
-              (swap! state assoc :error (handle-server-error get-parsed-response))))))))})
+              (swap! state assoc :error (handle-server-error status-code get-parsed-response))))))))})
 
 (react/defc RefreshCredentials
   {:get-initial-state
