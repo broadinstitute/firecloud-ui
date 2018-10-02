@@ -136,19 +136,20 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [fence-status error-message pending-fence-token]} @state
+           {:keys [display-name oauth-url oauth-client-id provider]} props
            date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
            username (:username fence-status)]
        [:div {}
-        [:h4 {} (:display-name props)]
+        [:h4 {} display-name]
         (cond
           error-message
           (style/create-server-error-message error-message)
           pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (links/create-external {:href (get-fence-oauth-href (:oauth-url props) (:oauth-client-id props) (:provider props)) :target "_self"}
+          (links/create-external {:href (get-fence-oauth-href oauth-url oauth-client-id provider) :target "_self"}
                                  "Log-In to Framework Services to link your account")
           :else
           (build-identity-table
@@ -158,7 +159,7 @@
                                  [:span {:style {:color "red"}} "Expired"]
                                  [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
                                [:div {}
-                                (links/create-external {:href (get-fence-oauth-href (:oauth-url props) (:oauth-client-id props) (:provider props)) :target "_self" :style {:white-space "nowrap"}}
+                                (links/create-external {:href (get-fence-oauth-href oauth-url oauth-client-id provider) :target "_self" :style {:white-space "nowrap"}}
                                                        "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
    (fn [{:keys [this props locals state after-update]}]
