@@ -257,8 +257,7 @@
   {:render
    (fn [{:keys [state this]}]
      (let [{:keys [error tos]} @state
-           update-status #(this :-get-status)
-           declined? (= error :declined)]
+           update-status #(this :-get-status)]
        [:div {}
         (links/create-internal {:style {:position "absolute" :right "1rem" :top "1rem"}
                                 :onClick #(.signOut @user/auth2-atom)}
@@ -267,15 +266,12 @@
           nil (spinner "Loading Terms of Service information...")
           (:declined :not-agreed) [:div {:style {:padding "2rem" :margin "5rem auto" :maxWidth 600
                                                  :border style/standard-line}}
-                                   [:h2 {:style {:marginTop 0}}
-                                    (when declined? [:div {} "You declined the Terms of Service."])
-                                    "You must accept the Terms of Service to use FireCloud."]
+                                   [:h2 {:style {:marginTop 0}} "You must accept the Terms of Service to use FireCloud."]
                                    (if tos
                                      [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"}}
                                       [markdown/MarkdownView {:text tos}]
                                       [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                       [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]
-                                       (when-not declined? [buttons/Button {:text "Decline" :onClick #(endpoints/tos-set-status false update-status)}])]]
+                                       [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]
                                      (spinner "Loading Terms of Service..."))]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
