@@ -165,7 +165,7 @@
    (fn [{:keys [this props locals state after-update]}]
      (let [fence-token (get-url-search-param "code")
            base64-oauth-state (get-url-search-param "state")
-           oauth-state (if (not-empty base64-oauth-state) (decode-base64-json base64-oauth-state))]
+           oauth-state (when (not-empty base64-oauth-state) (decode-base64-json base64-oauth-state))]
        (if (and (= (:provider props) (:provider oauth-state)) (not-empty fence-token))
          (do
            (swap! state assoc :pending-fence-token fence-token)
