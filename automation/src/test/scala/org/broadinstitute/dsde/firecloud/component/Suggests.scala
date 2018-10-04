@@ -40,7 +40,6 @@ trait Suggests extends LazyLogging { this: Component =>
   private def getSuggestionByTestId(suggestionTestId: String)(implicit webDriver: WebDriver): Element = {
     val uel = query.element.underlying
 
-    logger.info(s"(remove) getSuggestionByTestId: determine dropdownId")
     val ownedId = Option(uel.getAttribute("aria-owns"))
     val controlledId = Option(uel.getAttribute("aria-controls"))
     val dropdownId = (ownedId ++ controlledId).headOption match {
@@ -49,10 +48,10 @@ trait Suggests extends LazyLogging { this: Component =>
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
 
-    val listOptionXpath = s"#$dropdownId li [data-test-id='$suggestionTestId']"
-    val li = find(cssSelector(listOptionXpath)).head
-
-    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains ${li.size} li: $li")
+    val listOptionXpath = s"""#$dropdownId li *[data-test-id=\"$suggestionTestId\"]"""
+    logger.info(s"(remove) getSuggestionByTestId: listOptionXpath: $listOptionXpath")
+    val li = find(cssSelector(listOptionXpath)).get
+    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains $li")
     li
   }
 
