@@ -6,6 +6,8 @@ import com.typesafe.scalalogging.LazyLogging
 import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
 
+import scala.util.Random
+
 
 /**
   * Mix in for Components (ex. SearchField or TextField) which supply dropdown autosuggestions
@@ -40,7 +42,6 @@ trait Suggests extends LazyLogging { this: Component =>
   private def getSuggestionByTestId(suggestionTestId: String)(implicit webDriver: WebDriver): Element = {
     val uel = query.element.underlying
 
-    logger.info(s"(remove) getSuggestionByTestId: determine dropdownId")
     val ownedId = Option(uel.getAttribute("aria-owns"))
     val controlledId = Option(uel.getAttribute("aria-controls"))
     val dropdownId = (ownedId ++ controlledId).headOption match {
@@ -49,10 +50,13 @@ trait Suggests extends LazyLogging { this: Component =>
         " Is this input field enabled for suggestions? Has your test activated the suggestions dropdown?")
     }
 
-    val listOptionXpath = s"#$dropdownId li [data-test-id='$suggestionTestId']"
-    val li = find(cssSelector(listOptionXpath)).head
+    val listOptionCss1: String = s"""#$dropdownId li *[data-test-id=\"$suggestionTestId\"]"""
+    val listOptionCss2: String = s"""[data-test-id=\"$suggestionTestId\"]"""
+    val alternateCss = Random.shuffle(List(listOptionCss1, listOptionCss2)).head
+    logger.info(s"(remove) getSuggestionByTestId: alternated CssSelector: $alternateCss")
 
-    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains ${li.size} li: $li")
+    val li = find(cssSelector(alternateCss)).get
+    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains: $li")
     li
   }
 
