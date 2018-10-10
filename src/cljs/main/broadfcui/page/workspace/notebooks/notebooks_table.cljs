@@ -392,24 +392,24 @@
 
    :-get-clusters-list
    (fn [{:keys [props state this]}]
-     (endpoints/call-ajax-leo
-      {:endpoint endpoints/get-clusters-list
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (let [filtered-clusters (filter (fn [c]
-                                                      (and (= (get-in props [:workspace-id :namespace]) (:googleProject c))
-                                                           (= (user/get-email) (:creator c)))) (get-parsed-response))
-                          filtered-cluster-map (reduce merge (map (fn [c] {(:clusterName c) c}) filtered-clusters))]
-                      ; Update the state with the current cluster list
-                      (this :-update-cluster-map filtered-cluster-map)
-                      ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                      (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
-                        (js/setTimeout #(this :-get-clusters-list) 10000))
-                      ; If there are running clusters, call the /setCookie endpoint immediately.
-                      (when (notebook-utils/contains-statuses filtered-clusters ["Running"])
-                        (this :-process-running-clusters)))
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [google-project (get-in props [:workspace-id :namespace])
+           user-email (user/get-email)]
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/get-clusters-list-by-project google-project)
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (let [filtered-clusters (filter (comp (partial = user-email) :creator) (get-parsed-response))
+                            filtered-cluster-map (reduce merge (map (fn [c] {(:clusterName c) c}) filtered-clusters))]
+                        ; Update the state with the current cluster list
+                        (this :-update-cluster-map filtered-cluster-map)
+                        ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
+                        (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
+                          (js/setTimeout #(this :-get-clusters-list) 10000))
+                        ; If there are running clusters, call the /setCookie endpoint immediately.
+                        (when (notebook-utils/contains-statuses filtered-clusters ["Running"])
+                          (this :-process-running-clusters)))
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})))})))
 
    :-get-pet-token
    (fn [{:keys [props state this]}]
