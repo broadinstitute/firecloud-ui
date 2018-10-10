@@ -188,7 +188,7 @@
   {:path (str "/clusters")
    :method :get})
 
-(def get-clusters-list-by-project [google-project]
+(defn get-clusters-list-by-project [google-project]
   {:path (str "/clusters/" google-project)
    :method :get})
 
