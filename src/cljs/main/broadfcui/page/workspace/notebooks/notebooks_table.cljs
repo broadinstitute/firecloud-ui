@@ -333,7 +333,7 @@
            notebooks-to-localize (filter (every-pred (comp (partial = (:clusterName cluster)) :cluster-name)
                                                      (comp false? :localized?))
                                          notebooks)]
-       (when ((comp not nil?) notebooks-to-localize)
+       (when (not-empty notebooks-to-localize)
          (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
                                       (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
                                       (fn [{:keys [success? get-parsed-response]}]
