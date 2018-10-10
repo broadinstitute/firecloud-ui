@@ -395,7 +395,7 @@
      (let [google-project (get-in props [:workspace-id :namespace])
            user-email (user/get-email)]
        (endpoints/call-ajax-leo
-        {:endpoint endpoints/get-clusters-list
+        {:endpoint (endpoints/get-clusters-list-by-project google-project)
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
