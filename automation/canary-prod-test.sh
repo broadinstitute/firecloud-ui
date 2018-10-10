@@ -112,7 +112,8 @@ if [ $ENV = "prod" ]; then
     monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest $submissionId
 
    i=1
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 6 ]
+
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 16 ]
 
     do
             echo $i
