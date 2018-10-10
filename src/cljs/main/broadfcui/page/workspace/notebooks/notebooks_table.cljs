@@ -333,24 +333,24 @@
            notebooks-to-localize (filter (every-pred (comp (partial = (:clusterName cluster)) :cluster-name)
                                                      (comp false? :localized?))
                                          notebooks)]
-       (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
-                                    (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
-                                    (fn [{:keys [success? get-parsed-response]}]
-                                      (if success?
-                                        (let [updated-notebooks (map (fn [n]
-                                                                       (if (= (:cluster-name n) (:clusterName cluster))
-                                                                         (merge n {:localized? true})
-                                                                         n))
-                                                                     notebooks)]
-                                          ; flip :localized? to true so we don't re-localize notebooks to this cluster
-                                          (swap! state assoc :server-response
-                                                 {:notebooks (map (fn [n]
-                                                                    (if (= (:cluster-name n) (:clusterName cluster))
-                                                                      (merge n {:localized? true})
-                                                                      n))
-                                                                  notebooks)})
-                                          (this :-persist-notebook-cluster-association updated-notebooks))
-                                        (js/setTimeout #(this :-localize-notebooks cluster) 10000))))))
+       (when ((comp not nil?) notebooks-to-localize)
+         (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
+                                      (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
+                                      (fn [{:keys [success? get-parsed-response]}]
+                                        (when success?
+                                          (let [updated-notebooks (map (fn [n]
+                                                                         (if (= (:cluster-name n) (:clusterName cluster))
+                                                                           (merge n {:localized? true})
+                                                                           n))
+                                                                       notebooks)]
+                                            ; flip :localized? to true so we don't re-localize notebooks to this cluster
+                                            (swap! state assoc :server-response
+                                                   {:notebooks (map (fn [n]
+                                                                      (if (= (:cluster-name n) (:clusterName cluster))
+                                                                        (merge n {:localized? true})
+                                                                        n))
+                                                                    notebooks)})
+                                            (this :-persist-notebook-cluster-association updated-notebooks))))))))
 
    :-delocalize-json
    (fn [{:keys [props]}]
@@ -395,7 +395,7 @@
      (let [google-project (get-in props [:workspace-id :namespace])
            user-email (user/get-email)]
        (endpoints/call-ajax-leo
-        {:endpoint (endpoints/get-clusters-list-by-project google-project)
+        {:endpoint endpoints/get-clusters-list
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (if success?
