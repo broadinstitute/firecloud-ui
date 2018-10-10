@@ -43,12 +43,13 @@
            (when-not last-crumb-id
              (dropdown/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      (links/create-external {:href (config/user-guide-url)} "user guide.")]}))]
+                      (links/create-external {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=10738"} "user guide.")]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
              [import-data/Page
-              (select-keys props [:workspace-id :import-type :on-data-imported])]
+              (merge (select-keys props [:workspace-id :import-type :on-data-imported])
+                     {:truncate-preview? true})]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-auth-domain :on-data-imported])

@@ -142,6 +142,14 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
       case None =>
         fail(s"timed out waiting billing project $billingProjectName to be ready")
       case Some(status) =>
+        if (status == "failure" || status == "unknown") {
+          try {
+            // click icon to view then capture failure error in screeshot
+            find(xpath(s"//div[@data-test-id='$billingProjectName-row']//span[@data-test-id='status-icon']")).get.underlying.click()
+          } catch {
+            case _: Exception => // ignore error when click failed
+          }
+        }
         withClue(s"Creating billing project: $billingProjectName") {
           status shouldEqual "success"
         }

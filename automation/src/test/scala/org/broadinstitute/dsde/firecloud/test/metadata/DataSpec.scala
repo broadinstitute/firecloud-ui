@@ -29,6 +29,7 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
       implicit val authToken: AuthToken = owner.makeAuthToken()
       withCleanBillingProject(owner) { billingProject =>
         withWorkspace(billingProject, "DataSpec_launch_workflow", aclEntries = List(AclEntry(reader.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+          api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
           api.importMetaData(billingProject, workspaceName, "entities", testData.participantEntity)
           api.methodConfigurations.copyMethodConfigFromMethodRepo(billingProject, workspaceName, SimpleMethodConfig.configNamespace,
             SimpleMethodConfig.configName, SimpleMethodConfig.snapshotId, SimpleMethodConfig.configNamespace, methodConfigName)
@@ -38,7 +39,6 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               val headers1 = List("participant_id")
               eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1 }
-              api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodConfigName).open
               val submissionTab = methodConfigDetailsPage.launchAnalysis(SimpleMethodConfig.rootEntityType, testData.participantId, "", true)
               submissionTab.waitUntilSubmissionCompletes()

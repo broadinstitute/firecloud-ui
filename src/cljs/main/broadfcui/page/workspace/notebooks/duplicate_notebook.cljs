@@ -23,17 +23,16 @@
          :ok-button {:text "Duplicate" :onClick #(this :-duplicate-notebook)}
          :content
          (react/create-element
-          [:div {:style {:marginTop 0}}
+          [:div {:style {:marginTop 0 :width 500}}
            (when duplicating? (blocker "Duplicating notebook..."))
-           [comps/ErrorViewer {:error server-error}]
-
            [:div {:style {:width "48%" :marginRight "4%" :marginBottom "1%"}}
             [FoundationTooltip {:text (notebook-utils/create-inline-form-label "Name")
                                 :tooltip (str "Enter new name for copy of notebook \"" (notebook-utils/notebook-name choose-notebook) \" "")}]]
            [input/TextField {:data-test-id "notebook-name-input" :ref "newNotebookName" :autoFocus true :style {:width "100%"}
                              :defaultValue (str "Copy of " (notebook-utils/notebook-name choose-notebook))
                              :predicates [(input/nonempty "Notebook name") (input/alphanumeric_-space "Notebook name")]}]
-           (style/create-validation-error-message validation-errors)])}]))
+           (style/create-validation-error-message validation-errors)
+           [comps/ErrorViewer {:error server-error}]])}]))
 
    :-duplicate-notebook
    (fn [{:keys [props state this refs]}]
@@ -55,4 +54,4 @@
                                                  (do
                                                    (refresh-notebooks)
                                                    (dismiss))
-                                                 (swap! state assoc :server-response {:server-error raw-response}))))))))))})
+                                                 (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))))))))})

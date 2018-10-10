@@ -58,10 +58,12 @@
          :ok-button {:onClick #(this :-create-cluster)}
          :content
          (react/create-element
-          [:div {:style {:marginBottom -20}}
+          [:div {:style {:marginBottom -20 :width 500}}
            (when creating? (blocker "Creating cluster..."))
-           (notebook-utils/create-inline-form-label
-            (str "Create a cluster to associate with notebook \"" (notebook-utils/notebook-name choose-notebook) "\":"))
+           [:div {:style {:backgroundColor "#fda" :borderBottom style/standard-line :borderTop style/standard-line
+                          :textAlign "left" :padding "0.5rem 0.5rem 0.5rem 0.5rem"}}
+            [:span {:style {:fontSize "88%"}}
+             "Cluster creation may take up to 5 minutes. You will be notified when it is ready and can continue working as it builds."]]
            (react/create-element
             [:div {:style {:marginTop 25}}
              (style/create-form-label "Name")

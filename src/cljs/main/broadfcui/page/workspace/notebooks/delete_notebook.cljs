@@ -22,9 +22,9 @@
          :ok-button {:text "Delete" :onClick #(this :-delete-notebook)}
          :content
          (react/create-element
-          [:div {:style {:marginTop 0}}
+          [:div {:style {:marginTop 0 :width 500}}
            (when deleting? (blocker "Deleting notebook..."))
-           [:div {} (str "Are you sure you want to delete notebook \""
+           [:div {:style {:marginBottom "1em"}} (str "Are you sure you want to delete notebook \""
                          (notebook-utils/notebook-name choose-notebook) "\"? This operation cannot be undone.")]
            [comps/ErrorViewer {:error server-error}]])}]))
 
@@ -39,5 +39,5 @@
                                          (if success?
                                            (do
                                              (refresh-notebooks)
-                                             (dismiss)))
-                                         (swap! state assoc :server-response {:server-error raw-response})))))})
+                                             (dismiss))
+                                           (swap! state assoc :server-response {:server-error (notebook-utils/parse-gcs-error raw-response)}))))))})

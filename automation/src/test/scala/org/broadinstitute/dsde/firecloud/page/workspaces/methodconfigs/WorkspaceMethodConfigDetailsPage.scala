@@ -10,7 +10,7 @@ import org.broadinstitute.dsde.firecloud.fixture.DownloadUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetailsPage
 import org.broadinstitute.dsde.firecloud.page.PageUtil
-import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver}
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.selenium.Page
 
@@ -139,31 +139,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickAndReadSuggestions(field: String): Seq[String] = {
     val dataTestId = s"$field-text-input"
-    val listOptionXpath = s"//div[@data-test-id='$field-suggestions']/ul[@role='listbox']/li[@role='option']"
-
     click on find(testId("test.hello.response-text-input")).get // force page scrolls down
 
-    val suggestionTextfield: Element = find(testId(dataTestId)).get
-    val expandedDropdownId = suggestionTextfield.underlying.getAttribute("aria-owns")
-
-    click on suggestionTextfield // click in textfield to invoke list dropdown
-    await condition find(testId(dataTestId)).exists(_.underlying.getAttribute("aria-expanded") == "true")
-
-    // wait for dropdown to contain at least one item
-    await condition {
-      find(xpath(s"//div[@id='$expandedDropdownId']")).exists(_.isDisplayed)
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq.nonEmpty // getting Element's text force screen scroll if item is outside of viewport
-    }
-
-    Try[Seq[String]] {
-      findAll(xpath(listOptionXpath)).map(_.text).toSeq
-    } match {
-      case Success(value) => value
-      case Failure(exception) if (exception.isInstanceOf[StaleElementReferenceException]) =>
-        Thread sleep 1000
-        findAll(xpath(listOptionXpath)).map(_.text).toSeq // retry if encountered StaleElementReferenceException
-    }
-
+    val suggestionTextfield = TextField(TestId(dataTestId))
+    suggestionTextfield.getSuggestions()
   }
 
   def readFieldValue(field: String): String = {
