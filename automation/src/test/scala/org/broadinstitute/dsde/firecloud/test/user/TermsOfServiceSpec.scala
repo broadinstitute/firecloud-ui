@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
-import org.broadinstitute.dsde.firecloud.page.user.TermsOfServicePage
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
-import org.broadinstitute.dsde.workbench.config.UserPool
+import org.broadinstitute.dsde.firecloud.page.user.RegistrationPage
 import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.scalatest.concurrent.Eventually
@@ -16,13 +15,12 @@ class TermsOfServiceSpec extends FreeSpec with WebBrowserSpec with UserFixtures 
 
   "A user who has not previously accepted the Terms of Service" - {
     "should be required to accept them before using the application" in withWebDriver { implicit driver =>
-      val user = UserPool.chooseStudent
+      val user = FireCloudConfig.Users.temp
 
       withSignInNeedsTerms(user) { tosPage =>
-
         tosPage.accept()
 
-        await ready new WorkspaceListPage()
+        await ready new RegistrationPage()
       }
     }
   }
