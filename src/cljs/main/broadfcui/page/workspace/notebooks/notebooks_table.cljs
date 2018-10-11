@@ -333,24 +333,19 @@
            notebooks-to-localize (filter (every-pred (comp (partial = (:clusterName cluster)) :cluster-name)
                                                      (comp false? :localized?))
                                          notebooks)]
-       (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
-                                    (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
-                                    (fn [{:keys [success? get-parsed-response]}]
-                                      (if success?
-                                        (let [updated-notebooks (map (fn [n]
-                                                                       (if (= (:cluster-name n) (:clusterName cluster))
-                                                                         (merge n {:localized? true})
-                                                                         n))
-                                                                     notebooks)]
-                                          ; flip :localized? to true so we don't re-localize notebooks to this cluster
-                                          (swap! state assoc :server-response
-                                                 {:notebooks (map (fn [n]
-                                                                    (if (= (:cluster-name n) (:clusterName cluster))
-                                                                      (merge n {:localized? true})
-                                                                      n))
-                                                                  notebooks)})
-                                          (this :-persist-notebook-cluster-association updated-notebooks))
-                                        (js/setTimeout #(this :-localize-notebooks cluster) 10000))))))
+       (when (seq notebooks-to-localize)
+         (endpoints/localize-notebook (:googleProject cluster) (:clusterName cluster)
+                                      (reduce merge (conj (map (partial this :-localize-entry) notebooks-to-localize) (this :-delocalize-json)))
+                                      (fn [{:keys [success? get-parsed-response]}]
+                                        (when success?
+                                          (let [updated-notebooks (map (fn [n]
+                                                                         (if (= (:cluster-name n) (:clusterName cluster))
+                                                                           (assoc n :localized? true)
+                                                                           n))
+                                                                       notebooks)]
+                                            ; flip :localized? to true so we don't re-localize notebooks to this cluster
+                                            (swap! state assoc :server-response {:notebooks updated-notebooks})
+                                            (this :-persist-notebook-cluster-association updated-notebooks))))))))
 
    :-delocalize-json
    (fn [{:keys [props]}]
@@ -392,24 +387,24 @@
 
    :-get-clusters-list
    (fn [{:keys [props state this]}]
-     (endpoints/call-ajax-leo
-      {:endpoint endpoints/get-clusters-list
-       :headers ajax/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (let [filtered-clusters (filter (fn [c]
-                                                      (and (= (get-in props [:workspace-id :namespace]) (:googleProject c))
-                                                           (= (user/get-email) (:creator c)))) (get-parsed-response))
-                          filtered-cluster-map (reduce merge (map (fn [c] {(:clusterName c) c}) filtered-clusters))]
-                      ; Update the state with the current cluster list
-                      (this :-update-cluster-map filtered-cluster-map)
-                      ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
-                      (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
-                        (js/setTimeout #(this :-get-clusters-list) 10000))
-                      ; If there are running clusters, call the /setCookie endpoint immediately.
-                      (when (notebook-utils/contains-statuses filtered-clusters ["Running"])
-                        (this :-process-running-clusters)))
-                    (swap! state assoc :server-response {:server-error (get-parsed-response false)})))}))
+     (let [google-project (get-in props [:workspace-id :namespace])
+           user-email (user/get-email)]
+       (endpoints/call-ajax-leo
+        {:endpoint (endpoints/get-clusters-list-by-project google-project)
+         :headers ajax/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if-not success?
+                      (swap! state assoc :server-response {:server-error (get-parsed-response false)})
+                      (let [filtered-clusters (filter (comp (partial = user-email) :creator) (get-parsed-response))
+                            filtered-cluster-map (utils/map-values first (group-by :clusterName filtered-clusters))]
+                        ; Update the state with the current cluster list
+                        (this :-update-cluster-map filtered-cluster-map)
+                        ; If there are pending clusters, schedule another 'list clusters' call 10 seconds from now.
+                        (when (notebook-utils/contains-statuses filtered-clusters ["Creating" "Updating" "Deleting" "Stopping" "Starting"])
+                          (js/setTimeout #(this :-get-clusters-list) 10000))
+                        ; If there are running clusters, call the /setCookie endpoint immediately.
+                        (when (notebook-utils/contains-statuses filtered-clusters ["Running"])
+                          (this :-process-running-clusters)))))})))
 
    :-get-pet-token
    (fn [{:keys [props state this]}]
