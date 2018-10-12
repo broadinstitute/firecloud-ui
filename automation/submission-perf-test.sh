@@ -2,7 +2,6 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
-set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -135,7 +134,7 @@ if [ $ENV = "alpha" ]; then
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     testB= findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
-    Echo $testB
+    echo $testB
 #    sleep 1m
 #    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
 #    sleep 2m
