@@ -131,11 +131,11 @@ monitorSubmission() {
 if [ $ENV = "alpha" ]; then
     launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     testA= findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
-    echo $testA
+    echo "$testA"
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     testB= findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
-    echo $testB
+    echo "$testB"
 #    sleep 1m
 #    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
 #    sleep 2m
