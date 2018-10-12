@@ -130,55 +130,64 @@ monitorSubmission() {
 
 if [ $ENV = "alpha" ]; then
     launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    testA= findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
+    echo $testA
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 2m
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 1m
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
-
-    #Store 6K submission ID's
-    testA= findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testB= findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
-    testD= findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
-    testE= findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
-    testG= findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
+    Echo $testB
+#    sleep 1m
+#    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    sleep 2m
+#    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    sleep 1m
+#    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
+#
+#    #Store 6K submission ID's
+#    testA= findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
+#    echo $testA
+#    testB= findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
+#    Echo $testB
+#    testD= findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
+#    echo $testD
+#    testE= findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
+#    echo testE
+#    testG= findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
+#    echo testG
 
-    #Monitor the progress of the OneOff submission
-    findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
-    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
-
-   i=1
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
-
-    do
-            echo $i
-            sleep 10m
-            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
-            ((i++))
-    done
-
-    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
-      # exit 0
-    else
-      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-      exit 1
-    fi
+#    #Monitor the progress of the OneOff submission
+#    findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
+#    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+#
+#   i=1
+#   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
+#
+#    do
+#            echo $i
+#            sleep 10m
+#            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+#            ((i++))
+#    done
+#
+#    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+#      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
+#      # exit 0
+#    else
+#      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+#      exit 1
+#    fi
 ##########################################################################################
-    #Monitor the progress of the rest of submissions
-   i=1
-   [ "$i" -le 30 ]
-   while [ "$submissionA" != "Done" ] # && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
-    do
-            echo $i
-            sleep 10m
-
-            submissionA= monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
-            echo $submissionA
+#    #Monitor the progress of the rest of submissions
+#   i=1
+#   [ "$i" -le 30 ]
+#   while [ "$submissionA" != "Done" ] # && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
+#    do
+#            echo $i
+#            sleep 10m
+#
+#            submissionA= monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+#            echo $submissionA
 #            workflowStatusA= $workflowsStatus
 #            submissionB= monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
 #            workflowStatusB= $workflowsStatus
