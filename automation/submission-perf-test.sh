@@ -96,7 +96,7 @@ findSubmissionID() {
 
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
-    curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId'
+    submissionId=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
 
 }
 
@@ -133,28 +133,26 @@ if [ $ENV = "alpha" ]; then
     testA=`findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace`
     echo "$testA"
     sleep 2m
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    testB=`findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W`
-    echo "$testB"
+    submissionA=`monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA`
+    echo "$submissionA"
+    workflowStatusA="$workflowsStatus"
+    echo "$workflowStatusA"
+#    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    testB=`findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W`
+#    echo "$testB"
 #    sleep 1m
 #    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    testD=`findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy`
+#    echo "$testD"
 #    sleep 2m
 #    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    testE=`findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W`
+#    echo "$testE"
 #    sleep 1m
 #    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+#    testG=`findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W`
+#    echo "$testG"
 #    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
-#
-#    #Store 6K submission ID's
-#    testA= findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
-#    echo $testA
-#    testB= findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
-#    Echo $testB
-#    testD= findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
-#    echo $testD
-#    testE= findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
-#    echo testE
-#    testG= findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
-#    echo testG
 
 #    #Monitor the progress of the OneOff submission
 #    findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
@@ -186,11 +184,12 @@ if [ $ENV = "alpha" ]; then
 #            echo $i
 #            sleep 10m
 #
-#            submissionA= monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
-#            echo $submissionA
-#            workflowStatusA= $workflowsStatus
+#            submissionA=`monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA`
+#            echo "$submissionA"
+#            workflowStatusA="$workflowsStatus"
+#            echo "$workflowStatusA"
 #            submissionB= monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
-#            workflowStatusB= $workflowsStatus
+#            workflowStatusB="$workflowsStatus"
 #            submissionD= monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
 #            workflowStatusD= $workflowsStatus
 #            submissionE= monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
