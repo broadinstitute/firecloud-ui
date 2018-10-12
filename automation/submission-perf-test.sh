@@ -198,7 +198,7 @@ if [ $ENV = "alpha" ]; then
 #            submissionG= monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
 #            workflowStatusG= $workflowsStatus
             ((i++))
-    done
+#    done
 
 #    if [ "$submissionA" == "Done" ]
 #
