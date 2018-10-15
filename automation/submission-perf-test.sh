@@ -132,7 +132,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testA=$submissionID
     echo "$testA"
-    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace testA
+    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
     submissionA=$submissionStatus
     echo "$submissionA"
     workflowA=$workflowsStatus
