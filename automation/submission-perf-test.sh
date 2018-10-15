@@ -96,8 +96,7 @@ findSubmissionID() {
 
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
-    submissionId=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
-
+    submissionID=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
 }
 
 monitorSubmission() {
@@ -130,13 +129,14 @@ monitorSubmission() {
 
 if [ $ENV = "alpha" ]; then
     launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    testA=`findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace`
+    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
+    testA=$submissionID
     echo "$testA"
-    sleep 2m
-    submissionA=`monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA`
-    echo "$submissionA"
-    workflowStatusA="$workflowsStatus"
-    echo "$workflowStatusA"
+#    ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "{harry.potter@test.firecloud.org}" "${JSON_CREDS}"`
+#    submissionA=`curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/perf-test-a/Perf-test-A-workspace/submissions/$testA" | jq -r '.status'   `
+#    echo "$submissionA"
+#    workflowStatusA="$workflowsStatus"
+#    echo "$workflowStatusA"
 #    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
 #    testB=`findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W`
 #    echo "$testB"
