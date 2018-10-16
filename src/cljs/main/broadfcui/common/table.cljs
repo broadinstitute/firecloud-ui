@@ -216,10 +216,13 @@
      (let [columns (-> props :body :columns)
            processed-columns (if-let [defaults (-> props :body :column-defaults)]
                                (let [by-header (utils/index-by (some-fn :id :header) columns)
-                                     default-showing (->> (defaults "shown")
+                                     known-columns (set (keys by-header))
+                                     known-shown (set/intersection (set (defaults "shown")) known-columns)
+                                     known-hiding (set/intersection (set (defaults "hidden")) known-columns)
+                                     default-showing (->> known-shown
                                                           (replace by-header)
                                                           (map #(assoc % :show-initial? true)))
-                                     default-hiding (->> (defaults "hidden")
+                                     default-hiding (->> known-hiding
                                                          (replace by-header)
                                                          (map #(assoc % :show-initial? false)))
                                      mentioned (set/union (set (defaults "shown"))
