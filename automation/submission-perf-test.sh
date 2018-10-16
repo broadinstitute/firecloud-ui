@@ -108,7 +108,7 @@ monitorSubmission() {
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
     submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
-    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
+    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | sort_by (.status)')
     workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | select(.status == "Failed") | length')
 }
 
@@ -119,7 +119,7 @@ workflowsFailure() {
     submissionId=$4
 
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-    workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | select(.status == "Failed") | length')
+    workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | select(.status == "Failed")')
 }
 
 # check if user needs a token refresh
@@ -199,10 +199,10 @@ if [ $ENV = "alpha" ]; then
 
             monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
             submissionA=$submissionStatus
-            echo "$submissionA"
+            echo "Submission status: $submissionA"
             workflowA=$workflowsStatus
             echo "$workflowA"
-            echo "$workflowFailures"
+            echo "Number of failed workflows: $workflowFailures"
 #            monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
 #            submissionB=$submissionStatus
 #            echo "$submissionB"
