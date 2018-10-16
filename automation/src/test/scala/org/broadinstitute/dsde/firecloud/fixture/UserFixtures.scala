@@ -46,20 +46,22 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
-    * user is not registered and returns a ready RegistrationPage.
+    * user is not registered and returns a ready TermsOfServicePage.
     */
   def withSignInNewUser(user: Credentials)
-                           (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignIn(user, new RegistrationPage)(testCode)
-  }
+                       (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
+    withCleanUp {
+      withSignIn(user, new TermsOfServicePage) { tosPage =>
+        register cleanUp executeScript("window.rejctToS()")
 
-  /**
-    * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
-    * user has not accepted the Terms and returns a ready TermsOfServicePage.
-    */
-  def withSignInNeedsTerms(user: Credentials)
-                       (testCode: TermsOfServicePage => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignIn(user, new TermsOfServicePage)(testCode)
+        tosPage.accept()
+
+        val registrationPage = await ready new RegistrationPage
+
+        testCode(registrationPage)
+
+      }
+    }
   }
 
 

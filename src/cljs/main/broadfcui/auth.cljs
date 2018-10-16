@@ -298,6 +298,8 @@
               404 (swap! state assoc :error :not-agreed)
               (swap! state assoc :error (handle-server-error status-code get-parsed-response))))))))})
 
+(defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
+
 (react/defc RefreshCredentials
   {:get-initial-state
    (fn []

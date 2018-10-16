@@ -44,30 +44,33 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
     "should allow a person to register" taggedAs Retryable in {
       withWebDriver { implicit driver =>
-        withSignInNewUser(testUser) { registrationPage =>
-          registerCleanUpForDeleteUser(subjectId)
+        withCleanUp {
+          withSignInNewUser(testUser) { registrationPage =>
 
-          registrationPage.register(
-            firstName = "Test",
-            lastName = "Dummy",
-            title = "Tester",
-            contactEmail = Some("test@firecloud.org"),
-            institute = "Broad",
-            institutionalProgram = "DSDE",
-            nonProfitStatus = true,
-            principalInvestigator = "Nobody",
-            city = "Cambridge",
-            state = "MA",
-            country = "USA")
+            registerCleanUpForDeleteUser(subjectId)
 
-          new DataLibraryPage().validateLocation()
+            registrationPage.register(
+              firstName = "Test",
+              lastName = "Dummy",
+              title = "Tester",
+              contactEmail = Some("test@firecloud.org"),
+              institute = "Broad",
+              institutionalProgram = "DSDE",
+              nonProfitStatus = true,
+              principalInvestigator = "Nobody",
+              city = "Cambridge",
+              state = "MA",
+              country = "USA")
 
-          val profilePage = new ProfilePage().open
-          val username = testUser.email.split("@").head
-          /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
-          profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
-          */
-          profilePage.readProxyGroupEmail should endWith("firecloud.org")
+            new DataLibraryPage().validateLocation()
+
+            val profilePage = new ProfilePage().open
+            val username = testUser.email.split("@").head
+            /* Re-enable this code and remove the temporary code below after fixing rawls for GAWB-2933
+            profilePage.readProxyGroupEmail should (startWith (username) and endWith ("firecloud.org"))
+            */
+            profilePage.readProxyGroupEmail should endWith("firecloud.org")
+          }
         }
       }
     }
