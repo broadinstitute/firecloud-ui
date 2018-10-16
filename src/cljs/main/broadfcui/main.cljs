@@ -197,7 +197,7 @@
            (auth/force-signed-in {:on-sign-in #(swap! state update :user-status conj :signed-in)
                                   :on-sign-out #(swap! state update :user-status disj :signed-in)
                                   :on-error #(swap! state assoc :force-sign-in-error %)}))
-     (set! (.-rejectToS js/window) #(auth/reject-tos (fn [] (swap! state update :user-status disj :signed-in)))))
+     (set! (.-rejectToS js/window) auth/reject-tos))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
