@@ -108,7 +108,8 @@ monitorSubmission() {
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
     submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
-    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status | select(.status == "Failed")] | length')
+    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
+    workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status | select(.status == "Failed") | length')
 }
 
 # check if user needs a token refresh
@@ -215,7 +216,8 @@ if [ $ENV = "alpha" ]; then
     done
 
 #    if [ "$submissionA" == "Done" ]
-#
+#    workflowFailures harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+#    failuresA=$workflowFailures
 #
 #    if [ "$submissionB" == "Done" ]
 #
