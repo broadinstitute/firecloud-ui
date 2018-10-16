@@ -171,16 +171,16 @@ if [ $ENV = "alpha" ]; then
 
     if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
       echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
-      # exit 0
+      exit 0
     else
       echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
       exit 1
     fi
 ##########################################################################################
-#    #Monitor the progress of the rest of submissions
+   #Monitor the progress of the rest of submissions
    i=1
    [ "$i" -le 30 ]
-   while [ "$submissionA" != "Done" ] # && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
+   while [ "$submissionA" != "Done" ]  && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
     do
             echo $i
             sleep 10m
