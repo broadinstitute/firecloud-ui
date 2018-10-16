@@ -232,6 +232,8 @@
                             :on-change (fn [signed-in? token-saved?]
                                          (swap! state update :user-status
                                                 #(-> %
+                                                     ((if signed-in? identity disj)
+                                                      :tos)
                                                      ((if signed-in? conj disj)
                                                       :signed-in)
                                                      ((if token-saved? conj disj)
