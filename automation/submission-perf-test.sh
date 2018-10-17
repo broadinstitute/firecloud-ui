@@ -135,22 +135,22 @@ if [ $ENV = "alpha" ]; then
     echo "$testA"
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    findSubmissionID findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
+    findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
     testB=$submissionID
     echo "$testB"
     sleep 1m
     launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    findSubmissionID findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
+    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
     testD=$submissionID
     echo "$testD"
     sleep 2m
     launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    findSubmissionID findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
+    findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
     testE=$submissionID
     echo "$testE"
     sleep 1m
     launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    findSubmissionID findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
+    findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
     testG=$submissionID
     echo "$testG"
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
