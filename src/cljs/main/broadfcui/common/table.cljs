@@ -216,9 +216,12 @@
      (let [columns (-> props :body :columns)
            processed-columns (if-let [defaults (-> props :body :column-defaults)]
                                (let [by-header (utils/index-by (some-fn :id :header) columns)
+                                     ;; columns actually in the data model
                                      known-columns (set (keys by-header))
+                                     ;; strip out any workspace-column-defaults that aren't in the data model
                                      known-shown (set/intersection (set (defaults "shown")) known-columns)
                                      known-hiding (set/intersection (set (defaults "hidden")) known-columns)
+                                     ;; flesh out the workspace-column-defaults
                                      default-showing (->> known-shown
                                                           (replace by-header)
                                                           (map #(assoc % :show-initial? true)))
