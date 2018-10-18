@@ -133,26 +133,37 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testA=$submissionID
     echo "$testA"
+    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+    submissionA=$submissionStatus
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
     testB=$submissionID
     echo "$testB"
+    monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
+    submissionB=$submissionStatus
     sleep 1m
     launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
     testD=$submissionID
     echo "$testD"
+    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
+    submissionD=$submissionStatus
     sleep 2m
     launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
     testE=$submissionID
     echo "$testE"
+    monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
+    submissionE=$submissionStatus
     sleep 1m
     launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
     testG=$submissionID
     echo "$testG"
+    monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
+    submissionG=$submissionStatus
+    sleep 1m
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     test1=$submissionID
@@ -181,7 +192,7 @@ if [ $ENV = "alpha" ]; then
 ##########################################################################################
    #Monitor the progress of the rest of submissions
    i=1
-   [ "$i" -le 30 ]
+   # [ "$i" -le 30 ]
    while [ "$submissionA" != "Done" ]  && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
     do
             echo $i
@@ -191,42 +202,42 @@ if [ $ENV = "alpha" ]; then
             submissionA=$submissionStatus
             echo "Submission status: $submissionA"
             workflowA=$workflowsStatus
-            echo "$workflowA"
+            #echo "$workflowA"
             failuresA=$workflowFailures
             echo "Number of failed workflows: $failuresA"
             monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
             submissionB=$submissionStatus
             echo "$submissionB"
             workflowB=$workflowsStatus
-            echo "$workflowB"
+            #echo "$workflowB"
             failuresB=$workflowFailures
             echo "Number of failed workflows: $failuresB"
             monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
             submissionD=$submissionStatus
             echo "$submissionD"
             workflowD=$workflowsStatus
-            echo "$workflowD"
+            #echo "$workflowD"
             failuresD=$workflowFailures
             echo "Number of failed workflows: $failuresD"
             monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
             submissionE=$submissionStatus
             echo "$submissionE"
             workflowE=$workflowsStatus
-            echo "$workflowE"
+            #echo "$workflowE"
             failuresE=$workflowFailures
             echo "Number of failed workflows: $failuresE"
             monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
             submissionG=$submissionStatus
             echo "$submissionG"
             workflowG=$workflowsStatus
-            echo "$workflowG"
+            #echo "$workflowG"
             failuresG=$workflowFailures
             echo "Number of failed workflows: $failuresG"
             ((i++))
     done
 
-  totalFailures=$failuresA+$failuresB+$failuresD+$failuresE+$failuresG
-   if [ "$totalFailures" -le 19 ]; then
+  totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
+   if [ "$totalFailures" -le 10 ]; then
     echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
        exit 0
    else
