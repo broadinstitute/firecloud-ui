@@ -169,76 +169,65 @@ if [ $ENV = "alpha" ]; then
     test1=$submissionID
     echo "$test1"
 
-#    #Monitor the progress of the OneOff submission
-#    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
-#
-#   i=1
-#   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
-#
-#    do
-#            echo $i
-#            sleep 10m
-#            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
-#            ((i++))
-#    done
-#
-#    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-#      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
-#
-#    else
-#      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-#      exit 1
-#    fi
+ #Monitor the progress of the OneOff submission
+    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
+
+   i=1
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
+
+    do
+            echo $i
+            sleep 10m
+            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+            ((i++))
+    done
+
+    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
+
+    else
+      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+      exit 1
+    fi
 ##########################################################################################
-   #Monitor the progress of the rest of submissions
+ #Monitor the progress of the rest of submissions
 
    j=1
-   echo "$submissionA"
-   echo "$submissionB"
-   echo "$submissionD"
-   echo "$submissionE"
-   echo "$submissionG"
    until [[ "$submissionA" == "Done" ]  && [ "$submissionB" == "Done" ] && [ "$submissionD" == "Done" ] && [ "$submissionE" == "Done" ] && [ "$submissionG" == "Done" ]] && [ "$j" -le 30 ]
     do
             echo j
-            echo "hello gary"
-            sleep 1m
+            sleep 5m
 
             monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
             submissionA=$submissionStatus
             echo "Submission A status: $submissionA"
             workflowA=$workflowsStatus
-            #echo "$workflowA"
             failuresA=$workflowFailures
             echo "Number of failed workflows A: $failuresA"
             monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
             submissionB=$submissionStatus
-            echo "$submissionB"
+            echo "Submission B status: $submissionB"
             workflowB=$workflowsStatus
-            #echo "$workflowB"
             failuresB=$workflowFailures
-            echo "Number of failed workflows: $failuresB"
+            echo "Number of failed workflows B: $failuresB"
             monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
             submissionD=$submissionStatus
-            echo "$submissionD"
+            echo "Submission D status: $submissionD"
             workflowD=$workflowsStatus
-            #echo "$workflowD"
             failuresD=$workflowFailures
-            echo "Number of failed workflows: $failuresD"
+            echo "Number of failed workflows D: $failuresD"
             monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
             submissionE=$submissionStatus
-            echo "$submissionE"
+            echo "Submission E status: $submissionE"
             workflowE=$workflowsStatus
-            #echo "$workflowE"
             failuresE=$workflowFailures
-            echo "Number of failed workflows: $failuresE"
+            echo "Number of failed workflows E: $failuresE"
             monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
             submissionG=$submissionStatus
-            echo "$submissionG"
+            echo "Submission G status: $submissionG"
             workflowG=$workflowsStatus
-            #echo "$workflowG"
             failuresG=$workflowFailures
-            echo "Number of failed workflows: $failuresG"
+            echo "Number of failed workflows G: $failuresG"
             ((j++))
     done
 
