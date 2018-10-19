@@ -22,11 +22,11 @@
                                         "pair_set" (:pairs attrs)
                                         "participant_set" (:participants attrs)
                                         ;; below is for non FC model sets
-                                        ;; they will end in "_sets"
+                                        ;; they will end in "_set"
                                         ;; we need to remove that (hence the subs at length-4)
                                         ;; then make it plural by adding an s
                                         ;; then make it a keyword
-                                        ((keyword (str (subs entity-type 0 (- (count entity-type) 4)) "s")) attrs))]
+                                        ((keyword (str (subs entity-type 0 (- (count entity-type) (count "_set"))) "s")) attrs))]
                          (update-parent-state :selected-attr-list (:items entities) :loading-attributes? false))
                        ;; otherwise display all attribute values, expanded into separate rows.
                        ;; generate a user-friendly string for list-valued attributes.
