@@ -51,10 +51,12 @@ brew install chromedriver
 If your version of Chrome is 61 or later, check `chromedriver --version` to make sure you're up to at least 2.32. If not, use `brew upgrade chromedriver` to update.
  
 Also run the config render script. Configs are common across all test suites and live in [firecloud-automated-testing](https://github.com/broadinstitute/firecloud-automated-testing).  `render-local-env.sh` will clone a branch of custom configs or the default master branch.  
-If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/". This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. From the `automation` directory:
+If you are planning on running the firecloud ui locally, add the local_ui param (it will set the baseUrl to "http://local.broadinstitute.org/"). This will render the necessary `application.conf` and `firecloud-account.pem` for the tests. If you are running the UI locally, set `LOCAL_UI=true`. 
+
+From the `automation` directory:
 
 ```bash
-./render-local-env.sh [branch of firecloud-automated-testing] [vault token] [env] [service root]
+(optional: LOCAL_UI=true) ./render-local-env.sh [branch of firecloud-automated-testing] [vault token] [env] [service root]
 ```
 
 **Arguments:** (arguments are positional)
@@ -70,7 +72,7 @@ If you are planning on running the firecloud ui locally, add the local_ui param 
 
 #### Using a local UI
 
-Set `LOCAL_UI=true` before calling `render-local-env.sh`.   When starting your UI, run:
+When starting your UI, run:
 
 ```bash
 FIAB=true ./config/docker-rsync-local-ui.sh
