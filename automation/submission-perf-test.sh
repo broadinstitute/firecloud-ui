@@ -169,47 +169,48 @@ if [ $ENV = "alpha" ]; then
     test1=$submissionID
     echo "$test1"
 
-    #Monitor the progress of the OneOff submission
-    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
-
-   i=1
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
-
-    do
-            echo $i
-            sleep 10m
-            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
-            ((i++))
-    done
-
-    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
-
-    else
-      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-      exit 1
-    fi
+#    #Monitor the progress of the OneOff submission
+#    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
+#
+#   i=1
+#   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
+#
+#    do
+#            echo $i
+#            sleep 10m
+#            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+#            ((i++))
+#    done
+#
+#    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+#      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
+#
+#    else
+#      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+#      exit 1
+#    fi
 ##########################################################################################
    #Monitor the progress of the rest of submissions
 
-   # [ "$i" -le 30 ]
+   j=1
    echo "$submissionA"
    echo "$submissionB"
    echo "$submissionD"
    echo "$submissionE"
    echo "$submissionG"
-   while [ "$submissionA" != "Done" ]  && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
+   until [[ "$submissionA" == "Done" ]  && [ "$submissionB" == "Done" ] && [ "$submissionD" == "Done" ] && [ "$submissionE" == "Done" ] && [ "$submissionG" == "Done" ]] && [ "$j" -le 30 ]
     do
-            i=1
-            sleep 5m
+            echo j
+            echo "hello gary"
+            sleep 1m
 
             monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
             submissionA=$submissionStatus
-            echo "Submission status: $submissionA"
+            echo "Submission A status: $submissionA"
             workflowA=$workflowsStatus
             #echo "$workflowA"
             failuresA=$workflowFailures
-            echo "Number of failed workflows: $failuresA"
+            echo "Number of failed workflows A: $failuresA"
             monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
             submissionB=$submissionStatus
             echo "$submissionB"
@@ -238,7 +239,7 @@ if [ $ENV = "alpha" ]; then
             #echo "$workflowG"
             failuresG=$workflowFailures
             echo "Number of failed workflows: $failuresG"
-            ((i++))
+            ((j++))
     done
 
     totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
