@@ -176,7 +176,7 @@ if [ $ENV = "alpha" ]; then
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
 
     do
-            echo $i
+            echo "Monitoring one-off submission, this is run number: $i"
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             ((i++))
@@ -195,7 +195,7 @@ if [ $ENV = "alpha" ]; then
    j=1
    until [[ "$submissionA" == "Done" ]  && [ "$submissionB" == "Done" ] && [ "$submissionD" == "Done" ] && [ "$submissionE" == "Done" ] && [ "$submissionG" == "Done" ]] && [ "$j" -le 30 ]
     do
-            echo j
+            echo "Monitoring the other 5 submissions, this is run number: $j"
             sleep 5m
 
             monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
