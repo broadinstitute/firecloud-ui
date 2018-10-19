@@ -2,7 +2,7 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
-set -x
+# set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -191,12 +191,17 @@ if [ $ENV = "alpha" ]; then
     fi
 ##########################################################################################
    #Monitor the progress of the rest of submissions
-   i=1
+
    # [ "$i" -le 30 ]
+   echo "$submissionA"
+   echo "$submissionB"
+   echo "$submissionD"
+   echo "$submissionE"
+   echo "$submissionG"
    while [ "$submissionA" != "Done" ]  && [ "$submissionB" != "Done" ] && [ "$submissionD" != "Done" ] && [ "$submissionE" != "Done" ] && [ "$submissionG" != "Done" ] && [ "$i" -le 30 ]
     do
-            echo $i
-            sleep 10m
+            i=1
+            sleep 5m
 
             monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
             submissionA=$submissionStatus
@@ -236,14 +241,14 @@ if [ $ENV = "alpha" ]; then
             ((i++))
     done
 
-  totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
-   if [ "$totalFailures" -le 10 ]; then
-    echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
-       exit 0
-   else
-    echo "Nightly Alpha test failed with $totalFailures total failed workflows"
-       exit 1
-   fi
+    totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
+    if [ "$totalFailures" -le 10 ]; then
+        echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
+        exit 0
+    else
+        echo "Nightly Alpha test failed with $totalFailures total failed workflows"
+        exit 1
+    fi
 
 #########################################################################################
 elif [ $ENV = "staging" ]; then
