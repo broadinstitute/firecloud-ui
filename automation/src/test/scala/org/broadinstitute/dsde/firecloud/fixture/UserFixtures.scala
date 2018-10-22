@@ -50,7 +50,6 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     */
   def withSignInNewUser(user: Credentials)
                        (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
-    withCleanUp {
       withSignIn(user, new TermsOfServicePage) { tosPage =>
         register cleanUp executeAsyncScript("window.rejectToS(arguments[arguments.length - 1])")
 
@@ -60,7 +59,6 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
 
         testCode(registrationPage)
 
-      }
     }
   }
 
