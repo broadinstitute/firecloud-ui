@@ -2,7 +2,6 @@
 # Script to start perf test in $ENV, authorize users with NIH
 
 set -e
-set -x
 
 ENV=$1
 VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
@@ -96,8 +95,7 @@ findSubmissionID() {
 
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
-    submissionId=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
-
+    submissionID=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
 }
 
 monitorSubmission() {
@@ -110,6 +108,7 @@ monitorSubmission() {
 
     submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
     workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
+    workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '[.workflows[] | select(.status == "Failed")] | length')
 }
 
 # check if user needs a token refresh
@@ -130,39 +129,117 @@ monitorSubmission() {
 
 if [ $ENV = "alpha" ]; then
     launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
+    testA=$submissionID
+    echo "$testA"
+    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+    submissionA=$submissionStatus
     sleep 2m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
+    testB=$submissionID
+    echo "$testB"
+    monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
+    submissionB=$submissionStatus
     sleep 1m
     launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
+    testD=$submissionID
+    echo "$testD"
+    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
+    submissionD=$submissionStatus
     sleep 2m
     launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
+    testE=$submissionID
+    echo "$testE"
+    monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
+    submissionE=$submissionStatus
     sleep 1m
     launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
+    testG=$submissionID
+    echo "$testG"
+    monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
+    submissionG=$submissionStatus
+    sleep 1m
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
-
-    #Monitor the progress of the perf test
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
-    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+    test1=$submissionID
+    echo "$test1"
 
+ #Monitor the progress of the OneOff submission
+    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
 
    i=1
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 19 ]
 
     do
-            echo $i
+            echo "Monitoring one-off submission, this is run number: $i"
             sleep 10m
             monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
             ((i++))
     done
 
     if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
-      echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
-      exit 0
+      echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
+
     else
       echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
       exit 1
     fi
+##########################################################################################
+ #Monitor the progress of the rest of submissions
 
+   j=1
+   until [[ $submissionA == "Done"   &&  $submissionB == "Done"  &&  $submissionD == "Done"  &&  $submissionE == "Done"  &&  $submissionG == "Done" ]] && [ "$j" -le 30 ]
+    do
+            echo "Monitoring the other 5 submissions, this is run number: $j"
+            sleep 5m
+
+            monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+            submissionA=$submissionStatus
+            echo "Submission A status: $submissionA"
+            workflowA=$workflowsStatus
+            failuresA=$workflowFailures
+            echo "Number of failed workflows A: $failuresA"
+            monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
+            submissionB=$submissionStatus
+            echo "Submission B status: $submissionB"
+            workflowB=$workflowsStatus
+            failuresB=$workflowFailures
+            echo "Number of failed workflows B: $failuresB"
+            monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
+            submissionD=$submissionStatus
+            echo "Submission D status: $submissionD"
+            workflowD=$workflowsStatus
+            failuresD=$workflowFailures
+            echo "Number of failed workflows D: $failuresD"
+            monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
+            submissionE=$submissionStatus
+            echo "Submission E status: $submissionE"
+            workflowE=$workflowsStatus
+            failuresE=$workflowFailures
+            echo "Number of failed workflows E: $failuresE"
+            monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
+            submissionG=$submissionStatus
+            echo "Submission G status: $submissionG"
+            workflowG=$workflowsStatus
+            failuresG=$workflowFailures
+            echo "Number of failed workflows G: $failuresG"
+            ((j++))
+    done
+
+    totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
+    if [ "$totalFailures" -le 10 ]; then
+        echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
+        exit 0
+    else
+        echo "Nightly Alpha test failed with $totalFailures total failed workflows"
+        exit 1
+    fi
+
+#########################################################################################
 elif [ $ENV = "staging" ]; then
     launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
     launchSubmission ron.weasley@test.firecloud.org staging-submission-perf-test-b Perf-Test-B-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
@@ -177,3 +254,4 @@ else
 fi
 
 printf "\nDone"
+
