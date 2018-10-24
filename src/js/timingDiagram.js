@@ -14,8 +14,9 @@ function addDataTableRow(dataTable, callName, callPartName, startDate, endDate, 
     if (startDate <= endDate) {
         newRow = dataTable.addRow([callName, callPartName, startDate, endDate]);
         dataTable.setRowProperty(newRow, "ancestry", ancestry);
-    } else {
-        console.warn("Unable to add '" + callName + "'s entry: '" + callPartName + "' because start-time '" + startDate + "'' is greater than end-time '" + endDate + "'");
+    // DA: commented out for FireCloud - these are scary to users and not helpful for us to debug issues.
+    // } else {
+    //     console.error("Unable to add '" + callName + "'s entry: '" + callPartName + "' because start-time '" + startDate + "'' is greater than end-time '" + endDate + "'");
     }
 }
 
@@ -53,8 +54,7 @@ function parseMetadata(data, dataTable, ancestry) {
             callLqn = ( callStatus == "Done" && attempt == 1 ? callLqn : callLqn + ".retry-" + attempt);
 
             // Remove the workflow name
-            // DA: this line commented out for FireCloud.
-            // callLqn = callLqn.replace(new RegExp("^" + workflowName + "\\."), "");
+            callLqn = callLqn.replace(new RegExp("^" + workflowName + "\\."), "");
 
             var callFqn;
             if (ancestry.length == 0) {
@@ -234,6 +234,9 @@ function timingDiagram(element, response, workflowName, height) {
 
     chart.draw(chartView, options);
 
+    // DA: removed the custom selectHandler for toggling subworkflows open/closed. FireCloud currently does not retrieve subworkflow
+    // data, so this feature is a noop.
+    /*
     google.visualization.events.addListener(chart, 'select', selectHandler);
 
     function selectHandler(e) {
@@ -245,6 +248,7 @@ function timingDiagram(element, response, workflowName, height) {
             $( ".google-visualization-tooltip" ).remove();
         }
     }
+    */
 }
 // ======================= END code modified from Cromwell for FireCloud environment =======================
 
