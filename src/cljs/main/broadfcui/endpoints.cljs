@@ -538,3 +538,17 @@
 (def import-status
   {:path "/profile/importstatus"
    :method :get})
+
+
+(defn tos-get-status [on-done]
+  (ajax/call-tos
+   (str "?appid=" (config/tos-application-name) "&tosversion=" (config/tos-version))
+   {:on-done on-done}))
+
+(defn tos-set-status [accepted? on-done]
+  (ajax/call-tos
+   {:method :post
+    :on-done on-done
+    :data (utils/->json-string {:appid (config/tos-application-name)
+                                :tosversion (config/tos-version)
+                                :accepted accepted?})}))

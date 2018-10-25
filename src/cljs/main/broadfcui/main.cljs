@@ -196,7 +196,8 @@
      (set! (.-forceSignedIn js/window)
            (auth/force-signed-in {:on-sign-in #(swap! state update :user-status conj :signed-in)
                                   :on-sign-out #(swap! state update :user-status disj :signed-in)
-                                  :on-error #(swap! state assoc :force-sign-in-error %)})))
+                                  :on-error #(swap! state assoc :force-sign-in-error %)}))
+     (set! (.-rejectToS js/window) auth/reject-tos))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
@@ -231,6 +232,8 @@
                             :on-change (fn [signed-in? token-saved?]
                                          (swap! state update :user-status
                                                 #(-> %
+                                                     ((if signed-in? identity disj)
+                                                      :tos)
                                                      ((if signed-in? conj disj)
                                                       :signed-in)
                                                      ((if token-saved? conj disj)
@@ -256,6 +259,8 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+               (not (contains? user-status :tos))
+               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          (when (:showing-system-down-banner? @state)

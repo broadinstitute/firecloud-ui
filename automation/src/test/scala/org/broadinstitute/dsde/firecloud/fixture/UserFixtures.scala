@@ -4,7 +4,7 @@ package org.broadinstitute.dsde.firecloud.fixture
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
-import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage}
+import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage, TermsOfServicePage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
 import org.broadinstitute.dsde.workbench.config.Credentials
@@ -46,11 +46,20 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
-    * user is not registered and returns a ready RegistrationPage.
+    * user is not registered and returns a ready TermsOfServicePage.
     */
   def withSignInNewUser(user: Credentials)
-                           (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
-    withSignIn(user, new RegistrationPage)(testCode)
+                       (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
+      withSignIn(user, new TermsOfServicePage) { tosPage =>
+        register cleanUp executeAsyncScript("window.rejectToS(arguments[arguments.length - 1])")
+
+        tosPage.accept()
+
+        val registrationPage = await ready new RegistrationPage
+
+        testCode(registrationPage)
+
+    }
   }
 
 
