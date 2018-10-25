@@ -5,6 +5,10 @@
     following code, up until the END marker, is copied directly from Cromwell WITH THREE
     EXCEPTIONS. Each of the three exceptions is preceded by a comment. These comments
     all start with "DA:" and end with "for FireCloud."
+
+    The "ancestry" vars and features below relate to subworkflows, which are currently not
+    supported by FireCloud in the timing diagram. I've left all this code in place to make
+    it easy to compare to Cromwell's version of this JavaScript.
 */
 var parentWorkflowNames = [];
 var expandedParentWorkflows = [];
