@@ -7,10 +7,10 @@ object Dependencies {
   val serviceTestV = "0.13-c8c354e"
 
   val workbenchExclusions = Seq(
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-google_$scalaBinaryVersion")
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_2.12"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_2.12"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_2.12"),
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-google_2.12")
   )
 
   val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions:_*)
