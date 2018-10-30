@@ -4,13 +4,10 @@ import sbt.Keys._
 object Dependencies {
   val jacksonV = "2.9.0"
 
-  val serviceTestV = "0.12-7b3f0d6"
+  val serviceTestV = "0.13-dc0998e"
 
   val workbenchExclusions = Seq(
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-model_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-util_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_$scalaBinaryVersion"),
-    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-google_$scalaBinaryVersion")
+    ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_2.12")
   )
 
   val workbenchServiceTest: ModuleID = "org.broadinstitute.dsde.workbench" %% "workbench-service-test" % serviceTestV % "test" classifier "tests" excludeAll(workbenchExclusions:_*)
