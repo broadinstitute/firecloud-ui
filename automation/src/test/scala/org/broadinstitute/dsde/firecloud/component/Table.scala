@@ -133,7 +133,13 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
       val colToBeMoved = CssSelectorQuery(s"${dropdownCssQuery.queryString} [data-test-id=$header-grab-icon]").element.underlying
       val placeToMoveCol = CssSelectorQuery(s"${dropdownCssQuery.queryString} [data-test-id=$otherHeader-grab-icon]").element.underlying
       val action = new Actions(webDriver)
-      action.clickAndHold(colToBeMoved).moveToElement(placeToMoveCol).release().build().perform()
+      action.moveToElement(colToBeMoved)
+        .pause(1000)
+        .clickAndHold(colToBeMoved)
+        .pause(1000)
+        .moveToElement(placeToMoveCol)
+        .pause(1000)
+        .release().build().perform()
     }
   }
 
