@@ -183,10 +183,10 @@ if [ $ENV = "alpha" ]; then
 
     if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
       echo "One-off workflow finished within 3 hours with workflow status: $workflowsStatus"
-
+      echo "${submissionStatus}" "${workflowsStatus}" > submissionResults.txt 2>&1
     else
       echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-      echo $submissionStatus $workflowsStatus &> submissionResults.txt
+      echo "${submissionStatus}" "${workflowsStatus}" > submissionResults.txt 2>&1
       exit 1
     fi
 ##########################################################################################
@@ -234,11 +234,11 @@ if [ $ENV = "alpha" ]; then
 #    totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
 #    if [ "$totalFailures" -le 10 ]; then
 #        echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
-#        echo $totalFailures &> submissionResults.txt
+#        echo "${totalFailures}" &> submissionResults.txt 2>&1
 #        exit 0
 #    else
 #        echo "Nightly Alpha test failed with $totalFailures total failed workflows"
-#        echo $totalFailures &> submissionResults.txt
+#        echo "${totalFailures}" &> submissionResults.txt 2>&1
 #        exit 1
 #    fi
 
