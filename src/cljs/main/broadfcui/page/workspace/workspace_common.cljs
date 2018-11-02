@@ -7,6 +7,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.common.icons :as icons]
+   [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
 
@@ -47,6 +48,23 @@
 (defn config->id [config]
   (select-keys config [:namespace :name]))
 
+(defn- referenced-method-parts [config]
+  ((juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) (:methodRepoMethod config)))
+
+(defn- method-as-text [config]
+  (clojure.string/join "/" (referenced-method-parts config)))
+
+(defn- method-as-maybe-link [config]
+  (let [redacted? (:redacted? config)
+        methodRepoMethod (:methodRepoMethod config)
+        repo (:sourceRepo methodRepoMethod)
+        coldata (referenced-method-parts config)]
+    (if (or redacted? (not (= repo "agora")))
+      (apply style/render-entity coldata)
+      (let [method-id {:namespace (:methodNamespace methodRepoMethod)
+                       :name (:methodName methodRepoMethod)
+                       :snapshot-id (:methodVersion methodRepoMethod)}]
+        (links/create-internal {:href (nav/get-link :method-loader method-id)} (apply style/render-entity coldata))))))
 
 (defn method-config-selector [{:keys [data-test-id configs render-name toolbar-items]}]
   (assert configs "No configs given")
@@ -74,9 +92,10 @@
                                       (if (= repo "dockstore") "Dockstore" "FireCloud"))
                       :render (fn [repo] [:span {:style {:fontWeight 200}} repo])}
                      {:header "Method" :initial-width 800
-                      :column-data (comp (juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) :methodRepoMethod)
-                      :as-text (partial clojure.string/join "/")
-                      :render (partial apply style/render-entity)}]}
+                      :sort-by :text
+                      :as-text method-as-text
+                      :render method-as-maybe-link
+                     }]}
     :toolbar {:get-items (constantly toolbar-items)}}])
 
 
