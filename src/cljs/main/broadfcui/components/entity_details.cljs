@@ -8,6 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
 
@@ -78,7 +79,12 @@
             "agora" (list
                      (make-field :namespace "Namespace")
                      (make-field :name "Name")
-                     (make-field :snapshotId "Snapshot ID" :dropdown? true))
+                     (make-field :snapshotId "Snapshot ID" :dropdown? true
+                                 :render (fn [snapshotId]
+                                           (if redacted?
+                                            snapshotId
+                                            (let [method-id (merge entity {:snapshot-id snapshotId})]
+                                              (links/create-internal {:href (nav/get-link :method-loader method-id)} snapshotId))))))
             "dockstore" (list
                          (make-field :methodPath "Path"
                                      :render (fn [path]
