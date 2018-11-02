@@ -186,7 +186,20 @@
              [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
+             ;; if we were able to retrieve the method config (see :load-details), then display
+             ;; the config's name as a link. Else, display it as text with an informative tooltip.
+             (if (:ws-config @state)
+               (links/create-internal
+                 {:data-test-id (str "method-config-" (:methodConfigurationName submission) "-link")
+                  :style {:fontWeight "bold"}
+                  :href (nav/get-link :workspace-method-config
+                                      (:workspace-id props)
+                                      {:namespace (:methodConfigurationNamespace submission)
+                                        :name (:methodConfigurationName submission)})}
+                 (:methodConfigurationName submission))
+               [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)
+                (dropdown/render-info-box
+                  {:text "This config was updated or deleted since this submission ran."})])])
            (if (get-in submission [:submissionEntity :entityType])
              [:div {}
               (style/create-section-header "Submission Entity")
@@ -244,5 +257,16 @@
        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                   (swap! state assoc :server-response (if success?
                                                         {:submission (get-parsed-response)}
-                                                        {:error-message status-text})))}))
+                                                        {:error-message status-text}))
+                  ;; if we successfully retrieved the submission, make a call to see if the current
+                  ;; user has access to the method config on which this submission ran. The config
+                  ;; may have been updated/deleted, and therefore the user may not be able to see it.
+                  (let [submission (get-parsed-response)
+                        config-id {:namespace (:methodConfigurationNamespace submission)
+                                   :name (:methodConfigurationName submission)}]
+                    (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) config-id)
+                      :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                                 (when success?
+                                   (swap! state assoc :ws-config (get-parsed-response))))})))}))
    :component-did-mount (fn [{:keys [this]}] (this :load-details))})
