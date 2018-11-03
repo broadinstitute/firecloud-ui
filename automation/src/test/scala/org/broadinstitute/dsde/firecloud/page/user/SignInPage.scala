@@ -4,7 +4,6 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
-import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
@@ -16,6 +15,9 @@ import scala.util.{Failure, Success, Try}
 class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends FireCloudView with Page with PageUtil[SignInPage] {
 
   override def awaitReady(): Unit = {
+
+    Thread.sleep(1000)
+
     signInButton awaitReady()
     /*
      * The FireCloud not-signed-in page renders the sign-in button while it is still doing some
@@ -29,7 +31,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
      * user-status). Instead of reworking the sign-in logic for a case that (for the most part) only
      * a computer will operate fast enough to encounter, we'll just slow the computer down a little.
      */
-    Thread.sleep(500)
+    Thread.sleep(1000)
   }
 
   override val url: String = baseUrl
