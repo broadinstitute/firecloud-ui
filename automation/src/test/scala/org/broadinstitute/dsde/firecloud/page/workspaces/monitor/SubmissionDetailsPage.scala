@@ -89,7 +89,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
       if (workflowStatusLabel.isVisible) {
         val monitorTab = goToMonitorTab()
         monitorTab.openSubmission(submissionId) // link exists in "Analysis Detail" table
-        await ready (submissionStatusLabel, 5)
+        await ready (submissionStatusLabel)
       }
       if (isError) {
         Some(false)

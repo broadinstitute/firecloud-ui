@@ -162,6 +162,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
 
     withCleanBillingProject(owner) { billingProject =>
       withWorkspace(billingProject, "DataSpec_download", aclEntries = List(AclEntry(writer.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
+        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
         withSignIn(owner) { _ =>
           (defaultShown, defaultHidden) match {
             case (None, None) => Unit
