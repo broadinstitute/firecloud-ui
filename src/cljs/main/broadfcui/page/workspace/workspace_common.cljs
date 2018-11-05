@@ -49,7 +49,7 @@
   (select-keys config [:namespace :name]))
 
 (defn- referenced-method-parts [config]
-  ((juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) (:methodRepoMethod config)))
+  (replace (:methodRepoMethod config) [:sourceRepo :methodNamespace :methodName :methodPath :methodVersion]))
 
 (defn- method-as-text [config]
   (string/join "/" (referenced-method-parts config)))
