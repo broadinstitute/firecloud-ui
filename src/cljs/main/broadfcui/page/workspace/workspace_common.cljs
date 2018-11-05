@@ -52,7 +52,7 @@
   ((juxt :sourceRepo :methodNamespace :methodName :methodPath :methodVersion) (:methodRepoMethod config)))
 
 (defn- method-as-text [config]
-  (clojure.string/join "/" (referenced-method-parts config)))
+  (string/join "/" (referenced-method-parts config)))
 
 (defn- method-as-maybe-link [config]
   (let [redacted? (:redacted? config)
