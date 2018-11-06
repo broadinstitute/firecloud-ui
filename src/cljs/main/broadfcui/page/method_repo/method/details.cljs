@@ -73,7 +73,7 @@
             :ok-button
             {:text "Yes"
              :onClick #(mc-sync/flag-synchronization)
-             :href (if common/has-terra-return?
+             :href (if (common/has-terra-return?)
                      (let [{:keys [namespace name]} (:dest-config-id @state)]
                        (string/join "/" [(config/terra-url) (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name]))
                      (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state)))}}])

@@ -246,4 +246,5 @@
 (def login-scopes ["email" "profile"])
 (def storage-scopes (conj login-scopes "https://www.googleapis.com/auth/devstorage.read_only"))
 
-(def has-terra-return? (string/includes? js/window.location.search "return=terra"))
+(defn has-terra-return? []
+  (string/includes? js/window.location.search "return=terra"))

@@ -70,7 +70,7 @@
            path (subs (aget js/window "location" "hash") 1)]
        [:div {}
         [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
-         (when (and (= :registered (:registration-status @state)) (not common/has-terra-return?))
+         (when (and (= :registered (:registration-status @state)) (not (common/has-terra-return?)))
            [header/TopNavBar
             {:items (concat
                      [{:label "Workspaces"
@@ -262,7 +262,7 @@
                (not (contains? user-status :tos))
                [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
-         (when-not common/has-terra-return? (footer/render-footer))
+         (when-not (common/has-terra-return?) (footer/render-footer))
          (when (:showing-system-down-banner? @state)
            (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
                                                        "Server Unavailable")
