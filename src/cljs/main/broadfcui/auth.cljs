@@ -267,12 +267,17 @@
           (:declined :not-agreed) [:div {:style {:padding "2rem" :margin "5rem auto" :maxWidth 600
                                                  :border style/standard-line}}
                                    [:h2 {:style {:marginTop 0}} "You must accept the Terms of Service to use FireCloud."]
+                                   [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"}}
                                    (if tos
-                                     [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"}}
-                                      [markdown/MarkdownView {:text tos}]
-                                      [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                       [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]
-                                     (spinner "Loading Terms of Service..."))]
+                                     [markdown/MarkdownView {:text tos}]
+                                     (spinner
+                                       [:span {}
+                                        "Loading Terms of Service; also available "
+                                        [:a {:target "_blank"
+                                             :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
+                                        "here"] "."]))
+                                   [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
+                                    [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -282,7 +287,6 @@
              [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode error)]]]]])]))
    :component-did-mount
    (fn [{:keys [state this]}]
-     (ajax/get-google-bucket-file "tos" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
      (this :-get-status))
    :-get-status
    (fn [{:keys [props state]}]
@@ -291,12 +295,14 @@
         (fn [{:keys [success? status-code get-parsed-response]}]
           (if success?
             (on-success)
-            (case status-code
-              ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-              403 (swap! state assoc :error :declined)
-              ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-              404 (swap! state assoc :error :not-agreed)
-              (swap! state assoc :error (handle-server-error status-code get-parsed-response))))))))})
+            (do
+              (ajax/get-google-bucket-file "tosX" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
+              (case status-code
+                ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
+                403 (swap! state assoc :error :declined)
+                ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
+                404 (swap! state assoc :error :not-agreed)
+                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 
