@@ -80,11 +80,11 @@
                      (make-field :namespace "Namespace")
                      (make-field :name "Name")
                      (make-field :snapshotId "Snapshot ID" :dropdown? true
-                                 :render (fn [snapshotId]
+                                 :render (fn [snapshot-id]
                                            (if redacted?
-                                            snapshotId
-                                            (let [method-id (merge entity {:snapshot-id snapshotId})]
-                                              (links/create-internal {:href (nav/get-link :method-loader method-id)} snapshotId))))))
+                                            snapshot-id
+                                            (let [method-id (merge entity {:snapshot-id snapshot-id})]
+                                              (links/create-internal {:href (nav/get-link :method-loader method-id)} snapshot-id))))))
             "dockstore" (list
                          (make-field :methodPath "Path"
                                      :render (fn [path]
