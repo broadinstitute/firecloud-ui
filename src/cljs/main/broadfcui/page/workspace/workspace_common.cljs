@@ -55,8 +55,7 @@
   (string/join "/" (referenced-method-parts config)))
 
 (defn- method-as-maybe-link [config]
-  (let [redacted? (:redacted? config)
-        methodRepoMethod (:methodRepoMethod config)
+  (let [{:keys [redacted? methodRepoMethod]} config
         repo (:sourceRepo methodRepoMethod)
         coldata (referenced-method-parts config)]
     (if (or redacted? (not (= repo "agora")))
