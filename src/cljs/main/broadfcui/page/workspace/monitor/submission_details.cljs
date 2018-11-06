@@ -188,18 +188,22 @@
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
              ;; if we were able to retrieve the method config (see :load-details), then display
              ;; the config's name as a link. Else, display it as text with an informative tooltip.
-             (if (:ws-config @state)
-               (links/create-internal
-                 {:data-test-id (str "method-config-" (:methodConfigurationName submission) "-link")
-                  :style {:fontWeight "bold"}
-                  :href (nav/get-link :workspace-method-config
-                                      (:workspace-id props)
-                                      {:namespace (:methodConfigurationNamespace submission)
-                                        :name (:methodConfigurationName submission)})}
-                 (:methodConfigurationName submission))
-               [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)
-                (dropdown/render-info-box
-                  {:text "This config was updated or deleted since this submission ran."})])])
+             (let [config-name (:methodConfigurationName submission)
+                   config-namespace (:methodConfigurationNamespace submission)
+                   ws-config (:ws-config @state)
+                   workspace-id (:workspace-id props)]
+               (if ws-config
+                 (links/create-internal
+                   {:data-test-id (str "method-config-" config-name "-link")
+                    :style {:fontWeight "bold"}
+                    :href (nav/get-link :workspace-method-config
+                                        workspace-id
+                                        {:namespace config-namespace
+                                         :name config-name})}
+                   config-name)
+                 [:span {:style {:fontWeight 500}} config-name
+                  (dropdown/render-info-box
+                    {:text "This config was updated or deleted since this submission ran."})]))])
            (if (get-in submission [:submissionEntity :entityType])
              [:div {}
               (style/create-section-header "Submission Entity")
