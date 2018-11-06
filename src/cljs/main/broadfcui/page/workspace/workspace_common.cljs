@@ -94,8 +94,7 @@
                      {:header "Method" :initial-width 800
                       :sort-by :text
                       :as-text method-as-text
-                      :render method-as-maybe-link
-                     }]}
+                      :render method-as-maybe-link}]}
     :toolbar {:get-items (constantly toolbar-items)}}])
 
 
