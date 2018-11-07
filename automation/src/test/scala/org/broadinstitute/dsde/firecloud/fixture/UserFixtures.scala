@@ -12,7 +12,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
 import org.broadinstitute.dsde.workbench.config.Credentials
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
+import org.openqa.selenium.{OutputType, TakesScreenshot, TimeoutException, WebDriver}
 import org.scalatest.TestSuite
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.remote.Augmenter
@@ -73,10 +73,17 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     withSignIn(user, {
       // workaround for failed forceSignedIn
       var counter = 0
-      retry(Seq.fill(2)(1.seconds)) ({
+      retry(Seq.fill(2)(10.seconds)) ({
 
         logger.info(s"Open page URL ${FireCloudConfig.FireCloud.baseUrl}")
-        executeScript(s"window.location.href='${FireCloudConfig.FireCloud.baseUrl}'")
+        try {
+          new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
+          // executeScript(s"window.location.href='${FireCloudConfig.FireCloud.baseUrl}'")
+        } catch {
+          case _: TimeoutException =>
+            logger.info("Encountered TimeoutException")
+            webDriver.navigate().refresh()
+        }
 
         logger.info("sleeping 1 second")
         Thread.sleep(1000)
