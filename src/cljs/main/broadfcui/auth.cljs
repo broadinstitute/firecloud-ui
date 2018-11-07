@@ -338,6 +338,8 @@
                           (js/encodeURIComponent auth-token))
                 :on-done
                 (fn [{:keys [status-code success? get-parsed-response raw-response]}]
+                  ;; use console.warn to make sure logs are captured by selenium
+                  (js/console.warn (str "force-signed-in: <" success? "> " raw-response))
                   (if success?
                     (let [{:keys [email sub]} (get-parsed-response)
                           auth2 (clj->js

@@ -66,19 +66,26 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   private def withSignIn[T <: AuthenticatedPage](user: Credentials, page: T, scopes: Seq[String] = AuthTokenScopes.userLoginScopes)
                                                 (testCode: T => Any)
                                                 (implicit webDriver: WebDriver): Unit = {
-    withSignIn(user, {
+
+    logger.info(s"withSignIn (${user.email}) starting ...")
+    executeTestCodeWithSignIn(user, {
       // workaround for failed forceSignedIn
       var counter = 0
       retry(Seq.fill(2)(1.seconds)) ({
+        logger.info(s"withSignIn (${user.email}) opening SignInPage ...")
         new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
+        logger.info(s"withSignIn (${user.email}) executing script forceSignedIn ...")
         executeScript(s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')")
         if (counter > 0) logger.warn(s"Retrying forceSignedIn. $counter")
         counter +=1
         try {
+          logger.info(s"withSignIn (${user.email}) awaiting page ready ...")
           page.awaitReady()
+          logger.info(s"withSignIn (${user.email}) returning ready page.")
           Some(page)
         } catch {
-          case _: Throwable =>
+          case t: Throwable =>
+            logger.warn(s"withSignIn (${user.email}) errored witing for page: ${t.getMessage}")
             None
         }
       })
@@ -89,21 +96,28 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   private def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
                                                     (testCode: T => Any)
                                                     (implicit webDriver: WebDriver): Unit = {
-    withSignIn(user, {
+
+    logger.info(s"withSignInReal: ${user.email} ...")
+    executeTestCodeWithSignIn(user, {
       new SignInPage(FireCloudConfig.FireCloud.baseUrl).open.signIn(user.email, user.password)
     }, page, testCode)
   }
 
-  private def withSignIn[T <: AuthenticatedPage](user: Credentials, signIn: => Unit,
-                                                         page: T, testCode: T => Any)
-                                                        (implicit webDriver: WebDriver): Unit = {
+  private def executeTestCodeWithSignIn[T <: AuthenticatedPage](user: Credentials, signIn: => Unit,
+                                                                page: T, testCode: T => Any)
+                                                               (implicit webDriver: WebDriver): Unit = {
+
+    logger.info(s"executeTestCodeWithSignIn (${user.email}) starting ...")
     signIn
+    logger.info(s"executeTestCodeWithSignIn (${user.email}) awaiting page ready ...")
     await ready page
     logger.info(s"Login: ${user.email}. URL: ${page}")
+    logger.info(s"executeTestCodeWithSignIn (${user.email}) executing test code ...")
 
     // Don't try/finally here to prevent sign-out before capturing a failure screenshot
     testCode(page)
 
+    logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out ...")
     try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
   }
 
