@@ -338,6 +338,7 @@
                           (js/encodeURIComponent auth-token))
                 :on-done
                 (fn [{:keys [status-code success? get-parsed-response raw-response]}]
+                  (utils/log (str "force-signed-in: <" success? "> " raw-response))
                   (if success?
                     (let [{:keys [email sub]} (get-parsed-response)
                           auth2 (clj->js
