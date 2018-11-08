@@ -87,10 +87,15 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
               webDriver.navigate().refresh()
         }
 
-        // take screenshot and log console text on Login page
+        // take screenshot and log console text on Login page before execute JS script
         val date = new SimpleDateFormat("HH-mm-ss-SSS").format(new java.util.Date())
         val path = "login_page_screenshots"
         val name = s"${suiteName}_${date}"
+
+        val directory = new File(s"$path")
+        if (!directory.exists()) {
+          directory.mkdir()
+        }
 
         val screenshotFileName = s"$path/${name}.png"
         val tmpFile = new Augmenter().augment(webDriver).asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
