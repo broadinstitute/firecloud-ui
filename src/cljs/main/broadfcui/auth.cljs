@@ -296,7 +296,7 @@
           (if success?
             (on-success)
             (do
-              (ajax/get-google-bucket-file "tosX" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
+              (ajax/get-google-bucket-file "tos" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
