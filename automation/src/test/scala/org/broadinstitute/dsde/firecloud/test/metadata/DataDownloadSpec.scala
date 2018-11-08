@@ -154,7 +154,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
       withWorkspace(billingProject, "DataSpec_download", aclEntries = List(AclEntry(writer.email, WorkspaceAccessLevel.Writer))) { workspaceName =>
         api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
 
-        withWebDriver { implicit driver =>
+        withWebDriver(downloadPath) { implicit driver =>
           withSignIn(owner) { _ =>
             (defaultShown, defaultHidden) match {
               case (None, None) => Unit
@@ -167,7 +167,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
           }
         }
 
-        withWebDriver { implicit driver =>
+        withWebDriver(downloadPath) { implicit driver =>
           withSignIn(writer) { _ =>
             val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
             userHidden.foreach(dataTab.dataTable.hideColumn)
@@ -184,7 +184,7 @@ class DataDownloadSpec extends FreeSpec with ParallelTestExecution with WebBrows
           }
         }
 
-        withWebDriver { implicit driver =>
+        withWebDriver(downloadPath) { implicit driver =>
           withSignIn(owner) { _ =>
             val dataTab = new WorkspaceDataPage(billingProject, workspaceName).open
             eventually {
