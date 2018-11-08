@@ -38,21 +38,10 @@
 (defn get-url-search-param [param-name]
   (.get (js/URLSearchParams. js/window.location.search) param-name))
 
-(defn decode-base64-json [b64string]
-  (utils/parse-json-string (js/window.atob b64string) true))
-
-(defn encode-base64-json [map]
-  (js/window.btoa (utils/->json-string map)))
-
-(defn get-fence-oauth-href [oauth_host client_id provider]
-  (str oauth_host
-       "/user/oauth2/authorize?response_type=code&client_id="
-       client_id
-       "&scope=openid+google_credentials&redirect_uri="
-       (js/encodeURIComponent
-        (let [loc js/window.location]
-          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
-       "&state=" (encode-base64-json {:provider provider})))
+(defn auth-url-link [href text]
+  (if href
+    (links/create-external {:href href :target "_self"} text)
+    (spinner {:ref "pending-spinner"} "Getting link information...")))
 
 (react/defc- NihLink
   {:render
@@ -135,8 +124,8 @@
 (react/defc- FenceLink
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [fence-status error-message pending-fence-token]} @state
-           {:keys [display-name oauth-url oauth-client-id provider]} props
+     (let [{:keys [fence-status error-message pending-fence-token auth-url]} @state
+           {:keys [display-name provider]} props
            date-issued (.getTime (js/Date. (:issued_at fence-status)))
            expire-time (utils/_30-days-from-date-ms date-issued)
            expired? (< expire-time (.now js/Date))
@@ -149,8 +138,7 @@
           pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (links/create-external {:href (get-fence-oauth-href oauth-url oauth-client-id provider) :target "_self"}
-                                 "Log-In to Framework Services to link your account")
+          (auth-url-link auth-url "Log-In to Framework Services to link your account")
           :else
           (build-identity-table
            ["Username" username]
@@ -159,13 +147,12 @@
                                  [:span {:style {:color "red"}} "Expired"]
                                  [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
                                [:div {}
-                                (links/create-external {:href (get-fence-oauth-href oauth-url oauth-client-id provider) :target "_self" :style {:white-space "nowrap"}}
-                                                       "Log-In to Framework Services to re-link your account")]]]))]))
+                                (auth-url-link auth-url "Log-In to Framework Services to re-link your account")]]]))]))
    :component-did-mount
    (fn [{:keys [this props locals state after-update]}]
      (let [fence-token (get-url-search-param "code")
            base64-oauth-state (get-url-search-param "state")
-           oauth-state (when (not-empty base64-oauth-state) (decode-base64-json base64-oauth-state))]
+           oauth-state (when (not-empty base64-oauth-state) (utils/decode-base64-json base64-oauth-state))]
        (if (and (= (:provider props) (:provider oauth-state)) (not-empty fence-token))
          (do
            (swap! state assoc :pending-fence-token fence-token)
@@ -173,7 +160,8 @@
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
            (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))))
-     (this :load-fence-status))
+     (this :load-fence-status)
+     (this :get-auth-url))
    :component-did-update
    (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
@@ -186,6 +174,16 @@
         (cond
           success? (swap! state assoc :fence-status (get-parsed-response))
           (= status-code 404) (swap! state assoc :fence-status :none)
+          :else
+          (swap! state assoc :error-message status-text)))))
+   :get-auth-url
+   (fn [{:keys [props state]}]
+     (endpoints/get-provider-auth-url
+      (:provider props)
+      (fn [{:keys [success? status-code status-text get-parsed-response]}]
+        (cond
+          success? (swap! state assoc :auth-url (:url (get-parsed-response)))
+          (= status-code 404) (swap! state assoc :fence-status "Failed to retrieve Fence link")
           :else
           (swap! state assoc :error-message status-text)))))
    :link-fence-account
@@ -307,13 +305,9 @@
              [:h3 {} "Identity & External Servers"]
              [NihLink (select-keys props [:nih-token])]
              [FenceLink {:provider "fence"
-                         :display-name "DCP Framework Services by University of Chicago"
-                         :oauth-url (config/dcp-fence-url)
-                         :oauth-client-id (config/dcp-fence-client-id)}]
+                         :display-name "DCP Framework Services by University of Chicago"}]
              [FenceLink {:provider "dcf-fence"
-                         :display-name "DCF Framework Services by University of Chicago"
-                         :oauth-url (config/dcf-fence-url)
-                         :oauth-client-id (config/dcf-fence-client-id)}]])]]
+                         :display-name "DCF Framework Services by University of Chicago"}]])]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
