@@ -268,16 +268,16 @@
                                                  :border style/standard-line}}
                                    [:h2 {:style {:marginTop 0}} "You must accept the Terms of Service to use FireCloud."]
                                    [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"}}
-                                   (if tos
-                                     [markdown/MarkdownView {:text tos}]
-                                     (spinner
-                                       [:span {}
-                                        "Loading Terms of Service; also available "
-                                        [:a {:target "_blank"
-                                             :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
-                                        "here"] "."]))
-                                   [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                    [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
+                                    (if tos
+                                      [markdown/MarkdownView {:text tos}]
+                                      (spinner
+                                        [:span {}
+                                         "Loading Terms of Service; also available "
+                                         [:a {:target "_blank"
+                                              :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
+                                         "here"] "."]))
+                                    [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
