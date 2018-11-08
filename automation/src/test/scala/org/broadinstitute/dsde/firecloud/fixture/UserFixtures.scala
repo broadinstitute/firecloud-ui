@@ -119,7 +119,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
 
     logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out ...")
     try page.signOut() catch nonFatalAndLog(s"Non-Fatal-Error logging out user: ${user.email}")
-    try webDriver.close() catch nonFatalAndLog(s"Non-Fatal-Error WebDriver close browser")
+    try webDriver.navigate().refresh() catch nonFatalAndLog(s"Non-Fatal-Error WebDriver refresh browser")
   }
 
 }
