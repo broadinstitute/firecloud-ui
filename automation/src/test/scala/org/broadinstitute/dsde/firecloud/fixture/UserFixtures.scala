@@ -155,8 +155,9 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     // Don't try/finally here to prevent sign-out before capturing a failure screenshot
     testCode(page)
 
-    logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out ...")
+    logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out and closing browser ...")
     try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
+    try webDriver.close() catch nonFatalAndLog
   }
 
 }
