@@ -285,7 +285,7 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
     }
   }
 
-  def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
+  private def checkNoAccess(user: Credentials, projectName: String, workspaceName: String): Unit = {
     withWebDriver { implicit driver =>
       withSignIn(user) { workspaceListPage =>
         // Not in workspace list
@@ -298,7 +298,7 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
     }
   }
 
-  def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
+  private def checkVisibleNotAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
     withWebDriver { implicit driver =>
       withSignIn(user) { workspaceListPage =>
         // Looks restricted; implies in workspace list
@@ -318,7 +318,7 @@ class AuthDomainOwnersSpec extends FreeSpec /*with ParallelTestExecution*/ with 
     }
   }
 
-  def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
+  private def checkVisibleAndAccessible(user: Credentials, projectName: String, workspaceName: String): Unit = {
     withWebDriver { implicit driver =>
       withSignIn(user) { workspaceListPage =>
         // Looks restricted; implies in workspace list

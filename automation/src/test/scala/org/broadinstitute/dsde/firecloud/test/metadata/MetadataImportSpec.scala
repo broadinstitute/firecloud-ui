@@ -67,10 +67,17 @@ class MetadataImportSpec extends FreeSpec with ParallelTestExecution with WebBro
             withSignIn(owner) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers1, workspaceDataTab)
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1 }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
+              }
               createAndImportMetadataFile(headers2, workspaceDataTab)
-                eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2 }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers2 }
@@ -95,19 +102,36 @@ class MetadataImportSpec extends FreeSpec with ParallelTestExecution with WebBro
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers1, workspaceDataTab)
               workspaceDataTab.dataTable.hideColumn("test1")
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1 }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual headers1
+              }
               workspaceDataTab.dataTable.hideColumn("test2")
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(owner) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers2, workspaceDataTab)
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "test3") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test2", "test3")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test3") }
@@ -133,17 +157,32 @@ class MetadataImportSpec extends FreeSpec with ParallelTestExecution with WebBro
               withSignIn(owner) { _ =>
                 val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
                 createAndImportMetadataFile(headers1, workspaceDataTab)
-                eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1") }
+                eventually {
+                  workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
+                }
               }
+            }
+
+            withWebDriver { implicit driver =>
               withSignIn(reader) { _ =>
                 val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-                eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1") }
+                eventually {
+                  workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
+                }
               }
+            }
+
+            withWebDriver { implicit driver =>
               withSignIn(owner) { _ =>
                 val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
                 createAndImportMetadataFile(headers2, workspaceDataTab)
-                eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4") }
+                eventually {
+                  workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4")
+                }
               }
+            }
+
+            withWebDriver { implicit driver =>
               withSignIn(reader) { _ =>
                 val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
                 eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test4") }
@@ -169,18 +208,33 @@ class MetadataImportSpec extends FreeSpec with ParallelTestExecution with WebBro
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers1, workspaceDataTab)
               workspaceDataTab.dataTable.hideColumn("test1")
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               workspaceDataTab.dataTable.hideColumn("test4")
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(owner) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               createAndImportMetadataFile(headers2, workspaceDataTab)
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4", "test5") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test4", "test5")
+              }
             }
+          }
+
+          withWebDriver { implicit driver =>
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
               eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "test5") }

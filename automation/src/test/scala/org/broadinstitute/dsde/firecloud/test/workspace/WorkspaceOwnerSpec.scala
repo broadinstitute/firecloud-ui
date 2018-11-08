@@ -121,6 +121,9 @@ class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matche
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 detailPage.share(user2.email, "READER")
               }
+            }
+
+            withWebDriver { implicit driver =>
               withSignIn(user2) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                eventually { detailPage2.readAccessLevel() shouldBe WorkspaceAccessLevel.Reader }
@@ -140,6 +143,9 @@ class WorkspaceOwnerSpec extends FreeSpec with ParallelTestExecution with Matche
                 val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
                 detailPage.share(user2.email, "READER", share = true)
               }
+            }
+
+            withWebDriver { implicit driver =>
               withSignIn(user2) { listPage2 =>
                 val detailPage2 = listPage2.enterWorkspace(billingProject, workspaceName)
                 eventually { detailPage2.hasShareButton shouldBe true }

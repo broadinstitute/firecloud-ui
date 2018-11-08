@@ -244,18 +244,19 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
             method, SimpleMethodConfig.configNamespace, methodName, 1,
             SimpleMethodConfig.inputs, SimpleMethodConfig.outputs, MethodData.SimpleMethod.rootEntityType)
 
+          // TODO: avoid using var?
+          var submissionId: String = ""
+
           withWebDriver { implicit driver =>
-
-            // TODO: avoid using var?
-            var submissionId: String = ""
-
             // as owner, launch a submission
             withSignIn(owner) { _ =>
               val methodConfigDetailsPage = new WorkspaceMethodConfigDetailsPage(billingProject, workspaceName, SimpleMethodConfig.configNamespace, methodName).open
               val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(MethodData.SimpleMethod.rootEntityType, testData.participantId, "", shouldUseCallCaching)
               submissionId = submissionDetailsPage.getSubmissionId
             }
+          }
 
+          withWebDriver { implicit driver =>
             // as reader, view submission details and validate the abort button doesn't appear
             withSignIn(reader) { _ =>
               withClue("submissionId as returned by owner block: ") {
