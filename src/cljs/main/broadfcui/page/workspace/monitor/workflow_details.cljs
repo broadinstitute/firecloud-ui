@@ -33,6 +33,10 @@
                                     :link-label link-label)]
      (str gcs-uri))))
 
+(defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionEvents" "executionStatus" "callCaching:hit"
+                                    "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission"
+                                    "submittedFiles:inputs" "workflowLog" "workflowName" "workflowRoot"])
+
 (defn getTimingDiagramHeight [chartContainer]
   (let [e (-> chartContainer (.-childNodes)
               (aget 0) (.-childNodes)
@@ -224,7 +228,7 @@
         (endpoints/call-ajax-orch
           {:endpoint
            (endpoints/get-workflow-details
-             (:workspace-id props) (:submission-id props) (:workflow-id props))
+             (:workspace-id props) (:submission-id props) (:workflow-id props) default-metadata-includes)
            :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                       (swap! state assoc :server-response
                              {:success? success?
@@ -362,7 +366,7 @@
      (endpoints/call-ajax-orch
       {:endpoint
        (endpoints/get-workflow-details
-        (:workspace-id props) (:submission-id props) (:workflow-id props))
+        (:workspace-id props) (:submission-id props) (:workflow-id props) default-metadata-includes)
        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :metadata-response
                          {:success? success?
