@@ -305,7 +305,27 @@
                   [Failures {:data failures}])]])
             (:data props)))]))})
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workflow-cost workspace-id gcs-path-prefix]
+(react/defc- WorkflowCost
+  {:render
+   (fn [{:keys [state props]}]
+     (let [cost-response (:cost-response @state)
+           workflow-cost (:response cost-response)
+           rendered-cost (if cost-response
+                           (moncommon/render-cost workflow-cost)
+                           (spinner {:style {:fontSize "1rem" :margin 0}} "Loading..."))]
+         (create-field "Total Run Cost" rendered-cost)))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint
+       (endpoints/get-workflow-cost
+        (:workspace-id props) (:submission-id props) (:workflow-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (swap! state assoc :cost-response
+                         {:success? success?
+                          :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
+
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -315,7 +335,9 @@
      (create-field "Workflow ID" (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
      (let [status (workflow "status")]
        (create-field "Status" (moncommon/icon-for-wf-status status) status))
-     (create-field "Total Run Cost" (moncommon/render-cost workflow-cost))
+     [WorkflowCost {:workspace-id workspace-id
+                    :submission-id submission-id
+                    :workflow-id (workflow "id")}]
      (when-let [submission (workflow "submission")]
        (create-field "Submitted" (moncommon/render-date submission)))
      (when-let [start (workflow "start")]
@@ -339,15 +361,12 @@
 (react/defc- WorkflowDetails
   {:render
    (fn [{:keys [state props]}]
-     (let [metadata-response (:metadata-response @state)
-           cost-response (:cost-response @state)]
+     (let [metadata-response (:metadata-response @state)]
        (cond
          (nil? metadata-response)
          (spinner "Loading workflow details...")
          (not (:success? metadata-response))
          (style/create-server-error-message (:response metadata-response))
-         (nil? cost-response)
-         (spinner "Loading workflow cost...")
          :else
          ;; generate this workflow's GCS path prefix
          ;; subworkflows receive them as props from parent workflows
@@ -355,8 +374,7 @@
          (let [workflow-path-prefix [(:bucketName props) (:submission-id props)]]
            (render-workflow-detail (:response metadata-response) (:raw-response metadata-response)
                                    (:workflow-name props) (:submission-id props) (:use-call-cache props)
-                                   (:response cost-response) (:workspace-id props)
-                                   workflow-path-prefix)))))
+                                   (:workspace-id props) workflow-path-prefix)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -367,15 +385,7 @@
                   (swap! state assoc :metadata-response
                          {:success? success?
                           :response (if success? (get-parsed-response false) status-text)
-                          :raw-response raw-response}))})
-     (endpoints/call-ajax-orch
-      {:endpoint
-       (endpoints/get-workflow-cost
-        (:workspace-id props) (:submission-id props) (:workflow-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (swap! state assoc :cost-response
-                         {:success? success?
-                          :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
+                          :raw-response raw-response}))}))})
 
 
 (defn render [props]
