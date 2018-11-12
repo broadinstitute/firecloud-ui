@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :refer [login-scopes]]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
@@ -313,7 +314,9 @@
    :render
    (fn [{:keys [this state]}]
      [:div {:style {:display (when (:hidden? @state) "none")
-                    :padding "1ex 1em" :backgroundColor "#fda" :color "#530" :fontSize "80%"}}
+                    :font-weight "bold"
+                    :padding "1ex 1em" :backgroundColor (:state-exception style/colors) :color "#222" :fontSize "100%"}}
+      [:span {:style {:margin-right "10px"}} [icons/ExceptionIcon {:size 18}]]
       "Your offline credentials are missing or out-of-date."
       " Your workflows may not run correctly until they have been refreshed."
       " " [:a {:href "javascript:;" :onClick #(this :-re-auth)} "Refresh now..."]])
