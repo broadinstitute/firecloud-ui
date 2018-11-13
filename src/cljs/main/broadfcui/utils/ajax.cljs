@@ -139,3 +139,15 @@
    (call (assoc arg-map
            :url (str (config/tos-url) "/v1/user/response" query)
            :headers (merge (@get-bearer-token-header) content-type=json)))))
+
+(defn extract-error-message
+  ([get-parsed-response status-text status-code] (extract-error-message get-parsed-response status-text status-code []))
+  ([get-parsed-response status-text status-code key-path]
+    (let [default-error (str status-code " " status-text)
+          response (try
+                     (get-parsed-response)
+                     (catch js/Exception e {:message default-error}))]
+      (or
+        (if (not-empty key-path) (get-in response key-path))
+        (:message response)
+        (default-error)))))
