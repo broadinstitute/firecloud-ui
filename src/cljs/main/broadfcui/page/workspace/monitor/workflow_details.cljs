@@ -33,9 +33,12 @@
                                     :link-label link-label)]
      (str gcs-uri))))
 
-(defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionEvents" "executionStatus" "callCaching:hit"
+(defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionStatus" "callCaching:hit"
                                     "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission"
                                     "submittedFiles:inputs" "workflowLog" "workflowName" "workflowRoot"])
+
+(defonce metadata-timing-includes ["attempt" "description" "end" "endTime" "executionEvents" "executionStatus"
+                                   "shardIndex" "start" "startTime" "workflowName"])
 
 (defn getTimingDiagramHeight [chartContainer]
   (let [e (-> chartContainer (.-childNodes)
@@ -86,34 +89,65 @@
                                :filterable? false}
                     :columns (if (:call-detail? props) columns (cons task-column columns))}}])])])})
 
-(react/defc- WorkflowTiming
+(react/defc- WorkflowTimingDiagram
+  {:render
+    (fn [{:keys [props state refs]}]
+      (let [{:keys [error? expanded? metadata-response]} @state
+            {:keys [workspace-id submission-id workflow]} props
+            workflow-name (workflow "workflowName")
+            workflow-id (workflow "id")]
+        (cond
+          (nil? metadata-response)
+            (spinner "Loading timing diagram...")
+          (not (:success? metadata-response))
+            (style/create-inline-error-message (str "Error loading timing data: " (:response metadata-response)))
+          :else
+            (let [data (:raw-response metadata-response)]
+              [:div {}
+               (if error?
+                (style/create-inline-error-message "Error loading charts.")
+                [ScriptLoader
+                  {:on-error #(swap! state assoc :error? true)
+                  :on-load (fn []
+                              (js/google.charts.load "current" (clj->js {"packages" ["timeline"]}))
+                              (js/google.charts.setOnLoadCallback
+                              (fn []
+                                (let [chart-container (@refs "chart-container")]
+                                  (.timingDiagram js/window chart-container data workflow-name 100)
+                                  (let [height (getTimingDiagramHeight chart-container)]
+                                    (.timingDiagram js/window chart-container data workflow-name (+ 75 height)))))))
+                  :path "https://www.gstatic.com/charts/loader.js"}])
+              [:div {:ref "chart-container" :style {:paddingTop "0.5rem"}}]]))))
+   :component-did-mount
+    (fn [{:keys [props state]}]
+      (let [{:keys [workspace-id submission-id workflow]} props
+            workflow-name (workflow "name")
+            workflow-id (workflow "id")]
+        (endpoints/call-ajax-orch
+          {:endpoint
+           (endpoints/get-workflow-details workspace-id submission-id workflow-id metadata-timing-includes)
+           :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                      (swap! state assoc :metadata-response
+                             {:success? success?
+                              :response (if success? (get-parsed-response false) status-text)
+                              :raw-response raw-response}))})))})
+
+(react/defc- WorkflowTimingContainer
   {:render
    (fn [{:keys [props state refs]}]
-     (let [{:keys [error? expanded?]} @state
-           {:keys [label data]} props]
+     (let [{:keys [expanded?]} @state
+           {:keys [workspace-id submission-id workflow label]} props]
        [:div {}
-        (create-field
-         label
-         (if (empty? data)
-           "Not Available"
-           (links/create-internal {:onClick #(swap! state update :expanded? not)}
-             (if expanded? "Hide" "Show"))))
-        (when expanded?
-          [:div {}
-           (if error?
-             (style/create-server-error-message "Error loading charts.")
-             [ScriptLoader
-              {:on-error #(swap! state assoc :error? true)
-               :on-load (fn []
-                          (js/google.charts.load "current" (clj->js {"packages" ["timeline"]}))
-                          (js/google.charts.setOnLoadCallback
-                           (fn []
-                             (let [chart-container (@refs "chart-container")]
-                               (.timingDiagram js/window chart-container data workflow-name 100)
-                               (let [height (getTimingDiagramHeight chart-container)]
-                                 (.timingDiagram js/window chart-container data workflow-name (+ 75 height)))))))
-               :path "https://www.gstatic.com/charts/loader.js"}])
-           [:div {:ref "chart-container" :style {:paddingTop "0.5rem"}}]])]))})
+        (create-field label
+          (links/create-internal {:onClick #(swap! state update :expanded? not)}
+            (if expanded? "Hide" "Show")))
+        ;; use expanded? to show/hide the WorkflowTimingDiagram component via the DOM
+        [:div {:myattr "whereami" :style {:display (if expanded? "block" "none")}}
+          (when (some? expanded?)
+            ;; as long as the user has clicked to show the WorkflowTimingDiagram at least once,
+            ;; render it. After the first render, show/hide it via the DOM so we don't trigger
+            ;; its ajax call more than  once.
+            [WorkflowTimingDiagram (utils/restructure workspace-id submission-id workflow)])]]))})
 
 (defn- backend-logs [data workspace-id]
   (when-let [log-map (data "backendLogs")]
@@ -200,7 +234,7 @@
                    :backgroundColor (:background-light style/colors)}}
      (create-field "Subworkflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
      (when (seq (workflow "calls"))
-       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
+       [WorkflowTimingContainer (merge {:label "Workflow Timing"} (utils/restructure workspace-id submission-id workflow))])
      (when-let [failures (workflow "failures")]
        [Failures {:data failures}])
      (when (seq (workflow "calls"))
@@ -331,7 +365,7 @@
      (when-let [workflowLog (workflow "workflowLog")]
        (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))
      (when (seq (workflow "calls"))
-       [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
+       [WorkflowTimingContainer (merge {:label "Workflow Timing"} (utils/restructure workspace-id submission-id workflow))])
      (when-let [failures (workflow "failures")]
        [Failures {:data failures}])
      (when (seq (workflow "calls"))
