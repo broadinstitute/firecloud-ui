@@ -142,7 +142,7 @@
           (links/create-internal {:onClick #(swap! state update :expanded? not)}
             (if expanded? "Hide" "Show")))
         ;; use expanded? to show/hide the WorkflowTimingDiagram component via the DOM
-        [:div {:myattr "whereami" :style {:display (if expanded? "block" "none")}}
+        [:div {:style {:display (if expanded? "block" "none")}}
           (when (some? expanded?)
             ;; as long as the user has clicked to show the WorkflowTimingDiagram at least once,
             ;; render it. After the first render, show/hide it via the DOM so we don't trigger
