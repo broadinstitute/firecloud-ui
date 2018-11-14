@@ -148,6 +148,6 @@
                      (get-parsed-response)
                      (catch js/Exception e {:message default-error}))]
       (or
-        (if (not-empty key-path) (get-in response key-path))
+        (when (seq key-path) (get-in response key-path))
         (:message response)
-        (default-error)))))
+        default-error))))
