@@ -142,8 +142,8 @@
           (str "Malformed query parameters: " query-parameters))
   {:path (str "/workspaces/" (id-path workspace-id) "/entityQuery/" type "?"
               (string/join "&" (keep (fn [[k v]]
-                                               (some->> v str not-empty (str k "=")))
-                                             query-parameters)))
+                                       (some->> v str not-empty (str k "=")))
+                                     query-parameters)))
    :method :get})
 
 (defn get-entities-by-type [workspace-id]
