@@ -1,6 +1,7 @@
 (ns broadfcui.header
   (:require
    [dmohs.react :as react]
+   [broadfcui.common :as common]
    [broadfcui.common.style :as style]
    [broadfcui.components.foundation-dropdown :as dropdown]
    [broadfcui.nav :as nav]
@@ -34,7 +35,7 @@
             (:items props))]])})
 
 (defn create-account-dropdown []
-  (let [auth2 @user/auth2-atom]
+  (let [sign-out-item {:text "Sign Out" :dismiss #(.signOut @user/auth2-atom) :data-test-id "sign-out"}]
     (dropdown/render-dropdown-menu
      {:label [:div {:style {:borderRadius 2 :display "inline-block"
                             :backgroundColor (:background-light style/colors)
@@ -45,8 +46,10 @@
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
       :button-style {:height 32}
-      :items [{:href (nav/get-link :profile) :text "Profile"}
-              {:href (nav/get-link :groups) :text "Groups"}
-              {:href (nav/get-link :billing) :text "Billing"}
-              {:href (nav/get-link :notifications) :text "Notifications"}
-              {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id "sign-out"}]})))
+      :items (if (common/has-terra-return?)
+               [sign-out-item]
+               [{:href (nav/get-link :profile) :text "Profile"}
+                {:href (nav/get-link :groups) :text "Groups"}
+                {:href (nav/get-link :billing) :text "Billing"}
+                {:href (nav/get-link :notifications) :text "Notifications"}
+                sign-out-item])})))

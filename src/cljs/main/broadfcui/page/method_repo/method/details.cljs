@@ -1,6 +1,8 @@
 (ns broadfcui.page.method-repo.method.details
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
@@ -71,7 +73,10 @@
             :ok-button
             {:text "Yes"
              :onClick #(mc-sync/flag-synchronization)
-             :href (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state))}}])
+             :href (if (common/has-terra-return?)
+                     (let [{:keys [namespace name]} (:dest-config-id @state)]
+                       (string/join "/" [(config/terra-url) (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name]))
+                     (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state)))}}])
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem" :alignItems "flex-end"}}
          (tab-bar/render-title
           "METHOD"
