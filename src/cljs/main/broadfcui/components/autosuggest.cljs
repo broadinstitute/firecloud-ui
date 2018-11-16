@@ -11,13 +11,6 @@
 
 (def ^:private ReactAutosuggest (aget js/window "webpackDeps" "ReactAutosuggest"))
 
-;; when the user rapidly enters characters in the autosuggest input field, we fire off multiple ajax
-;; requests (assuming the autosuggest is powered by a remote url). We can receive the results for those
-;; ajax requests out of order, which results in the UI showing suggestions that don't match the current
-;; input. We use this atom to track which is the latest value input by the user, so we only show suggestions
-;; for that input.
-(defonce autosuggest-latest-input (atom false))
-
 (react/defc Autosuggest
   "One of
   :data - string suggestion possibilities
@@ -57,8 +50,15 @@
               :on-clear (when on-submit on-clear)
               :on-submit (when on-submit wrapped-on-submit))))
    :get-initial-state
+   ;; when the user rapidly enters characters in the autosuggest input field, we fire off multiple ajax
+   ;; requests (assuming the autosuggest is powered by a remote url). We can receive the results for those
+   ;; ajax requests out of order, which results in the UI showing suggestions that don't match the current
+   ;; input. We use the latest-input key to track which is the latest value input by the user, so we only
+   ;; show suggestions for that input.
    (fn [{:keys [props]}]
-     {:value (or (:value props) (:default-value props))})
+     {:value (or (:value props) (:default-value props))
+      :latest-input false
+      :ajax-result-map {}})
    :render
    (fn [{:keys [state props locals]}]
      (let [{:keys [data url service-prefix get-suggestions on-change caching? get-value suggestionsProps]} props
@@ -68,22 +68,22 @@
                              get-suggestions (fn [value]
                                                (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
                              url (fn [value]
-                                   (reset! autosuggest-latest-input value)
+                                   (swap! state assoc :latest-input value)
                                    (ajax/call-orch
                                     (str url (.-value value))
                                     {:on-done (fn [{:keys [success? get-parsed-response]}]
-                                                (swap! state assoc :suggestions
-                                                       (cond
-                                                         (not= value @autosuggest-latest-input)
-                                                           ;; search results don't match current input; don't display anything
-                                                           []
-                                                         success?
-                                                           ; don't bother keywordizing, it's just going to be converted to js
-                                                           (filterv
-                                                            (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
-                                                            (get-parsed-response false))
-                                                         :else
-                                                           [:error])))}
+                                                (let [result-map (:ajax-result-map @state)
+                                                      ajax-results (if success?
+                                                                     ; don't bother keywordizing, it's just going to be converted to js
+                                                                     (filterv
+                                                                      (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
+                                                                       (get-parsed-response false))
+                                                                     [:error])
+                                                      updated-result-map (assoc result-map value ajax-results)]
+                                                  ;; save results for this ajax request - which may not be current - to state
+                                                  (swap! state assoc :ajax-result-map updated-result-map)
+                                                  ;; extract results from state for the current input value
+                                                  (swap! state assoc :suggestions (get updated-result-map (:latest-input @state) []))))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
