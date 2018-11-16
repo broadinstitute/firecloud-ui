@@ -11,6 +11,13 @@
 
 (def ^:private ReactAutosuggest (aget js/window "webpackDeps" "ReactAutosuggest"))
 
+;; when the user rapidly enters characters in the autosuggest input field, we fire off multiple ajax
+;; requests (assuming the autosuggest is powered by a remote url). We can receive the results for those
+;; ajax requests out of order, which results in the UI showing suggestions that don't match the current
+;; input. We use this atom to track which is the latest value input by the user, so we only show suggestions
+;; for that input.
+(defonce autosuggest-latest-input (atom false))
+
 (react/defc Autosuggest
   "One of
   :data - string suggestion possibilities
@@ -61,16 +68,22 @@
                              get-suggestions (fn [value]
                                                (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
                              url (fn [value]
+                                   (reset! autosuggest-latest-input value)
                                    (ajax/call-orch
                                     (str url (.-value value))
                                     {:on-done (fn [{:keys [success? get-parsed-response]}]
                                                 (swap! state assoc :suggestions
-                                                       (if success?
-                                                         ; don't bother keywordizing, it's just going to be converted to js
-                                                         (filterv
-                                                          (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
-                                                          (get-parsed-response false))
-                                                         [:error])))}
+                                                       (cond
+                                                         (not= value @autosuggest-latest-input)
+                                                           ;; search results don't match current input; don't display anything
+                                                           []
+                                                         success?
+                                                           ; don't bother keywordizing, it's just going to be converted to js
+                                                           (filterv
+                                                            (fn [suggestion] (not (utils/seq-contains? (:remove-selected props) (get suggestion "id"))))
+                                                            (get-parsed-response false))
+                                                         :else
+                                                           [:error])))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
