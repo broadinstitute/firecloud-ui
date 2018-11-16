@@ -68,6 +68,7 @@
                              get-suggestions (fn [value]
                                                (get-suggestions (.-value value) #(swap! state assoc :suggestions %)))
                              url (fn [value]
+                                   ;; this is called in response to user keystrokes. Here, <value> represents the current user input.
                                    (swap! state assoc :latest-input value)
                                    (ajax/call-orch
                                     (str url (.-value value))
@@ -80,6 +81,9 @@
                                                                        (get-parsed-response false))
                                                                      [:error])
                                                       updated-result-map (assoc result-map value ajax-results)]
+                                                  ;; this is called in response to an ajax request returning. Here, <value> represents the argument sent to the
+                                                  ;; ajax request, and we need to look to <(:latest-input @state)> to see the current user input.
+                                                  ;;
                                                   ;; save results for this ajax request - which may not be current - to state
                                                   (swap! state assoc :ajax-result-map updated-result-map)
                                                   ;; extract results from state for the current input value
