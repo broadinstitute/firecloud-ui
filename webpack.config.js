@@ -2,6 +2,8 @@ const path = require('path');
 const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
+const envConfig = require('./config/config.json');
+
 const gitRevisionPlugin = new GitRevisionPlugin();
 
 const copyWebpackPlugin = new CopyWebpackPlugin([{
@@ -23,6 +25,8 @@ const copyWebpackPlugin = new CopyWebpackPlugin([{
 
             return content.toString()
                 .replace(/{{vtag}}/g, Date.now())
+                .replace(/{{tcellappid}}/g, envConfig.tcellappid)
+                .replace(/{{tcellapikey}}/g, envConfig.tcellapikey)
                 .replace(/{{gitversion}}/g, version)
                 .replace(/{{githash}}/g, hash);
         } else {
