@@ -381,6 +381,17 @@
    {:method :post
     :on-done on-done}))
 
+(defn get-provider-auth-url [provider on-done]
+  (ajax/call-bond
+   (str "/link/v1/" provider "/authorization-url"
+        "?scopes=openid&scopes=google_credentials"
+        "&redirect_uri="
+        (js/encodeURIComponent
+          (let [loc js/window.location]
+            (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
+        "&state=" (utils/encode-base64-json {:provider provider}))
+   {:method :get
+    :on-done on-done}))
 
 (defn get-groups [on-done]
   (call-ajax-orch
