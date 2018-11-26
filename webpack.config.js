@@ -2,21 +2,6 @@ const path = require('path');
 const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-
-let envConfig = {
-    'tcellappid': 'FCNonprod-NaVu9',
-    'tcellapikey': 'AQEBBAEkx4iE2KxNyI7Wx08EwU1ycTM7E4FMSmaibbMUQxNU6uQvuAJt7fyABAtFYSYfgEE'
-}
-try {
-    envConfig = require('./config/config.json');
-} catch (e) {
-    if (e.code !== 'MODULE_NOT_FOUND') {
-        throw e;
-    } else {
-        console.log('./config/config.json not available; defaulting to non-prod tCell values.');
-    }
-}
-
 const gitRevisionPlugin = new GitRevisionPlugin();
 
 const copyWebpackPlugin = new CopyWebpackPlugin([{
@@ -38,8 +23,6 @@ const copyWebpackPlugin = new CopyWebpackPlugin([{
 
             return content.toString()
                 .replace(/{{vtag}}/g, Date.now())
-                .replace(/{{tcellappid}}/g, envConfig.tcellappid)
-                .replace(/{{tcellapikey}}/g, envConfig.tcellapikey)
                 .replace(/{{gitversion}}/g, version)
                 .replace(/{{githash}}/g, hash);
         } else {
