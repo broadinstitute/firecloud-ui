@@ -2,7 +2,20 @@ const path = require('path');
 const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const envConfig = require('./config/config.json');
+
+let envConfig = {
+    'tcellappid': 'FCNonprod-NaVu9',
+    'tcellapikey': 'AQEBBAEkx4iE2KxNyI7Wx08EwU1ycTM7E4FMSmaibbMUQxNU6uQvuAJt7fyABAtFYSYfgEE'
+}
+try {
+    envConfig = require('./config/config.json');
+} catch (e) {
+    if (e.code !== 'MODULE_NOT_FOUND') {
+        throw e;
+    } else {
+        console.log('./config/config.json not available; defaulting to non-prod tCell values.');
+    }
+}
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
