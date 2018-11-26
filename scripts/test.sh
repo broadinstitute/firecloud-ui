@@ -24,9 +24,6 @@ docker cp package.json fcuitests_clojure-node_1:/w
 docker cp package-lock.json fcuitests_clojure-node_1:/w
 docker cp webpack.config.js fcuitests_clojure-node_1:/w
 
-docker exec fcuitests_clojure-node_1 mkdir /w/config
-docker cp config/config.json fcuitests_clojure-node_1:/w/config/config.json
-
 compose_exec clojure-node sh -c 'lein cljsbuild once 2>&1 | tee /tmp/cljsbuild.log'
 set +e
 compose_exec clojure-node grep WARNING /tmp/cljsbuild.log
