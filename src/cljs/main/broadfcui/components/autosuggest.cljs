@@ -86,8 +86,12 @@
                                                   ;;
                                                   ;; save results for this ajax request - which may not be current - to state
                                                   (swap! state assoc :ajax-result-map updated-result-map)
-                                                  ;; extract results from state for the current input value
-                                                  (swap! state assoc :suggestions (get updated-result-map (:latest-input @state) []))))}
+                                                  (let [{:keys [latest-input]} @state]
+                                                    ;; if, when this ajax request returns, we have results for the current input value,
+                                                    ;; then show the results. Else, the component elsewhere handles showing
+                                                    ;; the loading spinner.
+                                                    (when (contains? updated-result-map latest-input)
+                                                        (swap! state assoc :suggestions (get updated-result-map latest-input []))))))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
