@@ -118,7 +118,13 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     * @return Search textfield's dropdown element id
     */
   def enterOntologySearchText(text: String): Seq[String] = {
-    ontologySearch.setText(s"$text ") // appends a whitespace
+    val crit = s"$text " // appends a whitespace
+    ontologySearch.setText(crit)
+    // ontology autosuggest has a custom attribute that tracks what search criteria it is currently displaying
+    // suggestions for. Wait for the UI to catch up and display suggestions for what we just entered.
+    await condition {
+      ontologySearch.getAttribute("data-suggestions-for").exists(_.equals(crit))
+    }
     ontologySearch.getSuggestions
   }
 
