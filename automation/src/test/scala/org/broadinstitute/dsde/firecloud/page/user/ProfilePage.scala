@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
-import org.broadinstitute.dsde.firecloud.component.Button
+import org.broadinstitute.dsde.firecloud.component.{Button, Link}
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
@@ -14,6 +14,7 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val proxyGroupEmailQuery = testId("proxyGroupEmail")
   private val saveProfileButton = Button("save-profile-button")
+  private val linkAccountLink = Link("link-account")
 
   override def awaitReady(): Unit = {
     saveProfileButton.awaitVisible()
@@ -28,5 +29,10 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
       readText(proxyGroupEmailQuery).nonEmpty
     }
     readText(proxyGroupEmailQuery)
+  }
+
+  def linkFence: Unit = {
+    linkAccountLink.awaitVisible()
+    linkAccountLink.doClick()
   }
 }
