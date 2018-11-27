@@ -92,9 +92,8 @@
                                                     ;; then show the results. Else, the component elsewhere handles showing
                                                     ;; the loading spinner.
                                                     (when (contains? updated-result-map latest-input)
-                                                        (do
-                                                          (swap! state assoc :suggestions (get updated-result-map latest-input []))
-                                                          (swap! state assoc :current-suggestion-criteria (.-value latest-input)))))))}
+                                                      (utils/multi-swap! state (assoc :suggestions (get updated-result-map latest-input []))
+                                                                               (assoc :current-suggestion-criteria (.-value latest-input)))))))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
