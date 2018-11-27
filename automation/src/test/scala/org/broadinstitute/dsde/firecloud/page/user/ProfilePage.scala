@@ -20,7 +20,13 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def readProxyGroupEmail: String = {
+    // wait for the div containing the proxy group email to be visible
     await visible (proxyGroupEmailQuery, 10)
+    // wait for the proxy group email to be populated inside the div; this can happen asynchronously after the div
+    // itself is rendered
+    await condition {
+      readText(proxyGroupEmailQuery).nonEmpty
+    }
     readText(proxyGroupEmailQuery)
   }
 }

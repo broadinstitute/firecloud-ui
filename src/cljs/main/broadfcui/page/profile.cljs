@@ -281,10 +281,10 @@
             (swap! state assoc :error-message status-text)))))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/proxy-group (user/get-email))
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (swap! state assoc :userProxyGroupEmail (get-parsed-response))))}))})
-
+       :on-done (fn [{:keys [success? get-parsed-response status-code raw-response]}]
+                  (swap! state assoc :userProxyGroupEmail (if success?
+                                                            (get-parsed-response)
+                                                            (style/create-inline-error-message (str status-code ": " raw-response)))))}))})
 
 (react/defc- Page
   {:render
