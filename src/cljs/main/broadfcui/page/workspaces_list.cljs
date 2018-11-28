@@ -198,7 +198,7 @@
                       tcga-disabled-text
                       non-dbGap-disabled-text))
       :restricted? (seq auth-domain)
-      :featured?  (contains? featured-workspaces workspace-id))))
+      :featured?  (contains? (map #(select-keys % [:namespace :name]) featured-workspaces) workspace-id))))
 
 
 (react/defc- WorkspaceTable
