@@ -38,9 +38,9 @@
 (defn get-url-search-param [param-name]
   (.get (js/URLSearchParams. js/window.location.search) param-name))
 
-(defn auth-url-link [href text]
+(defn auth-url-link [href text provider]
   (if href
-    (links/create-external {:href href :target "_self" :data-test-id "link-account"} text)
+    (links/create-external {:href href :target "_self" :data-test-id provider} text)
     (spinner {:ref "pending-spinner"} "Getting link information...")))
 
 (react/defc- NihLink
@@ -138,7 +138,7 @@
           pending-fence-token
           (spinner {:ref "pending-spinner"} "Linking Framework Services account...")
           (nil? username)
-          (auth-url-link auth-url "Log-In to Framework Services to link your account")
+          (auth-url-link auth-url "Log-In to Framework Services to link your account" provider)
           :else
           (build-identity-table
            ["Username" username]
@@ -147,7 +147,7 @@
                                  [:span {:style {:color "red"}} "Expired"]
                                  [:span {:style {:color (:state-success style/colors)}} (common/format-date expire-time)])
                                [:div {}
-                                (auth-url-link auth-url "Log-In to Framework Services to re-link your account")]]]))]))
+                                (auth-url-link auth-url "Log-In to Framework Services to re-link your account" provider)]]]))]))
    :component-did-mount
    (fn [{:keys [this props locals state after-update]}]
      (let [fence-token (get-url-search-param "code")

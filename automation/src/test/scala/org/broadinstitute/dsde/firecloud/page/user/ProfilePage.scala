@@ -14,7 +14,8 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
 
   private val proxyGroupEmailQuery = testId("proxyGroupEmail")
   private val saveProfileButton = Button("save-profile-button")
-  private val linkAccountLink = Link("link-account")
+  private val fenceLink = Link("fence")
+  private val dcfFenceLink = Link("dcf-fence")
 
   override def awaitReady(): Unit = {
     saveProfileButton.awaitVisible()
@@ -32,7 +33,12 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   }
 
   def linkFence: Unit = {
-    linkAccountLink.awaitVisible()
-    linkAccountLink.doClick()
+    fenceLink.awaitVisible()
+    fenceLink.doClick()
+  }
+
+  def linkDcfFence: Unit = {
+    dcfFenceLink.awaitVisible()
+    dcfFenceLink.doClick()
   }
 }
