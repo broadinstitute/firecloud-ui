@@ -11,17 +11,6 @@ class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with La
   // 404s return the default Apache page, which has a title of "404 Not Found"
   val notFoundTitle = "404 Not Found"
 
-  def testUrl(partialUrl: String) = {
-    s"should put $partialUrl in the right place" in {
-      withWebDriver { implicit driver =>
-        driver.get(s"${FireCloudConfig.FireCloud.baseUrl}$partialUrl")
-        withClue(s"GET request to $partialUrl returned 404!!!") {
-          driver.getTitle shouldNot be(notFoundTitle)
-        }
-      }
-    }
-  }
-
   "FireCloud UI build and deploy process" - {
 
     // this test ensures that 404s always return a title of "404 Not Found". If they stop doing so, the other
@@ -35,9 +24,20 @@ class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with La
       }
     }
 
-    testUrl("tcell.js")
-    testUrl("newrelic.js")
-    testUrl("assets/favicon.ico")
+    // these tests ensure that the build/deploy process has generated files at the correct urls
+    List("tcell.js","newrelic.js","assets/favicon.ico").foreach { partialUrl =>
+
+      s"should put $partialUrl in the right place" in {
+        withWebDriver { implicit driver =>
+          driver.get(s"${FireCloudConfig.FireCloud.baseUrl}$partialUrl")
+          withClue(s"GET request to $partialUrl returned 404!!!") {
+            driver.getTitle shouldNot be(notFoundTitle)
+          }
+        }
+      }
+
+    }
+
   }
 
 }
