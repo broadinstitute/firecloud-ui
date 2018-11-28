@@ -33,7 +33,7 @@
                                     :link-label link-label)]
      (str gcs-uri))))
 
-(defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionStatus" "callCaching:hit"
+(defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionStatus" "callCaching:hit" "failures"
                                     "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission"
                                     "submittedFiles:inputs" "workflowLog" "workflowName" "workflowRoot"])
 
