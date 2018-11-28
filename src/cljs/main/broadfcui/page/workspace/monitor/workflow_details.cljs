@@ -34,11 +34,15 @@
      (str gcs-uri))))
 
 (defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionStatus" "callCaching:hit" "failures"
-                                    "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission" "subworkflowId"
-                                    "submittedFiles:inputs" "workflowLog" "workflowName" "workflowRoot"])
+                                    "id" "jobId" "start" "status" "stderr" "stdout" "submission" "subworkflowId"
+                                    "workflowLog" "workflowName" "workflowRoot"])
 
 (defonce metadata-timing-includes ["attempt" "description" "end" "endTime" "executionEvents" "executionStatus"
                                    "shardIndex" "start" "startTime" "workflowName"])
+
+(defonce metadata-inputs-includes ["submittedFiles:inputs" "inputs"])
+
+(defonce metadata-outputs-includes ["outputs"])
 
 (defn getTimingDiagramHeight [chartContainer]
   (let [e (-> chartContainer (.-childNodes)
@@ -64,42 +68,37 @@
      {:expanded false})
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [data-fn data-path workspace-id]} props
-            data (get-in data-fn data-path)]
-            (utils/log data-path)
-            (utils/log data-fn)
-            (utils/log data)
+     (let [{:keys [data-fn data-path data workspace-id]} props]
        [:div {}
         (create-field
          (:label props)
-         (if (empty? data)
-           "None"
            (links/create-internal {:onClick #(swap! state update :expanded not)}
-             (if (:expanded @state) "Hide" "Show"))))
+             (if (:expanded @state) "Hide" "Show")))
         (when (:expanded @state)
-          [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-           (let [namespace (get-in props [:workspace-id :namespace])
-                 columns [{:header "Label"
-                           :column-data #(last (string/split (key %) #"\."))}
-                          {:header "Value"
-                           :initial-width :auto
-                           :sortable? false
-                           :column-data #(display-value namespace (second %))}]
-                 task-column {:header "Task"
-                              :column-data #(second (string/split (key %) #"\."))}]
-             [Table
-              {:data data
-               :body {:style table-style/table-heavy
-                      :behavior {:reorderable-columns? false
-                                 :filterable? false}
-                      :columns (if (:call-detail? props) columns (cons task-column columns))}}]
-           )
-          ]
-        )
-       ]
-     )
-                    
-     )})
+          (cond
+            (nil? data)
+              (do
+                (data-fn) ;; trigger the request to get data
+                (spinner (str "Loading " (:label props) "..."))) ;; and show a spinner while data loads
+            (not (:success? data)) (style/create-inline-error-message (:raw-response data))
+            (empty? (get-in data (cons :response data-path))) (style/create-inline-error-message (str "No " (:label props) "."))
+            :else
+              [:div {:style {:padding "0.25em 0 0.25em 1em"}}
+              (let [namespace (get-in props [:workspace-id :namespace])
+                    columns [{:header "Label"
+                              :column-data #(last (string/split (key %) #"\."))}
+                              {:header "Value"
+                              :initial-width :auto
+                              :sortable? false
+                              :column-data #(display-value namespace (second %))}]
+                    task-column {:header "Task"
+                                  :column-data #(second (string/split (key %) #"\."))}]
+                [Table
+                  {:data (get-in data (cons :response data-path))
+                  :body {:style table-style/table-heavy
+                          :behavior {:reorderable-columns? false
+                                    :filterable? false}
+                          :columns (if (:call-detail? props) columns (cons task-column columns))}}])]))]))})
 
 (react/defc- WorkflowTimingDiagram
   {:render
@@ -237,6 +236,7 @@
 
 ;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
 ;; Only show new information
+;; TODO: update subworkflows to handle lazy-load inputs/outputs
 (defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
@@ -290,7 +290,8 @@
    (fn [{:keys [props state]}]
      (let [call-path-components (conj (:gcs-path-prefix props) (str "call-" (call-name (:label props))))
            all-call-statuses (set (map #(get % "executionStatus") (:data props)))
-           workspace-namespace (get-in props [:workspace-id :namespace])]
+           workspace-namespace (get-in props [:workspace-id :namespace])
+           {:keys [label inputs-fn inputs-data outputs-fn outputs-data]} props]
        [:div {:style {:marginTop "1em"}}
         (when (:show-operation-dialog? @state)
           [OperationDialog (:operation-dialog-props @state)])
@@ -344,8 +345,8 @@
                 (create-field "Started" (moncommon/render-date (data "start")))
                 ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
-                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true :workspace-id (:workspace-id props)}]
-                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Inputs" :data-path ["calls" label index "inputs"] :data-fn inputs-fn :data inputs-data :call-detail? true :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Outputs" :data-path ["calls" label index "outputs"] :data-fn outputs-fn :data outputs-data :call-detail? true :workspace-id (:workspace-id props)}]
                 (when-let [stdout (data "stdout")]
                   (create-field "stdout" (display-value workspace-namespace stdout (last (string/split stdout #"/")))))
                 (when-let [stderr (data "stderr")]
@@ -375,7 +376,7 @@
                          {:success? success?
                           :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn outputs-fn]
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -394,10 +395,8 @@
        (create-field "Started" (moncommon/render-date start)))
      (when-let [end (workflow "end")]
        (create-field "Ended" (moncommon/render-date end)))
-    ;;  [IODetail {:label "Inputs" :datapath (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"])) :workspace-id workspace-id}]
-     ;; [IODetail {:label "Inputs" :data-path ["submittedFiles", "inputs"] :data-fn inputs-fn :workspace-id workspace-id}]
-     [IODetail {:label "Inputs" :data-path ["inputs"] :data-fn inputs-fn :workspace-id workspace-id}]
-     [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :workspace-id workspace-id}]
+     [IODetail {:label "Inputs" :data-path ["inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
+     [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :data outputs-data :workspace-id workspace-id}]
      (when-let [workflowLog (workflow "workflowLog")]
        (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))
      (when (seq (workflow "calls"))
@@ -407,8 +406,12 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
-                    :workspace-id workspace-id :gcs-path-prefix workflow-path-components}])]))
+        ;; TODO: use restructure to make these props easier
+        [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
+                      :workspace-id workspace-id :gcs-path-prefix workflow-path-components
+                      :inputs-fn inputs-fn :inputs-data inputs-data
+                      :outputs-fn outputs-fn :outputs-data outputs-data
+                      }])]))
 
 (react/defc- WorkflowDetails
   {:render
@@ -427,7 +430,8 @@
            (render-workflow-detail (:response metadata-response) (:raw-response metadata-response)
                                    (:workflow-name props) (:submission-id props) (:use-call-cache props)
                                    (:workspace-id props) workflow-path-prefix
-                                   (this :get-inputs) (this :get-outputs)
+                                   #(this :get-inputs) (:metadata-inputs @state)
+                                   #(this :get-outputs) (:metadata-outputs @state)
                                    )))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -442,11 +446,37 @@
                           :raw-response raw-response}))}))
   :get-outputs
   (fn [{:keys [props state]}]
-    (get-in @state [:metadata-response :response])
+    ;; TODO: add a lock atom to ensure we only have one outstanding request for inputs at a time
+    (if-not (:metadata-outputs @state)
+      (endpoints/call-ajax-orch
+        {:endpoint
+         (endpoints/get-workflow-details
+          (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-outputs-includes)
+         :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                    (swap! state assoc :metadata-outputs
+                           {:success? success?
+                            :response (if success? (get-parsed-response false) status-text)
+                            :raw-response raw-response}))
+                            })
+      (:metdata-outputs @state)
+    )
   )
   :get-inputs
   (fn [{:keys [props state]}]
-    (get-in @state [:metadata-response :response])
+    ;; TODO: add a lock atom to ensure we only have one outstanding request for inputs at a time
+    (if-not (:metadata-inputs @state)
+      (endpoints/call-ajax-orch
+        {:endpoint
+         (endpoints/get-workflow-details
+          (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-inputs-includes)
+         :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                    (swap! state assoc :metadata-inputs
+                           {:success? success?
+                            :response (if success? (get-parsed-response false) status-text)
+                            :raw-response raw-response}))
+                            })
+      (:metdata-inputs @state)
+    )
   )
   })
 
