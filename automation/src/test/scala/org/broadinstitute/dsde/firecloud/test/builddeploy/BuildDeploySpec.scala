@@ -8,6 +8,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with LazyLogging with TestReporterFixture {
 
+  // 404s return the default Apache page, which has a title of "404 Not Found"
   val notFoundTitle = "404 Not Found"
 
   def testUrl(partialUrl: String) = {
@@ -23,6 +24,8 @@ class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with La
 
   "FireCloud UI build and deploy process" - {
 
+    // this test ensures that 404s always return a title of "404 Not Found". If they stop doing so, the other
+    // tests in this spec are invalid and need updating.
     s"should return '$notFoundTitle' in the page title for a missing file" in {
       withWebDriver { implicit driver =>
         driver.get(s"${FireCloudConfig.FireCloud.baseUrl}this-should-never-exist.nope")
