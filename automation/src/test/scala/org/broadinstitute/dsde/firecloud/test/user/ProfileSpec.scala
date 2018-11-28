@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
-import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
+import org.broadinstitute.dsde.firecloud.page.user.{ProfilePage, SignInPage}
 import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
@@ -33,12 +33,15 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
       val user = UserPool.chooseStudent
       withSignIn(user) { _ =>
         val profilePage = new ProfilePage().open
-        val scopes = AuthTokenScopes.userLoginScopes.toList
+        val authToken = user.makeAuthToken().value
 
         profilePage.linkFence
-        executeScript(s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')")
+        val postRedirectSignInPage = new SignInPage(driver.getCurrentUrl())
+        postRedirectSignInPage.awaitReady()
+        executeScript(s"window.forceSignedIn('${authToken}')")
         profilePage.linkDcfFence
-        executeScript(s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')")
+        postRedirectSignInPage.awaitReady()
+        executeScript(s"window.forceSignedIn('${authToken}')")
 
         eventually { findAll(linkText("Log-In to Framework Services to re-link your account")).size shouldBe 2 }
       }
