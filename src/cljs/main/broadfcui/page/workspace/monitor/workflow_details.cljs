@@ -81,7 +81,8 @@
                 (data-fn) ;; trigger the request to get data
                 (spinner (str "Loading " (:label props) "..."))) ;; and show a spinner while data loads
             (not (:success? data)) (style/create-inline-error-message (:raw-response data))
-            (empty? (get-in data (cons :response data-path))) (style/create-inline-error-message (str "No " (:label props) "."))
+            (empty? (get-in data (cons :response data-path)))
+              [:div {:style {:padding "0.25em 0 0.5em 1em" :font-style "italic"}} (str "No " (:label props) ".")]
             :else
               [:div {:style {:padding "0.25em 0 0.25em 1em"}}
               (let [namespace (get-in props [:workspace-id :namespace])
@@ -395,6 +396,7 @@
        (create-field "Started" (moncommon/render-date start)))
      (when-let [end (workflow "end")]
        (create-field "Ended" (moncommon/render-date end)))
+       ;; TODO: use submittedFiles/inputs instead, which requires json string parsing
      [IODetail {:label "Inputs" :data-path ["inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
      [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :data outputs-data :workspace-id workspace-id}]
      (when-let [workflowLog (workflow "workflowLog")]
@@ -406,15 +408,17 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-        ;; TODO: use restructure to make these props easier
-        [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
-                      :workspace-id workspace-id :gcs-path-prefix workflow-path-components
-                      :inputs-fn inputs-fn :inputs-data inputs-data
-                      :outputs-fn outputs-fn :outputs-data outputs-data
-                      }])]))
+        [CallDetail (conj (utils/restructure data submission-id use-call-cache workspace-id
+                                             inputs-fn inputs-data outputs-fn outputs-data)
+                          {:label call
+                           :workflowId (workflow "id")
+                           :gcs-path-prefix workflow-path-components})])]))
 
 (react/defc- WorkflowDetails
-  {:render
+  {:get-initial-state
+   (fn [] {:metadata-inputs-lock? false
+           :metadata-outputs-lock? false})
+   :render
    (fn [{:keys [state props this]}]
      (let [metadata-response (:metadata-response @state)]
        (cond
@@ -446,39 +450,36 @@
                           :raw-response raw-response}))}))
   :get-outputs
   (fn [{:keys [props state]}]
-    ;; TODO: add a lock atom to ensure we only have one outstanding request for inputs at a time
-    (if-not (:metadata-outputs @state)
-      (endpoints/call-ajax-orch
-        {:endpoint
-         (endpoints/get-workflow-details
-          (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-outputs-includes)
-         :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                    (swap! state assoc :metadata-outputs
-                           {:success? success?
-                            :response (if success? (get-parsed-response false) status-text)
-                            :raw-response raw-response}))
-                            })
-      (:metdata-outputs @state)
-    )
-  )
+    (when-not (or (:metadata-outputs-lock? @state) (:metadata-outputs @state))
+      (do
+        (swap! state assoc :metadata-outputs-lock? true)
+        (endpoints/call-ajax-orch
+          {:endpoint
+          (endpoints/get-workflow-details
+            (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-outputs-includes)
+          :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                      (swap! state assoc :metadata-outputs
+                            {:success? success?
+                              :response (if success? (get-parsed-response false) status-text)
+                              :raw-response raw-response})
+                      (swap! state assoc :metadata-outputs-lock? false))}))))
   :get-inputs
   (fn [{:keys [props state]}]
-    ;; TODO: add a lock atom to ensure we only have one outstanding request for inputs at a time
-    (if-not (:metadata-inputs @state)
-      (endpoints/call-ajax-orch
-        {:endpoint
-         (endpoints/get-workflow-details
-          (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-inputs-includes)
-         :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                    (swap! state assoc :metadata-inputs
-                           {:success? success?
-                            :response (if success? (get-parsed-response false) status-text)
-                            :raw-response raw-response}))
-                            })
-      (:metdata-inputs @state)
-    )
-  )
-  })
+    (when-not (or (:metadata-inputs-lock? @state) (:metadata-inputs @state))
+      (do
+        (swap! state assoc :metadata-inputs-lock? true)
+        (endpoints/call-ajax-orch
+          {:endpoint
+          (endpoints/get-workflow-details
+            (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-inputs-includes)
+          :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                      (swap! state assoc :metadata-inputs
+                            {:success? success?
+                              ;; TODO: handle json-string parsing of submittedFiles/inputs here?
+                              ;; TODO: or, if get-outputs and get-inputs are parallel, extract a common function
+                              :response (if success? (get-parsed-response false) status-text)
+                              :raw-response raw-response})
+                      (swap! state assoc :metadata-inputs-lock? false))}))))})
 
 
 (defn render [props]
