@@ -232,7 +232,7 @@ if [ $ENV = "alpha" ]; then
     done
 
     totalFailures=$(( $failuresA+$failuresB+$failuresD+$failuresE+$failuresG ))
-    if [ "$totalFailures" -le 10 ]; then
+    if [ "$totalFailures" -le 30 ]; then
         echo "Nightly Alpha test succeded  with $totalFailures total failed workflows"
         echo "${totalFailures}" &> submissionResults.txt 2>&1
         exit 0
