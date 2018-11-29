@@ -31,17 +31,20 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
 
     "should link with fence and dcf-fence" in withWebDriver { implicit driver =>
       val user = UserPool.chooseStudent
+      val providers = Set("dcf-fence", "fence")
+
       withSignIn(user) { _ =>
         val profilePage = new ProfilePage().open
         val authToken = user.makeAuthToken().value
 
-        profilePage.linkFence
-        val postRedirectSignInPage = new SignInPage(driver.getCurrentUrl())
-        postRedirectSignInPage.awaitReady()
-        executeScript(s"window.forceSignedIn('${authToken}')")
-        profilePage.linkDcfFence
-        postRedirectSignInPage.awaitReady()
-        executeScript(s"window.forceSignedIn('${authToken}')")
+        val providerIterator = findAll(id("provider-link"))
+        for {
+          provider <- findAll(id("provider-link"))
+        } yield {
+          profilePage.linkProvider(provider)
+          new SignInPage(driver.getCurrentUrl()).awaitReady()
+          executeScript(s"window.forceSignedIn('${authToken}')")
+        }
 
         eventually { findAll(linkText("Log-In to Framework Services to re-link your account")).size shouldBe 2 }
       }

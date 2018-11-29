@@ -40,7 +40,7 @@
 
 (defn auth-url-link [href text provider]
   (if href
-    (links/create-external {:href href :target "_self" :data-test-id provider} text)
+    (links/create-external {:href href :target "_self" :data-test-id provider :id "provider-link"} text)
     (spinner {:ref "pending-spinner"} "Getting link information...")))
 
 (react/defc- NihLink
