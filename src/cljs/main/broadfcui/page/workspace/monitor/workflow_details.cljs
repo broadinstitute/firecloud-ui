@@ -238,68 +238,9 @@
 (defn- render-gcs-path [components]
   (str moncommon/google-storage-context (string/join "/" components) "/"))
 
-;; recursive partner of render-subworkflow-detail
+;; recursive partner of render-workflow-detail
 (declare CallDetail)
-
-;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
-;; Only show new information
-(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data]
-  (let [inputs (ffirst (workflow "calls"))
-        input-names (string/split inputs ".")
-        workflow-name-for-path (first input-names)
-        subworkflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))]
-    [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
-                   :backgroundColor (:background-light style/colors)}}
-     (create-field "Subworkflow ID" (links/create-external {:href (render-gcs-path subworkflow-path-components)} (workflow "id")))
-     (when (seq (workflow "calls"))
-       [WorkflowTimingContainer (merge {:label "Workflow Timing"} (utils/restructure workspace-id submission-id workflow))])
-     (when-let [failures (workflow "failures")]
-       [Failures {:data failures}])
-     (when (seq (workflow "calls"))
-       [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
-     (for [[call data] (workflow "calls")]
-       [CallDetail (conj (utils/restructure data submission-id use-call-cache workspace-id
-                                            inputs-fn inputs-data outputs-fn outputs-data)
-                         {:label call
-                          :workflowId (workflow "id")
-                          :gcs-path-prefix subworkflow-path-components})])]))
-
-(react/defc- SubworkflowDetails
-  {:render
-   (fn [{:keys [state props this]}]
-     [:div {}
-      (let [server-response (:server-response @state)]
-        (cond
-          (nil? server-response)
-          (spinner "Loading subworkflow details...")
-          (not (:success? server-response))
-          (style/create-server-error-message (:response server-response))
-          :else
-          (render-subworkflow-detail (:response server-response) (:raw-response server-response)
-                                     (:workflow-name props) (:submission-id props) (:use-call-cache props)
-                                     (:workspace-id props) (:gcs-path-prefix props)
-                                     #(this :inputs-fn) server-response
-                                     #(this :outputs-fn) server-response)))])
-      :component-did-mount
-      (fn [{:keys [props state]}]
-        (endpoints/call-ajax-orch
-          {:endpoint
-           (endpoints/get-workflow-details
-             (:workspace-id props) (:submission-id props) (:workflow-id props)
-             (concat default-metadata-includes metadata-inputs-includes metadata-outputs-includes))
-           :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                      (swap! state assoc :server-response
-                             {:success? success?
-                              :response (if success? (get-parsed-response false) status-text)
-                              :raw-response raw-response}))}))
-      ;; TODO: for subworkflows, inputs-fn and outputs-fn are currently noops; we use the "old behavior" where
-      ;; subworkflows request a payload including inputs/outputs from Cromwell, and pass that to child
-      ;; components. Eventually, subworkflows should work like standard workflows and load inputs/outputs
-      ;; on demand.
-      :inputs-fn
-      (fn [] true)
-      :outputs-fn
-      (fn [] true)})
+(declare WorkflowDetails)
 
 (react/defc- CallDetail
   {:get-initial-state
@@ -330,7 +271,7 @@
                    (str "Call #" (inc index) " (Subworkflow ID " subWorkflowId "): ")
                    (if (contains? (:subworkflow-expanded @state) subWorkflowId)
                      [:span {}
-                      ;; click to hide this SubworkflowDetails and remove from the :subworkflow-expanded map in @state
+                      ;; click to hide this subworkflow's WorkflowDetails and remove from the :subworkflow-expanded map in @state
                       (links/create-internal {:onClick #(swap! state update :subworkflow-expanded
                                                                (fn [expanded-map]
                                                                  (dissoc expanded-map subWorkflowId)))}
@@ -339,9 +280,10 @@
                       (let [subworkflow-path-prefix (if (>= (data "shardIndex") 0)
                                                       (conj call-path-components (str "shard-" index))
                                                       call-path-components)]
-                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :use-call-cache :workflow-name
+                        [WorkflowDetails (merge (select-keys props [:workspace-id :submission-id :use-call-cache :workflow-name
                                                                        :inputs-fn :inputs-data :outputs-fn :outputs-data])
-                                                   {:workflow-id subWorkflowId
+                                                   {:subworkflow? true
+                                                    :workflow-id subWorkflowId
                                                     :gcs-path-prefix subworkflow-path-prefix})])]
                      ;; click to show subworkflow details and add it to the :subworkflow-expanded map in @state
                      (links/create-internal {:onClick #(swap! state assoc-in
@@ -396,29 +338,34 @@
                          {:success? success?
                           :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data]
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data subworkflow?]
+  (utils/log (str "render-workflow-detail for " (workflow "id") " thinks subworkflow?  is " subworkflow? ))
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
-        workflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))]
+        workflow-path-components (conj gcs-path-prefix workflow-name-for-path (workflow "id"))
+        unit-name (if subworkflow? "Subworkflow" "Workflow")]
     [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                    :backgroundColor (:background-light style/colors)}}
-     (create-field "Workflow ID" (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
-     (let [status (workflow "status")]
-       (create-field "Status" (moncommon/icon-for-wf-status status) status))
-     [WorkflowCost {:workspace-id workspace-id
-                    :submission-id submission-id
-                    :workflow-id (workflow "id")}]
-     (when-let [submission (workflow "submission")]
-       (create-field "Submitted" (moncommon/render-date submission)))
-     (when-let [start (workflow "start")]
-       (create-field "Started" (moncommon/render-date start)))
-     (when-let [end (workflow "end")]
-       (create-field "Ended" (moncommon/render-date end)))
-     [IODetail {:label "Inputs" :data-path ["submittedFiles" "inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
-     [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :data outputs-data :workspace-id workspace-id}]
-     (when-let [workflowLog (workflow "workflowLog")]
-       (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))
+     (create-field (str unit-name  " ID") (links/create-external {:href (render-gcs-path workflow-path-components)} (workflow "id")))
+     ;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
+     ;; Only show new information
+     (when-not subworkflow? [:div {}
+      (let [status (workflow "status")]
+        (create-field "Status" (moncommon/icon-for-wf-status status) status))
+      [WorkflowCost {:workspace-id workspace-id
+                      :submission-id submission-id
+                      :workflow-id (workflow "id")}]
+      (when-let [submission (workflow "submission")]
+        (create-field "Submitted" (moncommon/render-date submission)))
+      (when-let [start (workflow "start")]
+        (create-field "Started" (moncommon/render-date start)))
+      (when-let [end (workflow "end")]
+        (create-field "Ended" (moncommon/render-date end)))
+      [IODetail {:label "Inputs" :data-path ["submittedFiles" "inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
+      [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :data outputs-data :workspace-id workspace-id}]
+      (when-let [workflowLog (workflow "workflowLog")]
+        (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))])
      (when (seq (workflow "calls"))
        [WorkflowTimingContainer (merge {:label "Workflow Timing"} (utils/restructure workspace-id submission-id workflow))])
      (when-let [failures (workflow "failures")]
@@ -433,15 +380,18 @@
                            :gcs-path-prefix workflow-path-components})])]))
 
 (react/defc- WorkflowDetails
-  {:get-initial-state
+  {:get-default-props
+   (fn [] {:subworkflow? false})
+   :get-initial-state
    (fn [] {:metadata-inputs-lock? false
            :metadata-outputs-lock? false})
    :render
    (fn [{:keys [state props this]}]
-     (let [metadata-response (:metadata-response @state)]
+     (let [metadata-response (:metadata-response @state)
+           unit-name (if (:subworkflow? props) "subworkflow" "workflow")]
        (cond
          (nil? metadata-response)
-         (spinner "Loading workflow details...")
+         [:div {} (spinner (str "Loading " unit-name " details..."))]
          (not (:success? metadata-response))
          (style/create-server-error-message (:response metadata-response))
          :else
@@ -454,6 +404,7 @@
                                    (:workspace-id props) workflow-path-prefix
                                    #(this :get-inputs) (:metadata-inputs @state)
                                    #(this :get-outputs) (:metadata-outputs @state)
+                                   (:subworkflow? props)
                                    )))))
    :component-did-mount
    (fn [{:keys [props state]}]
