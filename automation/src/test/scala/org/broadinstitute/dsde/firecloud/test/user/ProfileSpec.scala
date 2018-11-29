@@ -29,17 +29,19 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
       }
     }
 
-    "should link with fence and dcf-fence" in withWebDriver { implicit driver =>
+    "should link with available providers" in withWebDriver { implicit driver =>
       val user = UserPool.chooseStudent
-      val providers = Set("dcf-fence", "fence")
 
       withSignIn(user) { _ =>
         val profilePage = new ProfilePage().open
         val authToken = user.makeAuthToken().value
 
-        val providerIterator = findAll(id("provider-link"))
+        profilePage.awaitProvidersReady
+        val providers = findAll(id("provider-link")).map(_.attribute("data-test-id")).toSet
+
         for {
-          provider <- findAll(id("provider-link"))
+          providerOpt <- providers
+          provider <- providerOpt
         } yield {
           profilePage.linkProvider(provider)
           new SignInPage(driver.getCurrentUrl()).awaitReady()
