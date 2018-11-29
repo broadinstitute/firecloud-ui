@@ -73,7 +73,7 @@
                                      {:label "Featured Methods"
                                       :predicate (fn [{:keys [namespace method-id]}]
                                                    (or (contains? featured-namespaces namespace)
-                                                       (contains? (map #(select-keys % [:namespace :name]) featured-methods) method-id)))}]}
+                                                       (utils/tolerant-contains? featured-methods method-id)))}]}
                       :body {:behavior {:reorderable-columns? false}
                              :style (utils/deep-merge table-style/table-light
                                                       {:body {:fontWeight "initial" :fontSize "120%"
@@ -87,7 +87,7 @@
                                :column-data
                                (fn [{:keys [namespace method-id]}]
                                  (or (contains? certified-namespaces namespace)
-                                     (contains? (map #(select-keys % [:namespace :name]) certified-methods) method-id)))
+                                     (utils/tolerant-contains? certified-methods method-id)))
                                :as-text (fn [certified?] (if certified? "Certified" "Not Certified"))
                                :sort-by not
                                :render
