@@ -17,6 +17,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (defn- create-field [label & contents]
@@ -80,26 +81,31 @@
               (do
                 (data-fn) ;; trigger the request to get data
                 (spinner (str "Loading " (:label props) "..."))) ;; and show a spinner while data loads
-            (not (:success? data)) (style/create-inline-error-message (:raw-response data))
+            (not (:success? data))
+              (style/create-inline-error-message (:response data))
             (empty? (get-in data (cons :response data-path)))
               [:div {:style {:padding "0.25em 0 0.5em 1em" :font-style "italic"}} (str "No " (:label props) ".")]
             :else
-              [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-              (let [namespace (get-in props [:workspace-id :namespace])
-                    columns [{:header "Label"
-                              :column-data #(last (string/split (key %) #"\."))}
-                              {:header "Value"
-                              :initial-width :auto
-                              :sortable? false
-                              :column-data #(display-value namespace (second %))}]
-                    task-column {:header "Task"
-                                  :column-data #(second (string/split (key %) #"\."))}]
-                [Table
-                  {:data (get-in data (cons :response data-path))
-                  :body {:style table-style/table-heavy
-                          :behavior {:reorderable-columns? false
-                                    :filterable? false}
-                          :columns (if (:call-detail? props) columns (cons task-column columns))}}])]))]))})
+              ;; some portions of the metadata response from Cromwell are escaped json strings (e.g. submittedFiles/inputs),
+              ;; instead of valid json. hHndle that transparently here: if we detect the target data is a string, attempt to parse it.
+              (let [raw-data (get-in data (cons :response data-path))
+                    usable-data (if (string? raw-data) (utils/parse-json-string raw-data) raw-data)]
+                [:div {:style {:padding "0.25em 0 0.25em 1em"}}
+                (let [namespace (get-in props [:workspace-id :namespace])
+                      columns [{:header "Label"
+                                :column-data #(last (string/split (key %) #"\."))}
+                                {:header "Value"
+                                :initial-width :auto
+                                :sortable? false
+                                :column-data #(display-value namespace (second %))}]
+                      task-column {:header "Task"
+                                    :column-data #(second (string/split (key %) #"\."))}]
+                  [Table
+                    {:data usable-data
+                    :body {:style table-style/table-heavy
+                            :behavior {:reorderable-columns? false
+                                      :filterable? false}
+                            :columns (if (:call-detail? props) columns (cons task-column columns))}}])])))]))})
 
 (react/defc- WorkflowTimingDiagram
   {:render
@@ -344,7 +350,6 @@
                 (when (and (:use-call-cache props) (some? (get (data "callCaching") "hit")))
                   (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
                 (create-field "Started" (moncommon/render-date (data "start")))
-                ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
                 [IODetail {:label "Inputs" :data-path ["calls" label index "inputs"] :data-fn inputs-fn :data inputs-data :call-detail? true :workspace-id (:workspace-id props)}]
                 [IODetail {:label "Outputs" :data-path ["calls" label index "outputs"] :data-fn outputs-fn :data outputs-data :call-detail? true :workspace-id (:workspace-id props)}]
@@ -396,8 +401,7 @@
        (create-field "Started" (moncommon/render-date start)))
      (when-let [end (workflow "end")]
        (create-field "Ended" (moncommon/render-date end)))
-       ;; TODO: use submittedFiles/inputs instead, which requires json string parsing
-     [IODetail {:label "Inputs" :data-path ["inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
+     [IODetail {:label "Inputs" :data-path ["submittedFiles" "inputs"] :data-fn inputs-fn :data inputs-data :workspace-id workspace-id}]
      [IODetail {:label "Outputs" :data-path ["outputs"] :data-fn outputs-fn :data outputs-data :workspace-id workspace-id}]
      (when-let [workflowLog (workflow "workflowLog")]
        (create-field "Workflow Log" (display-value (:namespace workspace-id) workflowLog (str "workflow." (workflow "id") ".log"))))
@@ -457,10 +461,11 @@
           {:endpoint
           (endpoints/get-workflow-details
             (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-outputs-includes)
-          :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+          :on-done (fn [{:keys [success? get-parsed-response status-text status-code raw-response]}]
                       (swap! state assoc :metadata-outputs
                             {:success? success?
-                              :response (if success? (get-parsed-response false) status-text)
+                              :response (if success? (get-parsed-response false)
+                                                     (ajax/extract-error-message get-parsed-response status-text status-code))
                               :raw-response raw-response})
                       (swap! state assoc :metadata-outputs-lock? false))}))))
   :get-inputs
@@ -472,12 +477,13 @@
           {:endpoint
           (endpoints/get-workflow-details
             (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-inputs-includes)
-          :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+          :on-done (fn [{:keys [success? get-parsed-response status-text status-code raw-response]}]
                       (swap! state assoc :metadata-inputs
                             {:success? success?
                               ;; TODO: handle json-string parsing of submittedFiles/inputs here?
                               ;; TODO: or, if get-outputs and get-inputs are parallel, extract a common function
-                              :response (if success? (get-parsed-response false) status-text)
+                              :response (if success? (get-parsed-response false)
+                                                     (ajax/extract-error-message get-parsed-response status-text status-code))
                               :raw-response raw-response})
                       (swap! state assoc :metadata-inputs-lock? false))}))))})
 
