@@ -18,7 +18,7 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   val gsLink = "gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam"
-  val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/dos.json"
+  val dosLink = "dos://wb-mock-drs-dev.storage.googleapis.com/drs.json"
 
   //These tests utilize the view via workspace, but the same code is used throughout
   //the UI to render this modal, so should work in all cases.
@@ -127,9 +127,9 @@ class PreviewSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpe
   "Preview Modal should hide preview even when dos:// link resolves to an otherwise previewable file" in {
     val user = UserPool.chooseStudent
     implicit val authToken: AuthToken = user.makeAuthToken()
-    val dosLink = "dos://broad-dsp-dos.storage.googleapis.com/preview_dos.json"
-    val bucket = "broad-dsp-dos"
-    val gObject = "dos_test.txt"
+    val dosLink = "dos://wb-mock-drs-dev.storage.googleapis.com/preview_dos.json"
+    val bucket = "wb-mock-drs-dev"
+    val gObject = "public/dos_test.txt"
     withCleanBillingProject(user) { billingProject =>
       withWorkspace(billingProject, "WorkspaceSpec_dos_file_previewable") { workspaceName =>
         api.workspaces.setAttributes(billingProject, workspaceName, Map("a" -> dosLink))
