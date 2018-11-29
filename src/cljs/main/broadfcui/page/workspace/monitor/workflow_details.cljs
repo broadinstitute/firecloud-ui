@@ -266,7 +266,7 @@
 
 (react/defc- SubworkflowDetails
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      [:div {}
       (let [server-response (:server-response @state)]
         (cond
@@ -278,19 +278,28 @@
           (render-subworkflow-detail (:response server-response) (:raw-response server-response)
                                      (:workflow-name props) (:submission-id props) (:use-call-cache props)
                                      (:workspace-id props) (:gcs-path-prefix props)
-                                     (:inputs-fn props) (:inputs-data props)
-                                     (:outputs-fn props) (:outputs-data props))))])
+                                     #(this :inputs-fn) server-response
+                                     #(this :outputs-fn) server-response)))])
       :component-did-mount
       (fn [{:keys [props state]}]
         (endpoints/call-ajax-orch
           {:endpoint
            (endpoints/get-workflow-details
-             (:workspace-id props) (:submission-id props) (:workflow-id props))
+             (:workspace-id props) (:submission-id props) (:workflow-id props)
+             (concat default-metadata-includes metadata-inputs-includes metadata-outputs-includes))
            :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                       (swap! state assoc :server-response
                              {:success? success?
                               :response (if success? (get-parsed-response false) status-text)
-                              :raw-response raw-response}))}))})
+                              :raw-response raw-response}))}))
+      ;; TODO: for subworkflows, inputs-fn and outputs-fn are currently noops; we use the "old behavior" where
+      ;; subworkflows request a payload including inputs/outputs from Cromwell, and pass that to child
+      ;; components. Eventually, subworkflows should work like standard workflows and load inputs/outputs
+      ;; on demand.
+      :inputs-fn
+      (fn [] true)
+      :outputs-fn
+      (fn [] true)})
 
 (react/defc- CallDetail
   {:get-initial-state
