@@ -101,11 +101,11 @@
                       task-column {:header "Task"
                                     :column-data #(second (string/split (key %) #"\."))}]
                   [Table
-                    {:data usable-data
+                   {:data usable-data
                     :body {:style table-style/table-heavy
-                            :behavior {:reorderable-columns? false
+                           :behavior {:reorderable-columns? false
                                       :filterable? false}
-                            :columns (if (:call-detail? props) columns (cons task-column columns))}}])])))]))})
+                           :columns (if (:call-detail? props) columns (cons task-column columns))}}])])))]))})
 
 (react/defc- WorkflowTimingDiagram
   {:render
