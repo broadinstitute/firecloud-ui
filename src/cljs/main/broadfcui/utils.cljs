@@ -2,6 +2,7 @@
   (:require-macros
    [broadfcui.utils :refer [log jslog cljslog pause restructure multi-swap! generate-build-timestamp]])
   (:require
+   [clojure.set :as set]
    [clojure.string :as string]
    cljs.pprint
    goog.net.cookies
@@ -172,7 +173,4 @@
   (js/window.btoa (->json-string map)))
 
 (defn tolerant-contains? [haystack needle]
-  (as-> haystack $
-        (map #(select-keys % (keys needle)) $)
-        (set $)
-        (contains? $ needle)))
+  (some #(set/subset? (set %) (set needle)) haystack))
