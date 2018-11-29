@@ -173,4 +173,7 @@
   (js/window.btoa (->json-string map)))
 
 (defn tolerant-contains? [haystack needle]
-  (some #(set/subset? (set %) (set needle)) haystack))
+  (as-> haystack $
+        (map #(select-keys % (keys needle)) $)
+        (set $)
+        (contains? $ needle)))
