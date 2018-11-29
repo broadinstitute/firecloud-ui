@@ -48,7 +48,7 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
           executeScript(s"window.forceSignedIn('${authToken}')")
         }
 
-        eventually { findAll(linkText("Log-In to Framework Services to re-link your account")).size shouldBe 2 }
+        eventually { findAll(linkText("Log-In to Framework Services to re-link your account")).size shouldBe providers.size }
       }
     }
   }
