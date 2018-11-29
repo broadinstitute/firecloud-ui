@@ -453,40 +453,27 @@
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))
   :get-outputs
-  (fn [{:keys [props state]}]
-    (when-not (or (:metadata-outputs-lock? @state) (:metadata-outputs @state))
-      (do
-        (swap! state assoc :metadata-outputs-lock? true)
-        (endpoints/call-ajax-orch
-          {:endpoint
-          (endpoints/get-workflow-details
-            (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-outputs-includes)
-          :on-done (fn [{:keys [success? get-parsed-response status-text status-code raw-response]}]
-                      (swap! state assoc :metadata-outputs
-                            {:success? success?
-                              :response (if success? (get-parsed-response false)
-                                                     (ajax/extract-error-message get-parsed-response status-text status-code))
-                              :raw-response raw-response})
-                      (swap! state assoc :metadata-outputs-lock? false))}))))
+  (fn [{:keys [this]}]
+    (this :-get-io :metadata-outputs :metadata-outputs-lock? metadata-outputs-includes))
   :get-inputs
-  (fn [{:keys [props state]}]
-    (when-not (or (:metadata-inputs-lock? @state) (:metadata-inputs @state))
+  (fn [{:keys [this]}]
+    (this :-get-io :metadata-inputs :metadata-inputs-lock? metadata-inputs-includes))
+  :-get-io
+  (fn [{:keys [props state]} data-key lock-key includes]
+    (when-not (or (lock-key @state) (data-key @state))
       (do
-        (swap! state assoc :metadata-inputs-lock? true)
+        (swap! state assoc lock-key true)
         (endpoints/call-ajax-orch
           {:endpoint
           (endpoints/get-workflow-details
-            (:workspace-id props) (:submission-id props) (:workflow-id props) metadata-inputs-includes)
+            (:workspace-id props) (:submission-id props) (:workflow-id props) includes)
           :on-done (fn [{:keys [success? get-parsed-response status-text status-code raw-response]}]
-                      (swap! state assoc :metadata-inputs
+                      (swap! state assoc data-key
                             {:success? success?
-                              ;; TODO: handle json-string parsing of submittedFiles/inputs here?
-                              ;; TODO: or, if get-outputs and get-inputs are parallel, extract a common function
                               :response (if success? (get-parsed-response false)
                                                      (ajax/extract-error-message get-parsed-response status-text status-code))
                               :raw-response raw-response})
-                      (swap! state assoc :metadata-inputs-lock? false))}))))})
-
+                      (swap! state assoc lock-key false))}))))})
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :use-call-cache :workflow-id}))
