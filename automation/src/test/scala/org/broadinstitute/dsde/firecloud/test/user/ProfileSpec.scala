@@ -37,13 +37,13 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
         val authToken = user.makeAuthToken().value
 
         profilePage.awaitProvidersReady
-        val providers = findAll(id("provider-link")).map(_.attribute("data-test-id")).toSet
+        val providers = findAll(className("provider-link")).map(_.attribute("data-test-id")).toSet
 
         for {
           providerOpt <- providers
           provider <- providerOpt
         } yield {
-          profilePage.linkProvider(provider)
+          profilePage.clickProviderLink(provider)
           new SignInPage(driver.getCurrentUrl()).awaitReady()
           executeScript(s"window.forceSignedIn('${authToken}')")
         }

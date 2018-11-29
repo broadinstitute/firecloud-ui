@@ -34,7 +34,7 @@ class ProfilePage(implicit webDriver: WebDriver) extends BaseFireCloudPage
     await notVisible (cssSelector("[data-test-id=spinner]"), 60)
   }
 
-  def linkProvider(provider: String): Unit = {
+  def clickProviderLink(provider: String): Unit = {
     val providerLink = Link(provider)
     providerLink.awaitVisible()
     providerLink.doClick()
