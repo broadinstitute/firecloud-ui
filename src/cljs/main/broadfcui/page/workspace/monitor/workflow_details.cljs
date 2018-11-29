@@ -243,8 +243,7 @@
 
 ;; Subworkflows contain a lot of information that is redundant to what can be seen from the Calls
 ;; Only show new information
-;; TODO: update subworkflows to handle lazy-load inputs/outputs
-(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix]
+(defn- render-subworkflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data]
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
@@ -259,8 +258,11 @@
      (when (seq (workflow "calls"))
        [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
      (for [[call data] (workflow "calls")]
-       [CallDetail {:label call :data data :submission-id submission-id :use-call-cache use-call-cache :workflowId (workflow "id")
-                    :workspace-id workspace-id :gcs-path-prefix subworkflow-path-components}])]))
+       [CallDetail (conj (utils/restructure data submission-id use-call-cache workspace-id
+                                            inputs-fn inputs-data outputs-fn outputs-data)
+                         {:label call
+                          :workflowId (workflow "id")
+                          :gcs-path-prefix subworkflow-path-components})])]))
 
 (react/defc- SubworkflowDetails
   {:render
@@ -275,7 +277,9 @@
           :else
           (render-subworkflow-detail (:response server-response) (:raw-response server-response)
                                      (:workflow-name props) (:submission-id props) (:use-call-cache props)
-                                     (:workspace-id props) (:gcs-path-prefix props))))])
+                                     (:workspace-id props) (:gcs-path-prefix props)
+                                     (:inputs-fn props) (:inputs-data props)
+                                     (:outputs-fn props) (:outputs-data props))))])
       :component-did-mount
       (fn [{:keys [props state]}]
         (endpoints/call-ajax-orch
@@ -326,7 +330,8 @@
                       (let [subworkflow-path-prefix (if (>= (data "shardIndex") 0)
                                                       (conj call-path-components (str "shard-" index))
                                                       call-path-components)]
-                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :use-call-cache :workflow-name])
+                        [SubworkflowDetails (merge (select-keys props [:workspace-id :submission-id :use-call-cache :workflow-name
+                                                                       :inputs-fn :inputs-data :outputs-fn :outputs-data])
                                                    {:workflow-id subWorkflowId
                                                     :gcs-path-prefix subworkflow-path-prefix})])]
                      ;; click to show subworkflow details and add it to the :subworkflow-expanded map in @state
