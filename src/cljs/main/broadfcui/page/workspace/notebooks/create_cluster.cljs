@@ -183,7 +183,7 @@
                                {:machineConfig machineConfig}
                                (when-not (string/blank? extensionURI) {:jupyterExtensionUri extensionURI})
                                (when-not (string/blank? userScriptURI) {:jupyterUserScriptUri userScriptURI})
-                               {:jupyterDockerImage jupyterDockerImage})
+                               )
                :headers ajax/content-type=json
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :creating?)
