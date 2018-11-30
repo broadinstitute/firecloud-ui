@@ -34,7 +34,7 @@
      (str gcs-uri))))
 
 (defonce default-metadata-includes ["backendLogs" "backendStatus" "end" "executionStatus" "callCaching:hit" "failures"
-                                    "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission"
+                                    "id" "inputs" "jobId" "outputs" "start" "status" "stderr" "stdout" "submission" "subworkflowId"
                                     "submittedFiles:inputs" "workflowLog" "workflowName" "workflowRoot"])
 
 (defonce metadata-timing-includes ["attempt" "description" "end" "endTime" "executionEvents" "executionStatus"
@@ -262,7 +262,7 @@
         (endpoints/call-ajax-orch
           {:endpoint
            (endpoints/get-workflow-details
-             (:workspace-id props) (:submission-id props) (:workflow-id props) default-metadata-includes)
+             (:workspace-id props) (:submission-id props) (:workflow-id props))
            :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                       (swap! state assoc :server-response
                              {:success? success?
