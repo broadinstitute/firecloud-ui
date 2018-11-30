@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.test.user
 
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
-import org.broadinstitute.dsde.firecloud.page.user.ProfilePage
+import org.broadinstitute.dsde.firecloud.page.user.{ProfilePage, SignInPage}
+import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
@@ -25,6 +26,29 @@ class ProfileSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Ma
         */
         eventually { profilePage.readProxyGroupEmail should endWith ("firecloud.org") }
 
+      }
+    }
+
+    "should link with available providers" in withWebDriver { implicit driver =>
+      val user = UserPool.chooseStudent
+
+      withSignIn(user) { _ =>
+        val profilePage = new ProfilePage().open
+        val authToken = user.makeAuthToken().value
+
+        profilePage.awaitProvidersReady
+        val providers = findAll(className("provider-link")).map(_.attribute("data-test-id")).toSet
+
+        for {
+          providerOpt <- providers
+          provider <- providerOpt
+        } yield {
+          profilePage.clickProviderLink(provider)
+          new SignInPage(driver.getCurrentUrl()).awaitReady()
+          executeScript(s"window.forceSignedIn('${authToken}')")
+        }
+
+        eventually { findAll(linkText("Log-In to Framework Services to re-link your account")).size shouldBe providers.size }
       }
     }
   }
