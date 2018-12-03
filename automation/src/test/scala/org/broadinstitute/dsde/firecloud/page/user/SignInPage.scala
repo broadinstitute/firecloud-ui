@@ -15,6 +15,17 @@ import scala.util.{Failure, Success, Try}
   */
 class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends FireCloudView with Page with PageUtil[SignInPage] {
 
+  case class GoogleSignInButton(queryString: CSSQuery)(implicit webDriver: WebDriver) extends Component(queryString) with Clickable {
+    override def awaitReady(): Unit = {
+      val signInTextXpath = s"${queryString.text} span"
+      log.info(s"GoogleSignInButton starting ready-wait for $signInTextXpath ...")
+      await condition {
+        val signInText = findAll(cssSelector(signInTextXpath))
+        signInText.exists(_.text.contains("Sign in with Google"))
+      }
+    }
+  }
+
   override def awaitReady(): Unit = {
     log.info("SignInPage.awaitReady starting to wait for signInButton ... ")
 
@@ -43,7 +54,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 
   override val url: String = baseUrl
 
-  private val signInButton = Button(CSSQuery("#sign-in-button"))
+  private val signInButton = GoogleSignInButton(CSSQuery("#sign-in-button"))
 
   def isOpen = signInButton.isVisible
 
@@ -74,6 +85,8 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     new GoogleSignInPopup().awaitLoaded()
   }
 }
+
+
 
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
 

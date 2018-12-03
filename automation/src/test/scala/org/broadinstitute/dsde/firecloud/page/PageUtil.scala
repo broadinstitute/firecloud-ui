@@ -31,8 +31,9 @@ trait PageUtil[P <: Page] extends FireCloudView with WebDriverIdLogging { self: 
     }
     Try (awaitReady()) match {
       case Success(_) =>
-      case Failure(_) =>
+      case Failure(f) =>
         log.error(s"Timed out ($defaultTimeOutInSeconds seconds) waiting for page ${this.url}")
+        throw(f)
     }
 
     this
