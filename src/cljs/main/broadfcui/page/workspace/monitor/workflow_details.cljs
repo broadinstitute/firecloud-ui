@@ -73,14 +73,13 @@
        [:div {}
         (create-field
          (:label props)
-           (links/create-internal {:onClick #(swap! state update :expanded not)}
+           ;; when the user clicks to expand, trigger the request to get data
+           (links/create-internal {:onClick #(when (:expanded (swap! state update :expanded not)) (data-fn))}
              (if (:expanded @state) "Hide" "Show")))
         (when (:expanded @state)
           (cond
             (nil? data)
-              (do
-                (data-fn) ;; trigger the request to get data
-                (spinner (str "Loading " (:label props) "..."))) ;; and show a spinner while data loads
+              (spinner (str "Loading " (:label props) "...")) ;; show a spinner while data from the onClick loads
             (not (:success? data))
               (style/create-inline-error-message (:response data))
             (empty? (get-in data (cons :response data-path)))
@@ -339,7 +338,6 @@
                           :response (if success? (:cost (get-parsed-response)) (str "Error: " (or (:message (get-parsed-response)) status-text)))}))}))})
 
 (defn- render-workflow-detail [workflow raw-data workflow-name submission-id use-call-cache workspace-id gcs-path-prefix inputs-fn inputs-data outputs-fn outputs-data subworkflow?]
-  (utils/log (str "render-workflow-detail for " (workflow "id") " thinks subworkflow?  is " subworkflow? ))
   (let [inputs (ffirst (workflow "calls"))
         input-names (string/split inputs ".")
         workflow-name-for-path (first input-names)
