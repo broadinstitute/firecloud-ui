@@ -57,7 +57,8 @@
    ;; show suggestions for that input.
    (fn [{:keys [props]}]
      {:value (or (:value props) (:default-value props))
-      :latest-input false
+      :latest-input false ;; most recent criteria input by the user
+      :current-suggestion-criteria "" ;; criteria for which we are currently showing suggestion results
       :ajax-result-map {}})
    :render
    (fn [{:keys [state props locals]}]
@@ -86,8 +87,13 @@
                                                   ;;
                                                   ;; save results for this ajax request - which may not be current - to state
                                                   (swap! state assoc :ajax-result-map updated-result-map)
-                                                  ;; extract results from state for the current input value
-                                                  (swap! state assoc :suggestions (get updated-result-map (:latest-input @state) []))))}
+                                                  (let [{:keys [latest-input]} @state]
+                                                    ;; if, when this ajax request returns, we have results for the current input value,
+                                                    ;; then show the results. Else, the component elsewhere handles showing
+                                                    ;; the loading spinner.
+                                                    (when (contains? updated-result-map latest-input)
+                                                      (utils/multi-swap! state (assoc :suggestions (get updated-result-map latest-input []))
+                                                                               (assoc :current-suggestion-criteria (.-value latest-input)))))))}
                                     (when service-prefix :service-prefix) service-prefix)
                                    [:loading])
                              :else (fn [value]
@@ -122,7 +128,8 @@
                                     (swap! state assoc :value value))
                                   (when on-change
                                     (on-change value))))
-                    :type "search"}
+                    :type "search"
+                    :data-suggestions-for (:current-suggestion-criteria @state)}
                    :shouldRenderSuggestions (complement string/blank?)
                    :highlightFirstSuggestion true
                    :id (:id @locals)
