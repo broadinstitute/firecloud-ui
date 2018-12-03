@@ -86,7 +86,7 @@
               [:div {:style {:padding "0.25em 0 0.5em 1em" :font-style "italic"}} (str "No " (:label props) ".")]
             :else
               ;; some portions of the metadata response from Cromwell are escaped json strings (e.g. submittedFiles/inputs),
-              ;; instead of valid json. hHndle that transparently here: if we detect the target data is a string, attempt to parse it.
+              ;; instead of valid json. Handle that transparently here: if we detect the target data is a string, attempt to parse it.
               (let [raw-data (get-in data (cons :response data-path))
                     usable-data (if (string? raw-data) (utils/parse-json-string raw-data) raw-data)]
                 [:div {:style {:padding "0.25em 0 0.25em 1em"}}
@@ -402,8 +402,7 @@
                                    (:workspace-id props) workflow-path-prefix
                                    #(this :get-inputs) (:metadata-inputs @state)
                                    #(this :get-outputs) (:metadata-outputs @state)
-                                   (:subworkflow? props)
-                                   )))))
+                                   (:subworkflow? props))))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
