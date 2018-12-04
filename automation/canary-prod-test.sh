@@ -125,15 +125,15 @@ if [ $ENV = "prod" ]; then
     if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
       timer=$SECONDS
       echo "One-off workflow finished within 5 minutes with workflow status: $workflowsStatus"
-      echo "[{\"eventType\":\"CanaryTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete\":\"$timer\"}]" > canary_events.json
-      cat canary_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: 85x1qvfYI2oNARBSxWk6cytmY8EpQhPE" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
+      echo "[{\"eventType\":\"CanaryTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete\":\"$timer sec\"}]" > canary_events.json
+      cat canary_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: $newRelicKey" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
 
       exit 0
     else
       timer=$SECONDS
       echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
-      echo "[{\"eventType\":\"CanaryTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete\":\"$timer\"}]" > canary_events.json
-      cat canary_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: 85x1qvfYI2oNARBSxWk6cytmY8EpQhPE" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
+      echo "[{\"eventType\":\"CanaryTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete\":\"$timer sec\"}]" > canary_events.json
+      cat canary_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: $newRelicKey" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
       exit 1
     fi
 
