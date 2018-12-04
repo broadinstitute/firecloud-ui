@@ -2,8 +2,9 @@ package org.broadinstitute.dsde.firecloud.test.builddeploy
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
-import org.broadinstitute.dsde.workbench.fixture. TestReporterFixture
+import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.openqa.selenium.By
 import org.scalatest.{FreeSpec, Matchers}
 
 class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with LazyLogging with TestReporterFixture {
@@ -36,6 +37,23 @@ class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with La
         }
       }
 
+    }
+
+    // this test ensures the build outputs a git commit hash value. As a side effect, this test also
+    // logs the value it finds, so we have a record - albeit buried - of the exact codebase on which
+    // the test ran.
+    "should populate a commithash value in HTML source" in {
+      withWebDriver { implicit driver =>
+        driver.get(s"${FireCloudConfig.FireCloud.baseUrl}index.html")
+        val commithash = driver
+          .findElement(By.xpath("//meta[@name='application-name']"))
+          .getAttribute("data-commithash")
+
+        logger.info(s"unit test commithash: $commithash")
+
+        commithash shouldNot be(empty)
+
+      }
     }
 
   }
