@@ -116,7 +116,7 @@ function parseMetadata(data, dataTable, ancestry) {
                 executionCallsCount++;
                 // DA: added the "or now()" safeguard for anything still in Starting or otherwise doesn't have a workflowEnd value, for FireCloud.
                 var endDate = workflowEnd || new Date(Date.now());
-                if(endDate == null) {
+                if(workflowEnd == null) {
                     addDataTableRow(dataTable, callFqn, status, new Date(callList[callIndex].start), new Date(Date.now()), ancestry);
                 }
                 else {
