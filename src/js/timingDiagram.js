@@ -2,8 +2,8 @@
 
 // ======================= START code used as-is from Cromwell =======================
 /*
-    following code, up until the END marker, is copied directly from Cromwell WITH THREE
-    EXCEPTIONS. Each of the three exceptions is preceded by a comment. These comments
+    following code, up until the END marker, is copied directly from Cromwell WITH TWO
+    EXCEPTIONS. Each of the two exceptions is preceded by a comment. These comments
     all start with "DA:" and end with "for FireCloud."
 
     The "ancestry" vars and features below relate to subworkflows, which are currently not
@@ -114,9 +114,8 @@ function parseMetadata(data, dataTable, ancestry) {
             } else if (callList[callIndex].executionStatus == "Running" || callList[callIndex].executionStatus == "QueuedInCromwell" || callList[callIndex].executionStatus == "Starting") {
                 var status = callList[callIndex].executionStatus
                 executionCallsCount++;
-                // DA: added the "or now()" safeguard for anything still in Starting or otherwise doesn't have a workflowEnd value, for FireCloud.
-                var endDate = workflowEnd || new Date(Date.now());
-                if(workflowEnd == null) {
+                var endDate = workflowEnd;
+                if(endDate == null) {
                     addDataTableRow(dataTable, callFqn, status, new Date(callList[callIndex].start), new Date(Date.now()), ancestry);
                 }
                 else {
