@@ -43,7 +43,11 @@
 
 (defonce metadata-inputs-includes ["submittedFiles:inputs" "inputs"])
 
-(defonce metadata-outputs-includes ["outputs"])
+;; requesting executionStatus for outputs makes the response payload somewhat larger, but it forces Cromwell to return
+;; data about every call in a task scatter. Otherwise, if we request just includeKey=outputs and a scatter contains both
+;; successes and failures, Cromwell will return only those calls that have outputs, i.e. the successes. Since our CLJS code
+;; identifies calls by their index in an array, this causes off-by-one (or off-by-many) functional errors.
+(defonce metadata-outputs-includes ["executionStatus" "outputs"])
 
 (defn getTimingDiagramHeight [chartContainer]
   (let [e (-> chartContainer (.-childNodes)
