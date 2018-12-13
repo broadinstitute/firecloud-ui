@@ -176,6 +176,7 @@
                    :attributes (if (or (:description props) (not (string/blank? description)))
                                  {:description description}
                                  {})
+                   :copyFilesWithPrefix "/notebooks"
                    :authorizationDomain auth-domain}
          :headers ajax/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
