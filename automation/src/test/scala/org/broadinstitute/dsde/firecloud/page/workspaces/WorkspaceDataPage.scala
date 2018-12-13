@@ -41,7 +41,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
 
   def downloadMetadata(downloadPath: String): String = {
     val entityType = find(CssSelectorQuery(downloadMetadataButton.query.queryString)).get.attribute("data-entity-type").get
-    downloadFile(downloadPath, entityType + ".txt", form)
+    downloadFile(downloadPath, entityType + ".tsv", form)
   }
 
   def getNumberOfParticipants: Int = {
