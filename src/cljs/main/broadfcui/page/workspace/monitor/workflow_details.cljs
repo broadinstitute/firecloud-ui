@@ -82,29 +82,29 @@
               (spinner (str "Loading " (:label props) "...")) ;; show a spinner while data from the onClick loads
             (not (:success? data))
               (style/create-inline-error-message (:response data))
-            (empty? (get-in data (cons :response data-path)))
-              [:div {:style {:padding "0.25em 0 0.5em 1em" :font-style "italic"}} (str "No " (:label props) ".")]
             :else
               ;; some portions of the metadata response from Cromwell are escaped json strings (e.g. submittedFiles/inputs),
               ;; instead of valid json. Handle that transparently here: if we detect the target data is a string, attempt to parse it.
               (let [raw-data (get-in data (cons :response data-path))
                     usable-data (if (string? raw-data) (utils/parse-json-string raw-data) raw-data)]
-                [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-                (let [namespace (get-in props [:workspace-id :namespace])
-                      columns [{:header "Label"
-                                :column-data #(last (string/split (key %) #"\."))}
-                                {:header "Value"
-                                :initial-width :auto
-                                :sortable? false
-                                :column-data #(display-value namespace (second %))}]
-                      task-column {:header "Task"
-                                    :column-data #(second (string/split (key %) #"\."))}]
-                  [Table
-                   {:data usable-data
-                    :body {:style table-style/table-heavy
-                           :behavior {:reorderable-columns? false
-                                      :filterable? false}
-                           :columns (if (:call-detail? props) columns (cons task-column columns))}}])])))]))})
+                (if (empty? usable-data)
+                  [:div {:style {:padding "0.25em 0 0.5em 1em" :font-style "italic"}} (str "No " (:label props) ".")]
+                  [:div {:style {:padding "0.25em 0 0.25em 1em"}}
+                    (let [namespace (get-in props [:workspace-id :namespace])
+                          columns [{:header "Label"
+                                    :column-data #(last (string/split (key %) #"\."))}
+                                   {:header "Value"
+                                    :initial-width :auto
+                                    :sortable? false
+                                    :column-data #(display-value namespace (second %))}]
+                          task-column {:header "Task"
+                                       :column-data #(second (string/split (key %) #"\."))}]
+                      [Table
+                       {:data usable-data
+                        :body {:style table-style/table-heavy
+                               :behavior {:reorderable-columns? false
+                                          :filterable? false}
+                               :columns (if (:call-detail? props) columns (cons task-column columns))}}])]))))]))})
 
 (react/defc- WorkflowTimingDiagram
   {:render
