@@ -102,7 +102,7 @@
                                     :sortable? false
                                     :column-data #(display-value namespace (second %))}]
                           task-column {:header "Task"
-                                       :column-data #(second (string/split (key %) #"\."))}]
+                                       :column-data #(second (rseq (string/split (key %) #"\.")))}]
                       [Table
                        {:data usable-data
                         :body {:style table-style/table-heavy
