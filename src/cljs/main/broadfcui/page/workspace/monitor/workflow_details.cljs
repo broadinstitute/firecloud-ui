@@ -310,8 +310,8 @@
                   (create-field "Cache Result" (moncommon/format-call-cache (get (data "callCaching") "hit"))))
                 (create-field "Started" (moncommon/render-date (data "start")))
                 (create-field "Ended" (moncommon/render-date (data "end")))
-                [IODetail {:label "Inputs" :data-path ["calls" label index "inputs"] :data-fn inputs-fn :data inputs-data :call-detail? true :workspace-id (:workspace-id props)}]
-                [IODetail {:label "Outputs" :data-path ["calls" label index "outputs"] :data-fn outputs-fn :data outputs-data :call-detail? true :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Inputs" :data-path ["calls" label index "inputs"] :data-fn inputs-fn :data inputs-data :call-detail? (not (data "subWorkflowId")) :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Outputs" :data-path ["calls" label index "outputs"] :data-fn outputs-fn :data outputs-data :call-detail? (not (data "subWorkflowId")) :workspace-id (:workspace-id props)}]
                 (when-let [stdout (data "stdout")]
                   (create-field "stdout" (display-value workspace-namespace stdout (last (string/split stdout #"/")))))
                 (when-let [stderr (data "stderr")]
