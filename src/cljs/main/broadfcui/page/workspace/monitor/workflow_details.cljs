@@ -81,7 +81,7 @@
                          :sortable? false
                          :column-data #(display-value namespace (second %))}]
                task-column {:header "Task"
-                            :column-data #(second (string/split (key %) #"\."))}]
+                            :column-data #(second (rseq (string/split (key %) #"\.")))}]
            [Table
             {:data (:data props)
              :body {:style table-style/table-heavy
@@ -332,8 +332,8 @@
                 (create-field "Started" (moncommon/render-date (data "start")))
                 ;(utils/cljslog data)
                 (create-field "Ended" (moncommon/render-date (data "end")))
-                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true :workspace-id (:workspace-id props)}]
-                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Inputs" :data (data "inputs") :call-detail? (not (data "subWorkflowId")) :workspace-id (:workspace-id props)}]
+                [IODetail {:label "Outputs" :data (data "outputs") :call-detail? (not (data "subWorkflowId")) :workspace-id (:workspace-id props)}]
                 (when-let [stdout (data "stdout")]
                   (create-field "stdout" (display-value workspace-namespace stdout (last (string/split stdout #"/")))))
                 (when-let [stderr (data "stderr")]
