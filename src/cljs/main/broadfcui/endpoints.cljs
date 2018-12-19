@@ -1,5 +1,6 @@
 (ns broadfcui.endpoints
   (:require
+   [clojure.string :as string]
    [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
@@ -140,9 +141,9 @@
              (set (keys query-parameters)))
           (str "Malformed query parameters: " query-parameters))
   {:path (str "/workspaces/" (id-path workspace-id) "/entityQuery/" type "?"
-              (clojure.string/join "&" (keep (fn [[k v]]
-                                               (some->> v str not-empty (str k "=")))
-                                             query-parameters)))
+              (string/join "&" (keep (fn [[k v]]
+                                       (some->> v str not-empty (str k "=")))
+                                     query-parameters)))
    :method :get})
 
 (defn get-entities-by-type [workspace-id]
@@ -212,10 +213,20 @@
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id)
    :method :get})
 
-(defn get-workflow-details [workspace-id submission-id workflow-id]
-  {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id
-              "/workflows/" workflow-id)
-   :method :get})
+(defn get-workflow-details
+  ;; basic form: use defaults for all query params
+  ([workspace-id submission-id workflow-id] (get-workflow-details workspace-id submission-id workflow-id nil [] []))
+  ;; includes form: specify which fields to include; defaults for everything else
+  ([workspace-id submission-id workflow-id include-keys] (get-workflow-details workspace-id submission-id workflow-id nil include-keys []))
+  ;; flexible form: specify any/all of expand-subworkflows, include-keys, exclude-keys
+  ([workspace-id submission-id workflow-id expand-subworkflows include-keys exclude-keys]
+    (let [expand (when (some? expand-subworkflows) (str "&expandSubWorkflows=" expand-subworkflows))
+          include (string/join (mapv #(str "&includeKey=" %) include-keys))
+          exclude (string/join (mapv #(str "&excludeKey=" %) exclude-keys))
+          querystring (str expand include exclude)]
+      {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id
+                  "/workflows/" workflow-id "?" querystring)
+       :method :get})))
 
 (defn get-workflow-cost [workspace-id submission-id workflow-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id
@@ -370,6 +381,17 @@
    {:method :post
     :on-done on-done}))
 
+(defn get-provider-auth-url [provider on-done]
+  (ajax/call-bond
+   (str "/link/v1/" provider "/authorization-url"
+        "?scopes=openid&scopes=google_credentials"
+        "&redirect_uri="
+        (js/encodeURIComponent
+          (let [loc js/window.location]
+            (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
+        "&state=" (utils/encode-base64-json {:provider provider}))
+   {:method :get
+    :on-done on-done}))
 
 (defn get-groups [on-done]
   (call-ajax-orch

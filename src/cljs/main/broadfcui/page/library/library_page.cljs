@@ -16,6 +16,7 @@
    [broadfcui.components.autosuggest :refer [Autosuggest]]
    [broadfcui.components.modals :as modals]
    [broadfcui.components.spinner :refer [spinner]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.library.research-purpose :refer [ResearchPurposeSection]]
@@ -194,7 +195,8 @@
                              (when (or tcga? target?)
                                [:p {} "After dbGaP approves your application please link your eRA
                                        Commons ID in your FireCloud profile page."])])])))}
-         {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
+         {:href (str (when (common/has-terra-return?) (config/terra-url))
+                     (nav/get-link :workspace-summary (common/row->workspace-id data)))})))
    :-build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce

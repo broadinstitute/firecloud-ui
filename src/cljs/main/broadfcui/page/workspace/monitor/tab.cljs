@@ -14,6 +14,7 @@
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.monitor.submission-details :as submission-details]
    [broadfcui.utils :as utils]
+   [broadfcui.utils.ajax :as ajax]
    ))
 
 (defn- render-date [submission]
@@ -87,10 +88,10 @@
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-submissions (:workspace-id props))
-       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+       :on-done (fn [{:keys [success? status-text status-code get-parsed-response]}]
                   (swap! state assoc :server-response (if success?
                                                         {:submissions (get-parsed-response)}
-                                                        {:error-message status-text})))}))})
+                                                        {:error-message (ajax/extract-error-message get-parsed-response status-text status-code)})))}))})
 
 
 (react/defc Page

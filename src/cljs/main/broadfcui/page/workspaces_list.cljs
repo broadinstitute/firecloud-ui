@@ -198,7 +198,7 @@
                       tcga-disabled-text
                       non-dbGap-disabled-text))
       :restricted? (seq auth-domain)
-      :featured?  (contains? featured-workspaces workspace-id))))
+      :featured? (utils/tolerant-contains? featured-workspaces workspace-id))))
 
 
 (react/defc- WorkspaceTable
@@ -428,7 +428,11 @@
           [WorkspaceTable
            (merge props (utils/restructure workspaces featured-workspaces))])
         {:loading-text "Loading workspaces..."
-         :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
+         :rephrase-error (fn [ajax-response]
+                           (let [msg (or
+                                      (get-in ajax-response [:parsed-response :message])
+                                      (get-in ajax-response [:parsed-response :workspaces :error-message]))]
+                            [:div {:style {:padding "50px"}} msg]))})))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch

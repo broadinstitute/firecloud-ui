@@ -245,3 +245,6 @@
 ;; scopes live here instead of in auth.cljs as a quick fix to avoid circular dependencies
 (def login-scopes ["email" "profile"])
 (def storage-scopes (conj login-scopes "https://www.googleapis.com/auth/devstorage.read_only"))
+
+(defn has-terra-return? []
+  (string/includes? js/window.location.search "return=terra"))

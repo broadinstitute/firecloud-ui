@@ -209,11 +209,7 @@
                                  :on-done
                                  (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
-                                     (user/reload-profile
-                                      #(swap! state dissoc :loading?))
-                                     (utils/multi-swap! state
-                                       (assoc :error (:message (get-parsed-response)))
-                                       (dissoc :loading?))))})))})
+                                     (.reload js/location)))})))})
                          (utils/multi-swap! state
                            (assoc :loading? true)
                            (dissoc :displaying-eula?)))]

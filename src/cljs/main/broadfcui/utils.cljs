@@ -164,3 +164,15 @@
   (.getElementById js/document "app"))
 
 (def build-timestamp (generate-build-timestamp))
+
+(defn decode-base64-json [b64string]
+  (parse-json-string (js/window.atob b64string) true))
+
+(defn encode-base64-json [map]
+  (js/window.btoa (->json-string map)))
+
+(defn tolerant-contains? [haystack needle]
+  (as-> haystack $
+        (map #(select-keys % (keys needle)) $)
+        (set $)
+        (contains? $ needle)))
