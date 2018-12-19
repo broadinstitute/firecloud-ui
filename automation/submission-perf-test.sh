@@ -128,35 +128,35 @@ monitorSubmission() {
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_task_workflow sample_set sample_set6k false "this.samples"
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testA=$submissionID
     echo "$testA"
     monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
     submissionA=$submissionStatus
     sleep 2m
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_task_workflow sample_set sample_set6k false "this.samples"
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
     testB=$submissionID
     echo "$testB"
     monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
     submissionB=$submissionStatus
     sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_task_workflow sample_set sample_set6k false "this.samples"
     findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
     testD=$submissionID
     echo "$testD"
     monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
     submissionD=$submissionStatus
     sleep 2m
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_task_workflow sample_set sample_set6k false "this.samples"
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
     testE=$submissionID
     echo "$testE"
     monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
     submissionE=$submissionStatus
     sleep 1m
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_task_workflow sample_set sample_set6k false "this.samples"
     findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
     testG=$submissionID
     echo "$testG"
