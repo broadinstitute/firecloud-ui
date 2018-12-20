@@ -10,7 +10,7 @@ NEED_TOKEN=false
 
 # Check if $ENV is not empty
 if [[ ! ${ENV} ]]; then
-   echo "ENV is empty. Run again \`sh submission-perf-test.sh <alpha or staging>\`"
+   echo "ENV is empty. Run again \`sh submission-perf-test-old.sh <alpha or staging>\`"
     exit 1
 else
     echo "Starting Perf test in {$ENV}"
