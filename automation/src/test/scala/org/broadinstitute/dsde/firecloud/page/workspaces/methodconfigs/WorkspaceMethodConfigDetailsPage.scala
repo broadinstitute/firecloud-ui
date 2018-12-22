@@ -41,7 +41,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   val inputsTable = Table("inputs-table")
 
 
-  def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
+  private def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
     Try(
       page.awaitReady() // check if click happened
@@ -55,6 +55,26 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
+    // TODO remove after fix Jira ticket ## (temp workaround to close Disabled Google Bucket message modal that blocks test execution)
+    Try(await condition {
+      logger.info("BEGIN SPECIAL CODE")
+      openLaunchAnalysisModalButton.isStateEnabled match {
+        case true =>
+          logger.info("END SPECIAL CODE")
+          true
+        case false =>
+          val msgModal = new DisabledMessageModal()
+          if (msgModal.isVisible && msgModal.getMessageText.startsWith(msgModal.message)) {
+            msgModal.clickXButton()
+            go to webDriver.getCurrentUrl
+            Thread.sleep(1000)
+          }
+          false
+      }
+    }).recover {
+      case _: Exception => logger.error("The Launch Analysis button is not Enabled")
+    }
+
     val launchModal = openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
     try {
@@ -175,7 +195,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
     await spinner "Loading attributes..."
-    openLaunchAnalysisModalButton.isVisible
+    openLaunchAnalysisModalButton.isStateDisabled || openLaunchAnalysisModalButton.isStateEnabled
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
@@ -189,7 +209,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def isSnapshotRedacted: Boolean = {
     snapshotRedactedLabel.isVisible
   }
+
 }
+
 
 class PopulateFromJsonModal(implicit webDriver: WebDriver) extends OKCancelModal("upload-json-modal") {
   private val fileInput = FileSelector("data-upload-input" inside this)
@@ -268,7 +290,9 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
   }
 }
 
-
+class DisabledMessageModal()(override implicit val webDriver: WebDriver) extends MessageModal {
+  val message = "You do not currently have access to the Google Bucket associated with this workspace"
+}
 
 
 
