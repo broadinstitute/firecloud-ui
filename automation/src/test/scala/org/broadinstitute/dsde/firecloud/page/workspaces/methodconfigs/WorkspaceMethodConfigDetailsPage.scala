@@ -55,12 +55,13 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
-    // TODO remove after fix Jira ticket ## (temp workaround to close Disabled Google Bucket message modal that blocks test execution)
+    // TODO remove after fix https://broadinstitute.atlassian.net/browse/GAWB-3711
+    //  (this is a temp workaround to close Disabled Google Bucket message modal that blocks test execution)
     Try(await condition {
-      logger.info("BEGIN SPECIAL CODE")
+      logger.info("BEGIN: launchAnalysis button")
       openLaunchAnalysisModalButton.isStateEnabled match {
         case true =>
-          logger.info("END SPECIAL CODE")
+          logger.info("TRUE: End try")
           true
         case false =>
           val msgModal = new DisabledMessageModal()
@@ -69,10 +70,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
             go to webDriver.getCurrentUrl
             Thread.sleep(1000)
           }
+          logger.info("FALSE: Retry")
           false
       }
     }).recover {
-      case _: Exception => logger.error("The Launch Analysis button is not Enabled")
+      case _: Exception => throw new TimeoutException("Timed out looking for enabled Launch Analysis button.")
     }
 
     val launchModal = openLaunchAnalysisModal()
