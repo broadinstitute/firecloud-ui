@@ -55,26 +55,26 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
-    // TODO remove after fix https://broadinstitute.atlassian.net/browse/GAWB-3711
-    //  (this is a temp workaround to close Disabled Google Bucket message modal that blocks test execution)
+    // TODO remove after fix. short term workaround that unblock test execution. Jira Ticket is https://broadinstitute.atlassian.net/browse/GAWB-3711
     Try(await condition {
-      logger.info("BEGIN: launchAnalysis button")
+      logger.info("GAWB-3711 workaround: looking for enabled Launch Analysis button")
       openLaunchAnalysisModalButton.isStateEnabled match {
         case true =>
-          logger.info("TRUE: End try")
+          logger.info("GAWB-3711 workaround: End of try")
           true
         case false =>
+          // if message modal is present, close it then reloads page
           val msgModal = new DisabledMessageModal()
           if (msgModal.isVisible && msgModal.getMessageText.startsWith(msgModal.message)) {
             msgModal.clickXButton()
             go to webDriver.getCurrentUrl
             Thread.sleep(1000)
           }
-          logger.info("FALSE: Retry")
+          logger.info("GAWB-3711 workaround: Retrying")
           false
       }
     }).recover {
-      case _: Exception => throw new TimeoutException("Timed out looking for enabled Launch Analysis button.")
+      case _: Exception => throw new TimeoutException("Timed out looking for enabled Launch Analysis button (GAWB-3711 workaround).")
     }
 
     val launchModal = openLaunchAnalysisModal()
