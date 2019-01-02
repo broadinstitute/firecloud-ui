@@ -197,6 +197,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
     await spinner "Loading attributes..."
+    // `isStateDisabled` and `isStateEnabled` checks values of two attributes: `isVisible` and `data-test-state`.
+    // Forces WebDriver to wait for the button has rendered attribute `data-test-state` then look for attribute value.
+    // Doesn't matter what value of `data-test-state` is, cares only if attribute exists.
+    // Evaluate to false if `isVisible` evaluate to false.
     openLaunchAnalysisModalButton.isStateDisabled || openLaunchAnalysisModalButton.isStateEnabled
   }
 
