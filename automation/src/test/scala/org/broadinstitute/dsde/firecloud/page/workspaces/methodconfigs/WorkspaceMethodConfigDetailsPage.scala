@@ -41,7 +41,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   val inputsTable = Table("inputs-table")
 
 
-  def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
+  private def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
     openLaunchAnalysisModalButton.doClick()
     Try(
       page.awaitReady() // check if click happened
@@ -55,6 +55,28 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
+    // TODO remove after fix. short term workaround that unblock test execution. Jira Ticket is https://broadinstitute.atlassian.net/browse/GAWB-3711
+    Try(await condition {
+      logger.info("GAWB-3711 workaround: looking for enabled Launch Analysis button")
+      openLaunchAnalysisModalButton.isStateEnabled match {
+        case true =>
+          logger.info("GAWB-3711 workaround: End of try")
+          true
+        case false =>
+          // if message modal is present, close it then reloads page
+          val msgModal = new DisabledMessageModal()
+          if (msgModal.isVisible && msgModal.getMessageText.startsWith(msgModal.message)) {
+            msgModal.clickXButton()
+            go to webDriver.getCurrentUrl
+            Thread.sleep(1000)
+          }
+          logger.info("GAWB-3711 workaround: Retrying")
+          false
+      }
+    }).recover {
+      case _: Exception => throw new TimeoutException("Timed out looking for enabled Launch Analysis button (GAWB-3711 workaround).")
+    }
+
     val launchModal = openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
     try {
@@ -175,7 +197,10 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
     await spinner "Loading attributes..."
-    openLaunchAnalysisModalButton.isVisible
+    // checks button is visible and has a value in its `data-test-state` attribute.
+    // Doesn't matter what value of `data-test-state` is, cares only if attribute value exists.
+    // Evaluate to false if `isVisible` evaluate to false.
+    openLaunchAnalysisModalButton.isVisible && openLaunchAnalysisModalButton.getState.nonEmpty
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
@@ -189,7 +214,9 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def isSnapshotRedacted: Boolean = {
     snapshotRedactedLabel.isVisible
   }
+
 }
+
 
 class PopulateFromJsonModal(implicit webDriver: WebDriver) extends OKCancelModal("upload-json-modal") {
   private val fileInput = FileSelector("data-upload-input" inside this)
@@ -268,7 +295,9 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends OKCancelModal("
   }
 }
 
-
+class DisabledMessageModal()(override implicit val webDriver: WebDriver) extends MessageModal {
+  val message = "You do not currently have access to the Google Bucket associated with this workspace"
+}
 
 
 
