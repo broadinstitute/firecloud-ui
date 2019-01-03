@@ -115,6 +115,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
             withWorkspace(billingProject, "PublishSpec_curator_publish_") { wsName =>
               val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
               api.library.setLibraryAttributes(billingProject, wsName, data)
+              api.library.setDiscoverableGroups(billingProject, wsName, List("all_broad_users"))
               api.library.publishWorkspace(billingProject, wsName)
 
               //clone workspace
