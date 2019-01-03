@@ -200,7 +200,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
     // checks button is visible and has a value in its `data-test-state` attribute.
     // Doesn't matter what value of `data-test-state` is, cares only if attribute value exists.
     // Evaluate to false if `isVisible` evaluate to false.
-    openLaunchAnalysisModalButton.isVisible && !openLaunchAnalysisModalButton.getState.isEmpty
+    openLaunchAnalysisModalButton.isVisible && openLaunchAnalysisModalButton.getState.nonEmpty
   }
 
   def deleteMethodConfig(): WorkspaceMethodConfigListPage = {
