@@ -187,9 +187,6 @@
                              (map #(dissoc % :read-only?))
                              (map #(update % :email clojure.string/trim))
                              (remove (comp empty? :email)))
-           ;; grant-filtered-acl (if (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
-           ;;                     filtered-acl
-           ;;                     (map #(dissoc % :canShare) filtered-acl))
            new-emails (set/difference (set (map :email filtered-acl))
                                       (:initial-acl-emails @locals))
            fails (->> (:non-project-owner-acl-vec @state) count range
