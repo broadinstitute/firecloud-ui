@@ -43,8 +43,19 @@
 
 (injections/setup)
 
+;; - when true, will show NPS survey as a popup. Popup visibility is controlled by SurveyMonkey via cookies.
+;; - when false, will show a comment icon in the bottom right of the page; clicking on the icon shows the NPS popup.
+;;   Popup visibility is controlled by our own persistence in local storage.
+;;
+;; Switching this var from true to false can lead to undesirable user behavior. If the user has already dismissed the
+;; SurveyMonkey popup, the user can have SurveyMonkey's cookies but not our own local storage key. Thus, we will
+;; show the comment icon - but when the user clicks on the icon, it will appear as if nothing happens. Behind the scenes,
+;; our JS handles the icon click and executes SurveyMonkey's JS. In turn, SurveyMonkey's JS sees its own cookies and
+;; declines to show the NPS modal.
+(def ^:private nps-use-popup? false)
 
 (def ^:private nps-persistence-key "nps-surveymonkey-done")
+(def ^:private nps-persistence-version 2)
 
 (defn- init-nav-paths []
   (nav/clear-paths)
@@ -99,10 +110,12 @@
                                                     :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
            (header/create-account-dropdown)]]]
         (let [original-destination (aget js/window "location" "hash")
+              {:keys [survey-loaded?]} @state
               {:keys [survey-interested?]} @state
-              survey-done? (persistence/try-restore
-                            {:key nps-persistence-key
-                             :initial (constantly false)})
+              survey-persistence (persistence/try-restore
+                                  {:key nps-persistence-key
+                                   :validator (comp (partial = nps-persistence-version) :v)
+                                   :initial (constantly {:v 0 :done? false})})
               on-done (fn [fall-through]
                         (when (empty? original-destination)
                           (nav/go-to-path fall-through))
@@ -122,23 +135,29 @@
             (if component
               [:div {}
                [component (make-props)]
-               (when-not survey-done?
-                 [:div {:style {:position "fixed" :bottom 20 :right 0 :padding 10
-                                :borderRadius "0.25rem 0 0 0.25rem"
-                                :backgroundColor (:button-primary style/colors) :opacity 0.8
-                                :cursor "pointer"}
-                        :title "Give feedback"
-                        :className "fa-stack"
-                        :onClick #(swap! state assoc :survey-interested? true)}
-                  (icons/render-icon {:className "fa-stack-2x" :style {:color "white"}} :comment)
-                  (icons/render-icon {:className "fa-stack-1x" :style {:color (:button-primary style/colors)}} :add-new)
-                  (when survey-interested?
-                    [ScriptLoader {:path "npssurvey.js"
-                                   :allow-cache? true
-                                   :on-error identity ;; we fail silently if we can't load the survey
-                                   :on-load #(do
-                                               (swap! state dissoc :survey-interested?)
-                                               (persistence/save-value nps-persistence-key true))}])])]
+               (if nps-use-popup?
+                (when-not survey-loaded?
+                  [ScriptLoader {
+                    :path "npssurvey.js"
+                    :on-error (swap! state assoc :survey-loaded? true) ;; we fail silently if we can't load the survey
+                    :on-load (swap! state assoc :survey-loaded? true)}])
+                (when-not (:done? survey-persistence)
+                  [:div {:style {:position "fixed" :bottom 20 :right 0 :padding 10
+                                 :borderRadius "0.25rem 0 0 0.25rem"
+                                 :backgroundColor (:button-primary style/colors) :opacity 0.8
+                                 :cursor "pointer"}
+                         :title "Give feedback"
+                         :className "fa-stack"
+                         :onClick #(swap! state assoc :survey-interested? true)}
+                   (icons/render-icon {:className "fa-stack-2x" :style {:color "white"}} :comment)
+                   (icons/render-icon {:className "fa-stack-1x" :style {:color (:button-primary style/colors)}} :add-new)
+                   (when survey-interested?
+                     [ScriptLoader {:path "npssurvey.js"
+                                    :allow-cache? true
+                                    :on-error identity ;; we fail silently if we can't load the survey
+                                    :on-load #(do
+                                                (swap! state dissoc :survey-interested?)
+                                                (persistence/save-value nps-persistence-key {:v nps-persistence-version :done? true}))}])]))]
               [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
