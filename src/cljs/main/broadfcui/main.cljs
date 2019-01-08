@@ -52,7 +52,7 @@
 ;; show the comment icon - but when the user clicks on the icon, it will appear as if nothing happens. Behind the scenes,
 ;; our JS handles the icon click and executes SurveyMonkey's JS. In turn, SurveyMonkey's JS sees its own cookies and
 ;; declines to show the NPS modal.
-(def ^:private nps-use-popup? false)
+(def ^:private nps-use-popup? true)
 
 (def ^:private nps-persistence-key "nps-surveymonkey-done")
 (def ^:private nps-persistence-version 2)
