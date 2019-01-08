@@ -14,6 +14,7 @@ import org.scalatest.TestSuite
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 
 import scala.concurrent.duration._
+import scala.util.Try
 
 trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: WebBrowserSpec with TestSuite =>
 
@@ -89,6 +90,12 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
             None
         }
       })
+
+      // This modal contains the user satisfaction survey
+      Try(click on find(className("smcx-modal-close")).get)
+      withClue("Failed to wait for the SurveyMonkey NPS survey popup to close") {
+        await notVisible className("smcx-modal")
+      }
 
     }, page, testCode)
   }
