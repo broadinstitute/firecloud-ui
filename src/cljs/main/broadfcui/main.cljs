@@ -135,29 +135,30 @@
             (if component
               [:div {}
                [component (make-props)]
-               (if nps-use-popup?
-                (when-not survey-loaded?
-                  [ScriptLoader {
-                    :path "npssurvey.js"
-                    :on-error (swap! state assoc :survey-loaded? true) ;; we fail silently if we can't load the survey
-                    :on-load (swap! state assoc :survey-loaded? true)}])
-                (when-not (:done? survey-persistence)
-                  [:div {:style {:position "fixed" :bottom 20 :right 0 :padding 10
-                                 :borderRadius "0.25rem 0 0 0.25rem"
-                                 :backgroundColor (:button-primary style/colors) :opacity 0.8
-                                 :cursor "pointer"}
-                         :title "Give feedback"
-                         :className "fa-stack"
-                         :onClick #(swap! state assoc :survey-interested? true)}
-                   (icons/render-icon {:className "fa-stack-2x" :style {:color "white"}} :comment)
-                   (icons/render-icon {:className "fa-stack-1x" :style {:color (:button-primary style/colors)}} :add-new)
-                   (when survey-interested?
-                     [ScriptLoader {:path "npssurvey.js"
-                                    :allow-cache? true
-                                    :on-error identity ;; we fail silently if we can't load the survey
-                                    :on-load #(do
-                                                (swap! state dissoc :survey-interested?)
-                                                (persistence/save-value nps-persistence-key {:v nps-persistence-version :done? true}))}])]))]
+               (when-not (common/has-terra-return?)
+                 (if nps-use-popup?
+                  (when-not survey-loaded?
+                    [ScriptLoader {
+                      :path "npssurvey.js"
+                      :on-error (swap! state assoc :survey-loaded? true) ;; we fail silently if we can't load the survey
+                      :on-load (swap! state assoc :survey-loaded? true)}])
+                  (when-not (:done? survey-persistence)
+                    [:div {:style {:position "fixed" :bottom 20 :right 0 :padding 10
+                                   :borderRadius "0.25rem 0 0 0.25rem"
+                                   :backgroundColor (:button-primary style/colors) :opacity 0.8
+                                   :cursor "pointer"}
+                           :title "Give feedback"
+                           :className "fa-stack"
+                           :onClick #(swap! state assoc :survey-interested? true)}
+                     (icons/render-icon {:className "fa-stack-2x" :style {:color "white"}} :comment)
+                     (icons/render-icon {:className "fa-stack-1x" :style {:color (:button-primary style/colors)}} :add-new)
+                     (when survey-interested?
+                       [ScriptLoader {:path "npssurvey.js"
+                                      :allow-cache? true
+                                      :on-error identity ;; we fail silently if we can't load the survey
+                                      :on-load #(do
+                                                  (swap! state dissoc :survey-interested?)
+                                                  (persistence/save-value nps-persistence-key {:v nps-persistence-version :done? true}))}])])))]
               [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
