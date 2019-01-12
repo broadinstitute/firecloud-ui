@@ -9,14 +9,14 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.broadinstitute.dsde.workbench.model.google.GcsPath
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.{Page, WebBrowser}
+import org.scalatest.selenium.WebBrowser
 
 class WorkspaceNotebooksPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceNotebooksPage] with LazyLogging {
+  extends WorkspacePage(namespace, name) with PageUtil[WorkspaceNotebooksPage] with LazyLogging {
 
   override def awaitReady(): Unit = clustersTable.awaitReady()
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/notebooks"
 
   private val clustersTable = Table("spark-clusters-table")
   private val openCreateClusterModalButton: Button = Button("create-modal-button")

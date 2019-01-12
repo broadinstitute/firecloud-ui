@@ -160,12 +160,12 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
 
               implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Minutes)), interval = scaled(Span(20, Seconds)))
 
-              // test will end when api status becomes Submitted. not waiting for Done
+              // test will end when api status becomes Running. not waiting for Done
               eventually {
                 val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)
                 logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
-                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Waited for status Submitted") {
-                  status shouldBe "Submitted"
+                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Status is Done or Running") {
+                  status should (equal("Done") or equal ("Runner"))
                 }
               }
             }

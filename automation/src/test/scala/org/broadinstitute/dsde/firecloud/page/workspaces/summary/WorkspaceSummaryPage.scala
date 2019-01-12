@@ -8,14 +8,14 @@ import org.broadinstitute.dsde.firecloud._
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.WorkspaceAccessLevel.WorkspaceAccessLevel
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
-import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
+import org.openqa.selenium.{TimeoutException, WebDriver}
+
 
 /**
   * Page class for the Workspace Detail page.
   */
 class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceSummaryPage] with Stateful {
+  extends WorkspacePage(namespace, name) with PageUtil[WorkspaceSummaryPage] with Stateful {
 
   override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name"
 
@@ -23,23 +23,43 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit val webDriv
 
   override def awaitReady(): Unit = {
     super.awaitReady()
-    await condition {
-      isError || getState == "error" ||
-        (getState == "ready" && sidebar.isReady && submissionCounter.isReady
-          /*&& (if (storageCostEstimate.isVisible) storageCostEstimate.isReady else true)*/)
-          // FIXME: Storage cost estimate hangs when cloning workspaces in AuthDomainSpec
+    if (!(isError || getState == "error")) {
+      try {
+        await condition {
+          getState == "ready"
+        }
+      } catch {
+        case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for [$query] data-test-state == ready on page $url. Actural value is ${getState}", e)
+      }
+
+      await condition {
+        sidebar.isReady
+      }
+
+      await condition {
+        submissionCounter.isReady
+      }
+
+      /*
+      await condition {
+        ( getState == "ready" && sidebar.isReady && submissionCounter.isReady
+          // && (if (storageCostEstimate.isVisible) storageCostEstimate.isReady else true)
+          )
+        // FIXME: Storage cost estimate hangs when cloning workspaces in AuthDomainSpec
+      } */
+
+      /* The workspace summary tab aggressively refreshes after it appears to be ready. Therefore,
+       * it's possible for tests to start interacting with the page in ways that change state and for
+       * that state to be reset when the refresh happens. When looking at test failures, this has the
+       * appearance of selenium click actions being completely missed.
+       *
+       * Users typically won't be interacting with the page in this narrow window because of the time
+       * it takes to locate the element they want to click and moving the pointer and clicking. While
+       * not ideal for test code, sleeping briefly here is an acceptable work-around until we can fix
+       * the tab to not refresh so aggressively.
+       */
+      Thread.sleep(1000)
     }
-    /* The workspace summary tab aggressively refreshes after it appears to be ready. Therefore,
-     * it's possible for tests to start interacting with the page in ways that change state and for
-     * that state to be reset when the refresh happens. When looking at test failures, this has the
-     * appearance of selenium click actions being completely missed.
-     *
-     * Users typically won't be interacting with the page in this narrow window because of the time
-     * it takes to locate the element they want to click and moving the pointer and clicking. While
-     * not ideal for test code, sleeping briefly here is an acceptable work-around until we can fix
-     * the tab to not refresh so aggressively.
-     */
-    Thread.sleep(1000)
   }
 
   def validateLocation(): Unit = {

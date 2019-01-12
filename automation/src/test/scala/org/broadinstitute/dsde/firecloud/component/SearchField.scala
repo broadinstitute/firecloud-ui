@@ -16,4 +16,9 @@ case class SearchField(queryString: QueryString)(implicit webDriver: WebDriver)
   def getAttribute(name: String): Option[String] = {
     searchField(query).attribute(name)
   }
+
+  def clear: Unit = {
+    searchField(query).clear()
+  }
+
 }

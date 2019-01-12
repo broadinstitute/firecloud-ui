@@ -5,13 +5,15 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
-class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with Page with PageUtil[MethodRepoPage] {
+class MethodRepoPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with PageUtil[MethodRepoPage] {
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#methods"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#methods"
 
-  override def awaitReady(): Unit = methodRepoTable.awaitReady()
+  override def awaitReady(): Unit = {
+    super.awaitReady()
+    methodRepoTable.awaitReady()
+  }
 
   val methodRepoTable = new MethodRepoTable()
   private val newMethodButton = Button("create-method-button")

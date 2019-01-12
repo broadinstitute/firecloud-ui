@@ -1,8 +1,11 @@
 package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
+import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.{StaleElementReferenceException, TimeoutException, WebDriver, WebDriverException}
 import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
+
+import scala.util.Try
 
 /**
   * Mix in for Components which can be clicked to do something arbitrary (such as navigate
@@ -28,16 +31,32 @@ trait Clickable extends LazyLogging { this: Component =>
     } catch {
       // on rare occasion, encounters stale exception
       case e: StaleElementReferenceException =>
-        logger.warn(s"Encountered StaleElementReferenceException. Retrying click on query: $query")
+        logger.warn(s"Encountered StaleElementReferenceException. Click again on: $query")
+        Thread.sleep(2000)
         click on query
       case e: WebDriverException =>
         logger.debug(e.getMessage)
         // make an attempt to recover for this exact error
-        if (e.getMessage.contains("Other element would receive the click")) {
-          Thread.sleep(5000)
-          logger.warn(s"Encountered WebDriverException. Retrying click on query: $query")
-          click on query
-        }
+
+
+        Try {
+          if (e.getMessage.contains("Other element would receive the click")) {
+            logger.warn(s"Encountered WebDriverException. Click again on: $query")
+            Thread.sleep(2000)
+            click on query
+          }
+        }.recover {
+          /* https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/2766
+            ChromeDriver always clicks the middle of the Link element. Sometimes, the link is not clickable in its middle.
+            To handle this: Use the advanced user interactions API to click link at offset position.
+          */
+          case e: WebDriverException =>
+            if (query.findElement.get.underlying.getTagName == "a") {
+              val action = new Actions(webDriver)
+              action.moveToElement(query.findElement.get.underlying, 10, 0).click().perform()
+            }
+          case ex: Exception => throw ex
+         }
     }
   }
 

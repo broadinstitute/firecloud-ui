@@ -13,7 +13,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   with WebBrowserSpec with Matchers with CleanUp with TestReporterFixture {
 
   val ownerUser: Credentials = UserPool.chooseProjectOwner
-  implicit val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
+  implicit lazy val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
     "should be able to create a method and see it in the table" in {
@@ -23,7 +23,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
             val methodRepoPage = new MethodRepoPage().open
 
             // create it
-            val name = "TEST-CREATE-" + randomUuid
+            val name = "CREATE-" + randomUuid
             val attributes = MethodData.SimpleMethod.creationAttributes + ("name" -> name) + ("documentation" -> "documentation")
             val namespace = attributes("namespace")
             methodRepoPage.createNewMethod(attributes)
@@ -41,7 +41,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
     }
 
     "should be able to redact a method that they own" in {
-      withMethod( "TEST-REDACT" ) { case (name,namespace)=>
+      withMethod( "REDACT" ) { case (name,namespace)=>
         withWebDriver { implicit driver =>
           withSignIn(ownerUser) { workspaceListPage =>
             val methodRepoPage = workspaceListPage.goToMethodRepository()
@@ -67,9 +67,9 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
 
     "should be able to export a method" - {
       "to an existing workspace" in {
-        withMethod("TEST-EXPORT") { case (methodName, methodNamespace) =>
+        withMethod("EXPORT") { case (methodName, methodNamespace) =>
           withCleanBillingProject(ownerUser) { billingProject =>
-            withWorkspace(billingProject, "TEST-EXPORT-DESTINATION") { workspaceName =>
+            withWorkspace(billingProject, "EXPORT-DESTINATION") { workspaceName =>
               withWebDriver { implicit driver =>
                 withSignIn(ownerUser) { workspaceListPage =>
                   val methodRepoPage = workspaceListPage.goToMethodRepository()
@@ -91,7 +91,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
       }
 
       "to a new workspace" in {
-        withMethod("TEST-EXPORT") { case (methodName, methodNamespace) =>
+        withMethod("EXPORT") { case (methodName, methodNamespace) =>
           withCleanBillingProject(ownerUser) { billingProject =>
             withCleanUp {
               withWebDriver { implicit driver =>
@@ -102,7 +102,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
                   val exportModal = methodRepoPage.methodRepoTable.enterMethod(methodNamespace, methodName).startExport()
                   val finalPage = exportModal.firstPage.useBlankConfiguration()
 
-                  val workspaceName = "test_create_on_export_" + randomUuid
+                  val workspaceName = "EXPORT-" + randomUuid
                   finalPage.workspaceSelector.selectNew(billingProject, workspaceName)
                   finalPage.confirm()
                   // register cleanUp after workspace created cleanly. otherwise, cleanup throws exception

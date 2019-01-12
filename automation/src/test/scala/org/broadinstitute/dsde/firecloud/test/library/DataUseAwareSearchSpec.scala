@@ -54,7 +54,10 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
         val ffiTagId = "doid:0050433-tag"
 
-        researchPurposeModal.enterOntologySearchText("fatal").exists(_.contains(ffiSuggestionText)) shouldBe true
+        eventually {
+          val fatalTexts: Seq[String] = researchPurposeModal.enterOntologySearchText("fatal")
+          fatalTexts.exists(_.contains(ffiSuggestionText)) shouldBe true
+        }
 
         researchPurposeModal.selectSuggestion(ffiSuggestionId)
         eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true }
@@ -64,7 +67,10 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846"
         val brxTagId = "doid:2846-tag"
 
-        researchPurposeModal.enterOntologySearchText("brux").exists(_.contains(brxSuggestionText)) shouldBe true
+        eventually {
+          val bruxTexts = researchPurposeModal.enterOntologySearchText("brux")
+          bruxTexts.exists(_.contains(brxSuggestionText)) shouldBe true
+        }
 
         researchPurposeModal.selectSuggestion(brxSuggestionId)
 

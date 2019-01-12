@@ -6,17 +6,16 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
 /**
   * Page class for the Workspace List page.
   */
-class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[WorkspaceListPage] {
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces"
+class WorkspaceListPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with PageUtil[WorkspaceListPage] {
+
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces"
 
   override def awaitReady(): Unit = {
-    await notVisible (cssSelector("[data-test-id=spinner]"), 60)
+    super.awaitReady()
     workspacesTable.awaitReady()
   }
 

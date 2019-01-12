@@ -17,24 +17,13 @@ import org.scalatest.time.{Seconds, Span}
 
 trait DownloadUtil extends Eventually with LazyLogging with WebBrowserUtil {
 
-
   def makeTempDownloadDirectory(): String = {
-    /*
-     * This might work some day if docker permissions get straightened out... or it might not be
-     * needed. For now, we instead `chmod 777` the directory in run-tests.sh.
-    new File("chrome").mkdirs()
-    val downloadPath = Files.createTempDirectory(Paths.get("chrome"), "downloads")
-    val permissions = Set(PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_WRITE, PosixFilePermission.OTHERS_WRITE)
-    Files.setPosixFilePermissions(downloadPath, permissions.asJava)
-    downloadPath.toString
-     */
 
     val downloadPath = s"chrome/downloads/${UUID.randomUUID()}"
     val dir = new File(downloadPath)
     dir.deleteOnExit()
     dir.mkdirs()
     val path = dir.toPath
-    logger.info(s"mkdir: $path")
     val permissions = Set(
       PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
       PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,

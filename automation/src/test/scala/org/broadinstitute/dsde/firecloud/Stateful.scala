@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud
 
 import org.broadinstitute.dsde.workbench.service.test.Awaiter
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.exceptions.TestFailedException
 
 trait Stateful { this: FireCloudView =>
@@ -31,7 +31,13 @@ trait SignalsReadiness extends Stateful { this: FireCloudView =>
 
   def isReady(implicit webDriver: WebDriver): Boolean = getState == "ready"
 
-  override def awaitReady(): Unit = await condition isReady
+  override def awaitReady(): Unit = {
+    try {
+      await condition isReady
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for [$query] data-test-state == ready on page ${webDriver.getCurrentUrl}. Actural value is ${getState}")
+    }
+  }
 }
 
 trait ReadyComponent { this: FireCloudView =>

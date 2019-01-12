@@ -2,7 +2,9 @@ package org.broadinstitute.dsde.firecloud.component
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
-import org.openqa.selenium.{JavascriptExecutor, WebDriver}
+import org.openqa.selenium.{JavascriptExecutor, TimeoutException, WebDriver}
+
+import scala.util.Try
 
 /**
   * Components can be specified either by an arbitrary CSS selector query, or by the data-test-id directly
@@ -56,7 +58,11 @@ abstract class Component(queryString: QueryString)(implicit webDriver: WebDriver
   }
 
   def awaitVisible(): Unit = await visible query
-  def awaitNotVisible(timeout: Long = defaultTimeOutInSeconds): Unit = await notVisible (query, timeout)
+  def awaitNotVisible(timeout: Long = defaultTimeOutInSeconds): Unit = {
+    Try { await notVisible (query, timeout) }.recover {
+      case _: TimeoutException => throw new TimeoutException(s"Failed waiting for notVisible on Element: $query (tried for $timeout seconds).")
+    }
+  }
   def awaitEnabled(): Unit = await enabled query
 
   def isVisible: Boolean = find(query).exists(_.isDisplayed)

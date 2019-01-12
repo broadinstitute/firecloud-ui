@@ -17,7 +17,7 @@ import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 
 class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
+  extends WorkspacePage(namespace, name) with PageUtil[SubmissionDetailsPage] {
 
   // TODO: Launch Analysis sends us to this page without knowing the submission ID. Fix this.
   override lazy val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
