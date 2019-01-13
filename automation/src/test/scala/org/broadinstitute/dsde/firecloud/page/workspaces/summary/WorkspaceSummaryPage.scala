@@ -264,8 +264,20 @@ class Sidebar(parent: WorkspaceSummaryPage)(implicit val webDriver: WebDriver) e
 
   def clickSave(): Unit = {
     saveButton.doClick()
-    await condition !parent.isEditing
-    parent.awaitReady()
+    try {
+      await condition !parent.isEditing
+      parent.awaitReady()
+    } catch {
+      case _: TimeoutException =>
+        val errorModal = new ErrorModal()
+        if (errorModal.isVisible) {
+          import spray.json._
+          val json = (errorModal.getMessageText).parseJson
+          throw new TimeoutException(s"Error modal:\n${json.prettyPrint}")
+        } else {
+          throw new TimeoutException(s"Error when click Save on page ${webDriver.getCurrentUrl}.")
+        }
+    }
   }
 
   def clickCancel(): Unit = {
