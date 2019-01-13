@@ -7,7 +7,6 @@ import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
 
@@ -15,9 +14,9 @@ import scala.concurrent.duration.DurationLong
   * Page class for the Data Library page.
   */
 class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[DataLibraryPage] with LazyLogging {
+  with PageUtil[DataLibraryPage] with LazyLogging {
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#library"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#library"
 
   private val libraryTable = Table("library-table")
   private val searchField = SearchField("library-search-input")
@@ -37,6 +36,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
   val dataUseLimitationSection = "Data Use Limitation"
 
   override def awaitReady(): Unit = {
+    super.awaitReady()
     libraryTable.awaitReady()
   }
 
@@ -119,6 +119,7 @@ class ResearchPurposeModal(implicit webDriver: WebDriver) extends OKCancelModal(
     */
   def enterOntologySearchText(text: String): Seq[String] = {
     val crit = s"$text " // appends a whitespace
+    ontologySearch.setText("") // clear texts
     ontologySearch.setText(crit)
     // ontology autosuggest has a custom attribute that tracks what search criteria it is currently displaying
     // suggestions for. Wait for the UI to catch up and display suggestions for what we just entered.

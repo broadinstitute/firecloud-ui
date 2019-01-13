@@ -76,8 +76,9 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
         logger.info(s"withSignIn (${user.email}) opening SignInPage ...")
         new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
         logger.info(s"withSignIn (${user.email}) executing script forceSignedIn ...")
-        executeScript(s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')")
-        if (counter > 0) logger.warn(s"Retrying forceSignedIn. $counter")
+        val js = s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')"
+        executeScript(js)
+        if (counter > 0) logger.warn(s"Retrying execute JavaScript forceSignedIn(): value = $js")
         counter +=1
         try {
           logger.info(s"withSignIn (${user.email}) awaiting page ready ...")

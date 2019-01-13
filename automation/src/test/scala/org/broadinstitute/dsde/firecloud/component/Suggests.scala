@@ -53,10 +53,8 @@ trait Suggests extends LazyLogging { this: Component =>
     val listOptionCss1: String = s"""#$dropdownId li *[data-test-id=\"$suggestionTestId\"]"""
     val listOptionCss2: String = s"""[data-test-id=\"$suggestionTestId\"]"""
     val alternateCss = Random.shuffle(List(listOptionCss1, listOptionCss2)).head
-    logger.info(s"(remove) getSuggestionByTestId: alternated CssSelector: $alternateCss")
 
     val li = find(cssSelector(alternateCss)).get
-    logger.info(s"(remove) getSuggestionByTestId: dropdown list contains: $li")
     li
   }
 
@@ -82,7 +80,6 @@ trait Suggests extends LazyLogging { this: Component =>
     // see https://www.w3.org/WAI/PF/aria-1.1/states_and_properties#attrs_relationships for info on aria-owns/aria-controls.
     //
     // wait for the aria-owns/aria-controls attribute to exist:
-    logger.info(s"(remove) autosuggestion: check aria-owns or aria-controls is nonEmpty")
     await condition ({
       Option(uel.getAttribute("aria-owns")).nonEmpty ||
       Option(uel.getAttribute("aria-controls")).nonEmpty
@@ -90,7 +87,6 @@ trait Suggests extends LazyLogging { this: Component =>
 
     // reduce the value of the "aria-owns" or "aria-controls" attributes - either could be populated - into
     // the DOM id that contains the suggestions.
-    logger.info(s"(remove) autosuggestion: determine dropdownId")
     val ownedId = Option(uel.getAttribute("aria-owns"))
     val controlledId = Option(uel.getAttribute("aria-controls"))
     val dropdownId = (ownedId ++ controlledId).headOption match {
@@ -102,12 +98,10 @@ trait Suggests extends LazyLogging { this: Component =>
     // wait for dropdown contains at least one option and every option text is visible
     var notEmpty = false
     val listOptionXpath = s"#$dropdownId li"
-    logger.info(s"(remove) autosuggestion: dropdownId: $dropdownId")
     await condition ({
       val options = findAll(cssSelector(listOptionXpath))
       notEmpty = options.nonEmpty
       val displayed = options.forall {_.isDisplayed}
-      logger.info(s"(remove) autosuggestion: texts displayed: $displayed. notEmpty: $notEmpty")
       displayed && notEmpty
     },5)
 
@@ -115,7 +109,6 @@ trait Suggests extends LazyLogging { this: Component =>
     val li = findAll(cssSelector(listOptionXpath)).map(_.text).filter(_.nonEmpty).toSeq
     if (li.isEmpty) throw new NoSuchElementException
 
-    logger.info(s"(remove) autosuggestion: dropdown list contains ${li.size} li: $li")
     li
   }
 

@@ -23,7 +23,12 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
   private val tabs = TabBar()
 
   override def awaitReady(): Unit = {
-    await spinner "Loading workspace..."
+    super.awaitReady()
+    try {
+      await spinner "Loading workspace..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Loading workspace...' stop on page $url.", e)
+    }
   }
 
   def isError: Boolean = workspaceError.isVisible
@@ -44,7 +49,7 @@ abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver
       await condition (webDriver.getCurrentUrl.compareTo(expUrl) == 0, 2)
     } catch {
       case e: TimeoutException =>
-        logger.warn(s"Actual url: ${webDriver.getCurrentUrl}, Expect url: $expUrl. Action of clicking Tab($tabName) possibily failed")
+        logger.warn(s"URL mismatch. Actual url: ${webDriver.getCurrentUrl}, Expect url: $expUrl. Action of clicking Tab($tabName) possibily failed. Continuing anyway...")
     }
   }
 

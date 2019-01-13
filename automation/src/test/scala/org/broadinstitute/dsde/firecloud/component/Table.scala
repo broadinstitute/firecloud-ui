@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.component
 
 import org.broadinstitute.dsde.firecloud.{Persists, Stateful}
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.{By, Keys, WebDriver}
+import org.openqa.selenium.{By, Keys, TimeoutException, WebDriver}
 
 import scala.util.Try
 
@@ -26,7 +26,9 @@ case class Table(queryString: QueryString)(implicit webDriver: WebDriver)
 
   override def awaitReady(): Unit = {
     awaitVisible()
-    await condition { getState == "ready" }
+    Try { await condition { getState == "ready" } }.recover {
+      case _: TimeoutException => throw new TimeoutException(s"Failed waiting for table's data-test-state == ready ($query)")
+    }
   }
 
   /**

@@ -12,19 +12,22 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.SubmissionDetai
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
 
 class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodConfigNamespace: String, val methodConfigName: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadUtil  {
+  extends WorkspacePage(namespace, name) with PageUtil[WorkspaceMethodConfigDetailsPage] with LazyLogging with Eventually with DownloadUtil  {
 
   override def awaitReady(): Unit = {
     await condition isLoaded
-    await spinner "Checking permissions..."
+    try {
+      await spinner "Checking permissions..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Checking permissions...' stop on page $url.", e)
+    }
   }
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
   private val openLaunchAnalysisModalButton = Button("open-launch-analysis-modal-button")
   private val openEditModeButton = Button("edit-method-config-button")
@@ -41,7 +44,36 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   val inputsTable = Table("inputs-table")
 
 
-  private def clickLaunchAnalysis[T <: FireCloudView](page: T): T = {
+  private def clickLaunchAnalysis[T <: FireCloudView](page: T, isEnabled: Boolean = true): T = {
+    // TODO remove after fix. short term workaround that unblock test execution. Jira Ticket is https://broadinstitute.atlassian.net/browse/GAWB-3711
+    if (isEnabled) {
+      try {
+        await condition {
+          logger.info("GAWB-3711 workaround: looking for enabled Launch Analysis button")
+          openLaunchAnalysisModalButton.isStateEnabled match {
+            case true =>
+              logger.info("GAWB-3711 workaround: End of try")
+              true
+            case false =>
+              // if message modal is present, close it then reloads page
+              val msgModal = new DisabledMessageModal()
+              if (msgModal.isVisible && msgModal.getMessageText.startsWith(msgModal.message)) {
+                msgModal.clickXButton()
+                logger.info("GAWB-3711 workaround: Close Diabled message modal")
+                val currUrl = webDriver.getCurrentUrl
+                goToWorkspaces()
+                go to currUrl
+                Thread.sleep(1000)
+              }
+              logger.info("GAWB-3711 workaround: Retrying")
+              false
+          }
+        }
+      } catch {
+        case ex: TimeoutException => throw new TimeoutException("Timed out looking for enabled Launch Analysis button.", ex.getCause)
+      }
+    }
+
     openLaunchAnalysisModalButton.doClick()
     Try(
       page.awaitReady() // check if click happened
@@ -55,28 +87,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true): SubmissionDetailsPage = {
-    // TODO remove after fix. short term workaround that unblock test execution. Jira Ticket is https://broadinstitute.atlassian.net/browse/GAWB-3711
-    Try(await condition {
-      logger.info("GAWB-3711 workaround: looking for enabled Launch Analysis button")
-      openLaunchAnalysisModalButton.isStateEnabled match {
-        case true =>
-          logger.info("GAWB-3711 workaround: End of try")
-          true
-        case false =>
-          // if message modal is present, close it then reloads page
-          val msgModal = new DisabledMessageModal()
-          if (msgModal.isVisible && msgModal.getMessageText.startsWith(msgModal.message)) {
-            msgModal.clickXButton()
-            go to webDriver.getCurrentUrl
-            Thread.sleep(1000)
-          }
-          logger.info("GAWB-3711 workaround: Retrying")
-          false
-      }
-    }).recover {
-      case _: Exception => throw new TimeoutException("Timed out looking for enabled Launch Analysis button (GAWB-3711 workaround).")
-    }
-
     val launchModal = openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
     try {
@@ -100,7 +110,7 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   }
 
   def clickLaunchAnalysisButtonError(): MessageModal = {
-    clickLaunchAnalysis(new MessageModal())
+    clickLaunchAnalysis(new MessageModal(), false)
   }
 
   def isEditing: Boolean = {
@@ -130,7 +140,12 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
   def editMethodConfig(newName: Option[String] = None, newSnapshotId: Option[Int] = None, newRootEntityType: Option[String] = None,
                        inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None): Unit = {
     openEditMode()
-    await spinner "Loading attributes..."
+
+    try {
+      await spinner "Loading attributes..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Loading attributes' stop on page $url.", e)
+    }
 
     if (newName.isDefined) { editMethodConfigNameInput.setText(newName.get) }
     if (newSnapshotId.isDefined) { changeSnapshotId(newSnapshotId.get) }
@@ -161,8 +176,6 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def clickAndReadSuggestions(field: String): Seq[String] = {
     val dataTestId = s"$field-text-input"
-    click on find(testId("test.hello.response-text-input")).get // force page scrolls down
-
     val suggestionTextfield = TextField(TestId(dataTestId))
     suggestionTextfield.getSuggestions()
   }
@@ -184,7 +197,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   def changeSnapshotId(newSnapshotId: Int): Unit = {
     editMethodConfigSnapshotIdSelect.select(newSnapshotId.toString)
-    await spinner "Updating..."
+    try {
+      await spinner "Updating..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Updating...' stop on page $url.", e)
+    }
   }
 
   private def changeInputsOutputs(fields: Map[String, String]): Unit = {
@@ -196,7 +213,11 @@ class WorkspaceMethodConfigDetailsPage(namespace: String, name: String, methodCo
 
   // TODO This is a very weak check to deterimine if page is ready
   def isLoaded: Boolean = {
-    await spinner "Loading attributes..."
+    try {
+      await spinner "Loading attributes..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Loading attributes...' stop on page $url.", e)
+    }
     // checks button is visible and has a value in its `data-test-state` attribute.
     // Doesn't matter what value of `data-test-state` is, cares only if attribute value exists.
     // Evaluate to false if `isVisible` evaluate to false.

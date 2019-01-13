@@ -4,7 +4,6 @@ import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserUtil
-import org.openqa.selenium.support.ui.{ExpectedConditions, WebDriverWait}
 import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.{Page, WebBrowser}
 
@@ -52,7 +51,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     }
   }
 
-  override val url: String = baseUrl
+  lazy override val url: String = baseUrl
 
   private val signInButton = GoogleSignInButton(CSSQuery("#sign-in-button"))
 

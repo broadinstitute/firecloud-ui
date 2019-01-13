@@ -6,19 +6,18 @@ import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.PageUtil
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspacePage
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
 
 
 class WorkspaceMonitorPage(namespace: String, name: String)(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[WorkspaceMonitorPage] {
+  extends WorkspacePage(namespace, name) with PageUtil[WorkspaceMonitorPage] {
 
   override def awaitReady(): Unit = {
     if (!isError) filterInput.awaitVisible()
   }
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor"
 
   // TODO: make this a Table
   private val filterInput = SearchField("filter-input")

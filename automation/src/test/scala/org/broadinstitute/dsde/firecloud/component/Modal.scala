@@ -57,17 +57,15 @@ class OKCancelModal(id: String)(override implicit val webDriver: WebDriver) exte
     clickCancel()
     awaitDismissed()
   }
-}
 
-class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message-modal") {
   def getMessageText: String = content.getText
 }
+
+class MessageModal(implicit webDriver: WebDriver) extends OKCancelModal("message-modal")
 
 class ErrorModal(implicit webDriver: WebDriver) extends OKCancelModal("error-modal")
 
-class ConfirmModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal") {
-  def getMessageText: String = content.getText
-}
+class ConfirmModal(implicit webDriver: WebDriver) extends OKCancelModal("confirmation-modal")
 
 class GCSFilePreviewModal(implicit webDriver: WebDriver) extends OKCancelModal("preview-modal") with SignalsReadiness {
   private val googleBucket = Label("google-bucket-content" inside this)
