@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.test.library
 
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.fixture.{LibraryData, UserFixtures}
-import org.broadinstitute.dsde.workbench.service.Orchestration
+import org.broadinstitute.dsde.workbench.service.{AclEntry, Orchestration, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.firecloud.page.library.DataLibraryPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
 import org.broadinstitute.dsde.workbench.auth.AuthToken
@@ -78,6 +78,30 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
           }
         }
       }
+      "should be visible to a user that has read access to the workspace but is not in the discoverability group" in {
+        val curatorUser = UserPool.chooseCurator
+        val wsReaderUser = UserPool.chooseStudent
+        implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
+        withCleanBillingProject(curatorUser) { billingProject =>
+          withWorkspace(billingProject, "PublishSpec_reader_view_", aclEntries = List(AclEntry(wsReaderUser.email, WorkspaceAccessLevel.Reader))) { wsName =>
+            val data = LibraryData.metadataBasic + ("library:datasetName" -> wsName)
+            api.library.setLibraryAttributes(billingProject, wsName, data)
+            api.library.setDiscoverableGroups(billingProject, wsName, List("all_broad_users"))
+            api.library.publishWorkspace(billingProject, wsName)
+
+            withWebDriver { implicit driver =>
+              withSignIn(wsReaderUser) { _ =>
+                val page = new DataLibraryPage().open
+                eventually {
+                  page.doSearch(wsName)
+                  page.hasDataset(wsName) shouldBe true
+                }
+              }
+            }
+          }
+        }
+      }
+
 
       "when cloned" - {
         "should be cloned without copying the published status" in {
