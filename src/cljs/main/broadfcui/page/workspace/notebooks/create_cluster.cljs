@@ -41,10 +41,6 @@
                    "n1-highmem-64"
                    "n1-highmem-96"])
 
-; TODO: FireCloud temporarily pegged at an older Jupyter image with Hail 0.1
-; See https://github.com/DataBiosphere/leonardo/issues/699
-(def jupyterDockerImage "us.gcr.io/broad-dsp-gcr-public/leonardo-notebooks:hail0.1")
-
 (react/defc ClusterCreator
   {:refresh
    (fn [])
@@ -182,8 +178,7 @@
                :payload (merge payload
                                {:machineConfig machineConfig}
                                (when-not (string/blank? extensionURI) {:jupyterExtensionUri extensionURI})
-                               (when-not (string/blank? userScriptURI) {:jupyterUserScriptUri userScriptURI})
-                               {:jupyterDockerImage jupyterDockerImage})
+                               (when-not (string/blank? userScriptURI) {:jupyterUserScriptUri userScriptURI}))
                :headers ajax/content-type=json
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :creating?)
