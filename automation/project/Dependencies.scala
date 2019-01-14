@@ -4,7 +4,7 @@ import sbt.Keys._
 object Dependencies {
   val jacksonV = "2.9.0"
 
-  val serviceTestV = "0.16-bf6aac5-SNAP"
+  val serviceTestV = "0.16-6e8475d-SNAP"
 
   val workbenchExclusions = Seq(
     ExclusionRule(organization = "org.broadinstitute.dsde.workbench", name = s"workbench-metrics_2.12")
