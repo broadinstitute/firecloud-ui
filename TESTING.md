@@ -97,7 +97,7 @@ Now, simply open the test spec, right-click on the class name or a specific test
 To run all tests:
 
 ```bash
-sbt test -Djsse.enableSNIExtension=false -Dheadless=false
+sbt -Djsse.enableSNIExtension=false -Dheadless=false test
 ```
 
 To run a single suite:
