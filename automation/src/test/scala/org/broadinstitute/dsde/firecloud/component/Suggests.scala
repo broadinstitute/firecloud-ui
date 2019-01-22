@@ -36,7 +36,7 @@ trait Suggests extends LazyLogging { this: Component =>
       .ignoring(classOf[NoSuchElementException])
     val ele: Element = wait until ((driver: WebDriver) => getSuggestionByTestId(suggestionTestId) )
     logger.info(s"Select dropdown autoSuggestion: ${ele.text}")
-    click on ele
+    click on getSuggestionByTestId(suggestionTestId)
   }
 
   private def getSuggestionByTestId(suggestionTestId: String)(implicit webDriver: WebDriver): Element = {
