@@ -116,7 +116,7 @@ if [ $ENV = "prod" ]; then
 
    i=1
 
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 24 ]
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 30 ]
 
     do
             echo $i
