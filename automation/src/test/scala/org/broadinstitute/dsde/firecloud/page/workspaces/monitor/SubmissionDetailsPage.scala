@@ -63,16 +63,24 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     statusMessage.getText
   }
 
+  def verifyWorkflowStatus(expectedStatus: String): Boolean = {
+    val actualStatus = readWorkflowStatus()
+    val pass = expectedStatus.contains(actualStatus)
+    if (!pass)
+      logger.error(s"expected workflow status to be [$expectedStatus]; actually [$actualStatus]")
+    pass
+  }
+
   def verifyWorkflowSucceeded(): Boolean = {
-    SUCCESS_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(SUCCESS_STATUS)
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    FAILED_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(FAILED_STATUS)
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    ABORTED_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(ABORTED_STATUS)
   }
 
   /**
