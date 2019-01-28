@@ -116,8 +116,6 @@ if [ $ENV = "prod" ]; then
 
    i=1
 
-
-
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 48 ]
 
     do
