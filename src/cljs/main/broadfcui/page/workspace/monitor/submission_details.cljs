@@ -96,7 +96,8 @@
                              input-names (string/split inputs ".")
                              workflow-name (first input-names)]
                          (links/create-external
-                           {:href (str moncommon/google-storage-context bucketName "/" submission-id "/"
+                           {:data-test-id "workflow-id"
+                            :href (str moncommon/google-storage-context bucketName "/" submission-id "/"
                                        workflow-name "/" workflowId "/")}
                            workflowId))))}
                   {:header "Run Cost" :initial-width 100 :column-data :cost
