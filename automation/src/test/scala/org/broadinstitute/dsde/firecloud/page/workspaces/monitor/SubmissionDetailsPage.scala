@@ -70,6 +70,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   // if the submission has multiple workflows, there will be multiple ids on the page
   // and this method will only read the one Selenium chooses by default.
   def readWorkflowId(): String = {
+    // if the workflow fails before starting, it won't have an id; make sure we handle this case.
     Try(workflowIdLabel.getText) match {
       case Success(id) => id
       case Failure(ex) => s"workflow id unavailable: ${ex.getMessage}"
@@ -85,7 +86,7 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     val pass = expectedStatus.contains(actualStatus)
     if (!pass) {
       val workflowId = readWorkflowId()
-      logger.error(s"for workflow id [$workflowId[, expected status [$expectedStatus]; actually [$actualStatus]")
+      logger.error(s"for workflow id [$workflowId] in project [$namespace], expected status [$expectedStatus]; actually [$actualStatus]")
     }
     pass
   }
