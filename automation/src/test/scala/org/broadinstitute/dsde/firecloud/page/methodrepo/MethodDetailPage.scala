@@ -7,19 +7,25 @@ import org.broadinstitute.dsde.firecloud.page.methodcommon.SelectConfigurationVi
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
 import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
 class MethodDetailPage(namespace: String, name: String)(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[MethodDetailPage] {
+  with PageUtil[MethodDetailPage] {
 
-  override val url = s"${FireCloudConfig.FireCloud.baseUrl}#methods/$namespace/$name"
+
+  lazy override val url = s"${FireCloudConfig.FireCloud.baseUrl}#methods/$namespace/$name/${snapshotVersion}"
 
   private val exportButton = Button("export-to-workspace-button")
 
   private val redactButton = Button("redact-button")
 
   override def awaitReady(): Unit = {
+    super.awaitReady()
     redactButton.awaitVisible()
+  }
+
+  def snapshotVersion: String = {
+    val ver = CssSelectorQuery(s"[data-test-id=snapshot-dropdown] > span").element.underlying.getText
+    ver
   }
 
   def startExport(): ExportModal = {

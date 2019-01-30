@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.page.user
 
+import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.broadinstitute.dsde.firecloud.component._
 import org.broadinstitute.dsde.firecloud.component.Component._
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
@@ -11,7 +12,12 @@ import org.openqa.selenium.WebDriver
   */
 class RegistrationPage(implicit webDriver: WebDriver) extends AuthenticatedPage {
 
-  override def awaitReady(): Unit = await text "User Info"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}"
+
+  override def awaitReady(): Unit = {
+    super.awaitReady()
+    await text "User Info"
+  }
 
   private val contactEmailInput = TextField("contactEmail")
   private val firstNameInput = TextField("firstName")

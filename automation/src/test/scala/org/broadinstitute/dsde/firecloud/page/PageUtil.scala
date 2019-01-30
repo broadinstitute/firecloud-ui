@@ -1,9 +1,8 @@
 package org.broadinstitute.dsde.firecloud.page
 
-import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.fixture.WebDriverIdLogging
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{TimeoutException, WebDriver}
 import org.scalatest.selenium.Page
 
 import scala.util.{Failure, Success, Try}
@@ -25,9 +24,13 @@ trait PageUtil[P <: Page] extends FireCloudView with WebDriverIdLogging { self: 
     Try (await notVisible cssSelector("[data-test-id=spinner]")) match {
       case Success(_) =>
       case Failure(_) =>
-        log.warn(s"Refreshing page ${webDriver.getCurrentUrl}")
+        log.warn(s"Timed out waiting for Spinner stop on page $url. Opened url is ${webDriver.getCurrentUrl}. Retry with page reload.")
         go to this
-        await notVisible cssSelector("[data-test-id=spinner]") // will throw timeout exception if spinner still isn't going away in retry
+        webDriver.navigate().refresh()
+        try { await notVisible cssSelector("[data-test-id=spinner]") } catch {
+          case e: TimeoutException =>
+            throw new TimeoutException(s"Timed out waiting for Spinner stop on page $url. Opened url is ${webDriver.getCurrentUrl}. Test stopping...", e)
+        } // will rethrow timeout exception if spinner still isn't going away in retry to abort test
     }
     Try (awaitReady()) match {
       case Success(_) =>

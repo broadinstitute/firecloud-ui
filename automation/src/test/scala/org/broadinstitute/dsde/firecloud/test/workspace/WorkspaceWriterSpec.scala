@@ -29,7 +29,7 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
       "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
-        val testName = "WorkspaceWriterSpec_writerAccess_projectCost"
+        val testName = "WorkspaceWriterAccess"
         withCleanBillingProject(projectOwner) { billingProject =>
           withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
             withWebDriver { implicit driver =>
@@ -46,9 +46,9 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
       "and does not have canCompute permission" - {
         "should see launch analysis button disabled" in {
           val user = UserPool.chooseStudent
-          val testName = "WorkspaceWriterSpec_writerAccess_withoutCompute"
-          withMethod(testName, MethodData.SimpleMethod) { methodName =>
-            val methodConfigName = methodName + "Config"
+          val testName = "WorkspaceWithoutCompute"
+          withMethod("m", MethodData.SimpleMethod) { methodName =>
+            val methodConfigName = methodName
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withCleanBillingProject(projectOwner) { billingProject =>
               withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(false)))) { workspaceName =>
@@ -77,9 +77,9 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
           val user = UserPool.chooseStudent
           implicit val authToken: AuthToken = user.makeAuthToken()
 
-          val testName = "WorkspaceWriterSpec_writerAccess_withCompute"
-          withMethod(testName, MethodData.SimpleMethod) { methodName =>
-            val methodConfigName = methodName + "Config"
+          val testName = "WorkspaceWithCompute"
+          withMethod("m", MethodData.SimpleMethod) { methodName =>
+            val methodConfigName = methodName
             api.methods.setMethodPermissions(MethodData.SimpleMethod.methodNamespace, methodName, 1, user.email, "READER")(authTokenOwner)
             withCleanBillingProject(projectOwner) { billingProject =>
               withWorkspace(billingProject, testName, Set.empty, List(AclEntry(user.email, WorkspaceAccessLevel.Writer, Some(false), Some(true)))) { workspaceName =>
@@ -91,7 +91,6 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
 
                 withWebDriver { implicit driver =>
                   withSignIn(user) { listPage =>
-                    api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
                     val workspacePage = listPage.enterWorkspace(billingProject, workspaceName)
                     val methodConfigDetailsPage = workspacePage.goToMethodConfigTab().openMethodConfig(SimpleMethodConfig.configNamespace, methodConfigName)
                     val launchAnalysisModal = methodConfigDetailsPage.openLaunchAnalysisModal()

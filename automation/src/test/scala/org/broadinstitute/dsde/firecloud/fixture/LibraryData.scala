@@ -34,8 +34,10 @@ object LibraryData {
      "library:cellType"->"cell",
      "library:requiresExternalApproval"->false,
      "library:useLimitationOption"-> "skip",
-     "library:technology"->Seq("is an optional","array attribute"),
-     "_discoverableByGroups"->Seq("all_broad_users"))
+     "library:technology"->Seq("is an optional","array attribute"))
+
+  // to set a discoverable by group, you can add the following with your specific group
+  // "library:discoverableByGroups"->Seq("all_broad_users")
 
    val metadataORSP = metadataBasic ++ Map(
       "library:useLimitationOption"->"orsp",

@@ -16,8 +16,10 @@ import org.scalatest.selenium.Page
 import scala.concurrent.duration.{DurationLong, FiniteDuration}
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 
+import scala.util.{Failure, Success, Try}
+
 class SubmissionDetailsPage(namespace: String, name: String, var submissionId: String = "unspecified")(implicit webDriver: WebDriver)
-  extends WorkspacePage(namespace, name) with Page with PageUtil[SubmissionDetailsPage] {
+  extends WorkspacePage(namespace, name) with PageUtil[SubmissionDetailsPage] {
 
   // TODO: Launch Analysis sends us to this page without knowing the submission ID. Fix this.
   override lazy val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#workspaces/$namespace/$name/monitor/$submissionId"
@@ -30,10 +32,14 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
   }
 
   private val submissionStatusLabel = Label("submission-status")
-  private val workflowStatusLabel = Label("workflow-status")
   private val submissionIdLabel = Label("submission-id")
   private val submissionAbortButton = Button("submission-abort-button")
   private val statusMessage = Label("status-message")
+
+  // if the submission has multiple workflows, there will be multiple statuses and ids on the page
+  // and these labels will only refer to the one Selenium chooses by default.
+  private val workflowStatusLabel = Label("workflow-status")
+  private val workflowIdLabel = Label("workflow-id")
 
   private val WAITING_STATES = Array("Queued","Launching")
   private val WORKING_STATES = Array("Submitted", "Running", "Aborting")
@@ -55,24 +61,46 @@ class SubmissionDetailsPage(namespace: String, name: String, var submissionId: S
     submissionIdLabel.getText
   }
 
+  // if the submission has multiple workflows, there will be multiple statuses on the page
+  // and this method will only read the one Selenium chooses by default.
   def readWorkflowStatus(): String = {
     workflowStatusLabel.getText
+  }
+
+  // if the submission has multiple workflows, there will be multiple ids on the page
+  // and this method will only read the one Selenium chooses by default.
+  def readWorkflowId(): String = {
+    // if the workflow fails before starting, it won't have an id; make sure we handle this case.
+    Try(workflowIdLabel.getText) match {
+      case Success(id) => id
+      case Failure(ex) => s"workflow id unavailable: ${ex.getMessage}"
+    }
   }
 
   def readStatusMessage(): String = {
     statusMessage.getText
   }
 
+  def verifyWorkflowStatus(expectedStatus: String): Boolean = {
+    val actualStatus = readWorkflowStatus()
+    val pass = expectedStatus.contains(actualStatus)
+    if (!pass) {
+      val workflowId = readWorkflowId()
+      logger.error(s"for workflow id [$workflowId] in project [$namespace], expected status [$expectedStatus]; actually [$actualStatus]")
+    }
+    pass
+  }
+
   def verifyWorkflowSucceeded(): Boolean = {
-    SUCCESS_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(SUCCESS_STATUS)
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    FAILED_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(FAILED_STATUS)
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    ABORTED_STATUS.contains(readWorkflowStatus())
+    verifyWorkflowStatus(ABORTED_STATUS)
   }
 
   /**

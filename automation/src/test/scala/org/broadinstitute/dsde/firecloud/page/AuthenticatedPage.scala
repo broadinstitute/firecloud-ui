@@ -2,14 +2,28 @@ package org.broadinstitute.dsde.firecloud.page
 
 import org.broadinstitute.dsde.firecloud.FireCloudView
 import org.broadinstitute.dsde.firecloud.component.{Link, TestId}
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{Keys, TimeoutException, WebDriver}
 import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.Keys
+import org.scalatest.selenium.Page
+
 
 /**
   * Base class for pages that are reachable after signing in.
   */
-abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireCloudView {
+abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireCloudView with Page {
+
+  override def awaitReady(): Unit = {
+    try { await notVisible (cssSelector("[data-test-id=spinner]"), 60) } catch {
+      case _: TimeoutException =>
+        throw new TimeoutException(s"Timed out waiting for Spinner stop on page $url. Continuing anyway. Opened url is ${webDriver.getCurrentUrl}.")
+    }
+
+    val actualUrl = Option(webDriver.getCurrentUrl).getOrElse("").trim.replaceAll(" ", "%20")
+    val expectUrl = Option(url).getOrElse("").trim.replaceAll(" ", "%20")
+    if (!expectUrl.startsWith(actualUrl)) {
+      throw new TimeoutException(s"Failed awaitReady() because URL mismatch. Opened URL is $actualUrl. Expected URL is $expectUrl")
+    }
+  }
 
   /**
     * Sign out of FireCloud.

@@ -43,18 +43,18 @@ Test / baseDirectory := (baseDirectory in ThisBuild).value
 Test / parallelExecution := true
 
 /**
-  * disable sbt's log buffering
+  * sbt's log buffering
   */
-Test / logBuffered := false
+Test / logBuffered := true
 
 /**
   * Control the number of forked JVM allowed to run at the same time by
   *  setting the limit on Tags.ForkedTestGroup tag, 1 is default.
   *
   *  Warning: can't set too high (parallel execution - tests become flaky)
-  *  This is not number of threads in each JVM. That would be up to sbt.
+  *  This is not number of threads in each JVM. That would be up to sbt to decide.
   */
-Global / concurrentRestrictions := Seq(Tags.limit(Tags.ForkedTestGroup, 3))
+Global / concurrentRestrictions := Seq(Tags.limit(Tags.Test, 25), Tags.limit(Tags.ForkedTestGroup, 3))
 
 /**
   * Forked JVM options

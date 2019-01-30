@@ -22,9 +22,11 @@ class MethodImportSpec extends FreeSpec with Matchers with WebBrowserSpec with W
               api.methodConfigurations.createMethodConfigInWorkspace(billingProject, sourceWorkspaceName,
                 method, method.methodNamespace, method.methodName, 1, Map.empty, Map.empty, method.rootEntityType)
 
+              api.workspaces.waitForBucketReadAccess(billingProject, destWorkspaceName)
+              
               withWebDriver { implicit driver =>
                 withSignIn(user) { listPage =>
-                  api.workspaces.waitForBucketReadAccess(billingProject, destWorkspaceName)
+
                   val methodConfigTab = listPage.enterWorkspace(billingProject, destWorkspaceName).goToMethodConfigTab()
 
                   val methodConfigDetailsPage = methodConfigTab.copyMethodConfigFromWorkspace(

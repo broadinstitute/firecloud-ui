@@ -145,7 +145,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
         if (status == "failure" || status == "unknown") {
           try {
             // click icon to view then capture failure error in screeshot
-            find(xpath(s"//div[@data-test-id='$billingProjectName-row']//span[@data-test-id='status-icon']")).get.underlying.click()
+            find(xpath(s"//div[@data-test-id='$billingProjectName-row']/div[@data-test-class='table-cell']//button")).get.underlying.click()
           } catch {
             case _: Exception => // ignore error when click failed
           }

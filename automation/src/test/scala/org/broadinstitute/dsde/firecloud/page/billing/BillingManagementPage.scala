@@ -9,19 +9,19 @@ import org.broadinstitute.dsde.firecloud.page.{BaseFireCloudPage, PageUtil}
 import org.broadinstitute.dsde.workbench.service.test.RandomUtil
 import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import org.openqa.selenium.WebDriver
-import org.scalatest.selenium.Page
 
 import scala.concurrent.duration.DurationLong
 
 /**
   * Page class for managing billing projects.
   */
-class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage
-  with Page with PageUtil[BillingManagementPage] with WebDriverIdLogging with RandomUtil {
+class BillingManagementPage(implicit webDriver: WebDriver) extends BaseFireCloudPage with PageUtil[BillingManagementPage]
+  with WebDriverIdLogging with RandomUtil {
 
-  override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#billing"
+  lazy override val url: String = s"${FireCloudConfig.FireCloud.baseUrl}#billing"
 
   override def awaitReady: Unit = {
+    super.awaitReady()
     billingProjectTable.awaitReady()
   }
 
