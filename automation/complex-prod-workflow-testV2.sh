@@ -90,7 +90,7 @@ monitorSubmission() {
     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
 
     submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
-    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
+    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN"  "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
 }
 
 # check if user needs a token refresh
@@ -106,7 +106,7 @@ monitorSubmission() {
 
 if [ $ENV = "prod" ]; then
     SECONDS=0
-    launchSubmission dumbledore.admin@test.firecloud.org whitelisted-v2-project complex-featured-workflow_V2 gatk five-dollar-genome-analysis-pipeline_copy sample na12878_real_small false
+    launchSubmission dumbledore.admin@test.firecloud.org whitelisted-v2-project complex-featured-workflow_V2 gd-five-dollar-genome five-dollar-genome-analysis-pipeline_copy sample na12878_real_small false
 
 
 
