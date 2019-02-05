@@ -83,7 +83,7 @@ class UnpublishedWorkspaceSpec extends FreeSpec with ParallelTestExecution with 
     }
   }
 
-  "DUOS autocomplete" - {
+  ignore "DUOS autocomplete" - {
     "should give multiple results for a partial word" in {
       val user = UserPool.chooseAnyUser
       // there is no need for an auth token for this test, except that the api wrapper expects one
