@@ -110,4 +110,4 @@
              [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
               (if (string/blank? (:documentation entity))
                [:em {} "No documentation provided"]
-                [markdown/MarkdownView {:text (:documentation entity)}])]}])]))})
+               [markdown/MarkdownView {:text (:documentation entity)}])]}])]))})
