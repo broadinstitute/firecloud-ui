@@ -40,7 +40,7 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
       }
     }
 
-    ignore "The ontology autocomplete exists and works" in withWebDriver { implicit driver =>
+    "The ontology autocomplete exists and works" in withWebDriver ignore { implicit driver =>
       val user = UserPool.chooseAnyUser
 
       withSignIn(user) { _ =>
