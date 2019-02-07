@@ -32,54 +32,71 @@ class DataUseAwareSearchSpec extends FreeSpec with WebBrowserSpec with UserFixtu
         modal.selectCheckbox("poa")
         modal.submit()
 
-        eventually { modal.isVisible shouldBe false }
+        eventually {
+          modal.isVisible shouldBe false
+        }
 
-        eventually { page.showsResearchPurposeCode("control") shouldBe true }
-        eventually { page.showsResearchPurposeCode("poa") shouldBe true }
-        eventually { page.showsResearchPurposeCode("commercial") shouldBe false } // We didn't select this one
+        eventually {
+          page.showsResearchPurposeCode("control") shouldBe true
+        }
+        eventually {
+          page.showsResearchPurposeCode("poa") shouldBe true
+        }
+        eventually {
+          page.showsResearchPurposeCode("commercial") shouldBe false
+        } // We didn't select this one
       }
     }
 
-    "The ontology autocomplete exists and works" ignore withWebDriver { implicit driver =>
-      val user = UserPool.chooseAnyUser
+    "The ontology autocomplete exists and works" ignore {
+      withWebDriver { implicit driver =>
+        val user = UserPool.chooseAnyUser
 
-      withSignIn(user) { _ =>
-        val page = new DataLibraryPage().open
-        val researchPurposeModal = page.openResearchPurposeModal()
+        withSignIn(user) { _ =>
+          val page = new DataLibraryPage().open
+          val researchPurposeModal = page.openResearchPurposeModal()
 
-        researchPurposeModal.selectCheckbox("disease-focused-research")
+          researchPurposeModal.selectCheckbox("disease-focused-research")
 
-        // Disease 1
-        val ffiSuggestionText = "fatal familial insomnia"
-        val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433"  // fatal familial insomnia
+          // Disease 1
+          val ffiSuggestionText = "fatal familial insomnia"
+          val ffiSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_0050433" // fatal familial insomnia
         val ffiTagId = "doid:0050433-tag"
 
-        eventually {
-          val fatalTexts: Seq[String] = researchPurposeModal.enterOntologySearchText("fatal")
-          fatalTexts.exists(_.contains(ffiSuggestionText)) shouldBe true
+          eventually {
+            val fatalTexts: Seq[String] = researchPurposeModal.enterOntologySearchText("fatal")
+            fatalTexts.exists(_.contains(ffiSuggestionText)) shouldBe true
+          }
+
+          researchPurposeModal.selectSuggestion(ffiSuggestionId)
+          eventually {
+            researchPurposeModal.isTagSelected(ffiTagId) shouldBe true
+          }
+
+          // Disease 2
+          val brxSuggestionText = "bruxism"
+          val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846"
+          val brxTagId = "doid:2846-tag"
+
+          eventually {
+            val bruxTexts = researchPurposeModal.enterOntologySearchText("brux")
+            bruxTexts.exists(_.contains(brxSuggestionText)) shouldBe true
+          }
+
+          researchPurposeModal.selectSuggestion(brxSuggestionId)
+
+          eventually {
+            researchPurposeModal.isTagSelected(brxTagId) shouldBe true
+          }
+          eventually {
+            researchPurposeModal.isTagSelected(ffiTagId) shouldBe true
+          } // previously-selected tag still there
+
+          researchPurposeModal.xOut()
         }
-
-        researchPurposeModal.selectSuggestion(ffiSuggestionId)
-        eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true }
-
-        // Disease 2
-        val brxSuggestionText = "bruxism"
-        val brxSuggestionId = "suggestion-http://purl.obolibrary.org/obo/DOID_2846"
-        val brxTagId = "doid:2846-tag"
-
-        eventually {
-          val bruxTexts = researchPurposeModal.enterOntologySearchText("brux")
-          bruxTexts.exists(_.contains(brxSuggestionText)) shouldBe true
-        }
-
-        researchPurposeModal.selectSuggestion(brxSuggestionId)
-
-        eventually { researchPurposeModal.isTagSelected(brxTagId) shouldBe true }
-        eventually { researchPurposeModal.isTagSelected(ffiTagId) shouldBe true } // previously-selected tag still there
-
-        researchPurposeModal.xOut()
       }
     }
   }
+ }
 
 }
