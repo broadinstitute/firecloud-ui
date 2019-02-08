@@ -6,7 +6,9 @@
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
+   [broadfcui.common.markdown :as markdown]
    [broadfcui.common.style :as style]
+   [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.config :as config]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -101,8 +103,11 @@
             (make-field :synopsis "Synopsis" :width "150px")
             (make-field :snapshotComment "Snapshot Comment" :wrap? true :width "150px")])]
         (when-not (or redacted? (= repo "dockstore"))
-          [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
-           "Documentation:"
-           (if (string/blank? (:documentation entity))
-             [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-             [:div {:style {:fontSize "90%"}} (:documentation entity)])])]))})
+          [Collapse
+           {:style {:marginBottom "2rem"}
+            :title [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}  "Documentation:"]
+            :contents
+             [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+              (if (string/blank? (:documentation entity))
+               [:em {} "No documentation provided"]
+               [markdown/MarkdownView {:text (:documentation entity)}])]}])]))})
