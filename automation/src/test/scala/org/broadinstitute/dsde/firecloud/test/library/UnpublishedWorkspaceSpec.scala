@@ -83,8 +83,7 @@ class UnpublishedWorkspaceSpec extends FreeSpec with ParallelTestExecution with 
     }
   }
 
-  "DUOS autocomplete" -  {
-    "should give multiple results for a partial word" ignore {
+  "DUOS autocomplete should give multiple results for a partial word" ignore {
       val user = UserPool.chooseAnyUser
       // there is no need for an auth token for this test, except that the api wrapper expects one
       implicit val authToken: AuthToken = user.makeAuthToken()
@@ -93,7 +92,6 @@ class UnpublishedWorkspaceSpec extends FreeSpec with ParallelTestExecution with 
         val resultCount = autocompleteTextQueryPrefix.r.findAllMatchIn(result).length
         resultCount should be > minNumOfResults
       }
-    }
   }
 
 }
