@@ -87,16 +87,20 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
           Some(page)
         } catch {
           case t: Throwable =>
-            logger.warn(s"withSignIn (${user.email}) errored witing for page: ${t.getMessage}")
+            logger.warn(s"withSignIn (${user.email}) errored waiting for page: ${t.getMessage}")
             None
         }
       })
 
       // This modal contains the user satisfaction survey
-      Try(click on find(className("smcx-modal-close")).get)
-      withClue("Failed to wait for the SurveyMonkey NPS survey popup to close") {
-        await notVisible className("smcx-modal")
-      }
+      // Use a retry to handle race condition where surveymonkey popup renders
+      // after our first attempt to click its close button
+      retry(2.seconds, 1.minutes)({
+        Try(click on find(className("smcx-modal-close")).get)
+        Try(withClue("Failed to wait for the SurveyMonkey NPS survey popup to close") {
+          await notVisible className("smcx-modal")
+        }).toOption
+      })
 
     }, page, testCode)
   }
