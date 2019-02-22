@@ -4,6 +4,7 @@ package org.broadinstitute.dsde.firecloud.fixture
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
+import org.broadinstitute.dsde.firecloud.page.duos.{DuosHomePage, DuosLoginPage}
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage, TermsOfServicePage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
@@ -43,6 +44,25 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   def withSignInReal(user: Credentials)
                     (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignInReal(user, new WorkspaceListPage)(testCode)
+  }
+
+  /**
+    * Signs in to FireCloud using the Google sign-in flow. Assumes the user is already registered so
+    * hands the test code a ready WorkspaceListPage.
+    */
+  def withSignInDuos(user: Credentials)
+                    (testCode: DuosHomePage => Any)(implicit webDriver: WebDriver): Unit = {
+    withSignInDuos(user, new DuosHomePage())(testCode)
+  }
+
+  def withSignInDuos[T <: AuthenticatedPage](user: Credentials, page: T)
+                                            (testCode: T => Any)
+                                            (implicit webDriver: WebDriver): Unit = {
+
+    logger.info(s"withSignInDuos: ${user.email} ...")
+    executeTestCodeWithSignIn(user, {
+      new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/login").open.signIn(user.email, user.password)
+    }, page, testCode)
   }
 
   /**
@@ -101,7 +121,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     }, page, testCode)
   }
 
-  private def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
+  def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
                                                     (testCode: T => Any)
                                                     (implicit webDriver: WebDriver): Unit = {
 
@@ -126,7 +146,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     testCode(page)
 
     logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out ...")
-    try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
+    //try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
   }
 
 }

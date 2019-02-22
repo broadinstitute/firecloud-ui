@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.test.user
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
 import org.broadinstitute.dsde.firecloud.page.user.SignInPage
 import org.broadinstitute.dsde.firecloud.FireCloudConfig.{FireCloud, Users}
+import org.broadinstitute.dsde.workbench.config.Credentials
 import org.broadinstitute.dsde.workbench.fixture.{FailedTestRetryable, TestReporterFixture}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.broadinstitute.dsde.workbench.service.util.Tags
@@ -23,7 +24,7 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with FailedTestRetryable w
   "A user with a registered account" - {
 
     "should be able to log in and out as different users in same browser" taggedAs (Retryable, Tags.SignInRealTest) ignore {
-      val user1 = Users.Students.getUserCredential("harry")
+      val user1: Credentials = Users.Students.getUserCredential("harry")
       withWebDriver { implicit driver =>
         withSignInReal(user1) { listPage =>
           eventually { listPage.readUserEmail() shouldEqual user1.email }
