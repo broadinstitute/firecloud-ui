@@ -65,6 +65,8 @@ class DuosLoginPage(val baseUrl: String)(implicit webDriver: WebDriver) extends 
     val initialWindowHandles = windowHandles
 
     signInButton.doClick()
+    Thread.sleep(1000)
+
     await condition (windowHandles.size == 2)
 
     val popupWindowHandle = (windowHandles -- initialWindowHandles).head
@@ -200,6 +202,4 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     val aboutButton = find(CssSelectorQuery("a[href='#/home_about']"))
     aboutButton.get
   }
-
-
 }

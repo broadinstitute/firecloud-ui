@@ -19,57 +19,53 @@ import org.broadinstitute.dsde.workbench.config.{CommonConfig, Credentials}
 class DuosLinkSpec extends FreeSpec with ParallelTestExecution with Matchers
   with WebBrowserSpec with WorkspaceFixtures with UserFixtures with BillingFixtures with TestReporterFixture {
 
-  "click on the sign in button" in {
+  "sign in and apply for access" in {
     val user = new Credentials(email = "test.firec@gmail.com", password = "BroadDec1")
     withWebDriver { implicit driver =>
-//      val clickOnSignInHomepage = new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/home").open
+      goTo("https://duos.dsde-dev.broadinstitute.org/#/home")
       withSignInDuos(user) { homePage =>
+        homePage.datasetSearch()
+        val datarequest = cssSelector("div[class='main-title-description']")
+        //        find(datarequest).get.underlying.getText should include ("Data Access Committee")
+        find(datarequest).get.text should include("Data Access Committee")
         println("success")
-        val homeSearch: Unit = new DuosHomePage().datasetSearch()
-        homeSearch shouldBe("DUOS-000003")
       }
     }
   }
 
-//  "when logged in, type something in the search box and click 'download selection'" in {
-//    withWebDriver { implicit driver =>
-//      val homeSearch = new DuosHomePage().datasetSearch()
-//      homeSearch shouldBe("DUOS-000003")
-//    }
-//  }
-//
-//  "verify that the description of the DUOS graphic contains the attribute name" in {
-//        withWebDriver { implicit driver =>
-//          val duosp = CssSelectorQuery("img[alt*='What is DUOS graphic']")
-//          val duosGraphic = new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/home").open.find()
-//
-//          val duosGraphic = new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/home").open
-//            //val duosGraphic = new DuosLoginPage().open.duosP()
-//
-//            duosGraphic.underlying.isDisplayed shouldBe(true)
-//          }
-//        }
-//
-//  "click on the join DUOS button and type username in" in {
-//    withWebDriver { implicit driver =>
-//
-//      val join = new DuosSignInPage().open.joinDuos()
-//      // AuthenticatedPage.readUserEmail
-//      join shouldBe("test.firec@gmail.com")
-//    }
-//  }
-//
-//  "clicking if the help button exists" in {
-//        withWebDriver { implicit driver =>
-//          val duosHelp = new DuosSignInPage().helpDuos()
-//            duosHelp.underlying.isEnabled shouldBe(true)
-//          }
-//        }
-//
-//  "testing if the about button exists" in {
-//        withWebDriver { implicit driver =>
-//          val duosAbout = new DuosSignInPage().open.aboutDuos()
-//          duosAbout.underlying.isEnabled shouldBe(true)
-//          }
-//        }
+
+  //  "verify that the description of the DUOS graphic contains the attribute name" in {
+  //        withWebDriver { implicit driver =>
+  //          val duosp = CssSelectorQuery("img[alt*='What is DUOS graphic']")
+  //          val duosGraphic = new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/home").open.find()
+  //
+  //          val duosGraphic = new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/home").open
+  //            //val duosGraphic = new DuosLoginPage().open.duosP()
+  //
+  //            duosGraphic.underlying.isDisplayed shouldBe(true)
+  //          }
+  //        }
+  //
+  //  "click on the join DUOS button and type username in" in {
+  //    withWebDriver { implicit driver =>
+  //
+  //      val join = new DuosSignInPage().open.joinDuos()
+  //      // AuthenticatedPage.readUserEmail
+  //      join shouldBe("test.firec@gmail.com")
+  //    }
+  //  }
+  //
+  //  "clicking if the help button exists" in {
+  //        withWebDriver { implicit driver =>
+  //          val duosHelp = new DuosSignInPage().helpDuos()
+  //            duosHelp.underlying.isEnabled shouldBe(true)
+  //          }
+  //        }
+  //
+  //  "testing if the about button exists" in {
+  //        withWebDriver { implicit driver =>
+  //          val duosAbout = new DuosSignInPage().open.aboutDuos()
+  //          duosAbout.underlying.isEnabled shouldBe(true)
+  //          }
+  //        }
 }
