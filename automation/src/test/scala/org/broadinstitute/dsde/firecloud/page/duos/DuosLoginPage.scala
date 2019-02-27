@@ -29,18 +29,17 @@ class DuosLoginPage(val baseUrl: String)(implicit webDriver: WebDriver) extends 
   override def awaitReady(): Unit = {
     log.info("DuosLoginPage.awaitReady starting to wait for signInButton ... ")
 
-    Try (signInButton awaitReady()) match {
+    Try(signInButton awaitReady()) match {
       case Success(_) =>
         log.info("DuosLoginPage.awaitReady believes signInButton is ready; sleeping for 500ms  ... ")
         Thread.sleep(500)
       case Failure(f) =>
         log.error(s"DuosLoginPage timed out waiting for signInButton to be ready: ${f.getMessage}")
-        throw(f)
+        throw (f)
     }
   }
 
   lazy override val url: String = "https://duos.dsde-dev.broadinstitute.org/#/login"
-//lazy override val url: String = "https://duos.dsde-dev.broadinstitute.org/#/dataset_catalog"
 
   private val signInButton = GoogleSignInButton(CSSQuery(".abcRioButtonContentWrapper span[id]:first-child"))
 
@@ -82,7 +81,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
 
   def awaitLoaded(): GoogleSignInPopup = {
     Try {
-      await condition (id("identifierLink").findElement.exists(_.isDisplayed)
+      await condition(id("identifierLink").findElement.exists(_.isDisplayed)
         || id("identifierId").findElement.exists(_.isEnabled)
         || id("Email").findElement.exists(_.isDisplayed), 10) // One Account All of Google popup
     } match {
@@ -103,7 +102,8 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
   def signIn(email: String, password: String): Unit = {
     (id("Email").findElement.isDefined) match {
       case true => oneAccountSignIn(email, password)
-      case false => normalSignIn(email, password)    }
+      case false => normalSignIn(email, password)
+    }
     returnFromSignIn()
   }
 
@@ -119,7 +119,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
      * Wait up to 60 seconds for animation finish.
      */
     // Thread sleep 1000
-    await condition (find(id("password")).exists(_.isDisplayed), 60)
+    await condition(find(id("password")).exists(_.isDisplayed), 60)
     pwdField(name("password")).value = password
     pressKeys("\n")
   }
@@ -152,7 +152,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
          */
         if (windowHandles.size > 1) {
           click on id("submit_approve_access")
-          await condition(windowHandles.size == 1)
+          await condition (windowHandles.size == 1)
         }
     }
 

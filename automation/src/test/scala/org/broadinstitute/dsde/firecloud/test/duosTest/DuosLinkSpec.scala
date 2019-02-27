@@ -27,36 +27,30 @@ class DuosLinkSpec extends FreeSpec with ParallelTestExecution with Matchers
       goTo("https://duos.dsde-dev.broadinstitute.org/#/home")
       withSignInDuos(user) { homePage =>
         homePage.datasetSearch()
-        val datarequest = cssSelector("div[class='main-title-description']")
+        val datarequest  = cssSelector("div[class='main-title-description']")
         find(datarequest).get.text should include("Data Access Committee")
         println("success")
       }
     }
   }
 
-    "clicking help and about button" in {
-          withWebDriver { implicit driver =>
-            goTo("https://duos.dsde-dev.broadinstitute.org/#/home")
-
-            val duosp = find(CssSelectorQuery("img[alt*='What is DUOS graphic']"))
-            duosp.get.isDisplayed shouldBe(true)
-
-            val helpButton = find(CssSelectorQuery("a[href='#/home_help']"))
-            helpButton.get.isEnabled shouldBe (true)
-
-            val aboutButton = find(CssSelectorQuery("a[href='#/home_about']"))
-            aboutButton.get.isEnabled shouldBe(true)
-
-            val email = "test.firec@gmail.com"
-            val joinButton = CssSelectorQuery("a.navbar-duos-link-join")
-
-            find(joinButton).get.underlying.click()
-            Thread.sleep(1000)
-            val typeInDes = CssSelectorQuery("input[ng-model='form.name']")
-            find(typeInDes).get.asInstanceOf[ValueElement].value_=(email)
-
-            val fullnametext = cssSelector("label[class='home-control-label col-lg-12 col-md-12 col-sm-12 col-xs-12']")
-            find(fullnametext).get.text shouldBe("Full Name")
-            }
-          }
+  "clicking help and about button" in {
+    withWebDriver { implicit driver =>
+      goTo("https://duos.dsde-dev.broadinstitute.org/#/home")
+      val duosp = find(CssSelectorQuery("img[alt*='What is DUOS graphic']"))
+      duosp.get.isDisplayed shouldBe (true)
+      val helpButton = find(CssSelectorQuery("a[href='#/home_help']"))
+      helpButton.get.isEnabled shouldBe (true)
+      val aboutButton = find(CssSelectorQuery("a[href='#/home_about']"))
+      aboutButton.get.isEnabled shouldBe (true)
+      val email = "test.firec@gmail.com"
+      val joinButton = CssSelectorQuery("a.navbar-duos-link-join")
+      find(joinButton).get.underlying.click()
+      Thread.sleep(1000)
+      val typeInDes = CssSelectorQuery("input[ng-model='form.name']")
+      find(typeInDes).get.asInstanceOf[ValueElement].value_=(email)
+      val fullnametext = cssSelector("label[class='home-control-label col-lg-12 col-md-12 col-sm-12 col-xs-12']")
+      find(fullnametext).get.text shouldBe ("Full Name")
+    }
+  }
 }
