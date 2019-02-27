@@ -40,6 +40,7 @@ class DuosLoginPage(val baseUrl: String)(implicit webDriver: WebDriver) extends 
   }
 
   lazy override val url: String = "https://duos.dsde-dev.broadinstitute.org/#/login"
+//lazy override val url: String = "https://duos.dsde-dev.broadinstitute.org/#/dataset_catalog"
 
   private val signInButton = GoogleSignInButton(CSSQuery(".abcRioButtonContentWrapper span[id]:first-child"))
 
@@ -156,50 +157,5 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     }
 
     switch to window(windowHandles.head)
-  }
-
-
-  // This is the start of all the methods that pertain to the first page of DUOS.
-  /**
-    * verify that the description of the Duos graphic contains the attribute name
-    */
-  def duosP(): Element = {
-    val duosp = find(CssSelectorQuery("img[alt*='What is DUOS graphic']"))
-    duosp.get
-  }
-
-  def rightSignInBtn(): Element = {
-    val toprightSignIn = CssSelectorQuery("a[class='navbar-duos-button']")
-    find(toprightSignIn).get.underlying.click()
-    rightSignInBtn()
-  }
-
-  /**
-    * click on the join DUOS button and type in username
-    */
-  def joinDuos(): String = {
-    val email = "test.firec@gmail.com"
-    val joinButton = CssSelectorQuery("a.navbar-duos-link-join")
-
-    find(joinButton).get.underlying.click()
-    val typeInDes = CssSelectorQuery("input[ng-model='form.name']")
-    find(typeInDes).get.asInstanceOf[ValueElement].value_=(email)
-    email
-  }
-
-  /**
-    * Click on the help button
-    */
-  def helpDuos(): Element = {
-    val helpButton = find(CssSelectorQuery("a[href='#/home_help']"))
-    helpButton.get
-  }
-
-  /**
-    * click on the about button
-    */
-  def aboutDuos(): Element = {
-    val aboutButton = find(CssSelectorQuery("a[href='#/home_about']"))
-    aboutButton.get
   }
 }
