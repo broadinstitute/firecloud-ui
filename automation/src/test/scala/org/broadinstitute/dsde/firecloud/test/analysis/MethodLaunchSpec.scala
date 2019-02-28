@@ -139,7 +139,16 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
     }
   }
 
-  "launch a method from the method repo" in {
+  // TODO: WB-402 reassess what this test covers.
+  // As-is, this test only verifies the ability to start a submission in Rawls; it doesn't verify
+  // that the submission finishes. This "launch only" functionality is covered by other tests in this suite  -
+  // especially "reader does not see an abort button for a launched submission", which has an equivalent assertion
+  // that the submission can be in "Submitted" status.
+  //
+  // we may decide we want this test to verify that workflows finish in time:
+  //   status should equal("Done")
+  // or we may decide we already have coverage, in which case we should delete it entirely
+  "launch a method from the method repo" ignore {
     val user = FireCloudConfig.Users.owner
     implicit val authToken: AuthToken = user.makeAuthToken()
     withCleanBillingProject(user) { billingProject =>
@@ -164,7 +173,7 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
               // submission starts correctly; we don't care if it finishes (other tests check that).
               //
               // Important: in-progress submissions have a status of "Submitted". The successful path for a submission
-              // is Accepted -> Submitted -> Done (potentially with additional intermediate statuses).
+              // is Submitted -> Done; aborted submissions move Submitted -> Aborting -> Aborted.
               //
               // Workflows have a Running status, but submissions do not.
               //
