@@ -160,7 +160,15 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
 
               implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Minutes)), interval = scaled(Span(20, Seconds)))
 
-              // test will end when api status becomes Running. not waiting for Done
+              // test will end when the submission's api status becomes Submitted or Done. We only care that the
+              // submission starts correctly; we don't care if it finishes (other tests check that).
+              //
+              // Important: in-progress submissions have a status of "Submitted". The successful path for a submission
+              // is Accepted -> Submitted -> Done (potentially with additional intermediate statuses).
+              //
+              // Workflows have a Running status, but submissions do not.
+              //
+              // see Rawls' SubmissionStatuses object for canonical submission status values.
               eventually {
                 val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)
                 logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
