@@ -164,8 +164,8 @@ class MethodLaunchSpec extends FreeSpec with ParallelTestExecution with Matchers
               eventually {
                 val status = submissionDetailsPage.getApiSubmissionStatus(billingProject, workspaceName, submissionId)
                 logger.info(s"Status is $status in Submission $billingProject/$workspaceName/$submissionId")
-                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Status is Done or Running.") {
-                  status should (equal("Done") or equal ("Running"))
+                withClue(s"Monitoring Submission $billingProject/$workspaceName/$submissionId. Status is Done or Submitted.") {
+                  status should (equal("Done") or equal ("Submitted"))
                 }
               }
             }
