@@ -115,6 +115,44 @@
    (fn [{:keys [state]} alert]
      (swap! state update :service-alerts #(filter (partial not= alert) %)))})
 
+(react/defc TerraBanner
+  {
+    :render
+    (fn [{:keys [this state]}]
+      [:div {:style {:height "66px"
+                     :line-height "66px"
+                     :position "relative"
+                     :border-bottom "2px solid rgb(176, 210, 57)"
+                     :background "81px url('assets/header-left-hexes.svg') no-repeat,
+                                 right url('assets/header-right-hexes.svg') no-repeat, rgb(116, 174, 67)"}}
+        [:img {:src "assets/terra-logo.svg"
+               :style {:height "56px"
+                       :width "60px"
+                       :float "left"
+                       :margin "4px 10px"}}]
+        [:span {:style {:color "white"
+                        :line-height 1.5
+                        :display "inline-block"
+                        :vertical-align "middle"
+                        :margin-left "30px"
+                }}
+          "On May 1st FireCloud will get a new look as it becomes "
+          [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
+               :target "_blank"
+               :style {:color "white"}}
+             "powered by Terra."]
+          " Please click "
+          [:a {:href "http://app.terra.bio/"
+               :target "_blank"
+               :style {:color "white"}}
+             "here"]
+          " to test-drive the new experience."
+        ]
+     ]
+   )
+  }
+)
+
 (react/defc TrialAlertContainer
   {:render
    (fn [{:keys [state this]}]

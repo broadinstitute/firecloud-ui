@@ -229,6 +229,8 @@
         ;; TODO: add Terra banner here
         ; (when (contains? user-status :signed-in)
         ;   [notifications/TrialAlertContainer])
+        (when (contains? user-status :signed-in)
+          [notifications/TerraBanner])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
                                 :text (auth/render-forced-sign-in-error error)
