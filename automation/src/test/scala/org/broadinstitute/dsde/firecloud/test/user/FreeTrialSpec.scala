@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.workbench.fixture.BillingFixtures
 import org.broadinstitute.dsde.workbench.fixture.TestReporterFixture
 import org.broadinstitute.dsde.workbench.service._
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{BeforeAndAfterEach, FreeSpec, Matchers}
+import org.scalatest.{BeforeAndAfterEach, FreeSpec, Ignore, Matchers}
 
 import scala.util.Try
 
@@ -19,6 +19,7 @@ import scala.util.Try
 /**
   * Tests for new user registration scenarios.
   */
+@Ignore
 class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with WebBrowserSpec
   with UserFixtures with BillingFixtures with CleanUp with LazyLogging with TestReporterFixture {
 
