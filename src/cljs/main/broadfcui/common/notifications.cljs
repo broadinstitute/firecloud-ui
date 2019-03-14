@@ -122,15 +122,15 @@
         (when (not dismissed?)
           [:div {}
             [:div {:style {:height "66px"
-                          :line-height "66px"
-                          :width "100%"
-                          :position "relative"
-                          :overflow "hidden"
-                          :white-space "nowrap"
-                          :border-bottom "2px solid rgb(176, 210, 57)"
-                          :box-shadow "rgba(0, 0, 0, 0.12) 0px 3px 2px 0px"
-                          :background "81px url('assets/header-left-hexes.svg') no-repeat,
-                                      right url('assets/header-right-hexes.svg') no-repeat, rgb(116, 174, 67)"}}
+                           :line-height "66px"
+                           :width "100%"
+                           :position "relative"
+                           :overflow "hidden"
+                           :white-space "nowrap"
+                           :border-bottom "2px solid rgb(176, 210, 57)"
+                           :box-shadow "rgba(0, 0, 0, 0.12) 0px 3px 2px 0px"
+                           :background "81px url('assets/header-left-hexes.svg') no-repeat,
+                                       right url('assets/header-right-hexes.svg') no-repeat, rgb(116, 174, 67)"}}
                 [:img {:src "assets/terra-logo.svg"
                       :style {:height "56px"
                               :width "60px"
@@ -145,26 +145,26 @@
                                 :font-weight "500"}}
                   "On May 1st FireCloud will get a new look as it becomes "
                   [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
-                      :target "_blank"
-                      :style {:color "white"}}
+                       :target "_blank"
+                       :style {:color "white"}}
                     "powered by Terra."]
                   " Please click "
                   [:a {:href "http://app.terra.bio/"
-                      :target "_blank"
-                      :style {:color "white"}}
+                       :target "_blank"
+                       :style {:color "white"}}
                     "here"]
                   " to test-drive the new experience."]]
                   [:div {:style {:alignSelf "center"
-                                :padding "1rem"
-                                :position "absolute"
-                                :top "0px"
-                                :right "0px"}}
+                                 :padding "1rem"
+                                 :position "absolute"
+                                 :top "0px"
+                                 :right "0px"}}
                     [FoundationTooltip
                       {:tooltip "Hide for now"
-                      :style {:borderBottom "none"}
-                      :position "left"
-                      :data-hover-delay 0
-                      :text [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
+                       :style {:borderBottom "none"}
+                               :position "left"
+                               :data-hover-delay 0
+                               :text [:button {:className "button-reset" :onClick #(swap! state assoc :dismissed? true)
                                       :style {:display "block" :fontSize "1.5rem"
                                               :color "white" :cursor "pointer"}}
                               (icons/render-icon {} :close)]}]]])))})
