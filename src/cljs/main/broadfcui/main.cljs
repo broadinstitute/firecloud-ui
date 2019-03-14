@@ -226,9 +226,6 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
-        ;; TODO: add Terra banner here
-        ; (when (contains? user-status :signed-in)
-        ;   [notifications/TrialAlertContainer])
         (when (contains? user-status :signed-in)
           [notifications/TerraBanner])
         (when-let [error (:force-sign-in-error @state)]
