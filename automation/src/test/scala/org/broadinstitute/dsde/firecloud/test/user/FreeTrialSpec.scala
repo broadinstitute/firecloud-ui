@@ -71,6 +71,21 @@ class FreeTrialSpec extends FreeSpec with BeforeAndAfterEach with Matchers with 
       }
     }
 
+    "Enrolled" - {
+      "should see that they are active" in {
+        registerCleanUpForDeleteTrialState()
+        Thurloe.keyValuePairs.set(subjectId, "trialState", "Enrolled")
+        withWebDriver { implicit driver =>
+          withSignIn(testUser) { _ =>
+            await ready new WorkspaceListPage()
+            val bannerTitleElement = Label(TestId("trial-banner-title"))
+            bannerTitleElement.isVisible shouldBe true
+            bannerTitleElement.getText shouldBe "Access Free Credits"
+          }
+        }
+      }
+    }
+
     "Terminated" - {
       "should see that they are inactive" in {
         registerCleanUpForDeleteTrialState()
