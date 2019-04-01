@@ -62,6 +62,7 @@
 (defn dockstore-api-url [] (get @config "dockstoreApiUrl"))
 (defn dockstore-web-url [] (get @config "dockstoreWebUrl"))
 (defn terra-url [] (get @config "terraUrl"))
+(defn terra-redirects-enabled [] (get @config "terraRedirectsEnabled" false))
 (defn tos-url [] (get @config "tosUrl"))
 (defn tos-application-name [] (get @config "tosApplicationName"))
 (defn tos-version [] (get @config "tosVersion"))

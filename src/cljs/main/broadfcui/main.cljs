@@ -204,6 +204,15 @@
   {:handle-hash-change
    (fn [{:keys [state]}]
      (let [window-hash (aget js/window "location" "hash")]
+       ;; if Terra redirects are globally enabled via config;
+       ;;   and the current hash has a path handler;
+       ;;   and that path handler has a Terra redirect,
+       ;; then redirect to Terra.
+       (when (config/terra-redirects-enabled)
+         (when-let [handler (nav/find-path-handler window-hash)]
+           (let [{:keys [make-props terra-redirect]} handler]
+             (when terra-redirect
+               (js-invoke (aget js/window "location") "replace" (str (config/terra-url) (terra-redirect (make-props))))))))
        (when-not (nav/execute-redirects window-hash)
          (swap! state assoc :window-hash window-hash))))
    :get-initial-state
