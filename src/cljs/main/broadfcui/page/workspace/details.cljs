@@ -1,4 +1,3 @@
-
 (ns broadfcui.page.workspace.details
   (:require
    [dmohs.react :as react]
