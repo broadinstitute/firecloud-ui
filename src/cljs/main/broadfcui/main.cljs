@@ -212,7 +212,7 @@
          (when-let [handler (nav/find-path-handler window-hash)]
            (let [{:keys [make-props terra-redirect]} handler]
              (when terra-redirect
-               (js-invoke (aget js/window "location") "replace" (str (config/terra-url) (terra-redirect (make-props))))))))
+               (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))))
        (when-not (nav/execute-redirects window-hash)
          (swap! state assoc :window-hash window-hash))))
    :get-initial-state

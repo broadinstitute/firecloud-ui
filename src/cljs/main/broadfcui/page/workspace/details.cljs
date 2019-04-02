@@ -192,7 +192,7 @@
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name)})
     :terra-redirect (fn [ws-id]
-                      (str "/#" (ws-path (:workspace-id ws-id))))
+                      (ws-path (:workspace-id ws-id)))
     :make-path ws-path})
   (nav/defpath
    :workspace-data
