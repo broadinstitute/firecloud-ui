@@ -204,15 +204,6 @@
   {:handle-hash-change
    (fn [{:keys [state]}]
      (let [window-hash (aget js/window "location" "hash")]
-       ;; if Terra redirects are globally enabled via config;
-       ;;   and the current hash has a path handler;
-       ;;   and that path handler has a Terra redirect,
-       ;; then redirect to Terra.
-       (when (config/terra-redirects-enabled)
-         (when-let [handler (nav/find-path-handler window-hash)]
-           (let [{:keys [make-props terra-redirect]} handler]
-             (when terra-redirect
-               (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))))
        (when-not (nav/execute-redirects window-hash)
          (swap! state assoc :window-hash window-hash))))
    :get-initial-state
@@ -230,11 +221,16 @@
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
-           {:keys [component make-props public?]} (nav/find-path-handler window-hash)
+           {:keys [component make-props public? terra-redirect]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        ;; if Terra redirects are globally enabled via config;
+        ;;   and the current path handler has a Terra redirect,
+        ;; then redirect to Terra.
+        (when (and config-loaded? (config/terra-redirects-enabled) terra-redirect)
+          (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props)))))
         (when (contains? user-status :signed-in)
           [:div {}
             [notifications/TerraBanner]
