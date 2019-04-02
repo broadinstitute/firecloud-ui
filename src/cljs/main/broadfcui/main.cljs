@@ -272,6 +272,7 @@
                                                       :refresh-token-saved))))}]
            (when (and config-loaded? (not auth2))
              [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}])
+
            (cond
              (not config-loaded?)
              [config-loader/Component
