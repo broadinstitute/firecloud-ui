@@ -200,6 +200,15 @@
                (aget e "filename")]]
     :show-cancel? false :dismiss dismiss :ok-button "OK"}])
 
+(react/defc- TerraRedirect
+  {:render
+   (fn []
+     [:div {} "Redirecting to Terra..."])
+   :component-did-mount
+    (fn [{:keys [props]}]
+      (let [{:keys [terra-redirect make-props]} props]
+        (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))})
+
 (react/defc- App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -221,7 +230,8 @@
    :render
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
-           {:keys [component make-props public?]} (nav/find-path-handler window-hash)
+           {:keys [component make-props public? terra-redirect]} (nav/find-path-handler window-hash)
+           terra-redirect? (and config-loaded? (config/terra-redirects-enabled) terra-redirect)
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
@@ -273,6 +283,8 @@
                                 js/window "error"
                                 (fn [e]
                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
+             terra-redirect?
+             [TerraRedirect {:terra-redirect terra-redirect :make-props make-props}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
