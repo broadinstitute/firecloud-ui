@@ -75,7 +75,15 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
 
           withWebDriver { implicit driver =>
             withSignIn(user) { listPage =>
-              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+              val startPage = driver.getCurrentUrl
+              // NB: "listPage.enterWorkspace" fails here, enterWorkspace's awaitReady never fires due to the redirect.
+              // so we use clickWorkspaceLink instead.
+              logger.info(s"starting at $startPage, about to call clickWorkspaceLink ...")
+              val detailPage = listPage.clickWorkspaceLink(billingProject, workspaceName)
+              logger.info(s"called clickWorkspaceLink, waiting for url to change ...")
+              await condition(driver.getCurrentUrl != startPage)
+              logger.info(s"after clickWorkspaceLink, current url has changed to: [${driver.getCurrentUrl}]")
+              logger.info(s"now waiting for url to be Terra-esque")
               await condition (isTerraUrl(driver.getCurrentUrl))
               val uri = Uri(driver.getCurrentUrl)
               logger.info(s"Terra redirect test found url: [${uri.toString}]")
