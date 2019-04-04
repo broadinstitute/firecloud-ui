@@ -207,37 +207,6 @@
                                 :else elem))
                             (:data props))}])])})
 
-(react/defc- OperationDialog
-  {:render
-   (fn [{:keys [props state]}]
-     [modals/OKCancelForm
-      {:header "Operation Details"
-       :content
-       (let [server-response (:server-response @state)]
-         (cond
-           (nil? server-response)
-           (spinner "Loading operation details...")
-           (not (:success? server-response))
-           (style/create-server-error-message (:response server-response))
-           :else
-           [CodeMirror {:text (:raw-response server-response)}]))
-       :show-cancel? false
-       :dismiss (:dismiss props)
-       :ok-button {:text "Done" :onClick #((:dismiss props))}}])
-
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint
-       (endpoints/get-workspace-genomic-operations
-        ;; strip out operations/ from the job id
-        (:workspace-id props) (last (string/split (:job-id props) #"/")))
-       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                  (swap! state assoc :server-response
-                         {:success? success?
-                          :response (if success? (get-parsed-response false) status-text)
-                          :raw-response raw-response}))}))})
-
 (defn- render-gcs-path [components]
   (str moncommon/google-storage-context (string/join "/" components) "/"))
 
@@ -257,8 +226,6 @@
            workspace-namespace (get-in props [:workspace-id :namespace])
            {:keys [label inputs-fn inputs-data outputs-fn outputs-data]} props]
        [:div {:style {:marginTop "1em"}}
-        (when (:show-operation-dialog? @state)
-          [OperationDialog (:operation-dialog-props @state)])
         [:div {:style {:display "inline-block" :marginRight "1em"}}
          (moncommon/icons-for-call-statuses all-call-statuses)
          (links/create-external {:href (render-gcs-path call-path-components)} (:label props))]
@@ -294,16 +261,7 @@
                                             "Show"))]
                   (str "Call #" (inc index) ":"))]
                [:div {:style {:paddingLeft "0.5em"}}
-                (create-field "Operation"
-                              ;; Note: using [:a ...] instead of style/create-link to be consistent with FilePreviewLink
-                              [:a {:href    "javascript:;"
-                                   :onClick (fn [_]
-                                              (swap! state assoc
-                                                     :show-operation-dialog? true
-                                                     :operation-dialog-props {:workspace-id (:workspace-id props)
-                                                                              :job-id       (data "jobId")
-                                                                              :dismiss      #(swap! state dissoc :show-operation-dialog?)}))}
-                               (data "jobId")])
+                (create-field "Operation" (data "jobId"))
                 (let [status (data "executionStatus")]
                   (create-field "Status" (moncommon/icon-for-call-status status) status))
                 (when (and (:use-call-cache props) (some? (get (data "callCaching") "hit")))
