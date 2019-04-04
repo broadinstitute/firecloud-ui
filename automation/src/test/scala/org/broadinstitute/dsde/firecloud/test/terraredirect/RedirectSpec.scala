@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
   *     b) in the UI's config.cljs, change the terra-redirects-enabled function to return a hardcoded
   *         value of true instead of returning (get @config "terraRedirectsEnabled" false)
   */
-class RedirectSpec  extends FreeSpec with BeforeAndAfterAll with Matchers with WebBrowserSpec
+class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with WebBrowserSpec
   with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with LazyLogging with TestReporterFixture {
 
   val user = UserPool.chooseAnyUser
@@ -38,42 +38,51 @@ class RedirectSpec  extends FreeSpec with BeforeAndAfterAll with Matchers with W
     (url.contains("saturn") && url.contains("appspot.com"))
   }
 
-  // beforeAll, create new workspace
-  override protected def beforeAll(): Unit = {
-    implicit val authToken = user.makeAuthToken()
-    withCleanBillingProject(user) { bp =>
-      billingProject = bp
-      withWorkspace(billingProject, "Terra_redirect_spec") { ws =>
-        workspaceName = ws
-        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-        logger.info(s"seed workspace created: $workspaceName")
-        super.beforeAll()
-      }
-    }
-  }
-
-  override protected def afterAll(): Unit = {
-    Try(api.workspaces.delete(billingProject, workspaceName)(user.makeAuthToken())) match {
-      case Success(_) => //noop
-      case Failure(ex) =>
-        logger.warn(s"failed to clean up workspace $billingProject/$workspaceName")
-    }
-    super.afterAll()
-  }
+//  // beforeAll, create new workspace
+//  override protected def beforeAll(): Unit = {
+//    // TODO: must fix!!! Can't use withWorkspace/withCleanBillingProject here because they release
+//    // at the end of their closures
+//    implicit val authToken = user.makeAuthToken()
+//    withCleanBillingProject(user) { bp =>
+//      billingProject = bp
+//      withWorkspace(billingProject, "Terra_redirect_spec") { ws =>
+//        workspaceName = ws
+//        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
+//        logger.info(s"seed workspace created: $workspaceName")
+//        super.beforeAll()
+//      }
+//    }
+//  }
+//
+//  override protected def afterAll(): Unit = {
+//    Try(api.workspaces.delete(billingProject, workspaceName)(user.makeAuthToken())) match {
+//      case Success(_) => //noop
+//      case Failure(ex) =>
+//        logger.warn(s"failed to clean up workspace $billingProject/$workspaceName")
+//    }
+//    super.afterAll()
+//  }
 
   // TODO: negative test - ensure that Library/Methods Repo/whatever does NOT redirect
 
   "A user who visits FireCloud should be redirected to the same location in Terra for" - {
     "workspace summary page" in {
       implicit val authToken = user.makeAuthToken()
-      withWebDriver { implicit driver =>
-        withSignIn(user) { listPage =>
-          val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
-          await condition (isTerraUrl(driver.getCurrentUrl))
-          val uri = Uri(driver.getCurrentUrl)
-          logger.info(s"Terra redirect test found url: [${uri.toString}]")
-          uri.fragment shouldBe Some(s"workspaces/$billingProject/$workspaceName")
-          uri.rawQueryString shouldBe Some("fcredir=1")
+      withCleanBillingProject(user) { bp =>
+        billingProject = bp
+        withWorkspace(billingProject, "Terra_redirect_spec") { ws =>
+          workspaceName = ws
+
+          withWebDriver { implicit driver =>
+            withSignIn(user) { listPage =>
+              val detailPage = listPage.enterWorkspace(billingProject, workspaceName)
+              await condition (isTerraUrl(driver.getCurrentUrl))
+              val uri = Uri(driver.getCurrentUrl)
+              logger.info(s"Terra redirect test found url: [${uri.toString}]")
+              uri.fragment shouldBe Some(s"workspaces/$billingProject/$workspaceName")
+              uri.rawQueryString shouldBe Some("fcredir=1")
+            }
+          }
         }
       }
     }
