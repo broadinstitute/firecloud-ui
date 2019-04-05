@@ -38,6 +38,7 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
 
   // negative test - ensure that Library/Methods Repo/whatever does NOT redirect
   "A user who visits FireCloud should NOT be redirected to the same location in Terra for" - {
+
     "methods repo" in {
       implicit val authToken = user.makeAuthToken()
       withWebDriver { implicit driver =>
@@ -50,15 +51,16 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
         }
       }
     }
+
   }
 
 
   "A user who visits FireCloud should be redirected to the same location in Terra for" - {
-    implicit val authToken = user.makeAuthToken()
-    withCleanBillingProject(user) { billingProject =>
-      withWorkspace(billingProject, "Terra_redirect_spec") { workspaceName =>
 
-        "workspace summary page" in {
+    "workspace summary page" in {
+      implicit val authToken = user.makeAuthToken()
+      withCleanBillingProject(user) { billingProject =>
+        withWorkspace(billingProject, "Terra_redirect_spec") { workspaceName =>
           withWebDriver { implicit driver =>
             // TODO: withSignIn will throw an error at the end of its closure, when it tries to sign out the user.
             //  this happens because, due to the redirect, the user is no longer in FC and therefore the signout
@@ -76,9 +78,9 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
             }
           }
         }
-
       }
     }
+
   }
 
 }
