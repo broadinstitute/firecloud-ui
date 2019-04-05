@@ -57,7 +57,7 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
 
   "A user who visits FireCloud should be redirected to the same location in Terra for" - {
 
-    "workspace summary page" in {
+    "workspace summary page" ignore {
       implicit val authToken = user.makeAuthToken()
       withCleanBillingProject(user) { billingProject =>
         withWorkspace(billingProject, "Terra_redirect_spec") { workspaceName =>
