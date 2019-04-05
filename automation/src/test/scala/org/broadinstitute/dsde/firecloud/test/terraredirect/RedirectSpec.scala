@@ -2,15 +2,12 @@ package org.broadinstitute.dsde.firecloud.test.terraredirect
 
 import akka.http.scaladsl.model.Uri
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.firecloud.component.{Label, TestId}
 import org.broadinstitute.dsde.firecloud.fixture.UserFixtures
-import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
-import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
+import org.broadinstitute.dsde.firecloud.page.methodrepo.MethodRepoPage
+import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FreeSpec, Matchers}
-
-import scala.util.{Failure, Success, Try}
+import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 
 
 /**
@@ -29,72 +26,59 @@ class RedirectSpec extends FreeSpec with BeforeAndAfterAll with Matchers with We
   with UserFixtures with WorkspaceFixtures with BillingFixtures with CleanUp with LazyLogging with TestReporterFixture {
 
   val user = UserPool.chooseAnyUser
-  var billingProject = ""
-  var workspaceName = ""
 
+  // TODO: this test sends traffic from a FiaB or other test environment directly to the Terra dev server.
+  //  tests will fail if the dev server is unresponsive, and tests will cause additional load on the dev server.
+  //  is this acceptable?
   private def isTerraUrl(url: String) = {
     // should this use an environment-specific full hostname instead of contains()?
     url.contains("terra.bio") ||
     (url.contains("saturn") && url.contains("appspot.com"))
   }
 
-//  // beforeAll, create new workspace
-//  override protected def beforeAll(): Unit = {
-//    // TODO: must fix!!! Can't use withWorkspace/withCleanBillingProject here because they release
-//    // at the end of their closures
-//    implicit val authToken = user.makeAuthToken()
-//    withCleanBillingProject(user) { bp =>
-//      billingProject = bp
-//      withWorkspace(billingProject, "Terra_redirect_spec") { ws =>
-//        workspaceName = ws
-//        api.workspaces.waitForBucketReadAccess(billingProject, workspaceName)
-//        logger.info(s"seed workspace created: $workspaceName")
-//        super.beforeAll()
-//      }
-//    }
-//  }
-//
-//  override protected def afterAll(): Unit = {
-//    Try(api.workspaces.delete(billingProject, workspaceName)(user.makeAuthToken())) match {
-//      case Success(_) => //noop
-//      case Failure(ex) =>
-//        logger.warn(s"failed to clean up workspace $billingProject/$workspaceName")
-//    }
-//    super.afterAll()
-//  }
-
-  // TODO: negative test - ensure that Library/Methods Repo/whatever does NOT redirect
-
-  "A user who visits FireCloud should be redirected to the same location in Terra for" - {
-    "workspace summary page" in {
+  // negative test - ensure that Library/Methods Repo/whatever does NOT redirect
+  "A user who visits FireCloud should NOT be redirected to the same location in Terra for" - {
+    "methods repo" in {
       implicit val authToken = user.makeAuthToken()
-      withCleanBillingProject(user) { bp =>
-        billingProject = bp
-        withWorkspace(billingProject, "Terra_redirect_spec") { ws =>
-          workspaceName = ws
-
-          withWebDriver { implicit driver =>
-            withSignIn(user) { listPage =>
-              val startPage = driver.getCurrentUrl
-              // NB: "listPage.enterWorkspace" fails here, enterWorkspace's awaitReady never fires due to the redirect.
-              // so we use clickWorkspaceLink instead.
-              logger.info(s"starting at $startPage, about to call clickWorkspaceLink ...")
-              val detailPage = listPage.clickWorkspaceLink(billingProject, workspaceName)
-              logger.info(s"called clickWorkspaceLink, waiting for url to change ...")
-              await condition(driver.getCurrentUrl != startPage)
-              logger.info(s"after clickWorkspaceLink, current url has changed to: [${driver.getCurrentUrl}]")
-              logger.info(s"now waiting for url to be Terra-esque")
-              await condition (isTerraUrl(driver.getCurrentUrl))
-              val uri = Uri(driver.getCurrentUrl)
-              logger.info(s"Terra redirect test found url: [${uri.toString}]")
-              uri.fragment shouldBe Some(s"workspaces/$billingProject/$workspaceName")
-              uri.rawQueryString shouldBe Some("fcredir=1")
-            }
-          }
+      withWebDriver { implicit driver =>
+        withSignIn(user) { _ =>
+          val methodRepoPage = new MethodRepoPage().open
+          // give the page a chance to issue a redirect, if a redirect mistakenly existed on this page
+          Thread.sleep(1000)
+          // are we still on the methods repo page?
+          await ready methodRepoPage.methodRepoTable
         }
       }
     }
   }
 
+
+  "A user who visits FireCloud should be redirected to the same location in Terra for" - {
+    implicit val authToken = user.makeAuthToken()
+    withCleanBillingProject(user) { billingProject =>
+      withWorkspace(billingProject, "Terra_redirect_spec") { workspaceName =>
+
+        "workspace summary page" in {
+          withWebDriver { implicit driver =>
+            // TODO: withSignIn will throw an error at the end of its closure, when it tries to sign out the user.
+            //  this happens because, due to the redirect, the user is no longer in FC and therefore the signout
+            //  feature isn't available. Is this acceptable?
+            withSignIn(user) { listPage =>
+              val startPage = driver.getCurrentUrl
+              // NB: "listPage.enterWorkspace" would fail here, because enterWorkspace's awaitReady never
+              //   fires due to the redirect. So we use clickWorkspaceLink instead.
+              listPage.clickWorkspaceLink(billingProject, workspaceName)
+              await condition (driver.getCurrentUrl != startPage)
+              await condition isTerraUrl(driver.getCurrentUrl)
+              val uri = Uri(driver.getCurrentUrl)
+              uri.fragment shouldBe Some(s"workspaces/$billingProject/$workspaceName")
+              uri.rawQueryString shouldBe Some("fcredir=1")
+            }
+          }
+        }
+
+      }
+    }
+  }
 
 }
