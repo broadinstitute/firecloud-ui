@@ -297,7 +297,7 @@
                            :text-align "center"
                            :font-weight "500"}}
             (if (common/has-terra-return?)
-              "Placeholder: Terra terra terra woooo! Under construction"
+              "This page is displaying in our legacy application. Please bear with us as we migrate these features fully into Terra"
               [:span {}
                "On May 1st FireCloud will get a new look as it becomes "
                [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
