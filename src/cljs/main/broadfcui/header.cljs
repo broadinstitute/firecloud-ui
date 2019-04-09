@@ -46,7 +46,7 @@
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
       :button-style {:height 32}
-      :items (if (common/has-terra-return?)
+      :items (if (or common/has-terra-return? common/has-firecloud-return?)
                [sign-out-item]
                [{:href (nav/get-link :profile) :text "Profile"}
                 {:href (nav/get-link :groups) :text "Groups"}
