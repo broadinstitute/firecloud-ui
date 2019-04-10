@@ -81,7 +81,7 @@
            path (subs (aget js/window "location" "hash") 1)]
        [:div {}
         [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
-         (when (and (= :registered (:registration-status @state)) (not ((and common/has-terra-return? common/has-firecloud-return?))))
+         (when (and (= :registered (:registration-status @state)) (not (or common/has-terra-return? common/has-firecloud-return?)))
            [header/TopNavBar
             {:items (concat
                      [{:label "Workspaces"
@@ -207,7 +207,10 @@
    :component-did-mount
     (fn [{:keys [props]}]
       (let [{:keys [terra-redirect make-props]} props]
-        (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))})
+        (js-invoke (aget js/window "location") "replace" (str (if (common/has-firecloud-return?)
+                                                                (config/firecloud-terra-url)
+                                                                (config/terra-url))
+                                                              "/?fcredir=1#" (terra-redirect (make-props))))))})
 
 (react/defc- App
   {:handle-hash-change

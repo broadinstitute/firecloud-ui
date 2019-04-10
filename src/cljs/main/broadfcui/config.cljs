@@ -50,6 +50,7 @@
 (defn max-retry-attempts [] (get @config "maxRetryAttempts" 6)) ;; 6 exponential retries = ~ 2 minutes
 (defn user-guide-url [] (get @config "userGuideUrl"))
 (defn user-notebooks-guide-url [] (get @config "userNotebooksGuideUrl"))
+(defn firecloud-terra-url [] (get @config "firecloudTerraUrl"))
 (defn forum-url [] (get @config "forumUrl"))
 (defn status-url [] (get @config "statusUrl"))
 (defn billing-project-guide-url [] (get @config "billingProjectGuideUrl"))
