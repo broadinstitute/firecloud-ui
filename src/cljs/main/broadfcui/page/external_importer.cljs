@@ -196,6 +196,8 @@
    :import
    {:component Importer
     :regex #"import/([^/]+)/(.+)"
+    :terra-redirect (fn [args]
+      (str "import-tool/" (:source args) "/" (:item args)))
     :make-props (fn [source item]
                   (utils/restructure source item))
     :make-path (fn [source item]
