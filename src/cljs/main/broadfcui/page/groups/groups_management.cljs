@@ -152,11 +152,13 @@
    :groups
    {:component Page
     :regex #"groups"
+    :terra-redirect #(str "groups")
     :make-props (fn [_] {})
     :make-path (fn [] "groups")})
   (nav/defpath
    :group
    {:component Page
     :regex #"groups/([^/]+)"
+    :terra-redirect (fn [args] (str "groups/" (:group-name args)))
     :make-props (fn [group-name] (utils/restructure group-name))
     :make-path (fn [group-name] (str "groups/" group-name))}))
