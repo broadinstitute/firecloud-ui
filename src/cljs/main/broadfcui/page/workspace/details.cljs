@@ -188,15 +188,15 @@
    :workspace-summary
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)"
+    :terra-redirect (fn [ws-id] (ws-path (:workspace-id ws-id)))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name)})
-    :terra-redirect (fn [ws-id]
-                      (ws-path (:workspace-id ws-id)))
     :make-path ws-path})
   (nav/defpath
    :workspace-data
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/data"
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/data"))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Data"})
     :make-path (fn [workspace-id]
@@ -205,6 +205,8 @@
    :workspace-analysis
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/analysis"
+    ;; Terra UI does not have an analysis tab, so redirect to the root of that workspace.
+    :terra-redirect (fn [ws-id] (ws-path (:workspace-id ws-id)))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Analysis"})
     :make-path (fn [workspace-id]
@@ -213,6 +215,7 @@
    :workspace-method-configs
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/method-configs"
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/tools"))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name)
                    :tab-name "Method Configurations"})
@@ -222,6 +225,10 @@
    :workspace-method-config
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/method-configs/([^/]+)/([^/]+)"
+    :terra-redirect (fn [args]
+                      (str (ws-path (:workspace-id args)) "/tools/"
+                           (get-in args [:config-id :namespace]) "/"
+                           (get-in args [:config-id :name])))
     :make-props (fn [namespace name config-ns config-name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Method Configurations"
                    :config-id {:namespace config-ns :name config-name}})
@@ -232,6 +239,7 @@
    :workspace-monitor
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/monitor"
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/job_history"))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"})
     :make-path (fn [workspace-id]
@@ -240,6 +248,8 @@
    :workspace-submission
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)"
+    ;; TODO: when Terra's submission detail page is ready, link to it
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id))  "/job_history"))
     :make-props (fn [namespace name submission-id]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id})
@@ -249,6 +259,8 @@
    :workspace-workflow
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)/([^/]+)"
+    ;; TODO: when Terra's submission detail page is ready, link to it 
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/job_history"))
     :make-props (fn [namespace name submission-id workflow-id]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id :workflow-id workflow-id})
@@ -258,6 +270,7 @@
    :workspace-notebooks
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/notebooks"
+    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/notebooks"))
     :make-props (fn [namespace name]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Notebooks"})
     :make-path (fn [workspace-id]
