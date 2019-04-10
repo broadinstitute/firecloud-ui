@@ -361,6 +361,9 @@
    :profile
    {:component Page
     :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
+    ;; account-linking redirects should not carry over between FC and Terra. Worst case, end user is redirected to Terra UI
+    ;; and must re-initiate account linking.
+    :terra-redirect #(str "profile")
     :make-props (fn [nih-token] (utils/restructure nih-token))
     :make-path (fn [] "profile")})
   (nav/defredirect
