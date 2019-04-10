@@ -207,10 +207,7 @@
    :component-did-mount
     (fn [{:keys [props]}]
       (let [{:keys [terra-redirect make-props]} props]
-        (js-invoke (aget js/window "location") "replace" (str (if (common/has-firecloud-return?)
-                                                                (config/firecloud-terra-url)
-                                                                (config/terra-url))
-                                                              "/?fcredir=1#" (terra-redirect (make-props))))))})
+        (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))})
 
 (react/defc- App
   {:handle-hash-change
