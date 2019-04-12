@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :refer [login-scopes]]
+   [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.markdown :as markdown]
@@ -158,25 +159,46 @@
        ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
        ;; than removing it from the page.
        [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
-        [:div {:style {:margin "0 auto" :maxWidth 716}}
-         [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
-          (if import-page? external-importer/import-title "New User?")]
-         [:div {:style {:marginBottom "1.5rem"}}
-          (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
-         [:div {:style {:display "flex"}}
-          [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
-           (if import-page?
-             (external-importer/render-import-tutorial)
-             [:div {:style {:lineHeight "130%"}}
-              "Need to create a FireCloud account? FireCloud uses your Google account. Once you have
-               signed in and completed the user profile registration step, you can start using FireCloud."
-              (links/create-external {:style {:display "block" :marginTop "0.3rem"}
-                                      :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
-                "Learn how to create a Google account with any email address.")])]
-          [:div {:id "sign-in-button"
-                 :style {:flexShrink 0 :width 180 :paddingLeft "2rem" :alignSelf "center"}
-                 :onClick #(this :-handle-sign-in-click)}
-           (spinner (:spinner-text props))]]]
+        (if (common/has-terra-return?)
+          [:div {:style {:margin "0 auto" :maxWidth 716}}
+           [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
+            (if import-page? external-importer/import-title "New User?")]
+           [:div {:style {:marginBottom "1.5rem"}}
+            (if import-page? external-importer/import-subtitle "Terra requires a Google account.")]
+           [:div {:style {:display "flex"}}
+            [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
+             (if import-page?
+               (external-importer/render-import-tutorial)
+               [:div {:style {:lineHeight "130%"}}
+                "Need to create a Terra account? Terra uses your Google account. Once you have
+                 signed in and completed the user profile registration step, you can start using Terra."
+                (links/create-external {:style {:display "block" :marginTop "0.3rem"}
+                                        :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
+                  "Learn how to create a Google account with any email address.")])]
+            [:div {:id "sign-in-button"
+                   :style {:flexShrink 0 :width 180 :paddingLeft "2rem" :alignSelf "center"}
+                   :onClick #(this :-handle-sign-in-click)}
+             (spinner (:spinner-text props))]]]
+          [:div {:style {:margin "0 auto" :maxWidth 716}}
+           [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
+            (if import-page? external-importer/import-title "New User?")]
+           [:div {:style {:marginBottom "1.5rem"}}
+            (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
+           [:div {:style {:display "flex"}}
+            [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
+             (if import-page?
+               (external-importer/render-import-tutorial)
+               [:div {:style {:lineHeight "130%"}}
+                "Need to create a FireCloud account? FireCloud uses your Google account. Once you have
+                 signed in and completed the user profile registration step, you can start using FireCloud."
+                (links/create-external {:style {:display "block" :marginTop "0.3rem"}
+                                        :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
+                  "Learn how to create a Google account with any email address.")])]
+            [:div {:id "sign-in-button"
+                   :style {:flexShrink 0 :width 180 :paddingLeft "2rem" :alignSelf "center"}
+                   :onClick #(this :-handle-sign-in-click)}
+             (spinner (:spinner-text props))]]]
+          )
         [Policy {:context :logged-out}]]))
    :component-did-mount
    (fn [{:keys [props locals]}]

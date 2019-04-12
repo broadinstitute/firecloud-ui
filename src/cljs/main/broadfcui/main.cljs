@@ -256,7 +256,8 @@
         [:div {:style {:position "relative"}}
          [:div {:style {:backgroundColor "white" :padding 20}}
           (when-not (contains? user-status :signed-in)
-            (style/render-text-logo))
+            (if-not (common/has-terra-return?)
+              (style/render-text-logo)))
           [:div {}
            [auth/LoggedOut {:spinner-text (cond (not config-loaded?) "Loading config..."
                                                 (not auth2) "Loading auth...")
