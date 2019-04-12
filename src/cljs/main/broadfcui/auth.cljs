@@ -156,7 +156,7 @@
   {:render
    (fn [{:keys [this props]}]
      (let [import-page? (string/starts-with? js/document.location.hash "#import")
-           domain-name (if (common/has-terra-return?)
+           domain-name (if (common/has-terra-return?) ;add has-firecloud-return? after PR goes in
                          "Terra"
                          "FireCloud")]
        ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
