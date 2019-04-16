@@ -196,6 +196,6 @@
    :billing-project
    {:component Page
     :regex #"billing/([^/]+)"
-    :terra-redirect (fn [args] (str "billing?type=project&selectedName=" (:project-name args)))
+    :terra-redirect (fn [args] (str "billing?selectedName=" (:project-name args) "&type=project"))
     :make-props (fn [project-name] (utils/restructure project-name))
     :make-path (fn [project-name] (str "billing/" project-name))}))
