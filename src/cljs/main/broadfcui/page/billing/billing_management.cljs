@@ -196,8 +196,6 @@
    :billing-project
    {:component Page
     :regex #"billing/([^/]+)"
-     ;; Terra UI cannot direct-link to an individual billing project. So, if a FireCloud user has a bookmark/link
-     ;; to a single project, we redirect to Terra's main billing page.
-    :terra-redirect #(str "billing")
+    :terra-redirect (fn [args] (str "billing?type=project&selectedName=" (:project-name args)))
     :make-props (fn [project-name] (utils/restructure project-name))
     :make-path (fn [project-name] (str "billing/" project-name))}))

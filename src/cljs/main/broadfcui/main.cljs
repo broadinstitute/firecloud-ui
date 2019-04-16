@@ -206,8 +206,11 @@
      [:div {} "Redirecting to Terra..."])
    :component-did-mount
     (fn [{:keys [props]}]
-      (let [{:keys [terra-redirect make-props]} props]
-        (js-invoke (aget js/window "location") "replace" (str (config/terra-url) "/?fcredir=1#" (terra-redirect (make-props))))))})
+      (let [{:keys [terra-redirect make-props]} props
+            url-snippet (terra-redirect (make-props))
+            query-marker (if (string/includes? url-snippet "?") "&" "?")
+            redir (str (config/terra-url) "/#" url-snippet query-marker "fcredir=1")]
+        (js-invoke (aget js/window "location") "replace" redir)))})
 
 (react/defc- App
   {:handle-hash-change
