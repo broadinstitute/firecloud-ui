@@ -248,3 +248,9 @@
 
 (defn has-terra-return? []
   (string/includes? js/window.location.search "return=terra"))
+
+(defn has-firecloud-return? []
+  (string/includes? js/window.location.search "return=firecloud"))
+
+(defn has-return? []
+  (or (has-terra-return?) (has-firecloud-return?)))
