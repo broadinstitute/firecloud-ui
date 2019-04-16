@@ -256,7 +256,8 @@
         [:div {:style {:position "relative"}}
          [:div {:style {:backgroundColor "white" :padding 20}}
           (when-not (contains? user-status :signed-in)
-            (if-not (common/has-terra-return?) ;add has-firecloud-return here too 
+            (if (common/has-terra-return?)
+              (style/render-terra-logo) ;add has-firecloud-return here too
               (style/render-text-logo)))
           [:div {}
            [auth/LoggedOut {:spinner-text (cond (not config-loaded?) "Loading config..."

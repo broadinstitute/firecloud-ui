@@ -234,6 +234,10 @@
                            :fontWeight "bold" :textDecoration "none" :height 38}}
     "FireCloud"]])
 
+(defn render-terra-logo []
+  [:img {:src "assets/terra-logo.svg"
+         :style {:height 56}}])
+
 (defn transform-style-map-to-css [styles & [!important?]]
   (reduce
    (fn [prev [k v]]
