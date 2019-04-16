@@ -73,10 +73,12 @@
             :ok-button
             {:text "Yes"
              :onClick #(mc-sync/flag-synchronization)
-             :href (if (common/has-terra-return?)
-                     (let [{:keys [namespace name]} (:dest-config-id @state)]
+             :href (cond
+                     (common/has-terra-return?) (let [{:keys [namespace name]} (:dest-config-id @state)]
                        (string/join "/" [(config/terra-url) (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name]))
-                     (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state)))}}])
+                     (common/has-firecloud-return?) (let [{:keys [namespace name]} (:dest-config-id @state)]
+                         (string/join "/" [(config/firecloud-terra-url) (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name]))
+                     :else (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state)))}}])
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem" :alignItems "flex-end"}}
          (tab-bar/render-title
           "METHOD"

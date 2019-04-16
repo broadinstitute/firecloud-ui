@@ -195,7 +195,10 @@
                              (when (or tcga? target?)
                                [:p {} "After dbGaP approves your application please link your eRA
                                        Commons ID in your FireCloud profile page."])])])))}
-         {:href (str (when (common/has-terra-return?) (config/terra-url))
+         {:href (str (cond
+                       (common/has-terra-return?) (config/terra-url)
+                       (common/has-firecloud-return?) (config/firecloud-terra-url))
+                     (when (common/has-return?) "/")
                      (nav/get-link :workspace-summary (common/row->workspace-id data)))})))
    :-build-aggregate-fields
    (fn [{:keys [props]}]
