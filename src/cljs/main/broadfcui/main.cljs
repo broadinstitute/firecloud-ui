@@ -209,7 +209,7 @@
       (let [{:keys [terra-redirect make-props]} props
             url-snippet (terra-redirect (make-props))
             query-marker (if (string/includes? url-snippet "?") "&" "?")
-            redir (str (config/terra-url) "/#" url-snippet query-marker "fcredir=1")]
+            redir (str (config/firecloud-terra-url) "/#" url-snippet query-marker "fcredir=1")]
         (js-invoke (aget js/window "location") "replace" redir)))})
 
 (react/defc- App
