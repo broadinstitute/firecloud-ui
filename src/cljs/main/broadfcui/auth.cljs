@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common :refer [login-scopes]]
+   [broadfcui.common :as common]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.markdown :as markdown]
@@ -160,16 +161,25 @@
        [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
         [:div {:style {:margin "0 auto" :maxWidth 716}}
          [:h1 {:style {:marginBottom "0.3rem" :fontWeight 400}}
-          (if import-page? external-importer/import-title "New User?")]
+          (cond
+            import-page? external-importer/import-title
+            (common/has-return?) "Hello"
+            :else "New User?")]
          [:div {:style {:marginBottom "1.5rem"}}
-          (if import-page? external-importer/import-subtitle "FireCloud requires a Google account.")]
+          (cond
+            import-page? external-importer/import-subtitle
+            (common/has-return?) "The content you are looking for is currently only accessible through Terra's legacy UI, originally called FireCloud."
+            :else "FireCloud requires a Google account.")]
          [:div {:style {:display "flex"}}
           [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
            (if import-page?
              (external-importer/render-import-tutorial)
              [:div {:style {:lineHeight "130%"}}
-              "Need to create a FireCloud account? FireCloud uses your Google account. Once you have
-               signed in and completed the user profile registration step, you can start using FireCloud."
+              (if (common/has-return?)
+                "Technically, this is a separate application. You will be asked to re-register and sign-in, as well as accept the Terms of Service. Please use the same Google identity you use to sign in to Terra."
+                "Need to create a FireCloud account? FireCloud uses your Google account. Once you have signed in and completed the user profile registration step, you can start using FireCloud.")
+              (when (common/has-return?)
+                [:div {:style {:marginTop "1.5rem"}} "Please bear with us as we migrate this functionality to our new user interface."])
               (links/create-external {:style {:display "block" :marginTop "0.3rem"}
                                       :href "https://software.broadinstitute.org/firecloud/documentation/article?id=9846"}
                 "Learn how to create a Google account with any email address.")])]
