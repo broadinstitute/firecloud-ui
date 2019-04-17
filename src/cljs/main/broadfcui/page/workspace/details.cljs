@@ -248,8 +248,7 @@
    :workspace-submission
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)"
-    ;; TODO: when Terra's submission detail page is ready, link to it
-    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id))  "/job_history"))
+    :terra-redirect (fn [args] (str (ws-path (:workspace-id args))  "/job_history/" (:submission-id args)))
     :make-props (fn [namespace name submission-id]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id})
@@ -259,8 +258,10 @@
    :workspace-workflow
    {:component WorkspaceDetails
     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)/([^/]+)"
-    ;; TODO: when Terra's submission detail page is ready, link to it 
-    :terra-redirect (fn [ws-id] (str (ws-path (:workspace-id ws-id)) "/job_history"))
+    ;; this redirect for workflow details intentionally links to Terra's submission detail page, not the
+    ;; workflow detail.  Workflow details in Terra are provided by job manager currently. We are ok linking
+    ;; to the submission detail instead.
+    :terra-redirect (fn [args] (str (ws-path (:workspace-id args))  "/job_history/" (:submission-id args)))
     :make-props (fn [namespace name submission-id workflow-id]
                   {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                    :submission-id submission-id :workflow-id workflow-id})
