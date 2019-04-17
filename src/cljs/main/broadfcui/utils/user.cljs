@@ -3,6 +3,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -56,12 +57,18 @@
 
 
 (defonce profile (atom false))
+(defonce terra-preference (atom false)) ;; initially false to disable redirects until profile is loaded
 
 (defn reload-profile [& [on-done]]
   (endpoints/profile-get
    (fn [{:keys [success? get-parsed-response] :as response}]
      (when success?
-       (reset! profile (common/parse-profile (get-parsed-response))))
+       (reset! profile (common/parse-profile (get-parsed-response)))
+       ;; pull the "preferTerra" key from profile and save it as its own atom, with defaulting, for convenience
+       (let [profile-pref (if-some [pp (:preferTerra @profile)]
+                            (utils/parse-boolean pp)
+                            true)]
+         (reset! terra-preference profile-pref)))
      (when on-done (on-done response)))))
 
 (defonce saved-ready-billing-project-names (atom []))
