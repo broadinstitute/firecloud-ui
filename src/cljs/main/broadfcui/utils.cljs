@@ -176,3 +176,8 @@
         (map #(select-keys % (keys needle)) $)
         (set $)
         (contains? $ needle)))
+
+(defn- parse-boolean [attr-value]
+  (if (contains? #{"true" "yes" "1"} (string/lower-case attr-value))
+    true
+    false))
