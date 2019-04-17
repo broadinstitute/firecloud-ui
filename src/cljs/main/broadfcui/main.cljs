@@ -234,7 +234,11 @@
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
            {:keys [component make-props public? terra-redirect]} (nav/find-path-handler window-hash)
-           terra-redirect? (and config-loaded? (config/terra-redirects-enabled) terra-redirect)
+           terra-redirect-override (utils/local-storage-read :terra-redirect-override)
+           terra-redirects-enabled? (if (some? terra-redirect-override)
+                                      (utils/parse-boolean terra-redirect-override)
+                                      (and config-loaded? (config/terra-redirects-enabled)))
+           terra-redirect? (and terra-redirects-enabled? terra-redirect)
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
