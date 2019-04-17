@@ -209,5 +209,7 @@
    :notifications
    {:component Page
     :regex #"notifications"
+    ;; in Terra UI, notification prefs are part of the user's profile
+    :terra-redirect #(str "profile")
     :make-props (constantly nil)
     :make-path (constantly "notifications")}))
