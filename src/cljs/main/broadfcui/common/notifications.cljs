@@ -268,9 +268,38 @@
                                         "You must check the boxes to accept the agreement.")
                            :onClick accept-eula})])}]))})
 
+(react/defc TerraLinkText
+  {:render
+    (fn [{:keys [state props]}]
+      (let [{:keys [terra-redirects-opted-out? terra-redirect-url]} props
+             final-terra-url (or terra-redirect-url (config/firecloud-terra-url))]
+        (if terra-redirects-opted-out?
+          ;; opted-out case: redirects are enabled for this FCUI instance, but user has an opt-out in preferences.
+          [:span {}
+             "You've opted out! You’ve got until August 2019! Also, Brad will fill in these words."
+             " Until he does, please click "
+            [:a {:href final-terra-url
+                 :target "_blank"
+                 :style {:color "white"}}
+              "here"]
+            " to head over to Terra."]
+          ;; not opted-out case, or redirects not enabled
+          [:span {}
+            "On May 1st FireCloud will get a new look as it becomes "
+            [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
+                 :target "_blank"
+                 :style {:color "white"}}
+              "powered by Terra."]
+            " Please click "
+            [:a {:href final-terra-url
+                 :target "_blank"
+                 :style {:color "white"}}
+              "here"]
+            " to test-drive the new experience."])))})
+
 (react/defc TerraBanner
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
      (let [{:keys [dismissed?]} @state]
        (when (not dismissed?)
          [:div {}
@@ -298,18 +327,7 @@
                            :font-weight "500"}}
             (if (and (common/has-return?) (config/terra-redirects-enabled))
               "This page is displaying in our legacy application. Please bear with us as we migrate these features fully into Terra."
-              [:span {}
-               "On May 1st FireCloud will get a new look as it becomes "
-               [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
-                    :target "_blank"
-                    :style {:color "white"}}
-                "powered by Terra."]
-               " Please click "
-               [:a {:href "http://app.terra.bio/"
-                    :target "_blank"
-                    :style {:color "white"}}
-                "here"]
-               " to test-drive the new experience."])]]
+              [TerraLinkText props])]]
           [:div {:style {:alignSelf "center"
                          :padding "1rem"
                          :position "absolute"
