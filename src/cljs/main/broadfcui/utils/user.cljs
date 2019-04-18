@@ -57,7 +57,7 @@
 
 
 (defonce profile (atom false))
-(defonce terra-preference (atom false)) ;; initially false to disable redirects until profile is loaded
+(defonce terra-preference (atom nil)) ;; initially false to disable redirects until profile is loaded
 
 (defn reload-profile [& [on-done]]
   (endpoints/profile-get
