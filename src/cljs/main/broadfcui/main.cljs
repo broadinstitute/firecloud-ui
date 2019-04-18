@@ -237,7 +237,7 @@
            terra-redirect-override (utils/local-storage-read :terra-redirect-override)
            terra-redirects-enabled? (if (some? terra-redirect-override)
                                       (utils/parse-boolean terra-redirect-override)
-                                      (and config-loaded? (config/terra-redirects-enabled)))
+                                      (and config-loaded? (config/terra-redirects-enabled) @user/terra-preference))
            terra-redirect? (and terra-redirects-enabled? terra-redirect)
            sign-in-hidden? (or (nil? component)
                                public?
