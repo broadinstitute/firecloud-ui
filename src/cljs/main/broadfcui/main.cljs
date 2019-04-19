@@ -238,14 +238,10 @@
            {:keys [component make-props public? terra-redirect]} (nav/find-path-handler window-hash)
            ;; developer override for terra redirects, read from local storage
            terra-redirect-override (utils/local-storage-read :terra-redirect-override)
-           ;; are redirects enabled in config.json?
-           terra-redirects-configured? (and config-loaded? (config/terra-redirects-enabled))
-           ;; are redirects enabled but the user has opted out?
-           terra-redirects-opted-out? (and terra-redirects-configured? (some? @user/terra-preference) (not @user/terra-preference))
            ;; combining override, config, and user preference, should redirects be enabled?
            terra-redirects-enabled? (if (some? terra-redirect-override)
                                       (utils/parse-boolean terra-redirect-override)
-                                      (and terra-redirects-configured? (some? @user/terra-preference) @user/terra-preference))
+                                      (and config-loaded? (config/terra-redirects-enabled) (some? @user/terra-preference) @user/terra-preference))
            ;; are redirects both enabled and the current page has a redirect?
            terra-redirect? (and terra-redirects-enabled? terra-redirect)
            ;; to what url should we redirect, if redirects are enabled?
@@ -256,7 +252,7 @@
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
-            [notifications/TerraBanner (utils/restructure terra-redirects-opted-out? terra-redirect-url)]
+            [notifications/TerraBanner (utils/restructure terra-redirect-url)]
             [notifications/TrialAlertContainer]])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
