@@ -211,7 +211,7 @@
      [:div {} "Redirecting to Terra..."])
    :component-did-mount
     (fn [{:keys [props]}]
-      (let [{:keys [terra-redirect-url ]} props]
+      (let [{:keys [terra-redirect-url]} props]
         (js-invoke (aget js/window "location") "replace" terra-redirect-url)))})
 
 (react/defc- App
@@ -300,7 +300,7 @@
                                 (fn [e]
                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              terra-redirect?
-             [TerraRedirect {:terra-redirect-url terra-redirect-url}]
+             [TerraRedirect (utils/restructure terra-redirect-url)]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
