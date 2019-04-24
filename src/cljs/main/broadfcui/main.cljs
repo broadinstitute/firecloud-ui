@@ -200,17 +200,19 @@
                (aget e "filename")]]
     :show-cancel? false :dismiss dismiss :ok-button "OK"}])
 
+(defn- make-terra-redirect-url [terra-redirect make-props]
+  (let [url-snippet (terra-redirect (make-props))
+        query-marker (if (string/includes? url-snippet "?") "&" "?")]
+    (str (config/firecloud-terra-url) "/#" url-snippet query-marker "fcredir=1")))
+
 (react/defc- TerraRedirect
   {:render
    (fn []
      [:div {} "Redirecting to Terra..."])
    :component-did-mount
     (fn [{:keys [props]}]
-      (let [{:keys [terra-redirect make-props]} props
-            url-snippet (terra-redirect (make-props))
-            query-marker (if (string/includes? url-snippet "?") "&" "?")
-            redir (str (config/firecloud-terra-url) "/#" url-snippet query-marker "fcredir=1")]
-        (js-invoke (aget js/window "location") "replace" redir)))})
+      (let [{:keys [terra-redirect-url]} props]
+        (js-invoke (aget js/window "location") "replace" terra-redirect-url)))})
 
 (react/defc- App
   {:handle-hash-change
@@ -234,18 +236,23 @@
    (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash config-loaded?]} @state
            {:keys [component make-props public? terra-redirect]} (nav/find-path-handler window-hash)
+           ;; developer override for terra redirects, read from local storage
            terra-redirect-override (utils/local-storage-read :terra-redirect-override)
+           ;; combining override, config, and user preference, should redirects be enabled?
            terra-redirects-enabled? (if (some? terra-redirect-override)
                                       (utils/parse-boolean terra-redirect-override)
-                                      (and config-loaded? (config/terra-redirects-enabled) @user/terra-preference))
+                                      (and config-loaded? (config/terra-redirects-enabled) (some? @user/terra-preference) @user/terra-preference))
+           ;; are redirects both enabled and the current page has a redirect?
            terra-redirect? (and terra-redirects-enabled? terra-redirect)
+           ;; to what url should we redirect, if redirects are enabled?
+           terra-redirect-url (when terra-redirect (make-terra-redirect-url terra-redirect make-props))
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
-            [notifications/TerraBanner]
+            [notifications/TerraBanner (utils/restructure terra-redirect-url)]
             [notifications/TrialAlertContainer]])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
@@ -293,7 +300,7 @@
                                 (fn [e]
                                   (swap! state assoc :showing-js-error-dialog? true :js-error e)))))}]
              terra-redirect?
-             [TerraRedirect {:terra-redirect terra-redirect :make-props make-props}]
+             [TerraRedirect (utils/restructure terra-redirect-url)]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?

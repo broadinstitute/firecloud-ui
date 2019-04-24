@@ -268,10 +268,22 @@
                                         "You must check the boxes to accept the agreement.")
                            :onClick accept-eula})])}]))})
 
+(defn terra-link-text [terra-redirect-url]
+  (let [final-terra-url (or terra-redirect-url (config/firecloud-terra-url))]
+    [:span {}
+      "You are using the classic FireCloud interface. "
+      "As of August 2019, FireCloud will permanently migrate to our new experience, powered by Terra. Click "
+      [:a {:href final-terra-url
+           :target "_blank"
+           :style {:color "white"}}
+        "here"]
+      " to try it out."]))
+
 (react/defc TerraBanner
   {:render
-   (fn [{:keys [state]}]
-     (let [{:keys [dismissed?]} @state]
+   (fn [{:keys [state props]}]
+     (let [{:keys [dismissed?]} @state
+           {:keys [terra-redirect-url]} props]
        (when (not dismissed?)
          [:div {}
           [:div {:style {:height "66px"
@@ -298,18 +310,7 @@
                            :font-weight "500"}}
             (if (and (common/has-return?) (config/terra-redirects-enabled))
               "This page is displaying in our legacy application. Please bear with us as we migrate these features fully into Terra."
-              [:span {}
-               "On May 1st FireCloud will get a new look as it becomes "
-               [:a {:href "https://software.broadinstitute.org/firecloud/blog?id=23627"
-                    :target "_blank"
-                    :style {:color "white"}}
-                "powered by Terra."]
-               " Please click "
-               [:a {:href "http://app.terra.bio/"
-                    :target "_blank"
-                    :style {:color "white"}}
-                "here"]
-               " to test-drive the new experience."])]]
+              (terra-link-text terra-redirect-url))]]
           [:div {:style {:alignSelf "center"
                          :padding "1rem"
                          :position "absolute"
