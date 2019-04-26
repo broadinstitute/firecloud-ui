@@ -229,9 +229,8 @@
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint
-       (endpoints/get-workspace-genomic-operations
-        ;; strip out operations/ from the job id
-        (:workspace-id props) (last (string/split (:job-id props) #"/")))
+       (endpoints/get-workflow-genomic-operations
+        (:workflow-id props) (:job-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :server-response
                          {:success? success?
@@ -300,7 +299,7 @@
                                    :onClick (fn [_]
                                               (swap! state assoc
                                                      :show-operation-dialog? true
-                                                     :operation-dialog-props {:workspace-id (:workspace-id props)
+                                                     :operation-dialog-props {:workflow-id (:workflowId props)
                                                                               :job-id       (data "jobId")
                                                                               :dismiss      #(swap! state dissoc :show-operation-dialog?)}))}
                                (data "jobId")])
