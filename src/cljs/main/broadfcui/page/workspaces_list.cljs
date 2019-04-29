@@ -450,6 +450,6 @@
    :workspaces
    {:component WorkspaceList
     :regex #""
-    :terra-redirect #(str "workspaces")
+    :terra-redirect #(str "")
     :make-props (fn [] {})
     :make-path (fn [] "")}))
