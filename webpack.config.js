@@ -61,7 +61,8 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            includePaths: ['node_modules/foundation-sites/scss/']
+                            includePaths: ['node_modules/foundation-sites/scss/'],
+                            implementation: require("sass")
                         }
                     }
                 ]
