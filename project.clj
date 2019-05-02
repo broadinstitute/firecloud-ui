@@ -1,13 +1,13 @@
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
-   [inflections "0.13.2"]
+   [inflections "0.13.0"]
    [dmohs/react "1.3.0"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
-   [org.clojure/clojure "1.10.0"]
-   [org.clojure/clojurescript "1.10.520"]
+   [org.clojure/clojure "1.9.0"]
+   [org.clojure/clojurescript "1.9.946"]
    ]
-  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.18"]]
+  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.9.9"]]
               :cljsbuild
