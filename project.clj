@@ -1,13 +1,13 @@
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
-   [inflections "0.13.0"]
+   [inflections "0.13.2"]
    [dmohs/react "1.3.0"]
    [org.broadinstitute/react-cljs-modal "2017.08.28"]
-   [org.clojure/clojure "1.9.0"]
-   [org.clojure/clojurescript "1.9.946"]
+   [org.clojure/clojure "1.10.0"]
+   [org.clojure/clojurescript "1.10.520"]
    ]
-  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.14"]]
+  :plugins [[lein-cljsbuild "1.1.7"] [lein-figwheel "0.5.18"]]
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.9.9"]]
               :cljsbuild
@@ -34,7 +34,7 @@
                  {;; As of 10/29/15, advanced optimization triggers
                   ;; infinite recursion, which I was not able to figure
                   ;; out.
-                  :optimizations :simple
+                  :optimizations :advanced
                   :static-fns true
                   :fn-invoke-direct true
                   :elide-asserts true
