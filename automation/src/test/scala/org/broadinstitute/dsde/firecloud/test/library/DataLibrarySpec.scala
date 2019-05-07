@@ -6,12 +6,13 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, TestReporterFixture, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
 class DataLibrarySpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with BillingFixtures with Matchers with TestReporterFixture {
 
-  "For a dataset with consent codes" in {
+  "For a dataset with consent codes" taggedAs Tags.SmokeTest in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withCleanBillingProject(curatorUser) { billingProject =>

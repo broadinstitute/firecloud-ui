@@ -8,8 +8,8 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNote
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, MethodFixtures, TestReporterFixture, WorkspaceFixtures}
+import org.broadinstitute.dsde.workbench.service.BillingProject.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
-import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
 import org.openqa.selenium.WebDriver
 import org.scalatest.{FreeSpec, Matchers}
 

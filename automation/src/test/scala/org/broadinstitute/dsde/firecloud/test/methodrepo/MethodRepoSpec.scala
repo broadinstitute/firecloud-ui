@@ -6,6 +6,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.scalatest._
 
 
@@ -16,7 +17,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   implicit lazy val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
-    "should be able to create a method and see it in the table" in {
+    "should be able to create a method and see it in the table" taggedAs Tags.SmokeTest in {
       withCleanUp {
         withWebDriver { implicit driver =>
           withSignIn(ownerUser) { _ =>

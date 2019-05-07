@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummar
 import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, GroupFixtures, TestReporterFixture, WorkspaceFixtures}
-import org.broadinstitute.dsde.workbench.service.Orchestration.billing.BillingProjectRole
+import org.broadinstitute.dsde.workbench.service.BillingProject.BillingProjectRole
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
 import org.broadinstitute.dsde.workbench.service.{AclEntry, Orchestration, WorkspaceAccessLevel}
 import org.scalatest._

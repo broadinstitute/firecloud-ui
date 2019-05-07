@@ -13,6 +13,7 @@ import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.model.{UserInfo, WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.service.{Google, Rawls}
 import org.broadinstitute.dsde.workbench.service.test.{CleanUp, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.openqa.selenium.WebDriver
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers}
@@ -52,7 +53,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
          *
          * E comes last because it makes the project unusable.
          */
-        "should be able add a new user, create a workspace, and run a method, change billing account" in {
+        "should be able add a new user, create a workspace, and run a method, change billing account" taggedAs Tags.SmokeTest in {
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken(AuthTokenScopes.billingScopes)
           val secondUser = UserPool.chooseStudent.email
