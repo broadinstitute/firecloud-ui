@@ -287,7 +287,7 @@
        (when (not dismissed?)
          [:div {:style {:display "flex"
                         :align-items "center"
-                        :height "66px"
+                        :height 66
                         :width "100%"
                         :border-bottom "2px solid rgb(176, 210, 57)"
                         :box-shadow "rgba(0, 0, 0, 0.12) 0px 3px 2px 0px"
@@ -298,7 +298,7 @@
                           :width "60px"
                           :margin "4px 10px"}}]
           [:div {:style {:color "white"
-                         :flexGrow "1"
+                         :flexGrow 1
                          :text-align "center"
                          :font-weight "500"}}
             (if (and (common/has-return?) (config/terra-redirects-enabled))
