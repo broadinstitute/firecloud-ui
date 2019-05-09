@@ -270,7 +270,7 @@
 
 (defn terra-link-text [terra-redirect-url]
   (let [final-terra-url (or terra-redirect-url (config/firecloud-terra-url))]
-    [:span {}
+    [:div {}
       "You are using the classic FireCloud interface. "
       "As of August 2019, FireCloud will permanently migrate to our new experience, powered by Terra. Click "
       [:a {:href final-terra-url
@@ -285,37 +285,26 @@
      (let [{:keys [dismissed?]} @state
            {:keys [terra-redirect-url]} props]
        (when (not dismissed?)
-         [:div {}
-          [:div {:style {:height "66px"
-                         :line-height "66px"
-                         :width "100%"
-                         :position "relative"
-                         :overflow "hidden"
-                         :white-space "nowrap"
-                         :border-bottom "2px solid rgb(176, 210, 57)"
-                         :box-shadow "rgba(0, 0, 0, 0.12) 0px 3px 2px 0px"
-                         :background "81px url('assets/header-left-hexes.svg') no-repeat,
+         [:div {:style {:display "flex"
+                        :align-items "center"
+                        :height 66
+                        :width "100%"
+                        :border-bottom "2px solid rgb(176, 210, 57)"
+                        :box-shadow "rgba(0, 0, 0, 0.12) 0px 3px 2px 0px"
+                        :background "81px url('assets/header-left-hexes.svg') no-repeat,
                                        right url('assets/header-right-hexes.svg') no-repeat, rgb(116, 174, 67)"}}
-           [:img {:src "assets/terra-logo.svg"
+          [:img {:src "assets/terra-logo.svg"
                   :style {:height "56px"
                           :width "60px"
-                          :float "left"
                           :margin "4px 10px"}}]
-           [:span {:style {:color "white"
-                           :height "66px"
-                           :display "inline-block"
-                           :vertical-align "middle"
-                           :margin-left "112px"
-                           :text-align "center"
-                           :font-weight "500"}}
+          [:div {:style {:color "white"
+                         :flexGrow 1
+                         :text-align "center"
+                         :font-weight "500"}}
             (if (and (common/has-return?) (config/terra-redirects-enabled))
               "This page is displaying in our legacy application. Please bear with us as we migrate these features fully into Terra."
-              (terra-link-text terra-redirect-url))]]
-          [:div {:style {:alignSelf "center"
-                         :padding "1rem"
-                         :position "absolute"
-                         :top "0px"
-                         :right "0px"}}
+              (terra-link-text terra-redirect-url))]
+          [:div {:style {:margin "1rem"}}
            [FoundationTooltip
             {:tooltip "Hide for now"
              :style {:borderBottom "none"}
