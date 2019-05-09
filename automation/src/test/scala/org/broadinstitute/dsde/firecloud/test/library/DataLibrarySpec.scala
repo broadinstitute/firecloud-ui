@@ -25,10 +25,10 @@ class DataLibrarySpec extends FreeSpec with ParallelTestExecution with WebBrowse
         withWebDriver { implicit driver =>
           withSignIn(curatorUser) { _ =>
             val page = new DataLibraryPage().waitForDataset(wsName)
-            if (page.isDefined) {
-              val codes: Seq[String] = page.get.getConsentCodes
-              Seq("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
-            }
+            page should not (be(None))
+
+            val codes: Seq[String] = page.get.getConsentCodes
+            Seq("HMB", "NCU", "NMDS", "NPU") should contain allElementsOf codes
           }
         }
       }
