@@ -109,7 +109,7 @@ if [ $ENV = "prod" ]; then
     launchSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest wdl-testing hello-world participant subject_HCC1143 false
 
     #Monitor the progress of the perf test
-    findSubmissionID dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest
+    #findSubmissionID dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest
     monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest $submissionId
 
    i=1
