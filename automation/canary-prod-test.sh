@@ -70,17 +70,6 @@ launchSubmission() {
     echo $submissionId
 }
 
-#findSubmissionID() {
-    #user=$1
-    #namespace=$2
-    #name=$3
-
-    #ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-    #submissionId=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
-    #submissionId=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
-#}
-
 monitorSubmission() {
     user=$1
     namespace=$2
@@ -109,7 +98,6 @@ if [ $ENV = "prod" ]; then
     launchSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest wdl-testing hello-world participant subject_HCC1143 false
 
     #Monitor the progress of the perf test
-    #findSubmissionID dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest
     monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest $submissionId
 
    i=1
