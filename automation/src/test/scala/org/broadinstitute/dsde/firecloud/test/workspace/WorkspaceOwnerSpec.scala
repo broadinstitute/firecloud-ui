@@ -8,7 +8,6 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.{RandomUtil, WebBrowserSpec}
-import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.broadinstitute.dsde.workbench.service.{RestException, WorkspaceAccessLevel}
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -31,7 +30,7 @@ class WorkspaceOwnerSpec extends FreeSpec with Matchers with WebBrowserSpec
 
   "A user" - {
     "with a billing project" - {
-      "should be able to create a workspace" taggedAs Tags.SmokeTest in {
+      "should be able to create a workspace" in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = user.makeAuthToken()
         withCleanBillingProject(user) { billingProject =>

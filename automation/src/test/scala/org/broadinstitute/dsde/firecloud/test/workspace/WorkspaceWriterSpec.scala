@@ -5,6 +5,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.config.{Credentials, UserPool}
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.test.{RandomUtil, WebBrowserSpec}
+import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.scalatest._
 
@@ -26,7 +27,7 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
 
   "A user" - {
     "who has writer access" - {
-      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
+      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" taggedAs Tags.SmokeTest in {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         val testName = "WorkspaceWriterAccess"

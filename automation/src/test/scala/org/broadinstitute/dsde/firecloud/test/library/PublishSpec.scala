@@ -10,7 +10,6 @@ import org.broadinstitute.dsde.workbench.config.UserPool
 import org.broadinstitute.dsde.workbench.fixture.{BillingFixtures, WorkspaceFixtures}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
 import org.broadinstitute.dsde.workbench.service.util.Retry
-import org.broadinstitute.dsde.workbench.service.util.Tags
 import org.scalatest._
 import org.scalatest.time.{Millis, Seconds, Span}
 
@@ -25,7 +24,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Wo
 
   "For a user with publish permissions" - {
     "a published workspace" - {
-      "should be visible in the library table" taggedAs Tags.SmokeTest in {
+      "should be visible in the library table" in {
         val curatorUser = UserPool.chooseCurator
         implicit val curatorAuthToken: AuthToken = curatorUser.makeAuthToken()
         withCleanBillingProject(curatorUser) { billingProject =>
