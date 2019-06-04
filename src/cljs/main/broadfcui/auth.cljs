@@ -352,7 +352,7 @@
                               :on-done #(swap! state assoc :hidden? true)})))))})
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
-  (fn [auth-token]
+  (fn [auth-token extra-on-sign-in]
     (ajax/call {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
                           (js/encodeURIComponent auth-token))
                 :on-done
@@ -375,7 +375,9 @@
                                    :listen (constantly nil)}
                                   :signOut on-sign-out})]
                       (user/set-google-auth2-instance! auth2)
-                      (on-sign-in))
+                      (on-sign-in)
+                      (when (some? extra-on-sign-in)
+                        (extra-on-sign-in)))
                     (on-error {:status status-code :response raw-response})))})))
 
 (defn render-forced-sign-in-error [error]

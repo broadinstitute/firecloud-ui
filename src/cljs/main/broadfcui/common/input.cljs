@@ -24,6 +24,7 @@
    (fn [{:keys [state props]}]
      (style/create-text-field
       (merge {:ref "textfield"
+              :type (or (:type props) "text")
               :style (merge (or (:style props) {})
                             (when (:invalid @state)
                               {:outline (str (:state-exception style/colors) " auto 5px")}))

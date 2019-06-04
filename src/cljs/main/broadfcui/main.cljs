@@ -32,6 +32,7 @@
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.style-guide :as style-guide]
+   [broadfcui.page.test-login :as test-login]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.persistence :as persistence]
@@ -56,6 +57,7 @@
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (style-guide/add-nav-paths)
+  (test-login/add-nav-paths)
   (workspace-details/add-nav-paths)
   (workspaces/add-nav-paths)
   )
