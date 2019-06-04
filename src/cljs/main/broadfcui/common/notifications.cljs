@@ -269,7 +269,7 @@
                            :onClick accept-eula})])}]))})
 
 (defn terra-link-text [terra-redirect-url]
-  (let [final-terra-url (or terra-redirect-url (config/firecloud-terra-url))]
+  (let [final-terra-url (or terra-redirect-url (common/make-return-url "firecloud"))]
     [:div {}
       "You are using the classic FireCloud interface. "
       "As of August 2019, FireCloud will permanently migrate to our new experience, powered by Terra. Click "
@@ -301,7 +301,7 @@
                          :flexGrow 1
                          :text-align "center"
                          :font-weight "500"}}
-            (if (and (common/has-return?) (config/terra-redirects-enabled))
+            (if (and common/has-return? (config/terra-redirects-enabled))
               "This page is displaying in our legacy application. Please bear with us as we migrate these features fully into Terra."
               (terra-link-text terra-redirect-url))]
           [:div {:style {:margin "1rem"}}
