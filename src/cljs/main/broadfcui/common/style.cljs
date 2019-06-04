@@ -101,7 +101,7 @@
              {} props))
 
 (defn create-text-field [props]
-  [:input (utils/deep-merge {:type "text" :style input-text-style} (replace-nil-value-key props))])
+  [:input (utils/deep-merge {:type (or (:type props) "text") :style input-text-style} (replace-nil-value-key props))])
 
 (defn create-search-field [props]
   [:input (utils/deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")}
