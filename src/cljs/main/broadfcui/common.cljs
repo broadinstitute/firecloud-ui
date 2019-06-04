@@ -248,9 +248,11 @@
 
 (def return-app (js* "new URLSearchParams(document.location.search).get('return')"))
 
-(defn make-return-url [app]
-  (string/replace (config/terra-base-url) "*" app))
+(defn make-return-url
+  ([] (make-return-url "firecloud"))
+  ([app] (string/replace (config/terra-base-url) "*" app)))
 
-(defn get-return-url [] (make-return-url (if (= return-app "terra") "app" return-app)))
+(defn get-return-url []
+  (make-return-url (if (= return-app "terra") "app" return-app)))
 
 (def has-return? (some? return-app))

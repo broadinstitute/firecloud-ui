@@ -269,7 +269,7 @@
                            :onClick accept-eula})])}]))})
 
 (defn terra-link-text [terra-redirect-url]
-  (let [final-terra-url (or terra-redirect-url (common/make-return-url "firecloud"))]
+  (let [final-terra-url (or terra-redirect-url (common/make-return-url))]
     [:div {}
       "You are using the classic FireCloud interface. "
       "As of August 2019, FireCloud will permanently migrate to our new experience, powered by Terra. Click "
