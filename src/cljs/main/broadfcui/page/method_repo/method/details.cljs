@@ -75,7 +75,7 @@
              :onClick #(mc-sync/flag-synchronization)
              :href (if common/has-return?
                      (let [{:keys [namespace name]} (:dest-config-id @state)]
-                       (str (common/get-return-url) "/" (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name))
+                       (string/join "/" [(common/get-return-url) (nav/get-link :workspace-summary (:dest-workspace-id @state)) "tools" namespace name]))
                      (nav/get-link :workspace-method-config (:dest-workspace-id @state) (:dest-config-id @state)))}}])
         [:div {:style {:display "flex" :marginTop "1.5rem" :padding "0 1.5rem" :alignItems "flex-end"}}
          (tab-bar/render-title
