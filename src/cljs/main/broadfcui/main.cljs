@@ -69,7 +69,7 @@
            path (subs (aget js/window "location" "hash") 1)]
        [:div {}
         [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
-         (when (and (= :registered (:registration-status @state)) (not (common/has-return?)))
+         (when (and (= :registered (:registration-status @state)) (not common/has-return?))
            [header/TopNavBar
             {:items (concat
                      [{:label "Workspaces"
@@ -160,7 +160,7 @@
 (defn- make-terra-redirect-url [terra-redirect make-props]
   (let [url-snippet (terra-redirect (make-props))
         query-marker (if (string/includes? url-snippet "?") "&" "?")]
-    (str (config/firecloud-terra-url) "/#" url-snippet query-marker "fcredir=1")))
+    (str (common/make-return-url) "/#" url-snippet query-marker "fcredir=1")))
 
 (react/defc- TerraRedirect
   {:render
@@ -202,15 +202,15 @@
            ;; are redirects both enabled and the current page has a redirect?
            terra-redirect? (and terra-redirects-enabled? terra-redirect)
            ;; to what url should we redirect, if redirects are enabled?
-           terra-redirect-url (when terra-redirect (make-terra-redirect-url terra-redirect make-props))
+           terra-redirect-url (when (and config-loaded? terra-redirect) (make-terra-redirect-url terra-redirect make-props))
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
-            [notifications/TerraBanner (utils/restructure terra-redirect-url)]
-            [notifications/TrialAlertContainer]])
+           [notifications/TerraBanner (utils/restructure terra-redirect-url)]
+           [notifications/TrialAlertContainer]])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")
                                 :text (auth/render-forced-sign-in-error error)
@@ -227,7 +227,7 @@
         [:div {:style {:position "relative"}}
          [:div {:style {:backgroundColor "white" :padding 20}}
           (when-not (contains? user-status :signed-in)
-            (if (common/has-return?)
+            (if common/has-return?
               (style/render-terra-logo)
               (style/render-text-logo)))
           [:div {}
@@ -269,7 +269,7 @@
                (not (contains? user-status :tos))
                [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
-         (when-not (common/has-return?) (footer/render-footer))
+         (when-not common/has-return? (footer/render-footer))
          (when (:showing-system-down-banner? @state)
            (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
                                                        "Server Unavailable")

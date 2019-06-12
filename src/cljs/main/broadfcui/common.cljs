@@ -246,11 +246,13 @@
 (def login-scopes ["email" "profile"])
 (def storage-scopes (conj login-scopes "https://www.googleapis.com/auth/devstorage.read_only"))
 
-(defn has-terra-return? []
-  (string/includes? js/window.location.search "return=terra"))
+(def return-app (js* "new URLSearchParams(document.location.search).get('return')"))
 
-(defn has-firecloud-return? []
-  (string/includes? js/window.location.search "return=firecloud"))
+(defn make-return-url
+  ([] (make-return-url "firecloud"))
+  ([app] (string/replace (config/terra-base-url) "*" app)))
 
-(defn has-return? []
-  (or (has-terra-return?) (has-firecloud-return?)))
+(defn get-return-url []
+  (make-return-url (if (= return-app "terra") "app" return-app)))
+
+(def has-return? (some? return-app))
