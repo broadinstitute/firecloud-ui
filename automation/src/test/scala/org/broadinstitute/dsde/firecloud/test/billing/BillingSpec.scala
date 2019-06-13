@@ -83,7 +83,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
               //END: Test creating workspace
 
               //BEGIN: Test running analysis in workspace
-              api.workspaces.waitForBucketReadAccess(billingProjectName, workspaceName)
+//              api.workspaces.waitForBucketReadAccess(billingProjectName, workspaceName)
               api.importMetaData(billingProjectName, workspaceName, "entities", testData.participantEntity)
 
               val methodConfigName: String = "test_method" + UUID.randomUUID().toString
