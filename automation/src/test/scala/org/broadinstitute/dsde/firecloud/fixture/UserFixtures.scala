@@ -4,6 +4,7 @@ package org.broadinstitute.dsde.firecloud.fixture
 import org.broadinstitute.dsde.firecloud.FireCloudConfig
 import org.scalatest.concurrent.{Eventually, ScaledTimeSpans}
 import org.broadinstitute.dsde.firecloud.page.AuthenticatedPage
+import org.broadinstitute.dsde.firecloud.page.duos.{DuosHomePage, DuosLoginPage}
 import org.broadinstitute.dsde.firecloud.page.user.{RegistrationPage, SignInPage, TermsOfServicePage}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceListPage
 import org.broadinstitute.dsde.workbench.auth.AuthTokenScopes
@@ -16,7 +17,8 @@ import org.broadinstitute.dsde.workbench.service.util.Retry.retry
 import scala.concurrent.duration._
 import scala.util.Try
 
-trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: WebBrowserSpec with TestSuite =>
+trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually {
+  self: WebBrowserSpec with TestSuite =>
 
   /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
@@ -32,7 +34,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     * Assumes the user is already registered so hands the test code a ready WorkspaceListPage.
     */
   def withScopedSignIn(user: Credentials, scopes: Seq[String])
-                 (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
+                      (testCode: WorkspaceListPage => Any)(implicit webDriver: WebDriver): Unit = {
     withSignIn(user, new WorkspaceListPage, scopes)(testCode)
   }
 
@@ -46,19 +48,38 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
   }
 
   /**
+    * Signs in to FireCloud using the Google sign-in flow. Assumes the user is already registered so
+    * hands the test code a ready WorkspaceListPage.
+    */
+  def withSignInDuos(user: Credentials)
+                    (testCode: DuosHomePage => Any)(implicit webDriver: WebDriver): Unit = {
+    withSignInDuos(user, new DuosHomePage())(testCode)
+  }
+
+  def withSignInDuos[T <: AuthenticatedPage](user: Credentials, page: T)
+                                            (testCode: T => Any)
+                                            (implicit webDriver: WebDriver): Unit = {
+
+    logger.info(s"withSignInDuos: ${user.email} ...")
+    executeTestCodeWithSignIn(user, {
+      new DuosLoginPage("https://duos.dsde-dev.broadinstitute.org/#/login").open.signIn(user.email, user.password)
+    }, page, testCode)
+  }
+
+  /**
     * "Signs in" to FireCloud with an access token, bypassing the Google sign-in flow. Assumes the
     * user is not registered and returns a ready TermsOfServicePage.
     */
   def withSignInNewUser(user: Credentials)
                        (testCode: RegistrationPage => Any)(implicit webDriver: WebDriver): Unit = {
-      withSignIn(user, new TermsOfServicePage) { tosPage =>
-        register cleanUp executeAsyncScript("window.rejectToS(arguments[arguments.length - 1])")
+    withSignIn(user, new TermsOfServicePage) { tosPage =>
+      register cleanUp executeAsyncScript("window.rejectToS(arguments[arguments.length - 1])")
 
-        tosPage.accept()
+      tosPage.accept()
 
-        val registrationPage = await ready new RegistrationPage
+      val registrationPage = await ready new RegistrationPage
 
-        testCode(registrationPage)
+      testCode(registrationPage)
 
     }
   }
@@ -72,14 +93,14 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     executeTestCodeWithSignIn(user, {
       // workaround for failed forceSignedIn
       var counter = 0
-      retry(Seq.fill(2)(1.seconds)) ({
+      retry(Seq.fill(2)(1.seconds))({
         logger.info(s"withSignIn (${user.email}) opening SignInPage ...")
         new SignInPage(FireCloudConfig.FireCloud.baseUrl).open
         logger.info(s"withSignIn (${user.email}) executing script forceSignedIn ...")
         val js = s"window.forceSignedIn('${user.makeAuthToken(scopes).value}')"
         executeScript(js)
         if (counter > 0) logger.warn(s"Retrying execute JavaScript forceSignedIn(): value = $js")
-        counter +=1
+        counter += 1
         try {
           logger.info(s"withSignIn (${user.email}) awaiting page ready ...")
           page.awaitReady()
@@ -94,9 +115,9 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     }, page, testCode)
   }
 
-  private def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
-                                                    (testCode: T => Any)
-                                                    (implicit webDriver: WebDriver): Unit = {
+  def withSignInReal[T <: AuthenticatedPage](user: Credentials, page: T)
+                                            (testCode: T => Any)
+                                            (implicit webDriver: WebDriver): Unit = {
 
     logger.info(s"withSignInReal: ${user.email} ...")
     executeTestCodeWithSignIn(user, {
@@ -119,7 +140,7 @@ trait UserFixtures extends CleanUp with ScaledTimeSpans with Eventually { self: 
     testCode(page)
 
     logger.info(s"executeTestCodeWithSignIn (${user.email}) signing out ...")
-    try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
+    //try page.signOut() catch nonFatalAndLog(s"ERROR logging out user: ${user.email}")
   }
 
 }
