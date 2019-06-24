@@ -53,7 +53,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with UserFixtures with Cl
          *
          * E comes last because it makes the project unusable.
          */
-        "should be able add a new user, create a workspace, and run a method, change billing account" taggedAs Tags.SmokeTest in {
+        "should be able add a new user, create a workspace, and run a method, change billing account" in {
           val user = UserPool.chooseProjectOwner
           implicit val authToken: AuthToken = user.makeAuthToken(AuthTokenScopes.billingScopes)
           val secondUser = UserPool.chooseStudent.email
