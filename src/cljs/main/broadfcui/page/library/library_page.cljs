@@ -387,8 +387,8 @@
     :component-did-mount
     (fn [{:keys [state]}]
       (let [js-query (js* "new URLSearchParams(document.location.search)")
-            query-projects (.get js-query "projects")
-            has-projects? (string/blank? query-projects)]
+            query-projects (.get js-query "projects") ; have to preserve these if we have to mutate the object later
+            has-projects? (.has js-query "projects")]
         (when has-projects?
           (.delete js-query "projects")
           (let [projectless-query (.toString js-query)]
