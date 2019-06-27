@@ -386,17 +386,30 @@
       (this :-refresh-table))
     :component-did-mount
     (fn [{:keys [state]}]
-      (endpoints/get-library-attributes
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (let [{:keys [properties searchResultColumns]} (get-parsed-response)
-                 aggs (->> properties (utils/filter-values :aggregate) keys)
-                 facets (:facet-filters @state)]
-             (swap! state assoc
-                    :library-attributes properties
-                    :aggregate-fields aggs
-                    :facet-filters (select-keys facets aggs)
-                    :search-result-columns (mapv keyword searchResultColumns)))))))
+      (let [js-query (js* "new URLSearchParams(document.location.search)")
+            query-projects (.get js-query "projects")
+            has-projects? (string/blank? query-projects)]
+        (when has-projects?
+          (.delete js-query "projects")
+          (let [projectless-query (.toString js-query)]
+            (js/window.history.replaceState
+             nil
+             ""
+             ;; without the slash in the string, the browser won't remove the existing search if there isn't a new one
+             (str "/" (when-not (string/blank? projectless-query) (str "?" projectless-query)) (nav/get-link :library)))))
+        (endpoints/get-library-attributes
+         (fn [{:keys [success? get-parsed-response]}]
+           (if success?
+             (let [{:keys [properties searchResultColumns]} (get-parsed-response)
+                   aggs (->> properties (utils/filter-values :aggregate) keys)
+                   facets (:facet-filters @state)]
+               (swap! state assoc
+                      :library-attributes properties
+                      :aggregate-fields aggs
+                      :facet-filters (if has-projects?
+                                       {:library:projectName (string/split query-projects ",")}
+                                       (select-keys facets aggs))
+                      :search-result-columns (mapv keyword searchResultColumns))))))))
     :render
     (fn [{:keys [state this]}]
       [:div {:style {:display "flex"}}
