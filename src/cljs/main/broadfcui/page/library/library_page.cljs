@@ -387,10 +387,10 @@
     :component-did-mount
     (fn [{:keys [state]}]
       (let [js-search-params (js* "new URLSearchParams(document.location.search)")
-            search-projects (.get js-search-params "projects") ; have to preserve these if we have to mutate the object later
-            has-projects? (.has js-search-params "projects")]
+            search-projects (js->clj (.getAll js-search-params "project")) ; have to preserve these if we have to mutate the object later
+            has-projects? (.has js-search-params "project")]
         (when has-projects?
-          (.delete js-search-params "projects")
+          (.delete js-search-params "project")
           (let [projectless-query (.toString js-search-params)]
             (js/window.history.replaceState
              nil
@@ -407,7 +407,7 @@
                       :library-attributes properties
                       :aggregate-fields aggs
                       :facet-filters (if has-projects?
-                                       {:library:projectName (string/split search-projects ",")}
+                                       {:library:projectName search-projects}
                                        (select-keys facets aggs))
                       :search-result-columns (mapv keyword searchResultColumns))))))))
     :render
