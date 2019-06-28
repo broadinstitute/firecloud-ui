@@ -368,6 +368,19 @@
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
 
+(defn- filter-search-projects-or-persist [page]
+  (let [search-projects (set (js* "new URLSearchParams(document.location.search).getAll('project')"))
+        initial-page-state {:search-text ""
+                            :research-purpose {}
+                            :facet-filters (if (empty? search-projects) {} {:library:projectName search-projects})
+                            :expanded-aggregates #{}}]
+    (if (empty? search-projects)
+      (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
+                                           :initial initial-page-state
+                                           :except [:library-attributes :aggregates]}
+                                          page)
+      (merge page {:get-initial-state #(identity initial-page-state)}))))
+
 (react/defc- Page
   (->>
    {:update-filter
@@ -386,30 +399,17 @@
       (this :-refresh-table))
     :component-did-mount
     (fn [{:keys [state]}]
-      (let [js-search-params (js* "new URLSearchParams(document.location.search)")
-            search-projects (js->clj (.getAll js-search-params "project")) ; have to preserve these if we have to mutate the object later
-            has-projects? (.has js-search-params "project")]
-        (when has-projects?
-          (.delete js-search-params "project")
-          (let [projectless-query (.toString js-search-params)]
-            (js/window.history.replaceState
-             nil
-             ""
-             ;; without the slash in the string, the browser won't remove the existing search if there isn't a new one
-             (str "/" (when-not (string/blank? projectless-query) (str "?" projectless-query)) (nav/get-link :library)))))
-        (endpoints/get-library-attributes
-         (fn [{:keys [success? get-parsed-response]}]
-           (if success?
-             (let [{:keys [properties searchResultColumns]} (get-parsed-response)
-                   aggs (->> properties (utils/filter-values :aggregate) keys)
-                   facets (:facet-filters @state)]
-               (swap! state assoc
-                      :library-attributes properties
-                      :aggregate-fields aggs
-                      :facet-filters (if has-projects?
-                                       {:library:projectName search-projects}
-                                       (select-keys facets aggs))
-                      :search-result-columns (mapv keyword searchResultColumns))))))))
+      (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [{:keys [properties searchResultColumns]} (get-parsed-response)
+                 aggs (->> properties (utils/filter-values :aggregate) keys)
+                 facets (:facet-filters @state)]
+             (swap! state assoc
+                    :library-attributes properties
+                    :aggregate-fields aggs
+                    :facet-filters (select-keys facets aggs)
+                    :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [state this]}]
       [:div {:style {:display "flex"}}
@@ -448,12 +448,7 @@
     :-refresh-table
     (fn [{:keys [refs after-update]} & [reset-sort?]]
       (after-update #((@refs "dataset-table") :execute-search reset-sort?)))}
-   (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
-                                        :initial {:search-text ""
-                                                  :research-purpose {}
-                                                  :facet-filters {}
-                                                  :expanded-aggregates #{}}
-                                        :except [:library-attributes :aggregates]})))
+   (filter-search-projects-or-persist)))
 
 (defn add-nav-paths []
   (nav/defpath
