@@ -368,6 +368,19 @@
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
 
+(defn- filter-search-projects-or-persist [page]
+  (let [search-projects (set (js* "new URLSearchParams(document.location.search).getAll('project')"))
+        initial-page-state {:search-text ""
+                            :research-purpose {}
+                            :facet-filters (if (empty? search-projects) {} {:library:projectName search-projects})
+                            :expanded-aggregates #{}}]
+    (if (empty? search-projects)
+      (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
+                                           :initial initial-page-state
+                                           :except [:library-attributes :aggregates]}
+                                          page)
+      (merge page {:get-initial-state #(identity initial-page-state)}))))
+
 (react/defc- Page
   (->>
    {:update-filter
@@ -435,12 +448,7 @@
     :-refresh-table
     (fn [{:keys [refs after-update]} & [reset-sort?]]
       (after-update #((@refs "dataset-table") :execute-search reset-sort?)))}
-   (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
-                                        :initial {:search-text ""
-                                                  :research-purpose {}
-                                                  :facet-filters {}
-                                                  :expanded-aggregates #{}}
-                                        :except [:library-attributes :aggregates]})))
+   (filter-search-projects-or-persist)))
 
 (defn add-nav-paths []
   (nav/defpath
