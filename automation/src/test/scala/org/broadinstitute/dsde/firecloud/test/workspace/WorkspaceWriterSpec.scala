@@ -27,7 +27,7 @@ class WorkspaceWriterSpec extends FreeSpec with Matchers with WebBrowserSpec wit
 
   "A user" - {
     "who has writer access" - {
-      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in {
+      "should only see the estimated monthly storage fee in the Project Cost section of the summary page" in taggedAs Tags.SmokeTest {
         val user = UserPool.chooseStudent
         implicit val authToken: AuthToken = authTokenOwner
         val testName = "WorkspaceWriterAccess"
