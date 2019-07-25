@@ -206,19 +206,12 @@
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                           :prompt "select_account"}))
            (.then (fn [response]
-                    (ajax/call {:url (str (config/api-url-root) "/handle-oauth-code")
-                                :method "POST"
-                                :data (utils/->json-string
-                                       {:code (.-code response)
-                                        :redirectUri (.. js/window -location -origin)})
-                                :on-done (fn [{:keys [success?]}]
-                                           (when success?
-                                             (swap! locals assoc :refresh-token-saved? true)
-                                             (let [signed-in? (-> auth2
-                                                                  (aget "currentUser")
-                                                                  (js-invoke "get")
-                                                                  (js-invoke "isSignedIn"))]
-                                               (on-change signed-in? true))))}))))))})
+             (swap! locals assoc :refresh-token-saved? true)
+             (let [signed-in? (-> auth2
+                                  (aget "currentUser")
+                                  (js-invoke "get")
+                                  (js-invoke "isSignedIn"))]
+               (on-change signed-in? true)))))))})
 
 ;; Borked servers often return HTML pages instead of JSON, so suppress JSON parsing
 ;; exceptions because they are useless ("Unexpected token T in JSON...")
@@ -316,40 +309,6 @@
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
-
-(react/defc RefreshCredentials
-  {:get-initial-state
-   (fn []
-     {:hidden? true})
-   :render
-   (fn [{:keys [this state]}]
-     [:div {:style {:display (when (:hidden? @state) "none")
-                    :font-weight "bold"
-                    :padding "1ex 1em" :backgroundColor (:state-exception style/colors) :color "#222" :fontSize "100%"}}
-      [:span {:style {:margin-right "10px"}} [icons/ExceptionIcon {:size 18}]]
-      "Your offline credentials are missing or out-of-date."
-      " Your workflows may not run correctly until they have been refreshed."
-      " " [:a {:href "javascript:;" :onClick #(this :-re-auth)} "Refresh now..."]])
-   :component-did-mount
-   (fn [{:keys [state]}]
-     (ajax/call-orch "/refresh-token-status"
-                     {:on-done (fn [{:keys [raw-response]}]
-                                 (let [[parsed _]
-                                       (utils/parse-json-string raw-response true false)]
-                                   (when (and parsed (:requiresRefresh parsed))
-                                     (swap! state dissoc :hidden?))))}))
-   :-re-auth
-   (fn [{:keys [props state]}]
-     (-> (:auth2 props)
-         (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                        :prompt "consent"}))
-         (.then (fn [response]
-                  (ajax/call {:url (str (config/api-url-root) "/handle-oauth-code")
-                              :method "POST"
-                              :data (utils/->json-string
-                                     {:code (.-code response)
-                                      :redirectUri (.. js/window -location -origin)})
-                              :on-done #(swap! state assoc :hidden? true)})))))})
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token extra-on-sign-in]
