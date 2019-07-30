@@ -222,8 +222,6 @@
         [top-banner/Container]
         (when config-loaded?
           [notifications/ServiceAlertContainer])
-        (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
-          [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:position "relative"}}
          [:div {:style {:backgroundColor "white" :padding 20}}
           (when-not (contains? user-status :signed-in)
