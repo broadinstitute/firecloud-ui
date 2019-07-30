@@ -205,7 +205,7 @@
        (-> auth2
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                           :prompt "select_account"}))
-           (.then (fn [response]
+           (.then (fn [_]
              (swap! locals assoc :refresh-token-saved? true)
              (let [signed-in? (-> auth2
                                   (aget "currentUser")
