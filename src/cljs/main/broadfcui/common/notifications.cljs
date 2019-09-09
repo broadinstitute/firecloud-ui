@@ -272,7 +272,7 @@
   (let [final-terra-url (or terra-redirect-url (common/make-return-url))]
     [:div {}
       "You are using the classic FireCloud interface. "
-      "As of August 2019, FireCloud will permanently migrate to our new experience, powered by Terra. Click "
+      "FireCloud will permanently migrate to our new experience, powered by Terra. Click "
       [:a {:href final-terra-url
            :target "_blank"
            :style {:color "white"}}
