@@ -43,7 +43,11 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
 
   "FireCloud registration" - {
 
-    "should allow a person to register" taggedAs Retryable in {
+    // Orchestration has a test that does the same thing as this test.
+    // UI and Orchestration tests run in parallel.
+    // If the Orch test runs first, it will register the user, and this test will fail.
+    // Therefore, we are ignoring this test. Re-enable it if we ever turn off the Orch test.
+    "should allow a person to register" taggedAs Retryable ignore {
       withWebDriver { implicit driver =>
         withCleanUp {
           withSignInNewUser(testUser) { registrationPage =>
