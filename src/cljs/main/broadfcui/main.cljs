@@ -209,7 +209,6 @@
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
-           [notifications/TerraBanner (utils/restructure terra-redirect-url)]
            [notifications/TrialAlertContainer]])
         (when-let [error (:force-sign-in-error @state)]
           (modals/render-error {:header (str "Error validating access token")

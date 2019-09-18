@@ -168,7 +168,7 @@
          [:div {:style {:marginBottom "1.5rem"}}
           (cond
             import-page? external-importer/import-subtitle
-            common/has-return? "The content you are looking for is currently only accessible through Terra's legacy UI, originally called FireCloud."
+            common/has-return? "The content you are looking for is currently only accessible through the Terra platform's legacy UI."
             :else "FireCloud requires a Google account.")]
          [:div {:style {:display "flex"}}
           [:div {:style {:paddingRight "2rem" :borderRight style/dark-line}}
@@ -176,7 +176,7 @@
              (external-importer/render-import-tutorial)
              [:div {:style {:lineHeight "130%"}}
               (if common/has-return?
-                "Technically, this is a separate application. You will be asked to re-register and sign-in, as well as accept the Terms of Service. Please use the same Google identity you use to sign in to Terra."
+                "Technically, this is a separate application. You will be asked to re-register and sign-in, as well as accept the Terms of Service. Please use the same Google identity you use to sign in to the Terra platform and co-branded sites."
                 "Need to create a FireCloud account? FireCloud uses your Google account. Once you have signed in and completed the user profile registration step, you can start using FireCloud.")
               (when common/has-return?
                 [:div {:style {:marginTop "1.5rem"}} "Please bear with us as we migrate this functionality to our new user interface."])
