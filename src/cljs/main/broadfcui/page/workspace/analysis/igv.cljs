@@ -53,7 +53,7 @@
                    :on-load #(do
                                (swap! state assoc :igv-loaded? true)
                                (this :refresh))
-                   :path "https://igv.org/web/release/2.0.0-rc5/dist/igv.min.js"}])]))
+                   :path "https://igv.org/web/release/2.0.1/dist/igv.min.js"}])]))
    :component-did-update
    (fn [{:keys [props state prev-props this]}]
      (when (and (not= (:tracks props) (:tracks prev-props)) (:igv-loaded? @state))
