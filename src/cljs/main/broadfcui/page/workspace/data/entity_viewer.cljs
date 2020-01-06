@@ -100,7 +100,6 @@
                                    {:header "Value" :initial-width :auto
                                     :column-data
                                     (fn [[_ v]]
-                                      (utils/cljslog v)
                                       (cond (map? v)
                                             {:for-sort (string/lower-case (:entityName v))
                                              :for-render (item-link (:entityType v) (:entityName v))}
