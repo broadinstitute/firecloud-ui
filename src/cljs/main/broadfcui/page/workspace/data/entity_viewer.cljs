@@ -10,6 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.components.blocker :refer [blocker]]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
@@ -119,7 +120,7 @@
                                                                               :attributes {:style {:display "inline"}}
                                                                               :link-label v)]}
                                               {:for-sort (string/lower-case (str v))
-                                               :for-render v})))
+                                               :for-render (table-utils/default-render v)})))
                                     :sort-by :for-sort
                                     :render :for-render}])}
                 :paginator :none}]]))
