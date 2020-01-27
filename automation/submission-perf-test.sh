@@ -133,6 +133,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testA=$submissionID
     echo "$testA"
+    sleep 30s
     monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
     submissionA=$submissionStatus
     sleep 2m
@@ -140,6 +141,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
     testB=$submissionID
     echo "$testB"
+    sleep 30s
     monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
     submissionB=$submissionStatus
     sleep 1m
@@ -147,6 +149,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
     testD=$submissionID
     echo "$testD"
+    sleep 30s
     monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
     submissionD=$submissionStatus
     sleep 2m
@@ -154,6 +157,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
     testE=$submissionID
     echo "$testE"
+    sleep30s
     monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
     submissionE=$submissionStatus
     sleep 1m
@@ -161,6 +165,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
     testG=$submissionID
     echo "$testG"
+    sleep 30s
     monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
     submissionG=$submissionStatus
     sleep 1m
@@ -168,7 +173,7 @@ if [ $ENV = "alpha" ]; then
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     test1=$submissionID
     echo "$test1"
-
+    sleep 30s
  #Monitor the progress of the OneOff submission
     monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
 
