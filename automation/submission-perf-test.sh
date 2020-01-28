@@ -129,8 +129,8 @@ monitorSubmission() {
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 30s
+    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    sleep 55s
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
     testA=$submissionID
     echo "$testA"
@@ -138,7 +138,7 @@ if [ $ENV = "alpha" ]; then
     submissionA=$submissionStatus
     sleep 1m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 30s
+    sleep 55s
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
     testB=$submissionID
     echo "$testB"
@@ -146,7 +146,7 @@ if [ $ENV = "alpha" ]; then
     submissionB=$submissionStatus
     sleep 1m
     launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 30s
+    sleep 55s
     findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
     testD=$submissionID
     echo "$testD"
@@ -154,7 +154,7 @@ if [ $ENV = "alpha" ]; then
     submissionD=$submissionStatus
     sleep 1m
     launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 30s
+    sleep 55s
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
     testE=$submissionID
     echo "$testE"
@@ -162,7 +162,7 @@ if [ $ENV = "alpha" ]; then
     submissionE=$submissionStatus
     sleep 1m
     launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
-    sleep 30s
+    sleep 55s
     findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
     testG=$submissionID
     echo "$testG"
@@ -170,7 +170,7 @@ if [ $ENV = "alpha" ]; then
     submissionG=$submissionStatus
     sleep 1m
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
-    sleep 30s
+    sleep 55s
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
     test1=$submissionID
     echo "$test1"
