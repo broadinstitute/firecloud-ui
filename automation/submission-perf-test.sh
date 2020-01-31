@@ -129,53 +129,53 @@ monitorSubmission() {
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     sleep 55s
-    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace
+    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020
     testA=$submissionID
     echo "$testA"
-    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
     submissionA=$submissionStatus
     sleep 1m
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     sleep 55s
-    findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W
+    findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020
     testB=$submissionID
     echo "$testB"
-    monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
+    monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
     submissionB=$submissionStatus
     sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     sleep 55s
-    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy
+    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020
     testD=$submissionID
     echo "$testD"
-    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
+    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
     submissionD=$submissionStatus
     sleep 1m
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     sleep 55s
-    findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W
+    findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020
     testE=$submissionID
     echo "$testE"
-    monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
+    monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 $testE
     submissionE=$submissionStatus
     sleep 1m
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
     sleep 55s
-    findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W
+    findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020
     testG=$submissionID
     echo "$testG"
-    monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
+    monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 $testG
     submissionG=$submissionStatus
     sleep 1m
-    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 anuMethods callCacheWDL participant subject_HCC1143 true
+    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 anuMethods callCacheWDL participant subject_HCC1143 true
     sleep 55s
-    findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717
+    findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020
     test1=$submissionID
     echo "$test1"
  #Monitor the progress of the OneOff submission
-    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $test1
+    monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 $test1
 
    i=1
    while [ "$submissionStatus" != "Done" ] && [ "$i" -le 199 ]
@@ -183,7 +183,7 @@ if [ $ENV = "alpha" ]; then
     do
             echo "Monitoring one-off submission, this is run number: $i"
             sleep 1m
-            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717 $submissionId
+            monitorSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 $submissionId
             ((i++))
     done
 
@@ -204,31 +204,31 @@ if [ $ENV = "alpha" ]; then
             echo "Monitoring the other 5 submissions, this is run number: $j"
             sleep 1m
 
-            monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace $testA
+            monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
             submissionA=$submissionStatus
             echo "Submission A status: $submissionA"
             workflowA=$workflowsStatus
             failuresA=$workflowFailures
             echo "Number of failed workflows A: $failuresA"
-            monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W $testB
+            monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
             submissionB=$submissionStatus
             echo "Submission B status: $submissionB"
             workflowB=$workflowsStatus
             failuresB=$workflowFailures
             echo "Number of failed workflows B: $failuresB"
-            monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_copy $testD
+            monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
             submissionD=$submissionStatus
             echo "Submission D status: $submissionD"
             workflowD=$workflowsStatus
             failuresD=$workflowFailures
             echo "Number of failed workflows D: $failuresD"
-            monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W $testE
+            monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 $testE
             submissionE=$submissionStatus
             echo "Submission E status: $submissionE"
             workflowE=$workflowsStatus
             failuresE=$workflowFailures
             echo "Number of failed workflows E: $failuresE"
-            monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W $testG
+            monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 $testG
             submissionG=$submissionStatus
             echo "Submission G status: $submissionG"
             workflowG=$workflowsStatus
