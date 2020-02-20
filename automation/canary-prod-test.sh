@@ -23,64 +23,7 @@ users=(
      dumbledore.admin@test.firecloud.org
    )
 
-checkToken () {
-    user=$1
-
-    # Verify that user does not need to refresh their token
-    if
-        curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
-    then
-        echo "$1 needs its refresh token refreshed"
-        NEED_TOKEN=true
-    fi
-}
-
-launchSubmission() {
-    user=$1
-    namespace=$2
-    name=$3
-    methodConfigurationNamespace=$4
-    methodConfigurationName=$5
-    entityType=$6
-    entityName=$7
-    useCallCache=$8
-    expression=$9  #optional
-
-    echo "
-    Launching submission for:
-        user=$1
-        namespace=$2
-        name=$3
-        methodConfigurationNamespace=$4
-        methodConfigurationName=$5
-        entityType=$6
-        entityName=$7
-        useCallCache=$8
-        expression=$9
-    "
-
-     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-   # check if $9 is set for expression
-    if [ -z ${9+x} ] ; then
-        submissionId=$(curl -X POST "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://portal.firecloud.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed | jq -r '.submissionId')
-    else
-        submissionId=$(curl -X POST "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://portal.firecloud.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache,\"expression\":\"$expression\"}" --compressed | jq -r '.submissionId')
-    fi
-    echo $submissionId
-}
-
-monitorSubmission() {
-    user=$1
-    namespace=$2
-    name=$3
-    submissionId=$4
-
-    ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-    submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
-    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
-}
+source prod-workflow-inc.sh
 
 # check if user needs a token refresh
     for user in "${users[@]}"
@@ -95,7 +38,16 @@ monitorSubmission() {
 
 if [ $ENV = "prod" ]; then
     SECONDS=0
-    launchSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest wdl-testing hello-world participant subject_HCC1143 false
+    launchSubmission \
+        dumbledore.admin@test.firecloud.org \
+        broad-firecloud-dsde \
+        CanaryTest \
+        wdl-testing \
+        hello-world \
+        participant \
+        subject_HCC1143 \
+        false \
+        false \
 
     #Monitor the progress of the perf test
     monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest $submissionId
