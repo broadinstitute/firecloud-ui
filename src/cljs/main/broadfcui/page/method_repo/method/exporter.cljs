@@ -23,6 +23,7 @@
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
+   [broadfcui.utils.user :as user]
    ))
 
 
@@ -209,4 +210,9 @@
                   (if success?
                     ((:on-export props) workspace-id (ws-common/config->id config))
                     (utils/multi-swap! state (assoc :server-error (get-parsed-response false))
-                                             (dissoc :banner))))}))})
+                                             (dissoc :banner)))
+                  (endpoints/send-metrics-event
+                   "workflow:export:firecloud"
+                   {:success success?
+                    :config (not= (:selected-config @state) :blank)
+                    :userId (:anonymousGroup @user/profile)}))}))}) ;; requiring user deeper causes circular dep

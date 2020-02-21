@@ -32,6 +32,9 @@
    (:path endpoint)
    (ajax-payload endpoint arg-map)))
 
+(defn send-metrics-event [event data]
+  (ajax/call-metrics event data))
+
 (defn- id-path [id]
   (str (:namespace id) "/" (:name id)))
 

@@ -57,6 +57,7 @@
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn google-bucket-url [filename] (str (get @config "googleBucketUrl") filename ".json"))
 (defn martha-url [] (get @config "marthaUrl"))
+(defn metrics-url [] (get @config "metricsUrl"))
 (defn martha-file-summary-url [] (get @config "marthaFileSummaryUrl"))
 (defn bond-url [] (get @config "bondUrl"))
 (defn dockstore-api-url [] (get @config "dockstoreApiUrl"))
