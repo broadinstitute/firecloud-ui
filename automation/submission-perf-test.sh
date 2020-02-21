@@ -27,90 +27,7 @@ users=(
      dumbledore.admin@test.firecloud.org
    )
 
-
-checkToken () {
-    user=$1
-
-    # Verify that user does not need to refresh their token
-    if
-        curl -f -v --silent -X GET --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/refresh-token-status"  2>&1 | grep '"requiresRefresh": true'
-    then
-        echo "$1 needs its refresh token refreshed"
-        NEED_TOKEN=true
-
-    fi
-
-}
-
-callbackToNIH() {
-    user=$1
-
-    echo "
-    Launching calback to NIH for:
-    user=$1
-    "
-     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-      curl -X POST --header "Content-Type: application/json" --header "Accept: application/json" --header "Authorization: Bearer $ACCESS_TOKEN" -d "{\"jwt\":\"eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s\"}" "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/nih/callback"
-}
-
-launchSubmission() {
-    user=$1
-    namespace=$2
-    name=$3
-    methodConfigurationNamespace=$4
-    methodConfigurationName=$5
-    entityType=$6
-    entityName=$7
-    useCallCache=$8
-    expression=$9  #optional
-
-    echo "
-    Launching submission for:
-        user=$1
-        namespace=$2
-        name=$3
-        methodConfigurationNamespace=$4
-        methodConfigurationName=$5
-        entityType=$6
-        entityName=$7
-        useCallCache=$8
-        expression=$9
-    "
-
-     ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-    # check if $9 is set for expression
-    if [ -z ${9+x} ] ; then
-        curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache}" --compressed
-    else
-        curl -f "https://firecloud-orchestration.dsde-$ENV.broadinstitute.org/api/workspaces/$namespace/$name/submissions" -H "origin: https://firecloud.dsde-$ENV.broadinstitute.org" -H "accept-encoding: gzip, deflate, br" -H "authorization: Bearer $ACCESS_TOKEN" -H "content-type: application/json" --data-binary "{\"methodConfigurationNamespace\":\"$methodConfigurationNamespace\",\"methodConfigurationName\":\"$methodConfigurationName\",\"entityType\":\"$entityType\",\"entityName\":\"$entityName\",\"useCallCache\":$useCallCache,\"expression\":\"$expression\"}" --compressed
-    fi
-}
-
-findSubmissionID() {
-    user=$1
-    namespace=$2
-    name=$3
-
-    ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
-
-    submissionID=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"| jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
-}
-
-monitorSubmission() {
-    user=$1
-    namespace=$2
-    name=$3
-    submissionId=$4
-
-    ACCESS_TOKEN=`docker run --rm -v $WORKING_DIR:/app/populate -w /app/populate broadinstitute/dsp-toolbox python get_bearer_token.py "${user}" "${JSON_CREDS}"`
- 
-    # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
-    submissionStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" | jq -r '.status')
-    workflowsStatus=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '.workflows[] | .status')
-    workflowFailures=$(curl -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId"  | jq -r '[.workflows[] | select(.status == "Failed")] | length')
-}
+source submission-perf-inc.sh
 
 # check if user needs a token refresh
     for user in "${users[@]}"
@@ -129,7 +46,7 @@ monitorSubmission() {
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020
     testA=$submissionID
@@ -137,7 +54,7 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
     submissionA=$submissionStatus
     sleep 1m
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020
     testB=$submissionID
@@ -145,7 +62,7 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
     submissionB=$submissionStatus
     sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020
     testD=$submissionID
@@ -153,7 +70,7 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
     submissionD=$submissionStatus
     sleep 1m
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020
     testE=$submissionID
@@ -161,7 +78,7 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 $testE
     submissionE=$submissionStatus
     sleep 1m
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true "this.samples"
+    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020
     testG=$submissionID
@@ -169,7 +86,7 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 $testG
     submissionG=$submissionStatus
     sleep 1m
-    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 anuMethods callCacheWDL participant subject_HCC1143 true
+    launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 anuMethods callCacheWDL participant subject_HCC1143 true false
     sleep 55s
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020
     test1=$submissionID
@@ -250,12 +167,12 @@ if [ $ENV = "alpha" ]; then
 
 #########################################################################################
 elif [ $ENV = "staging" ]; then
-    launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission ron.weasley@test.firecloud.org staging-submission-perf-test-b Perf-Test-B-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission mcgonagall.curator@test.firecloud.org staging-submission-perf-test-d Perf-Test-D-W_copy submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission draco.malfoy@test.firecloud.org staging-submission-perf-test-e Perf-Test_E_W submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission hermione.owner@test.firecloud.org staging-submission-perf-test-g Perf-Test-G-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true "this.samples"
-    launchSubmission dumbledore.admin@test.firecloud.org staging-submission-perf-test-1 Perf-test-oneoff gatk mutect2-gatk4 pair HCC1143_small true
+    launchSubmission harry.potter@test.firecloud.org staging-submission-perf-test-a Perf-test-A-workspace submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true false "this.samples"
+    launchSubmission ron.weasley@test.firecloud.org staging-submission-perf-test-b Perf-Test-B-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true false "this.samples"
+    launchSubmission mcgonagall.curator@test.firecloud.org staging-submission-perf-test-d Perf-Test-D-W_copy submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true false "this.samples"
+    launchSubmission draco.malfoy@test.firecloud.org staging-submission-perf-test-e Perf-Test_E_W submission-perf-test sleep1hr_echo_strings sample_set sample_set6k true false "this.samples"
+    launchSubmission hermione.owner@test.firecloud.org staging-submission-perf-test-g Perf-Test-G-W submission-perf-test sleep_20min_echo_strings sample_set sample_set6k true false "this.samples"
+    launchSubmission dumbledore.admin@test.firecloud.org staging-submission-perf-test-1 Perf-test-oneoff gatk mutect2-gatk4 pair HCC1143_small true false
 
 else
     echo "Could not find ENV"
