@@ -46,46 +46,6 @@ source ./submission-perf-inc.sh
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020
-    testA=$submissionID
-    echo "$testA"
-    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
-    submissionA=$submissionStatus
-    sleep 1m
-    launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020
-    testB=$submissionID
-    echo "$testB"
-    monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
-    submissionB=$submissionStatus
-    sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020
-    testD=$submissionID
-    echo "$testD"
-    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
-    submissionD=$submissionStatus
-    sleep 1m
-    launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020
-    testE=$submissionID
-    echo "$testE"
-    monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 $testE
-    submissionE=$submissionStatus
-    sleep 1m
-    launchSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020
-    testG=$submissionID
-    echo "$testG"
-    monitorSubmission hermione.owner@test.firecloud.org aa-test041417 Perf-Test-G-W_2020 $testG
-    submissionG=$submissionStatus
-    sleep 1m
     launchSubmission dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020 anuMethods callCacheWDL participant subject_HCC1143 true false
     sleep 55s
     findSubmissionID dumbledore.admin@test.firecloud.org aa-test-042717a test-042717_2020
