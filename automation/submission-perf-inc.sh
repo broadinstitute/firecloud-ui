@@ -102,6 +102,32 @@ launchSubmission() {
         optionalExpressionField="\"expression\":\"${expression}\","
     fi
 
+    set -x
+    echo ---
+    echo testing
+    echo ---
+    echo curl \
+        -f \
+        "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
+        -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" \
+        -H "accept-encoding: gzip, deflate, br" \
+        -H "authorization: Bearer ACCESS_TOKEN" \
+        -H "content-type: application/json" \
+        --data-binary "
+        {
+            \"deleteIntermediateOutputFiles\":${deleteIntermediateOutputFiles},
+            ${optionalExpressionField}
+            \"methodConfigurationNamespace\":\"${methodConfigurationNamespace}\",
+            \"methodConfigurationName\":\"${methodConfigurationName}\",
+            \"entityType\":\"${entityType}\",
+            \"entityName\":\"${entityName}\",
+            \"useCallCache\":${useCallCache}
+        }
+        " \
+        --compressed
+    echo ---
+    set +x
+
     curl \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
