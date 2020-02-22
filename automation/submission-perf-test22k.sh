@@ -27,7 +27,7 @@ users=(
      dumbledore.admin@test.firecloud.org
    )
 
-source submission-perf-inc.sh
+source ./submission-perf-inc.sh
 
 # check if user needs a token refresh
     for user in "${users[@]}"
