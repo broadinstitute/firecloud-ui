@@ -96,7 +96,7 @@ launchSubmission() {
      )
 
     # check if $expression is set
-    if [[ -z ${expression+x} ]] ; then
+    if [[ -z ${expression} ]] ; then
         optionalExpressionField=""
     else
         optionalExpressionField="\"expression\":\"${expression}\","

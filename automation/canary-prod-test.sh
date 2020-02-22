@@ -23,7 +23,7 @@ users=(
      dumbledore.admin@test.firecloud.org
    )
 
-source prod-workflow-inc.sh
+source ./prod-workflow-inc.sh
 
 # check if user needs a token refresh
     for user in "${users[@]}"
