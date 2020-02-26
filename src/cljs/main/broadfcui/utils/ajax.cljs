@@ -140,6 +140,21 @@
            :url (str (config/tos-url) "/v1/user/response" query)
            :headers (merge (@get-bearer-token-header) content-type=json)))))
 
+(defn call-metrics [event details]
+  (when (string? (config/metrics-url))
+    (try
+      (call {:method "POST"
+             :url (str (config/metrics-url) "/api/event")
+             :headers (merge (@get-bearer-token-header) content-type=json)
+             :data (utils/->json-string
+                    {:event event
+                     :data (assoc details
+                             :appId js/window.location.hostname
+                             :appPath "method-repo"
+                             :timestamp (js/Date.now))})
+             :on-done (constantly nil)})
+      (catch :default _ nil))))
+
 (defn extract-error-message
   ([get-parsed-response status-text status-code] (extract-error-message get-parsed-response status-text status-code []))
   ([get-parsed-response status-text status-code key-path]
