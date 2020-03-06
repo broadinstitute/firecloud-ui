@@ -23,7 +23,7 @@ curl \
   -X GET \
   -H 'Accept: application/json' \
   -H "authorization: Bearer ${ACCESS_TOKEN}" \
-  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq . > unarchived.json
 
 # The first archived workflow, position 91824074
 curl \
@@ -31,4 +31,4 @@ curl \
   -X GET \
   -H 'Accept: application/json' \
   -H "authorization: Bearer ${ACCESS_TOKEN}" \
-  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq . > archived.json
