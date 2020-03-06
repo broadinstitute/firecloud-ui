@@ -17,16 +17,18 @@ ACCESS_TOKEN=$(
             python get_bearer_token.py "hermione.owner@test.firecloud.org" "${JSON_CREDS}"
      )
 
+# The last unarchived workflow, position 91824073
 curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
   -H "authorization: Bearer ${ACCESS_TOKEN}" \
-  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false'
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq
 
-#curl \
-#    -f \
-#    'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' \
-#    -H "authorization: Bearer ${ACCESS_TOKEN}" \
-#    -H "content-type: application/json" \
-#    "
+# The first archived workflow, position 91824074
+curl \
+  -f \
+  -X GET \
+  -H 'Accept: application/json' \
+  -H "authorization: Bearer ${ACCESS_TOKEN}" \
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq
