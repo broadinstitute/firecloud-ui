@@ -17,11 +17,16 @@ ACCESS_TOKEN=$(
             python get_bearer_token.py "hermione.owner@test.firecloud.org" "${JSON_CREDS}"
      )
 
-curl -X GET --header 'Accept: application/json''https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false'
-
 curl \
-    -f \
-    'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' \
-    -H "authorization: Bearer ${ACCESS_TOKEN}" \
-    -H "content-type: application/json" \
-    "
+  -f \
+  -X GET \
+  -H 'Accept: application/json' \
+  -H "authorization: Bearer ${ACCESS_TOKEN}" \
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false'
+
+#curl \
+#    -f \
+#    'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' \
+#    -H "authorization: Bearer ${ACCESS_TOKEN}" \
+#    -H "content-type: application/json" \
+#    "
