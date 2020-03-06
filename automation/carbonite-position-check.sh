@@ -2,9 +2,8 @@
 
 set -e
 
-VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
-NEED_TOKEN=false
-WORKING_DIR=${3:-$PWD}
+VAULT_TOKEN=${1:-$(cat $HOME/.vault-token)}
+WORKING_DIR=$PWD
 
 JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.json | jq '.data'`
 
