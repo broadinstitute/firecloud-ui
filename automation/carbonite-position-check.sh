@@ -35,4 +35,4 @@ curl \
   -H "authorization: Bearer ${ACCESS_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq . > archived.json
 
-grep "\"metadataSource\": \"Unarchived\"" archived.json # This changes the night of 2020-03-06 when alpha starts carboniting
+grep "\"metadataSource\": \"archived\"" archived.json # This changes the night of 2020-03-06 when alpha starts carboniting
