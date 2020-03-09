@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 VAULT_TOKEN=${1:-$(cat $HOME/.vault-token)}
 WORKING_DIR=$PWD
