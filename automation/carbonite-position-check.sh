@@ -9,7 +9,7 @@ JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://cl
 
 # Substantially all workflows on alpha were run by the `PerformanceTest-against-Alpha` job, which uses the Harry Potter users.
 # The two target workflows happen to have been run by Hermione, so use her token to inspect metadata.
-ACCESS_TOKEN=$(
+BEARER_TOKEN=$(
         docker \
             run \
             --rm \
@@ -27,7 +27,7 @@ curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
-  -H "authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq . > unarchived.json
 
 grep "\"metadataSource\": \"Unarchived\"" unarchived.json
@@ -37,7 +37,7 @@ curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
-  -H "authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq . > archived.json
 
 grep "\"metadataSource\": \"Archived\"" archived.json
