@@ -148,10 +148,10 @@
              :headers (merge (@get-bearer-token-header) content-type=json)
              :data (utils/->json-string
                     {:event event
-                     :data (assoc details
-                             :appId js/window.location.hostname
-                             :appPath "method-repo"
-                             :timestamp (js/Date.now))})
+                     :properties (assoc details
+                                   :appId js/window.location.hostname
+                                   :appPath "method-repo"
+                                   :timestamp (js/Date.now))})
              :on-done (constantly nil)})
       (catch :default _ nil))))
 
