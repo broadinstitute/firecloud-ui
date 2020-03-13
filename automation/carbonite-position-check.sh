@@ -5,7 +5,7 @@ set -euo pipefail
 VAULT_TOKEN=${1:-$(cat $HOME/.vault-token)}
 WORKING_DIR=$PWD
 
-JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.json | jq '.data'`
+JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.json | jq '.data'`
 
 # Substantially all workflows on alpha were run by the `PerformanceTest-against-Alpha` job, which uses the Harry Potter users.
 # The two target workflows happen to have been run by Hermione, so use her token to inspect metadata.
