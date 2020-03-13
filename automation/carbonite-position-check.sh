@@ -23,21 +23,21 @@ BEARER_TOKEN=$(
 # [0] https://github.com/broadinstitute/firecloud-develop/blob/dev/base-configs/cromwell/cromwell.conf.ctmpl#L458-L469
 
 # The last unarchived workflow, position 91824073
-curl \
+$actualStatus=$(curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
-  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq . > unarchived.json
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-grep "\"metadataSource\": \"Unarchived\"" unarchived.json
+[[ "$actualStatus" == "Unarchived" ]]
 
 # The first archived workflow, position 91824074
-curl \
+$actualStatus=$(curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
-  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq . > archived.json
+  'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-grep "\"metadataSource\": \"Archived\"" archived.json
+[[ "$actualStatus" == "Archived" ]]
