@@ -23,7 +23,7 @@ BEARER_TOKEN=$(
 # [0] https://github.com/broadinstitute/firecloud-develop/blob/dev/base-configs/cromwell/cromwell.conf.ctmpl#L458-L469
 
 # The last unarchived workflow, position 91824073
-$actualStatus=$(curl \
+actualStatus=$(curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
@@ -33,7 +33,7 @@ $actualStatus=$(curl \
 [[ "$actualStatus" == "Unarchived" ]]
 
 # The first archived workflow, position 91824074
-$actualStatus=$(curl \
+actualStatus=$(curl \
   -f \
   -X GET \
   -H 'Accept: application/json' \
