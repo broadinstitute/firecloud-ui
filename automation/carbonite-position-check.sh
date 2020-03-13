@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-VAULT_TOKEN=${1:-$(cat $HOME/.vault-token)}
+VAULT_TOKEN=$(cat /etc/vault-token-dsde)
 WORKING_DIR=$PWD
 
 JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/dev/common/firecloud-account.json | jq '.data'`
