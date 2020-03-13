@@ -30,7 +30,7 @@ actualStatus=$(curl \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-[[ "$actualStatus" == "Unardchived" ]]
+[[ "$actualStatus" == "Unarchived" ]]
 
 # The first archived workflow, position 91824074
 actualStatus=$(curl \
