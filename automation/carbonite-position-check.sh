@@ -30,7 +30,13 @@ actualStatus=$(curl \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-[[ "$actualStatus" == "Unarchived" ]]
+if [[ "$actualStatus" == "Unarchived" ]]; then
+  echo "Pre-carboniting workflow check OK"
+else
+  echo "Pre-carboniting workflow has bad status:"
+  echo $actualStatus
+  exit 1
+fi
 
 # The first archived workflow, position 91824074
 actualStatus=$(curl \
@@ -40,4 +46,10 @@ actualStatus=$(curl \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/91d695f3-3326-4478-89bb-39813b1fb98c/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-[[ "$actualStatus" == "Archived" ]]
+if [[ "$actualStatus" == "Archived" ]]; then
+  echo "Post-carbonited workflow check OK"
+else
+  echo "Post-carbonited workflow has bad status:"
+  echo $actualStatus
+  exit 2
+fi
