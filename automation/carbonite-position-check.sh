@@ -30,7 +30,7 @@ actualStatus=$(curl \
   -H "authorization: Bearer ${BEARER_TOKEN}" \
   'https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workflows/v1/c4414fa5-4268-41f4-ad0f-eebb0ba358b2/metadata?expandSubWorkflows=false' | jq -r .metadataSource)
 
-if [[ "$actualStatus" == "Unadddddrchived" ]]; then
+if [[ "$actualStatus" == "Unarchived" ]]; then
   echo "Pre-carboniting workflow check OK"
 else
   echo "Pre-carboniting workflow has bad status:"
