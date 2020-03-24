@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Jira ticket: https://broadworkbench.atlassian.net/browse/BA-6202
+# Methods/workflows used in this test:
+# https://firecloud.dsde-alpha.broadinstitute.org/#workspaces/cromwell-tests-billing-project/cromwell-tests-workspace/method-configs
+
 set -euo pipefail
 
 VAULT_TOKEN=$(cat /etc/vault-token-dsde)
