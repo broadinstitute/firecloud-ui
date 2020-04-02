@@ -43,18 +43,18 @@ launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-proj
 findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
 submission4=$submissionID
 
-waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
+waitForSubmissionAndWorkflowStatus 20 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace $submission2
+waitForSubmissionAndWorkflowStatus 20 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace $submission2
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
+waitForSubmissionAndWorkflowStatus 20 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
+waitForSubmissionAndWorkflowStatus 20 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
