@@ -46,14 +46,14 @@ source ./submission-perf-inc.sh
     done
 
 if [ $ENV = "alpha" ]; then
-    launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020
-    testA=$submissionID
-    echo "$testA"
-    monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
-    submissionA=$submissionStatus
-    sleep 1m
+    #launchSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
+    #sleep 55s
+    #findSubmissionID harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020
+    #testA=$submissionID
+    #echo "$testA"
+    #monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
+    #submissionA=$submissionStatus
+    #sleep 1m
     launchSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020
@@ -121,12 +121,12 @@ if [ $ENV = "alpha" ]; then
             echo "Monitoring the other 5 submissions, this is run number: $j"
             sleep 1m
 
-            monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
-            submissionA=$submissionStatus
-            echo "Submission A status: $submissionA"
-            workflowA=$workflowsStatus
-            failuresA=$workflowFailures
-            echo "Number of failed workflows A: $failuresA"
+            #monitorSubmission harry.potter@test.firecloud.org perf-test-a Perf-test-A-workspace_2020 $testA
+            #submissionA=$submissionStatus
+            #echo "Submission A status: $submissionA"
+            #workflowA=$workflowsStatus
+            #failuresA=$workflowFailures
+            #echo "Number of failed workflows A: $failuresA"
             monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
             submissionB=$submissionStatus
             echo "Submission B status: $submissionB"
