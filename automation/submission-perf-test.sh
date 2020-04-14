@@ -116,7 +116,7 @@ if [ $ENV = "alpha" ]; then
  #Monitor the progress of the rest of submissions
 
    j=1
-   until [[ $submissionA == "Done"   &&  $submissionB == "Done"  &&  $submissionD == "Done"  &&  $submissionE == "Done"  &&  $submissionG == "Done" ]] && [ "$j" -le 150 ]
+   until [ "$j" -le 150 ] && [[ $submissionB == "Done"  &&  $submissionD == "Done"  &&  $submissionE == "Done"  &&  $submissionG == "Done" ]] #&& [ "$j" -le 150 ]
     do
             echo "Monitoring the other 5 submissions, this is run number: $j"
             sleep 1m
