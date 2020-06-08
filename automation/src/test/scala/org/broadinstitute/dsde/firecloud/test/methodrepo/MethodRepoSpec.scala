@@ -17,7 +17,7 @@ class MethodRepoSpec extends FreeSpec with MethodFixtures with UserFixtures with
   implicit lazy val ownerAuthToken: AuthToken = ownerUser.makeAuthToken()
 
   "A user" - {
-    "should be able to create a method and see it in the table" taggedAs Tags.SmokeTest in {
+    "should be able to create a method and see it in the table" in {
       withCleanUp {
         withWebDriver { implicit driver =>
           withSignIn(ownerUser) { _ =>
