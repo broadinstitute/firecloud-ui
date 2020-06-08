@@ -61,7 +61,7 @@ class AuthDomainGroupSpec extends FreeSpec with ParallelTestExecution with Match
         }
       }
 
-      "can be cloned and retain the auth domain" taggedAs Tags.SmokeTest in {
+      "can be cloned and retain the auth domain" in {
         val user = UserPool.chooseAuthDomainUser
         implicit val authToken: AuthToken = authTokenDefault
         withGroup("AuthDomain", List(user.email)) { authDomainName =>

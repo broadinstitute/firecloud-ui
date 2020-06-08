@@ -12,7 +12,7 @@ import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 class DataLibrarySpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec with UserFixtures with WorkspaceFixtures
   with BillingFixtures with Matchers with TestReporterFixture {
 
-  "For a dataset with consent codes" taggedAs Tags.SmokeTest in {
+  "For a dataset with consent codes" in {
     val curatorUser = UserPool.chooseCurator
     implicit val authToken: AuthToken = curatorUser.makeAuthToken()
     withCleanBillingProject(curatorUser) { billingProject =>
