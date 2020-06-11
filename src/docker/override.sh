@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Make sure config.json, newrelic.js, and tcell.js are in the right spot
-CONFIG_FILES="/config/config.json /config/newrelic.js /config/tcell.js"
+# Make sure config.json, and tcell.js are in the right spot
+CONFIG_FILES="/config/config.json /config/tcell.js"
 cp -f ${CONFIG_FILES} /var/www/html
 
 if [ "${HTTPS_ONLY}" = 'true' ]; then
