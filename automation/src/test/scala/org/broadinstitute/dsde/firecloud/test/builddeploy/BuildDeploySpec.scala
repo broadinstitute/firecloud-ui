@@ -26,7 +26,7 @@ class BuildDeploySpec extends FreeSpec with WebBrowserSpec with Matchers with La
     }
 
     // these tests ensure that the build/deploy process has generated files at the correct urls
-    List("tcell.js","newrelic.js","assets/favicon.ico").foreach { partialUrl =>
+    List("tcell.js","assets/favicon.ico").foreach { partialUrl =>
 
       s"should put $partialUrl in the right place" in {
         withWebDriver { implicit driver =>
