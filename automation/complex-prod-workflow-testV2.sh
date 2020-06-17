@@ -69,17 +69,12 @@ if [ $ENV = "prod" ]; then
       echo "Complex workflow V2 finished within 4 hours with workflow status: $workflowsStatus"
 
       echo "[{\"eventType\":\"ComplexWorkflowTestV2_Prod\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete (sec)\":\"$timer\"}]" > complexWorkflowV2_events.json
-
-      cat complexWorkflowV2_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: $newRelicKey" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
-
       exit 0
     else
       timer=$SECONDS
       echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
 
       echo "[{\"eventType\":\"ComplexWorkflowTestV2_Prod\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete (sec)\":\"$timer\"}]" > complexWorkflowV2_events.json
-
-      cat complexWorkflow_events.json | gzip -c | curl --data-binary @- -X POST -H "Content-Type: application/json" -H "X-Insert-Key: $newRelicKey" -H "Content-Encoding: gzip" https://insights-collector.newrelic.com/v1/accounts/1862859/events
       exit 1
     fi
 
