@@ -2,33 +2,38 @@
 
 set -euo pipefail
 
-#VAULT_TOKEN=$(cat /etc/vault-token-dsde)
-WORKFLOW_ID="8fcff291-f4aa-401a-bf16-70e7fa76e01d"
-EXPECTED_STATUS="TooLargeToArchive"
+main() {
+  if [[ -z "${WORKFLOW_ID}" ]]
+  then
+    echo "Missing required env input: WORKFLOW_ID"
+  fi
 
-if [[ -z "${WORKFLOW_ID}" ]]
-then
-  echo "Missing required env input: WORKFLOW_ID"
-fi
+  if [[ -z "${EXPECTED_STATUS}" ]]
+  then
+    echo "Missing required env input: EXPECTED_STATUS"
+  fi
 
-if [[ -z "${EXPECTED_STATUS}" ]]
-then
-  echo "Missing required env input: EXPECTED_STATUS"
-fi
+  if [[ -z "${VAULT_TOKEN}" ]]
+  then
+    echo "Missing required env input: VAULT_TOKEN"
+  fi
 
+  # Update the archive status to be 'Unarchived' (marked as NULL in the DB).
+  # This will trigger the carboniting process
+  echo "$(date): Updating archive status of ${WORKFLOW_ID} to NULL (ie Unarchived)"
+  docker run --rm \
+      -e VAULT_TOKEN=$VAULT_TOKEN \
+      broadinstitute/dsde-toolbox mysql-connect.sh -p firecloud -a cromwell1 -e alpha \
+      "UPDATE WORKFLOW_METADATA_SUMMARY_ENTRY SET METADATA_ARCHIVE_STATUS = NULL WHERE WORKFLOW_EXECUTION_UUID = '${WORKFLOW_ID}';"
 
-# Update the archive status to be 'Unarchived' (marked as NULL in the DB).
-# This will trigger the carboniting process
-echo "$(date): Updating archive status of ${WORKFLOW_ID} to NULL (ie Unarchived)"
-docker run --rm \
-    -e VAULT_TOKEN=$VAULT_TOKEN \
-    broadinstitute/dsde-toolbox mysql-connect.sh -p firecloud -a cromwell1 -e alpha \
-    "UPDATE WORKFLOW_METADATA_SUMMARY_ENTRY SET METADATA_ARCHIVE_STATUS = NULL WHERE WORKFLOW_EXECUTION_UUID = '${WORKFLOW_ID}';"
+  ATTEMPT=1
+  MAX_ATTEMPTS=30 # At 10s per attempt, this allows 300s (ie 5 minutes) for the carboniter to run.
+  echo "$(date): Waiting for archive status of ${WORKFLOW_ID} to become ${EXPECTED_STATUS}"
+  check_carbonite_failed_too_big
+}
+
 
 # Define a function to ensure that the carboniting has failed because it was too big. Then call it:
-ATTEMPT=1
-MAX_ATTEMPTS=30 # At 10s per attempt, this allows 300s (ie 5 minutes) for the carboniter to run.
-echo "$(date): Waiting for archive status of ${WORKFLOW_ID} to become ${EXPECTED_STATUS}"
 check_carbonite_failed_too_big () {
   ARCHIVE_STATUS=$(
     docker run --rm \
@@ -40,7 +45,7 @@ check_carbonite_failed_too_big () {
 
   if grep -q "${EXPECTED_STATUS}" <<< "${ARCHIVE_STATUS}"; then
     echo "$(date): [ATTEMPT ${ATTEMPT}] Workflow ${WORKFLOW_ID} finished carboniting with the status we expected (${EXPECTED_STATUS})"
-    return 0
+    exit 0
   elif [[ "ATTEMPT" -gt "MAX_ATTEMPTS" ]]; then
     echo "$(date): [ATTEMPT ${ATTEMPT}] Workflow ${WORKFLOW_ID} took too long to re-carbonite..."
     exit 1
@@ -55,4 +60,4 @@ check_carbonite_failed_too_big () {
   fi
 }
 
-check_carbonite_failed_too_big
+main "$@"; exit
