@@ -26,8 +26,11 @@ main() {
       broadinstitute/dsde-toolbox mysql-connect.sh -p firecloud -a cromwell1 -e alpha \
       "UPDATE WORKFLOW_METADATA_SUMMARY_ENTRY SET METADATA_ARCHIVE_STATUS = NULL WHERE WORKFLOW_EXECUTION_UUID = '${WORKFLOW_ID}';"
 
+
+  # At 10s per attempt, this allows 600s (ie 10 minutes) for the carboniter to run.
+  # Since the carboniter has a max-time-between on 5 minutes, this should be plenty:
+  MAX_ATTEMPTS=60
   ATTEMPT=1
-  MAX_ATTEMPTS=30 # At 10s per attempt, this allows 300s (ie 5 minutes) for the carboniter to run.
   echo "$(date): Waiting for archive status of ${WORKFLOW_ID} to become ${EXPECTED_STATUS}"
   check_carbonite_failed_too_big
 }
