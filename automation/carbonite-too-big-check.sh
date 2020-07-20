@@ -28,7 +28,7 @@ main() {
 
 
   # At 10s per attempt, this allows 600s (ie 10 minutes) for the carboniter to run.
-  # Since the carboniter has a max-time-between on 5 minutes, this should be plenty:
+  # Since the carboniter has a `metadata-freezing.max-interval` of 5 minutes, this should be plenty:
   MAX_ATTEMPTS=60
   ATTEMPT=1
   echo "$(date): Waiting for archive status of ${WORKFLOW_ID} to become ${EXPECTED_STATUS}"
