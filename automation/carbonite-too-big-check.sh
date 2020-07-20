@@ -53,7 +53,7 @@ check_carbonite_failed_too_big () {
     echo "$(date): [ATTEMPT ${ATTEMPT}] Workflow ${WORKFLOW_ID} took too long to re-carbonite..."
     exit 1
   elif grep -q "NULL" <<< "${ARCHIVE_STATUS}"; then
-    echo "$(date): [ATTEMPT ${ATTEMPT}] Workflow ${WORKFLOW_ID} is still uncarbonited. Will check again in 10s..."
+    echo "$(date): [ATTEMPT ${ATTEMPT}] Workflow ${WORKFLOW_ID}'s archive status is still ${ARCHIVE_STATUS}. Will check again in 10s..."
     sleep 10
     ATTEMPT=$(( ATTEMPT + 1 ))
     check_carbonite_failed_too_big
