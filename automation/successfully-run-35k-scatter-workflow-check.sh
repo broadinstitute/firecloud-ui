@@ -30,5 +30,5 @@ launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-proj
 findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
 submission1=$submissionID
 
-waitForSubmissionAndWorkflowStatus 20 Done Succeeded dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
+waitForSubmissionAndWorkflowStatus 180 Done Succeeded dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
