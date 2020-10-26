@@ -47,7 +47,7 @@ waitForSubmissionAndWorkflowStatus 120 Done Failed dumbledore.admin@test.fireclo
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 2 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace $submission2
+waitForSubmissionAndWorkflowStatus 2 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
