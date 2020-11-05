@@ -164,8 +164,8 @@ findLastSubmissionID() {
     user=$1
     namespace=$2
     name=$3
-    methodConfigurationNamespace=$4 # optional
-    methodConfigurationName=$5      # optional
+    methodConfigurationNamespace="$4" # optional
+    methodConfigurationName="$5"      # optional
 
     ACCESS_TOKEN=$(
         docker \
