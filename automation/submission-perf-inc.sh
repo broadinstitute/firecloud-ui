@@ -164,11 +164,8 @@ findLastSubmissionID() {
     user=$1
     namespace=$2
     name=$3
-    if [[ -n "$4" && -n "$5" ]]
-        then
-          methodConfigurationNamespace=$4 # optional
-          methodConfigurationName=$5      # optional
-    fi
+    methodConfigurationNamespace=${4-} # optional
+    methodConfigurationName=${5-}      # optional
 
     ACCESS_TOKEN=$(
         docker \
