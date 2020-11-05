@@ -164,6 +164,8 @@ findLastSubmissionID() {
     user=$1
     namespace=$2
     name=$3
+    methodConfigurationNamespace=$4 # optional
+    methodConfigurationName=$5      # optional
 
     ACCESS_TOKEN=$(
         docker \
@@ -175,13 +177,18 @@ findLastSubmissionID() {
             python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
 
+    selectorString=".status == (\"Submitted\")"
+    if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
+        then
+            selectorString="$selectorString and .methodConfigurationNamespace == (\"$methodConfigurationNamespace\") and .methodConfigurationName == (\"$methodConfigurationName\")"
+    fi
     submissionID=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
-        | jq -r '[.[] | select(.status == ("Submitted"))] | sort_by(.submissionDate) | reverse[0] | .submissionId')
+        | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
 
     export ACCESS_TOKEN
     export submissionID
