@@ -40,7 +40,7 @@ findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-
 submission3=$submissionID
 
 launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_workflow_output_block "" "" false false ""
-findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
+findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body
 submission4=$submissionID
 
 waitForSubmissionAndWorkflowStatus 120 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
