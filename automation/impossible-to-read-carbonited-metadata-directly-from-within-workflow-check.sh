@@ -28,33 +28,33 @@ ENV=alpha
 expectedErrorText="does not have storage.objects.get access"
 
 launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body "" "" false false ""
-findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
+findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body
 submission1=$submissionID
 
 launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_workflow_body "" "" false false ""
-findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
+findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body
 submission2=$submissionID
 
 launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_workflow_input_block "" "" false false ""
-findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
+findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body
 submission3=$submissionID
 
 launchSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_workflow_output_block "" "" false false ""
-findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace
+findLastSubmissionID dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace cromwell_carboniting_test_methods read_carbonited_metadata_in_task_body
 submission4=$submissionID
 
 waitForSubmissionAndWorkflowStatus 120 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission1"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 2 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
+waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission2"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 2 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
+waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission3"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
 
-waitForSubmissionAndWorkflowStatus 2 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
+waitForSubmissionAndWorkflowStatus 5 Done Failed dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
 findFirstWorkflowIdInSubmission dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$submission4"
 checkIfWorkflowErrorMessageContainsSubstring dumbledore.admin@test.firecloud.org cromwell-tests-billing-project cromwell-tests-workspace "$workflowID" "$expectedErrorText"
