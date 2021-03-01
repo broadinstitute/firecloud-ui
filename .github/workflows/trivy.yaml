@@ -11,6 +11,7 @@ jobs:
 
       - uses: broadinstitute/dsp-appsec-trivy-action@v1
         with:
+          image: broadinstitute/firecloud-ui:develop
           sarif: trivy-results.sarif
 
       - name: Upload Trivy scan results to GitHub Security tab
