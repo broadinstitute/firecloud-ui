@@ -27,13 +27,4 @@ fi
 
 echo "Checking if CSV file exists for workflow ${WORKFLOW_ID} in bucket 'cromwell-carbonited-workflows-alpha'..."
 
-FILE_EXISTS=$(gsutil -q stat gs://cromwell-carbonited-workflows-alpha/${FILE_LOCATION}; echo $?)
-
-if [[ $FILE_EXISTS == 0 ]]
-then
-  echo "Archived file exists for ${WORKFLOW_ID}"
-  exit 0
-else
-  echo "Something went wrong while archiving workflow ${WORKFLOW_ID}. Archived file doesn't exist!!"
-  exit 1
-fi
+gsutil -q stat gs://cromwell-carbonited-workflows-alpha/${FILE_LOCATION}
