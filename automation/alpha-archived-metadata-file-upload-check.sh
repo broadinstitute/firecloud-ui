@@ -27,4 +27,5 @@ fi
 
 echo "Checking if CSV file exists for workflow ${WORKFLOW_ID} in bucket 'cromwell-carbonited-workflows-alpha'..."
 
-gsutil stat gs://cromwell-carbonited-workflows-alpha/file-doesnt-exist.csv
+# If file exists, 'gsutil stat' will print it's metadata, else it returns 'No URLs matched' and exits with code 1.
+gsutil stat gs://cromwell-carbonited-workflows-alpha/${FILE_LOCATION}
