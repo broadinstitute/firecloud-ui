@@ -27,4 +27,4 @@ fi
 
 echo "Checking if CSV file exists for workflow ${WORKFLOW_ID} in bucket 'cromwell-carbonited-workflows-alpha'..."
 
-gsutil stat gs://cromwell-carbonited-workflows-alpha/${FILE_LOCATION}
+gsutil stat gs://cromwell-carbonited-workflows-alpha/file-doesnt-exist.csv
