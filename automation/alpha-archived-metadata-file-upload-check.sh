@@ -22,7 +22,7 @@ ROOT_WORKFLOW_ID=$(echo $ARCHIVED_WORKFLOW_RESULT | cut -d' ' -f2)
 
 if [ -z "$WORKFLOW_ID" ]
 then
-	echo "Error: No workflow id found! Exiting the script"
+  echo "Error: No workflow id found! Exiting the script"
   exit 1
 else
   echo "Found workflow id: ${WORKFLOW_ID}"
