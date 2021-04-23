@@ -4,6 +4,8 @@ set -euo pipefail
 
 VAULT_TOKEN=$(cat /etc/vault-token-dsde)
 
+echo "Looking for a workflow whose metadata was archived recently..."
+
 # Get a workflow which completed at least 40 minutes ago and whose metadata is archived
 # (archive-delay in alpha is set to 30 minutes. Hence adding 10 more minutes should give Cromwell enough time to
 # archive such a workflow)
@@ -18,6 +20,14 @@ ARCHIVED_WORKFLOW_RESULT=$(
 WORKFLOW_ID=$(echo $ARCHIVED_WORKFLOW_RESULT | cut -d' ' -f1)
 ROOT_WORKFLOW_ID=$(echo $ARCHIVED_WORKFLOW_RESULT | cut -d' ' -f2)
 
+if [ -z "$WORKFLOW_ID" ]
+then
+	echo "No workflow id found! Exiting the script..."
+  exit 1
+else
+  echo "Found workflow id: ${WORKFLOW_ID}"
+fi
+
 if [[ $ROOT_WORKFLOW_ID == 'NULL' ]]
 then
   FILE_LOCATION=${WORKFLOW_ID}/${WORKFLOW_ID}.csv
@@ -27,5 +37,5 @@ fi
 
 echo "Checking if CSV file exists for workflow ${WORKFLOW_ID} in bucket 'cromwell-carbonited-workflows-alpha'..."
 
-# If file exists, 'gsutil stat' will print it's metadata, else it returns 'No URLs matched' and exits with code 1.
+# If file exists, 'gsutil stat' will print its metadata, else it returns 'No URLs matched' and exits with code 1.
 gsutil stat gs://cromwell-carbonited-workflows-alpha/${FILE_LOCATION}
