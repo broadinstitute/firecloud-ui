@@ -4,7 +4,7 @@ set -euo pipefail
 
 VAULT_TOKEN=$(cat /etc/vault-token-dsde)
 
-echo "Looking for a workflow whose metadata was archived recently..."
+echo "Fetching workflow id whose metadata was archived recently..."
 
 # Get a workflow which completed at least 40 minutes ago and whose metadata is archived
 # (archive-delay in alpha is set to 30 minutes. Hence adding 10 more minutes should give Cromwell enough time to
@@ -13,7 +13,7 @@ ARCHIVED_WORKFLOW_RESULT=$(
   docker run --rm \
      -e VAULT_TOKEN=$VAULT_TOKEN \
      broadinstitute/dsde-toolbox mysql-connect.sh -p firecloud -a cromwell1 -e alpha \
-     "SELECT WORKFLOW_EXECUTION_UUID, ROOT_WORKFLOW_EXECUTION_UUID FROM cromwell.WORKFLOW_METADATA_SUMMARY_ENTRY WHERE METADATA_ARCHIVE_STATUS = 'Archived' AND END_TIMESTAMP > (NOW() - INTERVAL 1 DAY) AND END_TIMESTAMP <= (NOW() - INTERVAL 40 minute) ORDER BY END_TIMESTAMP DESC LIMIT 1;"\
+     "SELECT WORKFLOW_EXECUTION_UUID, ROOT_WORKFLOW_EXECUTION_UUID FROM cromwell.WORKFLOW_METADATA_SUMMARY_ENTRY WHERE METADATA_ARCHIVE_STATUS = 'Archived' AND END_TIMESTAMP <= (NOW() - INTERVAL 40 minute) ORDER BY END_TIMESTAMP DESC LIMIT 1;"\
      | tail -n1
 )
 
@@ -22,7 +22,7 @@ ROOT_WORKFLOW_ID=$(echo $ARCHIVED_WORKFLOW_RESULT | cut -d' ' -f2)
 
 if [ -z "$WORKFLOW_ID" ]
 then
-	echo "No workflow id found! Exiting the script..."
+	echo "Error: No workflow id found! Exiting the script"
   exit 1
 else
   echo "Found workflow id: ${WORKFLOW_ID}"
