@@ -44,7 +44,7 @@ getAccessToken() {
     )
   fi
 
-  export ACCESS_TOKEN
+  export ACCESS_TOKEN="${ACCESS_TOKEN}"
   export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
 }
