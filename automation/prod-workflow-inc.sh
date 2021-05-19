@@ -18,7 +18,6 @@ checkToken () {
             "https://api.firecloud.org/api/refresh-token-status" 2>&1 \
         | grep '"requiresRefresh": true'
     then
-        echo "$1 needs its refresh token refreshed"
         NEED_TOKEN=true
         export NEED_TOKEN
     fi
@@ -117,9 +116,7 @@ launchSubmission() {
             }
             " \
             --compressed)
-    echo "Working with submission details: ${submissionDetails}"
-    submissionId=$(echo "${submissionDetails}" | jq -r '.submissionId')
-    echo "${submissionId}"
+    submissionId=$(jq -r '.submissionId' <<< "${submissionDetails}")
 }
 
 monitorSubmission() {
@@ -136,10 +133,8 @@ monitorSubmission() {
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId")
 
-    echo "Got submission details: ${submissionDetails}"
-
-    submissionStatus=$(echo "${submissionDetails}" | jq -r '.status')
-    workflowsStatus=$(echo "${submissionDetails}" | jq -r '.workflows[] | .status')
+    submissionStatus=$(jq -r '.status' <<< "${submissionDetails}")
+    workflowsStatus=$(jq -r '.workflows[] | .status' <<< "${submissionDetails}")
 
 
     export submissionStatus
