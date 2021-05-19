@@ -86,7 +86,7 @@ launchSubmission() {
         optionalExpressionField="\"expression\":\"${expression}\","
     fi
 
-    submissionId=$(
+    submissionDetails=$(
         curl \
             -X POST \
             "https://api.firecloud.org/api/workspaces/${namespace}/${name}/submissions" \
@@ -105,9 +105,9 @@ launchSubmission() {
                 \"useCallCache\":${useCallCache}
             }
             " \
-            --compressed \
-        | jq -r '.submissionId'
-    )
+            --compressed)
+    echo "Working with submission details: ${submissionDetails}"
+    submissionId=$(echo "${submissionDetails}" | jq -r '.submissionId')
     echo "${submissionId}"
 }
 
