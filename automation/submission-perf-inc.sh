@@ -31,7 +31,7 @@ getAccessToken() {
     NEED_TOKEN=true
   fi
 
-  if [ "${NEED_TOKEN}" = "true"]
+  if [ "${NEED_TOKEN}" = "true" ]
   then
     ACCESS_TOKEN=$(
       docker \
@@ -44,7 +44,7 @@ getAccessToken() {
     )
   fi
 
-  export ACCESS_TOKEN="${ACCESS_TOKEN}"
+  export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
 }
