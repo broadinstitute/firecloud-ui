@@ -20,24 +20,34 @@ checkToken () {
         NEED_TOKEN=true
         export NEED_TOKEN
     fi
-
 }
 
 getAccessToken() {
   user=$1
 
-  [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ] || ACCESS_TOKEN=$(
-    docker \
+  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ]
+  then
+    checkToken "$user"
+  else
+    NEED_TOKEN=true
+  fi
+
+  if [ "${NEED_TOKEN}" = "true"]
+  then
+    ACCESS_TOKEN=$(
+      docker \
         run \
         --rm \
         -v "${WORKING_DIR}:/app/populate" \
         -w /app/populate \
         broadinstitute/dsp-toolbox \
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
-  )
+    )
+  fi
 
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
+  export NEED_TOKEN=false
 }
 
 callbackToNIH() {
