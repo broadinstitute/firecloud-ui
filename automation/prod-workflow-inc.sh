@@ -33,7 +33,7 @@ getAccessToken() {
     NEED_TOKEN=true
   fi
 
-  if [ "${NEED_TOKEN}" = "true"]
+  if [ "${NEED_TOKEN}" = "true" ]
   then
     ACCESS_TOKEN=$(
       docker \
