@@ -24,6 +24,23 @@ checkToken () {
     fi
 }
 
+getAccessToken() {
+  user=$1
+
+  [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ] || ACCESS_TOKEN=$(
+    docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+  )
+
+  export ACCESS_TOKEN
+  export ACCESS_TOKEN_USER="${user}"
+}
+
 launchSubmission() {
     user="$1"
     shift 1
@@ -60,15 +77,7 @@ launchSubmission() {
         expression=${expression}
     "
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -108,33 +117,20 @@ monitorSubmission() {
     name=$3
     submissionId=$4
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
-    submissionStatus=$(
-        curl \
+    submissionDetails=$(curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" \
-        | jq -r '.status'
-    )
-    workflowsStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" \
-        | jq -r '.workflows[] | .status'
-    )
+            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId")
 
-    export ACCESS_TOKEN
+    echo "Got submission details: ${submissionDetails}"
+
+    submissionStatus=$(echo "${submissionDetails}" | jq -r '.status')
+    workflowsStatus=$(echo "${submissionDetails}" | jq -r '.workflows[] | .status')
+
+
     export submissionStatus
     export workflowsStatus
 }

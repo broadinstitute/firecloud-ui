@@ -23,22 +23,32 @@ checkToken () {
 
 }
 
+getAccessToken() {
+  user=$1
+
+  [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ] || ACCESS_TOKEN=$(
+    docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+  )
+
+  export ACCESS_TOKEN
+  export ACCESS_TOKEN_USER="${user}"
+}
+
 callbackToNIH() {
     user=$1
 
     echo "
-    Launching calback to NIH for:
+    Launching callback to NIH for:
     user=$1
     "
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+
+    getAccessToken "$user"
 
     curl \
         -X POST \
@@ -85,15 +95,7 @@ launchSubmission() {
         expression=${expression}
     "
 
-     ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-     )
+    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -138,15 +140,7 @@ findSubmissionID() {
     namespace=$2
     name=$3
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     submissionID=$(
         curl \
@@ -156,7 +150,6 @@ findSubmissionID() {
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
         | jq -r '.[] | select(.status == ("Submitted")) | .submissionId')
 
-    export ACCESS_TOKEN
     export submissionID
 }
 
@@ -167,15 +160,7 @@ findLastSubmissionID() {
     methodConfigurationNamespace=${4-} # optional
     methodConfigurationName=${5-}      # optional
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -190,7 +175,6 @@ findLastSubmissionID() {
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
         | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
 
-    export ACCESS_TOKEN
     export submissionID
 }
 
@@ -200,15 +184,7 @@ findFirstWorkflowIdInSubmission() {
     name=$3
     submissionId=$4
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     workflowID=$(
         curl \
@@ -218,7 +194,6 @@ findFirstWorkflowIdInSubmission() {
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions/$submissionId" \
         | jq -r '.workflows[0].workflowId')
 
-    export ACCESS_TOKEN
     export workflowID
 }
 
@@ -229,15 +204,7 @@ checkIfWorkflowErrorMessageContainsSubstring() {
     workflowId=$4
     expectedSubstring=$5
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     workflowErrorMessage=$(
         curl \
@@ -259,43 +226,21 @@ monitorSubmission() {
     name=$3
     submissionId=$4
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
-    submissionStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-        | jq -r '.status'
-    )
-    workflowsStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '.workflows[] | .status'
-    )
-    workflowFailures=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
-    )
+    submissionDetails=$(curl \
+        -X GET \
+        --header 'Accept: application/json' \
+        --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+        "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId")
 
-    export ACCESS_TOKEN
+    echo "Got submission details: ${submissionDetails}"
+
+    submissionStatus=$(echo "${submissionDetails}" | jq -r '.status' )
+    workflowsStatus=$(echo "${submissionDetails}" | jq -r '.workflows[] | .status' )
+    workflowFailures=$(echo "${submissionDetails}" | jq -r '[.workflows[] | select(.status == "Failed")] | length' )
+
     export submissionStatus
     export workflowsStatus
     export workflowFailures
