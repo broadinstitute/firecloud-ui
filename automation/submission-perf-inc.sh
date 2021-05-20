@@ -23,8 +23,9 @@ checkToken () {
 
 getAccessToken() {
   user=$1
+  timestampNow=$(date '+%s')
 
-  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ]
+  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a $(( $timestampNow - ${ACCESS_TOKEN_TIMESTAMP:-0} )) -lt 1800 -a -n "${ACCESS_TOKEN}" ]
   then
     checkToken "$user"
   else
@@ -45,6 +46,7 @@ getAccessToken() {
   fi
 
   export ACCESS_TOKEN
+  export ACCESS_TOKEN_TIMESTAMP="${timestampNow}"
   export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
 }
