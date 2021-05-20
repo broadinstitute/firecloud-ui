@@ -16,7 +16,7 @@ checkToken () {
             --header "Accept: application/json" \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://api.firecloud.org/api/refresh-token-status" 2>&1 \
-        | grep '"requiresRefresh": true'
+        | grep '"requiresRefresh": true\|error: 401'
     then
         NEED_TOKEN=true
         export NEED_TOKEN
