@@ -8,6 +8,10 @@ set -x
 checkToken () {
     user=$1
 
+    echo "***** printing access token *****"
+    echo "${ACCESS_TOKEN}"
+    echo "**********"
+
     # Verify that user does not need to refresh their token
     if
         curl \
