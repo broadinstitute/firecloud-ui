@@ -15,7 +15,7 @@ checkToken () {
       getAccessToken "$user"
     fi
 
-    # Verify that user does not need to refresh their token and is authorized
+    # Verify that user is authorized to make the API call and does not need to refresh their token
     if
         curl \
             -f -v --silent \
