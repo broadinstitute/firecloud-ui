@@ -6,6 +6,13 @@ set -e
 checkToken () {
     user=$1
 
+    # Get access token if it hasn't been initialized. This usually happens during the start of a test.
+    # For more details see https://broadworkbench.atlassian.net/browse/BW-721
+    if [ -z "${ACCESS_TOKEN}" ]
+    then
+      getAccessToken "$user"
+    fi
+
     # Verify that user does not need to refresh their token
     if
         curl \

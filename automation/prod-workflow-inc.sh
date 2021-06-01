@@ -8,15 +8,12 @@ set -x
 checkToken () {
     user=$1
 
-    # Get access token if it hasn't been initialized
+    # Get access token if it hasn't been initialized. This usually happens during the start of a test.
+    # For more details see https://broadworkbench.atlassian.net/browse/BW-721
     if [ -z "${ACCESS_TOKEN}" ]
     then
       getAccessToken "$user"
     fi
-
-    echo "***** printing access token *****"
-    echo "${ACCESS_TOKEN}"
-    echo "**********"
 
     # Verify that user does not need to refresh their token and is authorized
     if
