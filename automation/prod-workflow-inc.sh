@@ -16,12 +16,39 @@ checkToken () {
             --header "Accept: application/json" \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://api.firecloud.org/api/refresh-token-status" 2>&1 \
-        | grep '"requiresRefresh": true'
+        | grep '"requiresRefresh": true\|error: 401'
     then
-        echo "$1 needs its refresh token refreshed"
         NEED_TOKEN=true
         export NEED_TOKEN
     fi
+}
+
+getAccessToken() {
+  user=$1
+
+  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ]
+  then
+    checkToken "$user"
+  else
+    NEED_TOKEN=true
+  fi
+
+  if [ "${NEED_TOKEN}" = "true" ]
+  then
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
+  fi
+
+  export ACCESS_TOKEN
+  export ACCESS_TOKEN_USER="${user}"
+  export NEED_TOKEN=false
 }
 
 launchSubmission() {
@@ -60,15 +87,7 @@ launchSubmission() {
         expression=${expression}
     "
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate \
-            broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -77,7 +96,7 @@ launchSubmission() {
         optionalExpressionField="\"expression\":\"${expression}\","
     fi
 
-    submissionId=$(
+    submissionDetails=$(
         curl \
             -X POST \
             "https://api.firecloud.org/api/workspaces/${namespace}/${name}/submissions" \
@@ -96,10 +115,8 @@ launchSubmission() {
                 \"useCallCache\":${useCallCache}
             }
             " \
-            --compressed \
-        | jq -r '.submissionId'
-    )
-    echo "${submissionId}"
+            --compressed)
+    submissionId=$(jq -r '.submissionId' <<< "${submissionDetails}")
 }
 
 monitorSubmission() {
@@ -108,33 +125,18 @@ monitorSubmission() {
     name=$3
     submissionId=$4
 
-    ACCESS_TOKEN=$(
-        docker \
-            run \
-            --rm \
-            -v "${WORKING_DIR}:/app/populate" \
-            -w /app/populate broadinstitute/dsp-toolbox \
-            python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
-    submissionStatus=$(
-        curl \
+    submissionDetails=$(curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" \
-        | jq -r '.status'
-    )
-    workflowsStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId" \
-        | jq -r '.workflows[] | .status'
-    )
+            "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId")
 
-    export ACCESS_TOKEN
+    submissionStatus=$(jq -r '.status' <<< "${submissionDetails}")
+    workflowsStatus=$(jq -r '.workflows[] | .status' <<< "${submissionDetails}")
+
+
     export submissionStatus
     export workflowsStatus
 }
