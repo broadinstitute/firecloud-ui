@@ -8,11 +8,17 @@ set -x
 checkToken () {
     user=$1
 
+    # Get access token if it hasn't been initialized
+    if [ -z "${ACCESS_TOKEN}" ]
+    then
+      getAccessToken "$user"
+    fi
+
     echo "***** printing access token *****"
     echo "${ACCESS_TOKEN}"
     echo "**********"
 
-    # Verify that user does not need to refresh their token
+    # Verify that user does not need to refresh their token and is authorized
     if
         curl \
             -f -v --silent \
