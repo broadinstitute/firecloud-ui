@@ -8,7 +8,7 @@ checkToken () {
 
     # Get access token if it hasn't been initialized. This usually happens during the start of a test.
     # For more details see https://broadworkbench.atlassian.net/browse/BW-721
-    if [ -z "${ACCESS_TOKEN}" ]
+    if [ -z "${ACCESS_TOKEN-}" ]
     then
       getAccessToken "$user"
     fi
@@ -31,7 +31,7 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-  if [ -z "${ACCESS_TOKEN}" ]
+  if [ -z "${ACCESS_TOKEN-}" ]
   then
     NEED_TOKEN=true
   else
