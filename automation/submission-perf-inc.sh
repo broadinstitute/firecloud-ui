@@ -31,35 +31,25 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-#  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
-#  then
-#    checkToken "$user"
-#  else
-#    NEED_TOKEN=true
-#  fi
-#
-#  if [ "${NEED_TOKEN}" = "true" ]
-#  then
-#    ACCESS_TOKEN=$(
-#      docker \
-#        run \
-#        --rm \
-#        -v "${WORKING_DIR}:/app/populate" \
-#        -w /app/populate \
-#        broadinstitute/dsp-toolbox \
-#        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-#    )
-#  fi
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
+  then
+    checkToken "$user"
+  else
+    NEED_TOKEN=true
+  fi
 
-  ACCESS_TOKEN=$(
-    docker \
-      run \
-      --rm \
-      -v "${WORKING_DIR}:/app/populate" \
-      -w /app/populate \
-      broadinstitute/dsp-toolbox \
-      python get_bearer_token.py "${user}" "${JSON_CREDS}"
-  )
+  if [ "${NEED_TOKEN}" = "true" ]
+  then
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
+  fi
 
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
@@ -74,7 +64,17 @@ callbackToNIH() {
     user=$1
     "
 
-    getAccessToken "$user"
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
+
+#    getAccessToken "$user"
 
     curl \
         -X POST \
@@ -121,7 +121,17 @@ launchSubmission() {
         expression=${expression}
     "
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -166,7 +176,17 @@ findSubmissionID() {
     namespace=$2
     name=$3
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     submissionDetails=$(
         curl \
@@ -186,7 +206,17 @@ findLastSubmissionID() {
     methodConfigurationNamespace=${4-} # optional
     methodConfigurationName=${5-}      # optional
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -210,7 +240,17 @@ findFirstWorkflowIdInSubmission() {
     name=$3
     submissionId=$4
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     workflowID=$(
         curl \
@@ -230,7 +270,17 @@ checkIfWorkflowErrorMessageContainsSubstring() {
     workflowId=$4
     expectedSubstring=$5
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     workflowErrorMessage=$(
         curl \
@@ -252,7 +302,17 @@ monitorSubmission() {
     name=$3
     submissionId=$4
 
-    getAccessToken "$user"
+#    getAccessToken "$user"
+
+    ACCESS_TOKEN=$(
+      docker \
+        run \
+        --rm \
+        -v "${WORKING_DIR}:/app/populate" \
+        -w /app/populate \
+        broadinstitute/dsp-toolbox \
+        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+    )
 
     # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
     submissionDetails=$(curl \
