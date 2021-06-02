@@ -33,11 +33,11 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-  if [ -z "${ACCESS_TOKEN-}" ]
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
   then
-    NEED_TOKEN=true
-  else
     checkToken "$user"
+  else
+    NEED_TOKEN=true
   fi
 
   if [ "${NEED_TOKEN}" = "true" ]
@@ -54,6 +54,7 @@ getAccessToken() {
   fi
 
   export ACCESS_TOKEN
+  export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
 }
 
