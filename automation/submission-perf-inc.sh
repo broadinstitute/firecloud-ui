@@ -31,25 +31,35 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
-  then
-    checkToken "$user"
-  else
-    NEED_TOKEN=true
-  fi
+#  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
+#  then
+#    checkToken "$user"
+#  else
+#    NEED_TOKEN=true
+#  fi
+#
+#  if [ "${NEED_TOKEN}" = "true" ]
+#  then
+#    ACCESS_TOKEN=$(
+#      docker \
+#        run \
+#        --rm \
+#        -v "${WORKING_DIR}:/app/populate" \
+#        -w /app/populate \
+#        broadinstitute/dsp-toolbox \
+#        python get_bearer_token.py "${user}" "${JSON_CREDS}"
+#    )
+#  fi
 
-  if [ "${NEED_TOKEN}" = "true" ]
-  then
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
-  fi
+  ACCESS_TOKEN=$(
+    docker \
+      run \
+      --rm \
+      -v "${WORKING_DIR}:/app/populate" \
+      -w /app/populate \
+      broadinstitute/dsp-toolbox \
+      python get_bearer_token.py "${user}" "${JSON_CREDS}"
+  )
 
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
