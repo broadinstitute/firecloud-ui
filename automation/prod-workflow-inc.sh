@@ -54,8 +54,6 @@ getAccessToken() {
     )
   fi
 
-  echo "Retrieved ACCESS_TOKEN for user '${user}'"
-
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
