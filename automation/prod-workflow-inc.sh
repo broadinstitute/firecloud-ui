@@ -42,6 +42,7 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
+    echo "Retrieving new ACCESS_TOKEN for user '${user}'"
     ACCESS_TOKEN=$(
       docker \
         run \
@@ -52,6 +53,8 @@ getAccessToken() {
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
   fi
+
+  echo "Retrieved ACCESS_TOKEN for user '${user}'"
 
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
@@ -80,6 +83,8 @@ launchSubmission() {
 
     expression="$1"  #optional
 
+    getAccessToken "$user"
+
     echo "
     Launching submission for:
         user=${user}
@@ -93,8 +98,6 @@ launchSubmission() {
         deleteIntermediateOutputFiles=${deleteIntermediateOutputFiles}
         expression=${expression}
     "
-
-    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -133,6 +136,8 @@ monitorSubmission() {
     submissionId=$4
 
     getAccessToken "$user"
+
+    echo "Fetching status for submission ID '${submissionId}':"
 
     submissionDetails=$(curl \
             -X GET \

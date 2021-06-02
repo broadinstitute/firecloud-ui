@@ -40,6 +40,7 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
+    echo "Retrieving new ACCESS_TOKEN for user '${user}'"
     ACCESS_TOKEN=$(
       docker \
         run \
@@ -51,6 +52,8 @@ getAccessToken() {
     )
   fi
 
+  echo "Retrieved ACCESS_TOKEN for user '${user}'"
+
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
   export NEED_TOKEN=false
@@ -59,14 +62,12 @@ getAccessToken() {
 callbackToNIH() {
     user=$1
 
+    getAccessToken "$user"
+
     echo "
     Launching callback to NIH for:
     user=$1
     "
-
-    getAccessToken "$user"
-
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     curl \
         -X POST \
@@ -100,8 +101,6 @@ launchSubmission() {
     expression="$1" #optional
 
     getAccessToken "$user"
-
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     echo "
     Launching submission for:
@@ -162,7 +161,7 @@ findSubmissionID() {
 
     getAccessToken "$user"
 
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+    echo "Fetching submission ID for workspace '${name}' in namespace '${namespace}':"
 
     submissionDetails=$(
         curl \
@@ -184,7 +183,7 @@ findLastSubmissionID() {
 
     getAccessToken "$user"
 
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+    echo "Fetching last submission ID for workspace '${name}' in namespace '${namespace}':"
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -210,7 +209,7 @@ findFirstWorkflowIdInSubmission() {
 
     getAccessToken "$user"
 
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+    echo "Fetching first workflow ID for submission ID '${submissionId}':"
 
     workflowID=$(
         curl \
@@ -232,7 +231,7 @@ checkIfWorkflowErrorMessageContainsSubstring() {
 
     getAccessToken "$user"
 
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+    echo "Checking if workflow contains expected error string:"
 
     workflowErrorMessage=$(
         curl \
@@ -256,7 +255,7 @@ monitorSubmission() {
 
     getAccessToken "$user"
 
-    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+    echo "Fetching status for submission ID '${submissionId}':"
 
     # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
     submissionDetails=$(curl \
