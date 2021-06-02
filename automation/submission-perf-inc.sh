@@ -40,7 +40,7 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
-    echo "Retrieving new ACCESS_TOKEN for user '${user}'"
+    printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
         run \
@@ -159,7 +159,7 @@ findSubmissionID() {
 
     getAccessToken "$user"
 
-    echo "Fetching submission ID for workspace '${name}' in namespace '${namespace}':"
+    printf "\nFetching submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
 
     submissionDetails=$(
         curl \
@@ -181,7 +181,7 @@ findLastSubmissionID() {
 
     getAccessToken "$user"
 
-    echo "Fetching last submission ID for workspace '${name}' in namespace '${namespace}':"
+    printf "\nFetching last submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -207,7 +207,7 @@ findFirstWorkflowIdInSubmission() {
 
     getAccessToken "$user"
 
-    echo "Fetching first workflow ID for submission ID '${submissionId}':"
+    printf "\nFetching first workflow ID for submission ID '%s':" "${submissionId}"
 
     workflowID=$(
         curl \
@@ -229,7 +229,7 @@ checkIfWorkflowErrorMessageContainsSubstring() {
 
     getAccessToken "$user"
 
-    echo "Checking if workflow contains expected error string:"
+    printf "\nChecking if workflow contains expected error string:"
 
     workflowErrorMessage=$(
         curl \
@@ -253,7 +253,7 @@ monitorSubmission() {
 
     getAccessToken "$user"
 
-    echo "Fetching status for submission ID '${submissionId}':"
+    printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
     # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
     submissionDetails=$(curl \

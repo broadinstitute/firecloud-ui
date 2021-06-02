@@ -42,7 +42,7 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
-    echo "Retrieving new ACCESS_TOKEN for user '${user}'"
+    printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
         run \
@@ -135,7 +135,7 @@ monitorSubmission() {
 
     getAccessToken "$user"
 
-    echo "Fetching status for submission ID '${submissionId}':"
+    printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
     submissionDetails=$(curl \
             -X GET \
