@@ -64,17 +64,9 @@ callbackToNIH() {
     user=$1
     "
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    getAccessToken "$user"
 
-#    getAccessToken "$user"
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     curl \
         -X POST \
@@ -107,6 +99,10 @@ launchSubmission() {
 
     expression="$1" #optional
 
+    getAccessToken "$user"
+
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
+
     echo "
     Launching submission for:
         user=${user}
@@ -120,18 +116,6 @@ launchSubmission() {
         deleteIntermediateOutputFiles=${deleteIntermediateOutputFiles}
         expression=${expression}
     "
-
-#    getAccessToken "$user"
-
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -176,17 +160,9 @@ findSubmissionID() {
     namespace=$2
     name=$3
 
-#    getAccessToken "$user"
+    getAccessToken "$user"
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     submissionDetails=$(
         curl \
@@ -206,17 +182,9 @@ findLastSubmissionID() {
     methodConfigurationNamespace=${4-} # optional
     methodConfigurationName=${5-}      # optional
 
-#    getAccessToken "$user"
+    getAccessToken "$user"
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -240,17 +208,9 @@ findFirstWorkflowIdInSubmission() {
     name=$3
     submissionId=$4
 
-#    getAccessToken "$user"
+    getAccessToken "$user"
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     workflowID=$(
         curl \
@@ -270,17 +230,9 @@ checkIfWorkflowErrorMessageContainsSubstring() {
     workflowId=$4
     expectedSubstring=$5
 
-#    getAccessToken "$user"
+    getAccessToken "$user"
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     workflowErrorMessage=$(
         curl \
@@ -302,17 +254,9 @@ monitorSubmission() {
     name=$3
     submissionId=$4
 
-#    getAccessToken "$user"
+    getAccessToken "$user"
 
-    ACCESS_TOKEN=$(
-      docker \
-        run \
-        --rm \
-        -v "${WORKING_DIR}:/app/populate" \
-        -w /app/populate \
-        broadinstitute/dsp-toolbox \
-        python get_bearer_token.py "${user}" "${JSON_CREDS}"
-    )
+    echo "***** GOT ACCESS TOKEN: ${ACCESS_TOKEN} *****"
 
     # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
     submissionDetails=$(curl \
