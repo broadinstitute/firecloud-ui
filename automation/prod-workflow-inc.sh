@@ -44,7 +44,6 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
-    printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
         run \
