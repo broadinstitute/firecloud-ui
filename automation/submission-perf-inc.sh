@@ -31,6 +31,8 @@ checkToken () {
 getAccessToken() {
   user=$1
 
+  # This checks that we are getting an access token for the same user as before. If the user changed
+  # we will get a new access token
   if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
   then
     checkToken "$user"
