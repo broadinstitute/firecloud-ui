@@ -8,7 +8,7 @@ checkToken () {
 
     # Get access token if it hasn't been initialized. This usually happens during the start of a test.
     # For more details see https://broadworkbench.atlassian.net/browse/BW-721
-    if [ -z "${ACCESS_TOKEN}" ]
+    if [ -z "${ACCESS_TOKEN-}" ]
     then
       getAccessToken "$user"
     fi
@@ -31,7 +31,9 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ]
+  # This checks that we are getting an access token for the same user as before. If the user changed
+  # we will get a new access token
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
   then
     checkToken "$user"
   else
@@ -40,6 +42,7 @@ getAccessToken() {
 
   if [ "${NEED_TOKEN}" = "true" ]
   then
+    printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
         run \
@@ -59,12 +62,12 @@ getAccessToken() {
 callbackToNIH() {
     user=$1
 
+    getAccessToken "$user"
+
     echo "
     Launching callback to NIH for:
     user=$1
     "
-
-    getAccessToken "$user"
 
     curl \
         -X POST \
@@ -97,6 +100,8 @@ launchSubmission() {
 
     expression="$1" #optional
 
+    getAccessToken "$user"
+
     echo "
     Launching submission for:
         user=${user}
@@ -110,8 +115,6 @@ launchSubmission() {
         deleteIntermediateOutputFiles=${deleteIntermediateOutputFiles}
         expression=${expression}
     "
-
-    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -158,6 +161,8 @@ findSubmissionID() {
 
     getAccessToken "$user"
 
+    printf "\nFetching submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
+
     submissionDetails=$(
         curl \
             -X GET \
@@ -177,6 +182,8 @@ findLastSubmissionID() {
     methodConfigurationName=${5-}      # optional
 
     getAccessToken "$user"
+
+    printf "\nFetching last submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
 
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
@@ -202,6 +209,8 @@ findFirstWorkflowIdInSubmission() {
 
     getAccessToken "$user"
 
+    printf "\nFetching first workflow ID for submission ID '%s':" "${submissionId}"
+
     workflowID=$(
         curl \
             -X GET \
@@ -221,6 +230,8 @@ checkIfWorkflowErrorMessageContainsSubstring() {
     expectedSubstring=$5
 
     getAccessToken "$user"
+
+    printf "\nChecking if workflow contains expected error string:"
 
     workflowErrorMessage=$(
         curl \
@@ -244,16 +255,32 @@ monitorSubmission() {
 
     getAccessToken "$user"
 
-    # curl -s -X GET --header 'Accept: application/json' --header "Authorization: Bearer $ACCESS_TOKEN" "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/submissions/queueStatus" | jq -r '"\(now),\(.workflowCountsByStatus.Queued),\(.workflowCountsByStatus.Running),\(.workflowCountsByStatus.Submitted)"' | tee -a workflow-progress-$BUILD_NUMBER.csv
-    submissionDetails=$(curl \
-        -X GET \
-        --header 'Accept: application/json' \
-        --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-        "https://api.firecloud.org/api/workspaces/$namespace/$name/submissions/$submissionId")
+    printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
-    submissionStatus=$(jq -r '.status' <<< "${submissionDetails}" )
-    workflowsStatus=$(jq -r '.workflows[] | .status' <<< "${submissionDetails}")
-    workflowFailures=$(jq -r '[.workflows[] | select(.status == "Failed")] | length' <<< "${submissionDetails}")
+    submissionStatus=$(
+        curl \
+            -X GET \
+            --header 'Accept: application/json' \
+            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+        | jq -r '.status'
+    )
+    workflowsStatus=$(
+        curl \
+            -X GET \
+            --header 'Accept: application/json' \
+            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+         | jq -r '.workflows[] | .status'
+    )
+    workflowFailures=$(
+        curl \
+            -X GET \
+            --header 'Accept: application/json' \
+            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
+    )
 
     export submissionStatus
     export workflowsStatus

@@ -10,7 +10,7 @@ checkToken () {
 
     # Get access token if it hasn't been initialized. This usually happens during the start of a test.
     # For more details see https://broadworkbench.atlassian.net/browse/BW-721
-    if [ -z "${ACCESS_TOKEN}" ]
+    if [ -z "${ACCESS_TOKEN-}" ]
     then
       getAccessToken "$user"
     fi
@@ -33,7 +33,9 @@ checkToken () {
 getAccessToken() {
   user=$1
 
-  if [ "${ACCESS_TOKEN_USER}" = "${user}" -a -n "${ACCESS_TOKEN}" ]
+  # This checks that we are getting an access token for the same user as before. If the user changed
+  # we will get a new access token
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
   then
     checkToken "$user"
   else
@@ -80,6 +82,8 @@ launchSubmission() {
 
     expression="$1"  #optional
 
+    getAccessToken "$user"
+
     echo "
     Launching submission for:
         user=${user}
@@ -93,8 +97,6 @@ launchSubmission() {
         deleteIntermediateOutputFiles=${deleteIntermediateOutputFiles}
         expression=${expression}
     "
-
-    getAccessToken "$user"
 
     # check if $expression is set
     if [[ -z ${expression} ]] ; then
@@ -133,6 +135,8 @@ monitorSubmission() {
     submissionId=$4
 
     getAccessToken "$user"
+
+    printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
     submissionDetails=$(curl \
             -X GET \
