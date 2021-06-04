@@ -14,19 +14,19 @@ checkToken () {
     fi
 
     tokenStatus=$(
-        curl \
-            -v --silent \
-            -X GET \
-            --header "Accept: application/json" \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/refresh-token-status" 2>&1
+      curl \
+        -v --silent \
+        -X GET \
+        --header "Accept: application/json" \
+        --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+        "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/refresh-token-status" 2>&1
     )
 
     # Verify that user is authorized to make the API call and does not need to refresh their token
     if [[ "${tokenStatus}" =~ '"requiresRefresh":true' ]] || [[ ${tokenStatus} =~ "401 Unauthorized" ]]
     then
-        NEED_TOKEN=true
-        export NEED_TOKEN
+      NEED_TOKEN=true
+      export NEED_TOKEN
     fi
 }
 
