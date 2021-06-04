@@ -2,6 +2,7 @@
 # Include script for perf tests
 
 set -e
+set -x
 
 checkToken () {
     user=$1
@@ -23,6 +24,7 @@ checkToken () {
             "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/refresh-token-status" 2>&1 \
         | grep '"requiresRefresh": true\|error: 401'
     then
+        echo "****** ${user} needs new token ******"
         NEED_TOKEN=true
         export NEED_TOKEN
     fi
@@ -52,6 +54,7 @@ getAccessToken() {
         broadinstitute/dsp-toolbox \
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
+    echo "****** Retrieved new access token for user '${user}: ${ACCESS_TOKEN} ******"
   fi
 
   export ACCESS_TOKEN
@@ -257,30 +260,57 @@ monitorSubmission() {
 
     printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
-    submissionStatus=$(
+    submissionDetails=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-        | jq -r '.status'
+            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}"
     )
-    workflowsStatus=$(
+    submissionStatus=$(jq -r '.status' <<< "${submissionDetails}")
+
+    workflowsDetails=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '.workflows[] | .status'
+            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}"
     )
-    workflowFailures=$(
+    workflowsStatus=$(jq -r '.workflows[] | .status' <<< "${workflowsDetails}")
+
+    workflowFailureDetails=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
+            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}"
     )
+    workflowFailures=$(jq -r '[.workflows[] | select(.status == "Failed")] | length' <<< "${workflowFailureDetails}")
+
+#    submissionStatus=$(
+#        curl \
+#            -X GET \
+#            --header 'Accept: application/json' \
+#            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+#            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+#        | jq -r '.status'
+#    )
+#    workflowsStatus=$(
+#        curl \
+#            -X GET \
+#            --header 'Accept: application/json' \
+#            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+#            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+#         | jq -r '.workflows[] | .status'
+#    )
+#    workflowFailures=$(
+#        curl \
+#            -X GET \
+#            --header 'Accept: application/json' \
+#            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+#            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
+#         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
+#    )
 
     export submissionStatus
     export workflowsStatus
