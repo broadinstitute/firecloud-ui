@@ -160,37 +160,18 @@ findSubmissionID() {
     user=$1
     namespace=$2
     name=$3
-
-    getAccessToken "$user"
-
-    printf "\nFetching submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
-
-    submissionDetails=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions")
-    submissionID=$(jq -r '.[] | select(.status == ("Submitted")) | .submissionId' <<< "${submissionDetails}")
-
-    export submissionID
-}
-
-findLastSubmissionID() {
-    user=$1
-    namespace=$2
-    name=$3
     methodConfigurationNamespace=${4-} # optional
     methodConfigurationName=${5-}      # optional
 
     getAccessToken "$user"
 
-    printf "\nFetching last submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
-
     selectorString=".status == (\"Submitted\")"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
         then
+            printf "\nFetching last submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
             selectorString="$selectorString and .methodConfigurationNamespace == (\"$methodConfigurationNamespace\") and .methodConfigurationName == (\"$methodConfigurationName\")"
+    else
+            printf "\nFetching submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
     fi
     submissionID=$(
         curl \
