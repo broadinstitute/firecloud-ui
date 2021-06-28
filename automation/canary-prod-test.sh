@@ -54,7 +54,7 @@ if [ $ENV = "prod" ]; then
 
    i=1
 
-   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 20 ]
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 60 ]
 
     do
             echo $i
@@ -65,7 +65,7 @@ if [ $ENV = "prod" ]; then
 
     if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
       timer=$SECONDS
-      echo "One-off workflow finished within 15 minutes with workflow status: $workflowsStatus"
+      echo "One-off workflow finished within 60 minutes with workflow status: $workflowsStatus"
 
       echo "[{\"eventType\":\"CanaryTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete (sec)\":\"$timer\"}]" > canary_events.json
       exit 0
