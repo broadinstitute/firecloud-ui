@@ -2,6 +2,7 @@
 # Include script for perf tests
 
 set -e
+set -x
 
 checkToken () {
     user=$1
@@ -283,7 +284,7 @@ waitForSubmissionAndWorkflowStatus() {
   i=1
   while [ "$submissionStatus" != "$expectedSubmissionStatus" ] && [ "$i" -le "$numOfAttempts" ]
     do
-      echo "Submission $submissionId is not yet $expectedSubmissionStatus. Will make attempt $(($i+1)) after 60 seconds"
+      echo "Submission $submissionId is not yet $expectedSubmissionStatus (got: ${submissionStatus}). Will make attempt $(($i+1)) after 60 seconds"
       sleep 60
       monitorSubmission $user $namespace $name $submissionId
       ((i++))
