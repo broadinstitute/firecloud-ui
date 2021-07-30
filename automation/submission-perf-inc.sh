@@ -77,7 +77,7 @@ callbackToNIH() {
         --header "Content-Type: application/json" \
         --header "Accept: application/json" \
         --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-        -d "{\"jwt\":\"eyJhbGciOiJIUzI1NiJ9.ZmlyZWNsb3VkLWRldg.NPXbSpTmAOUvJ1HX85TauAARnlMKfqBsPjumCC7zE7s\"}" \
+        -d "{\"jwt\":\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlcmFDb21tb25zVXNlcm5hbWUiOiJmaXJlY2xvdWQtZGV2IiwiaWF0IjoxNjE0ODc3MTk3MDB9.k2HVt74OedfgP_bVHSz6U-1c25_XRMw2v8YtuiPHWZUPdYdXR8qZRzYq9YIUI1wbWtr6M7_w1XgBC9ubl7aLFtOcm00CSFAYkTA23NvF3jzrW_qoCArUfYP5GfvUAsA-8RPn-jIOpT5xBWp6vnoTElddiujrZ3_ykToB0s2ZE_cpi2uRUl6SQvNxsWmVdnAKi84NvPHKNwb3Z8HCQ9WdMJ53K2a_ks8psviQao-RvtLUO2hZY4G8cPM581WpfhZ_FM61EHqGQlflJlOSYceI6tiKuKoqPHvWHUAEkd5TdUtee1FVVgLYVEq6hidACMFSsanhqCfmnt4bA7Wlfzyt3A\"}" \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/nih/callback"
 }
 
