@@ -241,34 +241,16 @@ monitorSubmission() {
 
     printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
-    submissionStatus=$(
+    submissionDetails=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-        | jq -r '.status'
-    )
-    workflowsStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '.workflows[] | .status'
-    )
-    workflowFailures=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
-    )
+            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}")
 
-    export submissionStatus
-    export workflowsStatus
-    export workflowFailures
+    export submissionStatus=$(echo "$submissionDetails" | jq -r '.status')
+    export workflowsStatus=$(echo "$submissionDetails" | jq -r '.workflows[] | .status')
+    export workflowFailures=$(echo "$submissionDetails" | jq -r '[.workflows[] | select(.status == "Failed")] | length')
 }
 
 waitForSubmissionAndWorkflowStatus() {
