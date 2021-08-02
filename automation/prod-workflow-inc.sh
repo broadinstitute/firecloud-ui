@@ -25,8 +25,11 @@ checkToken () {
             "https://api.firecloud.org/api/refresh-token-status" 2>&1 \
         | grep '"requiresRefresh": true\|error: 401'
     then
-        NEED_TOKEN=true
-        export NEED_TOKEN
+        export NEED_TOKEN=true
+    else if [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
+        export NEED_TOKEN=true
+    else
+        export NEED_TOKEN=false
     fi
 }
 
@@ -57,6 +60,7 @@ getAccessToken() {
 
   export ACCESS_TOKEN
   export ACCESS_TOKEN_USER="${user}"
+  export TOKEN_CREATION_TIME=$(date +%s)
   export NEED_TOKEN=false
 }
 
