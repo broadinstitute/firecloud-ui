@@ -28,6 +28,7 @@ checkToken () {
     then
         export NEED_TOKEN=true
     elif [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
+    then
         echo "Token is over 30m old, so we need a new one"
         export NEED_TOKEN=true
     else
