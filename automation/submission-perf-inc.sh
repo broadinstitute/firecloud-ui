@@ -65,7 +65,7 @@ getAccessToken() {
     export ACCESS_TOKEN_USER
     TOKEN_CREATION_TIME=$(date +%s)
     export TOKEN_CREATION_TIME
-    checkToken
+    checkToken "${user}"
   done
 }
 
