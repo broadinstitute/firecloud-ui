@@ -27,7 +27,7 @@ checkToken () {
     if [[ "${tokenStatus}" =~ '"requiresRefresh":true' ]] || [[ ${tokenStatus} =~ "401 Unauthorized" ]]
     then
         export NEED_TOKEN=true
-    else if [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
+    elif [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
         export NEED_TOKEN=true
     else
         export NEED_TOKEN=false
