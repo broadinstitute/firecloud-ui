@@ -41,7 +41,7 @@ getAccessToken() {
 
   # This checks that we are getting an access token for the same user as before. If the user changed
   # we will get a new access token
-  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" ] && [ -n "${ACCESS_TOKEN-}" ]
   then
     checkToken "$user"
   else
@@ -61,9 +61,11 @@ getAccessToken() {
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
     export ACCESS_TOKEN
-    export ACCESS_TOKEN_USER="${user}"
-    export TOKEN_CREATION_TIME=$(date +%s)
-    checkToken()
+    ACCESS_TOKEN_USER="${user}"
+    export ACCESS_TOKEN_USER
+    TOKEN_CREATION_TIME=$(date +%s)
+    export TOKEN_CREATION_TIME
+    checkToken
   done
 }
 
@@ -253,9 +255,12 @@ monitorSubmission() {
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}")
 
-    export submissionStatus=$(echo "$submissionDetails" | jq -r '.status')
-    export workflowsStatus=$(echo "$submissionDetails" | jq -r '.workflows[] | .status')
-    export workflowFailures=$(echo "$submissionDetails" | jq -r '[.workflows[] | select(.status == "Failed")] | length')
+    submissionStatus=$(echo "$submissionDetails" | jq -r '.status')
+    export submissionStatus
+    workflowsStatus=$(echo "$submissionDetails" | jq -r '.workflows[] | .status')
+    export workflowsStatus
+    workflowFailures=$(echo "$submissionDetails" | jq -r '[.workflows[] | select(.status == "Failed")] | length')
+    export workflowFailures
 }
 
 waitForSubmissionAndWorkflowStatus() {
@@ -267,13 +272,13 @@ waitForSubmissionAndWorkflowStatus() {
   name=$6
   submissionId=$7
 
-  monitorSubmission $user $namespace $name $submissionId
+  monitorSubmission "$user" "$namespace" "$name" "$submissionId"
   i=1
   while [ "$submissionStatus" != "$expectedSubmissionStatus" ] && [ "$i" -le "$numOfAttempts" ]
     do
-      echo "Submission $submissionId is not yet $expectedSubmissionStatus (got: ${submissionStatus}). Will make attempt $(($i+1)) after 60 seconds"
+      echo "Submission ${submissionId} is not yet ${expectedSubmissionStatus} (got: ${submissionStatus}). Will make attempt $((i+1)) after 60 seconds"
       sleep 60
-      monitorSubmission $user $namespace $name $submissionId
+      monitorSubmission "$user" "$namespace" "$name" "$submissionId"
       ((i++))
     done
 
