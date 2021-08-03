@@ -26,8 +26,11 @@ checkToken () {
     # Verify that user is authorized to make the API call and does not need to refresh their token
     if [[ "${tokenStatus}" =~ '"requiresRefresh":true' ]] || [[ ${tokenStatus} =~ "401 Unauthorized" ]]
     then
-      NEED_TOKEN=true
-      export NEED_TOKEN
+        export NEED_TOKEN=true
+    else if [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
+        export NEED_TOKEN=true
+    else
+        export NEED_TOKEN=false
     fi
 }
 
@@ -43,8 +46,8 @@ getAccessToken() {
     NEED_TOKEN=true
   fi
 
-  if [ "${NEED_TOKEN}" = "true" ]
-  then
+  while [ "${NEED_TOKEN}" = "true" ]
+  do
     printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
@@ -55,11 +58,11 @@ getAccessToken() {
         broadinstitute/dsp-toolbox \
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
-  fi
-
-  export ACCESS_TOKEN
-  export ACCESS_TOKEN_USER="${user}"
-  export NEED_TOKEN=false
+    export ACCESS_TOKEN
+    export ACCESS_TOKEN_USER="${user}"
+    export TOKEN_CREATION_TIME=$(date +%s)
+    checkToken()
+  done
 }
 
 callbackToNIH() {
