@@ -48,8 +48,8 @@ getAccessToken() {
     NEED_TOKEN=true
   fi
 
-  while [ "${NEED_TOKEN}" = "true" ]
-  do
+  if [ "${NEED_TOKEN}" = "true" ]
+  then
     printf "\nRetrieving new ACCESS_TOKEN for user '%s'" "${user}"
     ACCESS_TOKEN=$(
       docker \
@@ -66,7 +66,7 @@ getAccessToken() {
     TOKEN_CREATION_TIME=$(date +%s)
     export TOKEN_CREATION_TIME
     checkToken "${user}"
-  done
+  fi
 }
 
 callbackToNIH() {
