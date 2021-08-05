@@ -26,8 +26,13 @@ checkToken () {
     # Verify that user is authorized to make the API call and does not need to refresh their token
     if [[ "${tokenStatus}" =~ '"requiresRefresh":true' ]] || [[ ${tokenStatus} =~ "401 Unauthorized" ]]
     then
-      NEED_TOKEN=true
-      export NEED_TOKEN
+        export NEED_TOKEN=true
+    elif [ "$(( $(date +%s) - ${TOKEN_CREATION_TIME-0} ))" -gt "1800" ]
+    then
+        echo "Token is over 30m old, so we need a new one"
+        export NEED_TOKEN=true
+    else
+        export NEED_TOKEN=false
     fi
 }
 
@@ -36,7 +41,7 @@ getAccessToken() {
 
   # This checks that we are getting an access token for the same user as before. If the user changed
   # we will get a new access token
-  if [ "${ACCESS_TOKEN_USER-}" = "${user}" -a -n "${ACCESS_TOKEN-}" ]
+  if [ "${ACCESS_TOKEN_USER-}" = "${user}" ] && [ -n "${ACCESS_TOKEN-}" ]
   then
     checkToken "$user"
   else
@@ -55,11 +60,13 @@ getAccessToken() {
         broadinstitute/dsp-toolbox \
         python get_bearer_token.py "${user}" "${JSON_CREDS}"
     )
+    export ACCESS_TOKEN
+    ACCESS_TOKEN_USER="${user}"
+    export ACCESS_TOKEN_USER
+    TOKEN_CREATION_TIME=$(date +%s)
+    export TOKEN_CREATION_TIME
+    checkToken "${user}"
   fi
-
-  export ACCESS_TOKEN
-  export ACCESS_TOKEN_USER="${user}"
-  export NEED_TOKEN=false
 }
 
 callbackToNIH() {
@@ -241,33 +248,18 @@ monitorSubmission() {
 
     printf "\nFetching status for submission ID '%s':" "${submissionId}"
 
-    submissionStatus=$(
+    submissionDetails=$(
         curl \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-        | jq -r '.status'
-    )
-    workflowsStatus=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '.workflows[] | .status'
-    )
-    workflowFailures=$(
-        curl \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}" \
-         | jq -r '[.workflows[] | select(.status == "Failed")] | length'
-    )
+            "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions/${submissionId}")
 
+    submissionStatus=$(echo "$submissionDetails" | jq -r '.status')
     export submissionStatus
+    workflowsStatus=$(echo "$submissionDetails" | jq -r '.workflows[] | .status')
     export workflowsStatus
+    workflowFailures=$(echo "$submissionDetails" | jq -r '[.workflows[] | select(.status == "Failed")] | length')
     export workflowFailures
 }
 
@@ -280,13 +272,13 @@ waitForSubmissionAndWorkflowStatus() {
   name=$6
   submissionId=$7
 
-  monitorSubmission $user $namespace $name $submissionId
+  monitorSubmission "$user" "$namespace" "$name" "$submissionId"
   i=1
   while [ "$submissionStatus" != "$expectedSubmissionStatus" ] && [ "$i" -le "$numOfAttempts" ]
     do
-      echo "Submission $submissionId is not yet $expectedSubmissionStatus (got: ${submissionStatus}). Will make attempt $(($i+1)) after 60 seconds"
+      echo "Submission ${submissionId} is not yet ${expectedSubmissionStatus} (got: ${submissionStatus}). Will make attempt $((i+1)) after 60 seconds"
       sleep 60
-      monitorSubmission $user $namespace $name $submissionId
+      monitorSubmission "$user" "$namespace" "$name" "$submissionId"
       ((i++))
     done
 
