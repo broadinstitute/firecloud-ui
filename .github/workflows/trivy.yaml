@@ -9,15 +9,19 @@ jobs:
     # Parse Dockerfile and build, scan image if a "blessed" base image is not used
     name: DSP AppSec Trivy check
     runs-on: ubuntu-latest
+    env:
+      SARIF_PATH: trivy-results.sarif
+
     steps:
       - uses: actions/checkout@v2
 
       - uses: broadinstitute/dsp-appsec-trivy-action@v1
         with:
           image: broadinstitute/firecloud-ui:develop
-          sarif: trivy-results.sarif
+          sarif: ${{ !github.base_ref && env.SARIF_PATH || '' }} # omit Sarif report only on PRs
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v1
+        if: ${{ !github.base_ref }} # omit upload on PRs
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: ${{ env.SARIF_PATH }}
