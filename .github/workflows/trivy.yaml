@@ -17,7 +17,6 @@ jobs:
 
       - uses: broadinstitute/dsp-appsec-trivy-action@v1
         with:
-          image: broadinstitute/firecloud-ui:develop
           sarif: ${{ !github.base_ref && env.SARIF_PATH || '' }} # omit Sarif report only on PRs
 
       - name: Upload Trivy scan results to GitHub Security tab
