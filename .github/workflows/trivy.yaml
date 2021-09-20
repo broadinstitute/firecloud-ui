@@ -1,0 +1,30 @@
+name: dsp-appsec-trivy
+on:
+  # This workflow is triggered on a schedule and not PRs, since:
+  # 1) this repo is infrequently updated, and
+  # 2) the base Docker image is private, so we're unable to rebuild the child image on-demand in PRs.
+  # So instead, we scan pre-built `broadinstitute/firecloud-ui:develop` on a schedule.
+  schedule:
+    - cron:  '0 14 * * 1' # each Monday at 9am EST
+
+jobs:
+  appsec-trivy:
+    # Scan pre-built `broadinstitute/firecloud-ui:develop` image with Trivy,
+    # and report vulnerabilities to GitHub Security tab.
+    name: DSP AppSec Trivy check
+    runs-on: ubuntu-latest
+    env:
+      SARIF_PATH: trivy-results.sarif
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: broadinstitute/dsp-appsec-trivy-action@v1
+        with:
+          image: broadinstitute/firecloud-ui:develop
+          sarif: ${{ env.SARIF_PATH }}
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: ${{ env.SARIF_PATH }}
