@@ -1,11 +1,16 @@
 name: dsp-appsec-trivy
 on:
+  # This workflow is triggered on a schedule and not PRs, since:
+  # 1) this repo is infrequently updated, and
+  # 2) the base Docker image is private, so we're unable to rebuild the child image on-demand in PRs.
+  # So instead, we scan pre-built `broadinstitute/firecloud-ui:develop` on a schedule.
   schedule:
     - cron:  '0 14 * * 1' # each Monday at 9am EST
 
 jobs:
   appsec-trivy:
-    # Parse Dockerfile and build, scan image if a "blessed" base image is not used
+    # Scan pre-built `broadinstitute/firecloud-ui:develop` image with Trivy,
+    # and report vulnerabilities to GitHub Security tab.
     name: DSP AppSec Trivy check
     runs-on: ubuntu-latest
     env:
