@@ -302,7 +302,12 @@
             (do
               (endpoints/tos-get-text
                 (fn [{:keys [success? status-code raw-response]}]
-                  (swap! state assoc :tos raw-response))) ;; TODO: probably need more elegant handling than raw-response
+                    (swap! state assoc :tos
+                      (if success?
+                        raw-response
+                        (str "Could not load Terms of Service; please read it at "
+                           (str (config/terra-base-url) "/#terms-of-service")
+                           ".")))))
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
