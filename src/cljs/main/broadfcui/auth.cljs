@@ -300,7 +300,9 @@
           (if success?
             (on-success)
             (do
-              (ajax/get-google-bucket-file "tos" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
+              (endpoints/tos-get-text
+                (fn [{:keys [success? status-code raw-response]}]
+                  (swap! state assoc :tos raw-response))) ;; TODO: probably need more elegant handling than raw-response
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)

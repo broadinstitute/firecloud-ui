@@ -564,6 +564,12 @@
   {:path "/profile/importstatus"
    :method :get})
 
+;; TODO: change to actual url, e.g. /register/tos, once that is available
+(defn tos-get-text [on-done]
+  (ajax/call-sam
+   (str "/version")
+   {:on-done on-done}
+   :service-prefix ""))
 
 (defn tos-get-status [on-done]
   (ajax/call-tos
