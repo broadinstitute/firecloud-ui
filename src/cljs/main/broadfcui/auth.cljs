@@ -278,7 +278,7 @@
                                         [:span {}
                                          "Loading Terms of Service; also available "
                                          [:a {:target "_blank"
-                                              :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
+                                              :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
                                      [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
