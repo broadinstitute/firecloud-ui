@@ -564,6 +564,11 @@
   {:path "/profile/importstatus"
    :method :get})
 
+(defn tos-get-text [on-done]
+  (ajax/call-sam
+   (str "/tos/text")
+   {:on-done on-done}
+   :service-prefix ""))
 
 (defn tos-get-status [on-done]
   (ajax/call-tos

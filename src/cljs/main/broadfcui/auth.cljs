@@ -278,7 +278,7 @@
                                         [:span {}
                                          "Loading Terms of Service; also available "
                                          [:a {:target "_blank"
-                                              :href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"}
+                                              :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
                                      [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
@@ -300,7 +300,14 @@
           (if success?
             (on-success)
             (do
-              (ajax/get-google-bucket-file "tos" #(swap! state assoc :tos (% (-> (config/tos-version) str keyword))))
+              (endpoints/tos-get-text
+                (fn [{:keys [success? status-code raw-response]}]
+                    (swap! state assoc :tos
+                      (if success?
+                        raw-response
+                        (str "Could not load Terms of Service; please read it at "
+                           (str (config/terra-base-url) "/#terms-of-service")
+                           ".")))))
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)

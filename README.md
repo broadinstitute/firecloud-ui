@@ -54,7 +54,7 @@ This can take around 40 seconds to completely start. When ready, it will display
 Prompt will show when figwheel connects to your application
 ```
 
-To connect, load [`http://local.broadinstitute.org`](http://local.broadinstitute.org) in your browser (Chrome is strongly recommended for development). The prompt should appear less than ten seconds after you reload the page. If it is not connecting, make sure to check the JavaScript console for error messages.
+To connect, load ~~[`http://local.broadinstitute.org`](http://local.broadinstitute.org)~~ [`http://localhost:3449`](http://localhost:3449) in your browser (Chrome is strongly recommended for development). The prompt should appear less than ten seconds after you reload the page. If it is not connecting, make sure to check the JavaScript console for error messages.
 
 ### Building
 
