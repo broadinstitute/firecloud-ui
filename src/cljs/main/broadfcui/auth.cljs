@@ -281,7 +281,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status (str (config/terra-base-url) "/#terms-of-service")}) update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -295,9 +295,9 @@
    :-get-status
    (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
-       (endpoints/tos-get-status
+       (endpoints/get-user-status
         (fn [{:keys [success? status-code get-parsed-response]}]
-          (if success?
+          (if {:tosAccepted get-parsed-response}
             (on-success)
             (do
               (endpoints/tos-get-text
@@ -315,7 +315,7 @@
                 404 (swap! state assoc :error :not-agreed)
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
-(defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
+(defn reject-tos [on-done] (endpoints/tos-set-status (str "tos-not-accepted") on-done))
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token extra-on-sign-in]

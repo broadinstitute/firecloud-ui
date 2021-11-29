@@ -570,15 +570,14 @@
    {:on-done on-done}
    :service-prefix ""))
 
-(defn tos-get-status [on-done]
-  (ajax/call-tos
-   (str "?appid=" (config/tos-application-name) "&tosversion=" (config/tos-version))
+(defn get-user-status [on-done]
+  (ajax/call-sam
+   (str "/register/user/v2/self/info")
    {:on-done on-done}))
 
-(defn tos-set-status [accepted? on-done]
-  (ajax/call-tos
+(defn tos-set-status [tos-url on-done]
+  (ajax/call-sam
+   (str "/user/v1")
    {:method :post
     :on-done on-done
-    :data (utils/->json-string {:appid (config/tos-application-name)
-                                :tosversion (config/tos-version)
-                                :accepted accepted?})}))
+    :data (utils/->json-string {:value tos-url}))
