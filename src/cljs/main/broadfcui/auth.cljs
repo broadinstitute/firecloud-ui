@@ -281,7 +281,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status (str (config/terra-base-url) "/#terms-of-service") update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status "app.terra.bio/#terms-of-service" update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
