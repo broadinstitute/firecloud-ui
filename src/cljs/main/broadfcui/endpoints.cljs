@@ -573,11 +573,12 @@
 (defn get-user-status [on-done]
   (ajax/call-sam
    (str "/register/user/v2/self/info")
-   {:on-done on-done}))
+   {:on-done on-done}
+   :service-prefix ""))
 
 (defn tos-set-status [tos-url on-done]
   (ajax/call-sam
    (str "/user/v1")
    {:method :post
     :on-done on-done
-    :data (utils/->json-string {:value tos-url}))
+    :data (utils/->json-string {:value tos-url})}))

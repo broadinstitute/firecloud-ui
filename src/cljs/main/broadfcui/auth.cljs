@@ -281,7 +281,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status (str (config/terra-base-url) "/#terms-of-service")}) update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status (str (config/terra-base-url) "/#terms-of-service") update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -296,9 +296,12 @@
    (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
        (endpoints/get-user-status
-        (fn [{:keys [success? status-code get-parsed-response]}]
+        (fn [{:keys [success? status-code get-parsed-response raw-response]}]
           (if {:tosAccepted get-parsed-response}
-            (on-success)
+            (do
+                (js/console.log raw-response)
+                (js/console.log (:enabled get-parsed-response))
+                on-success)
             (do
               (endpoints/tos-get-text
                 (fn [{:keys [success? status-code raw-response]}]
