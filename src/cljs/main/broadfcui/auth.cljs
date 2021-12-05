@@ -281,7 +281,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status (str (config/terra-base-url) "/#terms-of-service") update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -297,7 +297,7 @@
      (let [{:keys [on-success]} props]
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response]}]
-          (if success?
+          (if (:tosAccepted (get-parsed-response))
             (on-success)
             (do
               (endpoints/tos-get-text
@@ -308,14 +308,9 @@
                         (str "Could not load Terms of Service; please read it at "
                            (str (config/terra-base-url) "/#terms-of-service")
                            ".")))))
-              (case status-code
-                ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-                403 (swap! state assoc :error :declined)
-                ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                404 (swap! state assoc :error :not-agreed)
-                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
+              (swap! state assoc :error :not-agreed)))))))})
 
-(defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
+(defn reject-tos [on-done] (endpoints/tos-set-status "invalid-url" on-done))
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token extra-on-sign-in]
