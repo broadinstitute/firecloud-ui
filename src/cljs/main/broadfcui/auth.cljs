@@ -310,8 +310,6 @@
                            ".")))))
               (swap! state assoc :error :not-agreed)))))))})
 
-(defn reject-tos [on-done] (endpoints/tos-set-status "tos-rejected" on-done))
-
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token extra-on-sign-in]
     (ajax/call {:url (str "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="
