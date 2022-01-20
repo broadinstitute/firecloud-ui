@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+# Script to start complex workflow test in Production
+
+set -e
+set -x
+
+ENV=$1
+VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
+WORKING_DIR=${3:-$PWD}
+NEED_TOKEN=false
+
+# Check if $ENV is not empty
+if [[ ! ${ENV} ]]; then
+   # echo "ENV is empty. Run again \`sh complex-prod-workflow-test.sh <Production>\`"
+    exit 1
+else
+    echo "Starting complex workflow test in Production"
+fi
+
+JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/prod/common/canary/firecloud-account.json | jq '.data'`
+
+users=(
+     dumbledore.admin@test.firecloud.org
+   )
+
+source ./prod-workflow-inc.sh
+
+# check if user needs a token refresh
+    for user in "${users[@]}"
+    do
+        checkToken $user
+    done
+
+    if [ "$NEED_TOKEN" = true ]; then
+       exit 1
+    fi
+
+
+if [ $ENV = "prod" ]; then
+    SECONDS=0
+    launchSubmission \
+        dumbledore.admin@test.firecloud.org \
+        broad-firecloud-dsde \
+        complex-featured-workflow \
+        gatk \
+        five-dollar-genome-analysis-pipeline \
+        sample \
+        na12878_real_small \
+        false \
+        false \
+
+    #Monitor the progress of the perf test
+    monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde complex-featured-workflow $submissionId
+
+   i=1
+
+   while [ "$submissionStatus" != "Done" ] && [ "$i" -le 48 ]
+
+    do
+            echo $i
+            sleep 5m
+            monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde complex-featured-workflow $submissionId
+            ((i++))
+    done
+
+    if [ "$submissionStatus" == "Done" ] && [ "$workflowsStatus" == "Succeeded" ]; then
+      timer=$SECONDS
+      echo "One-off workflow finished within 2 hours with workflow status: $workflowsStatus"
+
+      echo "[{\"eventType\":\"ComplexWorkflowTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete (sec)\":\"$timer\"}]" > complexWorkflow_events.json
+      exit 0
+    else
+      timer=$SECONDS
+      echo "failing with submission status: $submissionStatus and workflow status: $workflowsStatus"
+
+      echo "[{\"eventType\":\"ComplexWorkflowTestProd\",\"type\":\"Workflow\",\"status\": \"$workflowsStatus\",\"timeToComplete (sec)\":\"$timer\"}]" > complexWorkflow_events.json
+      exit 1
+    fi
+
+else
+    echo "Could not find ENV"
+    exit 1
+fi
+
+printf "\nDone"
+

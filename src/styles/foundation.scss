@@ -1,0 +1,44 @@
+@import './foundation_settings';
+
+$primary-color: #457fd2;
+$tooltip-font-size: 0.8rem;
+$has-tip-font-weight: unset;
+$switch-radius: 1rem;
+$switch-paddle-radius: 1rem;
+
+@import '~foundation-sites/scss/foundation';
+
+// following resets normally applied by global, see below
+
+.button-reset {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  font: unset;
+  text-align: unset;
+  padding: unset;
+  font-weight: unset;
+
+  [data-whatinput='mouse'] & {
+    outline: 0;
+  }
+}
+
+.foundation-mq {
+  font-family: '#{-zf-bp-serialize($breakpoints)}';
+}
+
+//@include foundation-global-styles;    // disabled because it insists on changing _everything_
+@include foundation-visibility-classes;
+@include foundation-float-classes;
+@include foundation-tooltip;
+@include foundation-dropdown;
+@include foundation-switch;
+@include foundation-menu;
+@include foundation-sticky;
+
+.dropdown-pane {
+  font-weight: normal;
+  z-index: 523; // Our modals are at 513
+}

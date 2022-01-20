@@ -1,0 +1,97 @@
+package org.broadinstitute.dsde.firecloud.page.workspaces
+
+import com.typesafe.scalalogging.LazyLogging
+import org.broadinstitute.dsde.firecloud.component._
+import org.broadinstitute.dsde.firecloud.component.Component._
+import org.broadinstitute.dsde.firecloud.page.BaseFireCloudPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigListPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.monitor.WorkspaceMonitorPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.notebooks.WorkspaceNotebooksPage
+import org.broadinstitute.dsde.firecloud.page.workspaces.summary.WorkspaceSummaryPage
+import org.openqa.selenium.{TimeoutException, WebDriver}
+
+/*
+A Workspace Page is any page within the workspace (i.e. the Summary tab, Data tab)
+ */
+abstract class WorkspacePage(namespace: String, name: String)(implicit webDriver: WebDriver)
+  extends BaseFireCloudPage with LazyLogging{
+
+  private val workspaceError = Label("workspace-details-error")
+
+  private val namespaceHeader = Label("header-namespace")
+  private val nameHeader = Label("header-name")
+  private val tabs = TabBar()
+
+  override def awaitReady(): Unit = {
+    super.awaitReady()
+    try {
+      await spinner "Loading workspace..."
+    } catch {
+      case e: TimeoutException => throw new TimeoutException(s"Timed out waiting for Spinner 'Loading workspace...' stop on page $url.", e)
+    }
+  }
+
+  def isError: Boolean = workspaceError.isVisible
+  def readError(): String = workspaceError.getText
+
+  def readWorkspace: (String, String) = {
+    (namespaceHeader.getText, nameHeader.getText)
+  }
+
+  def validateWorkspace: Boolean = {
+    (namespace, name) == readWorkspace
+  }
+
+  private def clickTab(tabName: String, pageUrl: String): Unit = {
+    tabs.goToTab(tabName)
+    val expUrl = pageUrl.replaceAll(" ", "%20")
+    try {
+      await condition (webDriver.getCurrentUrl.compareTo(expUrl) == 0, 2)
+    } catch {
+      case e: TimeoutException =>
+        logger.warn(s"URL mismatch. Actual url: ${webDriver.getCurrentUrl}, Expect url: $expUrl. Action of clicking Tab($tabName) possibily failed. Continuing anyway...")
+    }
+  }
+
+  def goToSummaryTab(): WorkspaceSummaryPage = {
+    val page = new WorkspaceSummaryPage(namespace, name)
+    clickTab("Summary", page.url)
+    await ready page
+  }
+
+  def goToDataTab(): WorkspaceDataPage = {
+    val page = new WorkspaceDataPage(namespace, name)
+    clickTab("Data", page.url)
+    await ready page
+  }
+
+  def goToMethodConfigTab(): WorkspaceMethodConfigListPage = {
+    val page = new WorkspaceMethodConfigListPage(namespace, name)
+    clickTab("Method Configurations", page.url)
+    await ready page
+  }
+
+  def goToMonitorTab(): WorkspaceMonitorPage = {
+    val page = new WorkspaceMonitorPage(namespace, name)
+    clickTab("Monitor", page.url)
+    await condition {
+      try {
+        val element = find(CssSelectorQuery(s"[data-test-persistence-key='$name:monitor']"))
+        if (element.isDefined) {
+          element.get.underlying.getAttribute("data-test-state") == "ready"
+        } else {
+          false
+        }
+      } catch {
+        case _: Exception => false
+      }
+    }
+    await ready page
+  }
+
+  def goToNotebooksTab(): WorkspaceNotebooksPage = {
+    val page = new WorkspaceNotebooksPage(namespace, name)
+    clickTab("Notebooks", page.url)
+    await ready page
+  }
+}

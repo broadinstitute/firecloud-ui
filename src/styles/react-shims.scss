@@ -1,0 +1,39 @@
+.grab-icon {
+  cursor: grab;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+}
+
+.grabbing-icon {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+.underline-on-hover:hover {
+  text-decoration: underline !important;
+}
+
+// for any-resize-event
+iframe {
+  box-sizing: border-box;
+}
+
+// for the Google sign-in buttons
+#app { // specificity to avoid !importance
+  .abcRioButtonBlue {
+    background-color: #457fd2;
+  }
+
+  .abcRioButton {
+    box-shadow: none;
+
+    &:not(.abcRioButtonBlue) {
+      border: 1px solid #ddd;
+    }
+  }
+}
