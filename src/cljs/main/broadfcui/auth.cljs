@@ -251,7 +251,8 @@
                                    (if success?
                                      (on-success)
                                      (case status-code
-                                       403 (swap! state assoc :error :not-active)
+                                       ;; 403 can now mean "user has not accepted ToS"
+                                       403 (on-success)
                                        ;; 404 means "not yet registered"
                                        404 (on-success)
                                        (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))}
@@ -281,7 +282,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status true update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status "app.terra.bio/#terms-of-service" update-status)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]

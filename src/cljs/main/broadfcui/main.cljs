@@ -206,6 +206,7 @@
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
+       (utils/cljslog user-status)
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
@@ -263,7 +264,7 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-               (not (contains? user-status :tos))
+              (and (not (contains? user-status :tos)) (contains? user-status :registered))
                [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (when-not common/has-return? (footer/render-footer))
