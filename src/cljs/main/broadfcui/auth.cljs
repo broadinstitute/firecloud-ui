@@ -281,8 +281,8 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [on-success]} props]
        (endpoints/sam-tos-get-status
-        (fn [{:keys [success? status-code get-parsed-response]}]
-          (utils/cljslog (false? get-parsed-response))
+        (fn [{:keys [success? status-code get-parsed-response raw-response]}]
+          (utils/cljslog (utils/parse-json-string raw-response))
           (utils/cljslog status-code)
           (utils/cljslog success?)
           (if get-parsed-response
@@ -319,7 +319,7 @@
      [:div {:style {:padding "40px 0"}}
       (case (:error @state)
             nil (spinner "Loading user information...")
-            :not-active [TermsOfService {:on-success #(utils/cljslog "whoa!")}]
+            :not-active [TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
             [:div {}
              [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
               "Error loading user information. Please try again later."]
