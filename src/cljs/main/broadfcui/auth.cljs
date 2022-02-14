@@ -294,22 +294,20 @@
    (fn [{:keys [state this]}]
      (this :-get-status))
    :-get-status
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response raw-response]}]
           (if (= "true" raw-response)
             (on-success)
-            (do
-              (endpoints/tos-get-text
-               (fn [{:keys [success? status-code raw-response]}]
-                 (swap! state assoc :tos
-                        (if success?
-                          raw-response
-                          (str "Could not load Terms of Service; please read it at "
-                               (str (config/terra-base-url) "/#terms-of-service")
-                               ".")))))
-              (swap! state assoc :error :not-agreed)))))))})
+            (endpoints/tos-get-text
+             (fn [{:keys [success? status-code raw-response]}]
+               (swap! state assoc :tos
+                      (if success?
+                        raw-response
+                        (str "Could not load Terms of Service; please read it at "
+                             (str (config/terra-base-url) "/#terms-of-service")
+                             "."))))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 
