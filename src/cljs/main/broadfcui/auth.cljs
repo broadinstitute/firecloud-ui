@@ -251,6 +251,7 @@
                                    (if success?
                                      (on-success)
                                      (case status-code
+                                       ;; 403 can now mean "user has not accepted ToS"
                                        403 (on-success)
                                        ;; 404 means "not yet registered"
                                        404 (on-success)
@@ -312,7 +313,25 @@
             (on-success)
             (do
               (this :-get-tos-text)
-              (swap! state assoc :error :not-agreed)))))))})
+              (case status-code
+                ;; Sam ToS is not live yet, so fall back to the CF
+                404 (this :-cf-get-status)
+                (swap! state assoc :error :not-agreed))))))))
+   :-cf-get-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props]
+       (endpoints/tos-get-status
+        (fn [{:keys [success? status-code get-parsed-response]}]
+          (if success?
+            (on-success)
+            (do
+              (this :-get-tos-text)
+              (case status-code
+                    ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
+                    403 (swap! state assoc :error :declined)
+                    ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
+                    404 (swap! state assoc :error :not-agreed)
+                    (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 

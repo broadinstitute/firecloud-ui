@@ -109,7 +109,7 @@
                     (style/create-server-error-message (.-errorMessage this))]
             :not-registered (profile-page/render
                              {:new-registration? true
-                              :on-done #(on-done :library)})
+                              :on-done #(swap! state update :user-status conj :tos)})
             :update-registered (profile-page/render
                                 {:update-registration? true
                                  :on-done #(on-done :workspaces)})
@@ -206,6 +206,7 @@
            sign-in-hidden? (or (nil? component)
                                public?
                                (contains? (:user-status @state) :signed-in))]
+       (utils/cljslog user-status)
        [:div {}
         (when (contains? user-status :signed-in)
           [:div {}
@@ -262,10 +263,11 @@
              (contains? user-status :signed-in)
              (cond
                (not (contains? user-status :go))
-               [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-               (not (contains? user-status :tos))
-               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
-               :else [LoggedIn {:component component :make-props make-props}]))]]
+                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+               (and (not (contains? user-status :tos)) (or (contains? user-status :registered) (contains? user-status :update-registered)))
+                [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
+               :else
+                [LoggedIn {:component component :make-props make-props}]))]]
          (when-not common/has-return? (footer/render-footer))
          (when (:showing-system-down-banner? @state)
            (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
