@@ -227,41 +227,11 @@
         {:message (get-parsed-response)
          :statusCode status-code}))))
 
-(react/defc UserStatus
-  {:render
-   (fn [{:keys [state]}]
-     [:div {:style {:padding "40px 0"}}
-      (case (:error @state)
-        nil (spinner "Loading user information...")
-        :not-active [:div {:style {:color (:state-exception style/colors)}}
-                     "Thank you for registering. Your account is currently inactive."
-                     " You will be contacted via email when your account is activated."]
-        [:div {}
-         [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
-          "Error loading user information. Please try again later."]
-         [:table {:style {:color (:text-lighter style/colors)}}
-          [:tbody {:style {}}
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
-           [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (let [{:keys [on-success]} props]
-       (ajax/call-orch "/me?userDetailsOnly=true"
-                       {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
-                                   (if success?
-                                     (on-success)
-                                     (case status-code
-                                       403 (swap! state assoc :error :not-active)
-                                       ;; 404 means "not yet registered"
-                                       404 (on-success)
-                                       (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))}
-                       :service-prefix "")))})
-
 (react/defc TermsOfService
   {:render
    (fn [{:keys [state this]}]
      (let [{:keys [error tos]} @state
-           update-status #(this :-get-status)]
+           update-status #(this :-get-tos-status)]
        [:div {}
         (links/create-internal {:style {:position "absolute" :right "1rem" :top "1rem"}
                                 :onClick #(.signOut @user/auth2-atom)}
@@ -291,23 +261,49 @@
              [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode error)]]]]])]))
    :component-did-mount
    (fn [{:keys [state this]}]
-     (this :-get-status))
-   :-get-status
+     (this :-get-tos-status))
+   :-get-tos-text
    (fn [{:keys [props state]}]
+     (let [{:keys [on-success]} props]
+       (endpoints/tos-get-text
+        (fn [{:keys [success? status-code raw-response]}]
+          (swap! state assoc :tos
+                 (if success?
+                   raw-response
+                   (str "Could not load Terms of Service; please read it at "
+                        (str (config/terra-base-url) "/#terms-of-service")
+                        ".")))))))
+   :-get-tos-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props]
+       (this :-sam-get-tos-status)))
+   :-sam-get-tos-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props]
+       (endpoints/sam-tos-get-status
+        (fn [{:keys [success? status-code get-parsed-response]}]
+          (utils/cljslog (false? get-parsed-response))
+          (utils/cljslog status-code)
+          (utils/cljslog success?)
+          (if get-parsed-response
+            (on-success)
+            (do
+              (utils/cljslog "hello2")
+              (this :-get-tos-text)
+              (case status-code
+                403 (on-success) ;(swap! state assoc :error :not-agreed)
+                ;; 404 means that Sam ToS isn't live yet, so defer to the ToS CF
+                404 (this :-cf-get-status)
+                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))
+   :-cf-get-tos-status
+   (fn [{:keys [props state this]}]
      (let [{:keys [on-success]} props]
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response]}]
           (if success?
             (on-success)
             (do
-              (endpoints/tos-get-text
-                (fn [{:keys [success? status-code raw-response]}]
-                    (swap! state assoc :tos
-                      (if success?
-                        raw-response
-                        (str "Could not load Terms of Service; please read it at "
-                           (str (config/terra-base-url) "/#terms-of-service")
-                           ".")))))
+              (this :-get-tos-text)
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
@@ -316,6 +312,34 @@
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
+
+(react/defc UserStatus
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:padding "40px 0"}}
+      (case (:error @state)
+            nil (spinner "Loading user information...")
+            :not-active [TermsOfService {:on-success #(utils/cljslog "whoa!")}]
+            [:div {}
+             [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
+              "Error loading user information. Please try again later."]
+             [:table {:style {:color (:text-lighter style/colors)}}
+              [:tbody {:style {}}
+               [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "What went wrong:"] [:td {} (:message (:error @state))]]
+               [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode (:error @state))]]]]])])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (let [{:keys [on-success]} props]
+       (ajax/call-orch "/me?userDetailsOnly=true"
+                       {:on-done (fn [{:keys [success? status-code get-parsed-response]}]
+                                   (if success?
+                                     (on-success)
+                                     (case status-code
+                                           403 (swap! state assoc :error :not-active)
+                                           ;; 404 means "not yet registered"
+                                           404 (on-success)
+                                           (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))}
+                       :service-prefix "")))})
 
 (defn force-signed-in [{:keys [on-sign-in on-sign-out on-error]}]
   (fn [auth-token extra-on-sign-in]
