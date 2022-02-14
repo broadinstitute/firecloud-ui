@@ -268,8 +268,8 @@
                                 :onClick #(.signOut @user/auth2-atom)}
           "Sign Out")
         (case error
-          nil (spinner "Loading Terms of Service information...")
-          (:declined :not-agreed) [:div {:style {:padding "2rem" :margin "5rem auto" :maxWidth 600
+          nil (spinner "Loading TermZ of Service information...")
+          :not-agreed [:div {:style {:padding "2rem" :margin "5rem auto" :maxWidth 600
                                                  :border style/standard-line}}
                                    [:h2 {:style {:marginTop 0}} "You must accept the Terms of Service to use FireCloud."]
                                    [:div {:style {:display "flex" :flexDirection "column" :alignItems "center"}}
@@ -300,14 +300,16 @@
         (fn [{:keys [success? status-code get-parsed-response raw-response]}]
           (if (= "true" raw-response)
             (on-success)
-            (endpoints/tos-get-text
-             (fn [{:keys [success? status-code raw-response]}]
-               (swap! state assoc :tos
-                      (if success?
-                        raw-response
-                        (str "Could not load Terms of Service; please read it at "
-                             (str (config/terra-base-url) "/#terms-of-service")
-                             "."))))))))))})
+            (do
+              (endpoints/tos-get-text
+               (fn [{:keys [success? status-code raw-response]}]
+                 (swap! state assoc :tos
+                        (if success?
+                          raw-response
+                          (str "Could not load Terms of Service; please read it at "
+                               (str (config/terra-base-url) "/#terms-of-service")
+                               ".")))))
+               (swap! state assoc :error :not-agreed)))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 

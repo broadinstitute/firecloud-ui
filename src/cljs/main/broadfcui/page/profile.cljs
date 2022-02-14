@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
+   [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.components :as components]
    [broadfcui.common.flex-utils :as flex]
@@ -309,6 +310,8 @@
              [FenceLink {:provider "dcf-fence"
                          :display-name "DCF Framework Services by University of Chicago"}]])]]
         [:div {:style {:marginTop "2em"}}
+         (when (not (:tosAccepted @state))
+           [auth/TermsOfService {:on-success #(swap! state assoc :tosAccepted)}])
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
             [components/ErrorViewer {:error (:server-error @state)}]])

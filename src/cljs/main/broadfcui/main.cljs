@@ -66,10 +66,10 @@
   {:render
    (fn [{:keys [this props state]}]
      (let [{:keys [component make-props]} props
-           {:keys [user-status]} @state
+           {:keys [user-status registration-status]} @state
            path (subs (aget js/window "location" "hash") 1)]
        (cond
-        (not (contains? user-status :tosAccepted))
+        (and (not (contains? user-status :tosAccepted)) (contains? registration-status :registered))
         [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tosAccepted)}]
         :else
         [:div {}
@@ -122,6 +122,9 @@
                  (if component
                    [:div {} [component (make-props)]]
                    [:h2 {} "Page not found."])))])))
+   :get-initial-state
+   (fn []
+     {:user-status #{}})
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
