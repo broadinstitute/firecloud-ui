@@ -251,7 +251,8 @@
                                    (if success?
                                      (on-success)
                                      (case status-code
-                                       403 (swap! state assoc :error :not-active)
+                                       ;; 403 can now also mean "hasn't accepted ToS"
+                                       403 (on-success)
                                        ;; 404 means "not yet registered"
                                        404 (on-success)
                                        (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))}
@@ -291,28 +292,45 @@
              [:tr {} [:td {:style {:fontStyle "italic" :textAlign "right" :paddingRight "0.3rem"}} "Status code:"] [:td {} (:statusCode error)]]]]])]))
    :component-did-mount
    (fn [{:keys [state this]}]
-     (this :-get-status))
-   :-get-status
+     (this :-sam-get-status))
+   :-get-tos-text
    (fn [{:keys [props state]}]
+     (let [{:keys [on-success]} props]
+       (endpoints/tos-get-text
+        (fn [{:keys [success? status-code raw-response]}]
+          (swap! state assoc :tos
+                 (if success?
+                   raw-response
+                   (str "Could not load Terms of Service; please read it at "
+                        (str (config/terra-base-url) "/#terms-of-service")
+                        ".")))))))
+   :-get-status
+   (fn [{:keys [props state this]}]
      (let [{:keys [on-success]} props]
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response]}]
-          (if success?
+          (if get-parsed-response
             (on-success)
             (do
-              (endpoints/tos-get-text
-                (fn [{:keys [success? status-code raw-response]}]
-                    (swap! state assoc :tos
-                      (if success?
-                        raw-response
-                        (str "Could not load Terms of Service; please read it at "
-                           (str (config/terra-base-url) "/#terms-of-service")
-                           ".")))))
+              (this :-get-tos-text)
               (case status-code
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
                 ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
                 404 (swap! state assoc :error :not-agreed)
+                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))
+   :-sam-get-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props]
+       (endpoints/sam-tos-get-status
+        (fn [{:keys [success? status-code get-parsed-response]}]
+          (utils/cljslog get-parsed-response)
+          (if get-parsed-response
+            (on-success)
+            (do
+              (this :-get-tos-text)
+              (case status-code
+                404 (this :-get-status)
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
