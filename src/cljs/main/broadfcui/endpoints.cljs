@@ -591,7 +591,9 @@
 
 (defn sam-tos-set-status [tos-url on-done]
   (ajax/call-sam
-   (str "/users/v1/tos/accept")
+   (str "/register/user/v1/termsofservice")
    {:method :post
     :on-done on-done
-    :data (utils/->json-string tos-url)}))
+    :headers ajax/content-type=json
+    :data (utils/->json-string tos-url)}
+   :service-prefix ""))
