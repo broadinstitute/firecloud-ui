@@ -339,7 +339,11 @@
        (cond
          (nil? validation-errors)
          (endpoints/profile-set
-          values
+          (cond
+           (:userAcceptedTos? props)
+           (assoc values :termsOfService "app.terra.bio/#terms-of-service")
+           :else
+           values)
           (fn [{:keys [success? get-parsed-response]}]
             (swap! state (fn [s]
                            (let [new-state (dissoc s :in-progress? :validation-errors)]
