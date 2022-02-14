@@ -294,27 +294,22 @@
    (fn [{:keys [state this]}]
      (this :-get-status))
    :-get-status
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state this]}]
      (let [{:keys [on-success]} props]
        (endpoints/tos-get-status
-        (fn [{:keys [success? status-code get-parsed-response]}]
-          (if success?
+        (fn [{:keys [success? status-code get-parsed-response raw-response]}]
+          (if (= "true" raw-response)
             (on-success)
             (do
               (endpoints/tos-get-text
-                (fn [{:keys [success? status-code raw-response]}]
-                    (swap! state assoc :tos
-                      (if success?
-                        raw-response
-                        (str "Could not load Terms of Service; please read it at "
-                           (str (config/terra-base-url) "/#terms-of-service")
-                           ".")))))
-              (case status-code
-                ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-                403 (swap! state assoc :error :declined)
-                ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                404 (swap! state assoc :error :not-agreed)
-                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
+               (fn [{:keys [success? status-code raw-response]}]
+                 (swap! state assoc :tos
+                        (if success?
+                          raw-response
+                          (str "Could not load Terms of Service; please read it at "
+                               (str (config/terra-base-url) "/#terms-of-service")
+                               ".")))))
+              (swap! state assoc :error :not-agreed)))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 

@@ -261,12 +261,14 @@
              public?
              [component (make-props)]
              (contains? user-status :signed-in)
-             (cond
-               (not (contains? user-status :go))
-               [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-              (and (not (contains? user-status :tos)) (contains? user-status :registered))
-               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
-               :else [LoggedIn {:component component :make-props make-props}]))]]
+             (do
+               (utils/cljslog user-status)
+               (cond
+                 (not (contains? user-status :go))
+                 [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+                 (not (contains? user-status :tos))
+                 [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
+                 :else [LoggedIn {:component component :make-props make-props}])))]]
          (when-not common/has-return? (footer/render-footer))
          (when (:showing-system-down-banner? @state)
            (let [title (if (:maintenance-mode? @state) "Maintenance Mode"
