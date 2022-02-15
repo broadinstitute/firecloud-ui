@@ -251,7 +251,7 @@
                                    (if success?
                                      (on-success)
                                      (case status-code
-                                       ;;403 can now mean "user has not yet accepted the ToS"
+                                       ;; 403 can now mean "user has not yet accepted the ToS"
                                        403 (on-success)
                                        ;; 404 means "not yet registered"
                                        404 (on-success)
