@@ -70,9 +70,7 @@
            path (subs (aget js/window "location" "hash") 1)]
        (cond
         (and (= :registered (:registration-status @state)) (not (contains? user-status :tos)))
-        (do
-          (utils/cljslog "yes")
-          [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}])
+        [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
         :else
          [:div {}
           [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
