@@ -68,8 +68,6 @@
      (let [{:keys [component make-props]} props
            {:keys [user-status]} @state
            path (subs (aget js/window "location" "hash") 1)]
-       (utils/cljslog (:registration-status @state))
-       (utils/cljslog user-status)
        (cond
         (and (= :registered (:registration-status @state)) (not (contains? user-status :tos)))
         (do
@@ -275,8 +273,6 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-;               (not (contains? user-status :tos))
-;               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (when-not common/has-return? (footer/render-footer))
          (when (:showing-system-down-banner? @state)

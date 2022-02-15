@@ -299,9 +299,7 @@
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response raw-response]}]
           (if (= "true" raw-response)
-            (do
-              (utils/cljslog "success...")
-              (on-success))
+            (on-success)
             (do
               (endpoints/tos-get-text
                 (fn [{:keys [success? status-code raw-response]}]
@@ -312,12 +310,12 @@
                            (str (config/terra-base-url) "/#terms-of-service")
                            ".")))))
               (case status-code
-                    200 (swap! state assoc :error :not-agreed)
-                    ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-                    403 (swap! state assoc :error :declined)
-                    ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                    404 (swap! state assoc :error :not-agreed)
-                    (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
+                200 (swap! state assoc :error :not-agreed)
+                ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
+                403 (swap! state assoc :error :declined)
+                ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
+                404 (swap! state assoc :error :not-agreed)
+                (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
 
