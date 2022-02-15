@@ -584,3 +584,16 @@
     :headers ajax/content-type=json
     :data (utils/->json-string tos-url)}
    :service-prefix ""))
+
+(defn cf-tos-get-status [on-done]
+  (ajax/call-tos
+   (str "?appid=" (config/tos-application-name) "&tosversion=" (config/tos-version))
+   {:on-done on-done}))
+
+(defn cf-tos-set-status [accepted? on-done]
+  (ajax/call-tos
+   {:method :post
+    :on-done on-done
+    :data (utils/->json-string {:appid (config/tos-application-name)
+                                :tosversion (config/tos-version)
+                                :accepted accepted?})}))

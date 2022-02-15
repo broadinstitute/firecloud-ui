@@ -282,7 +282,7 @@
                                               :href (str (config/terra-base-url) "/#terms-of-service")}
                                          "here"] "."]))
                                     [:div {:style {:display "flex" :width 200 :justifyContent "space-evenly" :marginTop "1rem"}}
-                                     [buttons/Button {:text "Accept" :onClick #(endpoints/tos-set-status "app.terra.bio/#terms-of-service" update-status)}]]]]
+                                     [buttons/Button {:text "Accept" :onClick (:submit-tos @state)}]]]]
           [:div {}
            [:div {:style {:color (:state-exception style/colors) :paddingBottom "1rem"}}
             "Error loading Terms of Service information. Please try again later."]
@@ -293,28 +293,52 @@
    :component-did-mount
    (fn [{:keys [state this]}]
      (this :-get-status))
-   :-get-status
+   :-get-tos-text
    (fn [{:keys [props state]}]
      (let [{:keys [on-success]} props]
+       (endpoints/tos-get-text
+        (fn [{:keys [success? status-code raw-response]}]
+          (swap! state assoc :tos
+                 (if success?
+                   raw-response
+                   (str "Could not load Terms of Service; please read it at "
+                        (str (config/terra-base-url) "/#terms-of-service")
+                        ".")))))))
+   :-cf-get-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props
+           update-status #(this :-get-status)]
+       (endpoints/cf-tos-get-status
+        (fn [{:keys [success? status-code get-parsed-response]}]
+          (if success?
+            (on-success)
+            (do
+              (swap! state assoc :submit-tos #(endpoints/cf-tos-set-status true update-status))
+              (this :-get-tos-text)
+              (case status-code
+                    ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
+                    403 (swap! state assoc :error :declined)
+                    ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
+                    404 (swap! state assoc :error :not-agreed)
+                    (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))
+   :-get-status
+   (fn [{:keys [props state this]}]
+     (let [{:keys [on-success]} props
+           update-status #(this :-get-status)]
        (endpoints/tos-get-status
         (fn [{:keys [success? status-code get-parsed-response raw-response]}]
           (if (= "true" raw-response)
             (on-success)
             (do
-              (endpoints/tos-get-text
-                (fn [{:keys [success? status-code raw-response]}]
-                    (swap! state assoc :tos
-                      (if success?
-                        raw-response
-                        (str "Could not load Terms of Service; please read it at "
-                           (str (config/terra-base-url) "/#terms-of-service")
-                           ".")))))
+              (this :-get-tos-text)
+              (swap! state assoc :submit-tos #(endpoints/tos-set-status "app.terra.bio/#terms-of-service" update-status))
               (case status-code
+                ;; in this case, the response was false, which is considered a failure case
                 200 (swap! state assoc :error :not-agreed)
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
-                ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                404 (swap! state assoc :error :not-agreed)
+                ;; 404 means that Sam ToS is not live, so fallback to the Cloud Function ToS
+                404 (this :-cf-get-status)
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
