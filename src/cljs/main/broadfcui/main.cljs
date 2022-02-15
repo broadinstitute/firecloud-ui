@@ -69,11 +69,12 @@
            {:keys [user-status]} @state
            path (subs (aget js/window "location" "hash") 1)]
        (utils/cljslog (:registration-status @state))
+       (utils/cljslog user-status)
        (cond
-        (= :registered (:registration-status @state))
+        (and (= :registered (:registration-status @state)) (not (contains? user-status :tos)))
         (do
           (utils/cljslog "yes")
-          [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tosAccepted)}])
+          [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}])
         :else
          [:div {}
           [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
@@ -125,6 +126,9 @@
               (if component
                 [:div {} [component (make-props)]]
                 [:h2 {} "Page not found."])))])))
+   :get-initial-state
+   (fn []
+     {:user-status #{}})
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
