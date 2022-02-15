@@ -66,57 +66,65 @@
   {:render
    (fn [{:keys [this props state]}]
      (let [{:keys [component make-props]} props
+           {:keys [user-status]} @state
            path (subs (aget js/window "location" "hash") 1)]
-       [:div {}
-        [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
-         (when (and (= :registered (:registration-status @state)) (not common/has-return?))
-           [header/TopNavBar
-            {:items (concat
-                     [{:label "Workspaces"
-                       :nav-key :workspaces
-                       :data-test-id "workspace-nav-link"
-                       :is-selected? #(or (empty? path)
-                                          (string/starts-with? path "workspaces/"))}
-                      {:label "Data Library"
-                       :nav-key :library
-                       :data-test-id "library-nav-link"
-                       :is-selected? #(= path "library")}
-                      {:label "Method Repository"
-                       :nav-key :method-repo
-                       :data-test-id "method-repo-nav-link"
-                       :is-selected? #(or (= path "methods")
-                                          (string/starts-with? path "methods/"))}])}])
-         flex/spring
-         [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
-          [:div {:style {:display "flex" :justifyContent "flex-end"}}
-           (dropdown/render-dropdown-menu {:label (icons/render-icon {:style style/secondary-icon-style} :help)
-                                           :width 150
-                                           :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
-                                           :items [{:href (config/user-guide-url) :target "_blank"
-                                                    :text [:span {} "User Guide" icons/external-link-icon]}
-                                                   {:href (config/forum-url) :target "_blank"
-                                                    :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
-           (header/create-account-dropdown)]]]
-        (let [original-destination (aget js/window "location" "hash")
-              on-done (fn [fall-through]
-                        (when (empty? original-destination)
-                          (nav/go-to-path fall-through))
-                        (this :-load-registration-status))]
-          (case (:registration-status @state)
-            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-                 (spinner "Loading user information...")]
-            :error [:div {:style {:margin "2em 0"}}
-                    (style/create-server-error-message (.-errorMessage this))]
-            :not-registered (profile-page/render
-                             {:new-registration? true
-                              :on-done #(on-done :library)})
-            :update-registered (profile-page/render
-                                {:update-registration? true
-                                 :on-done #(on-done :workspaces)})
-            :registered
-            (if component
-              [:div {} [component (make-props)]]
-              [:h2 {} "Page not found."])))]))
+       (utils/cljslog (:registration-status @state))
+       (cond
+        (= :registered (:registration-status @state))
+        (do
+          (utils/cljslog "yes")
+          [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tosAccepted)}])
+        :else
+         [:div {}
+          [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
+           (when (and (= :registered (:registration-status @state)) (not common/has-return?))
+             [header/TopNavBar
+              {:items (concat
+                       [{:label "Workspaces"
+                         :nav-key :workspaces
+                         :data-test-id "workspace-nav-link"
+                         :is-selected? #(or (empty? path)
+                                            (string/starts-with? path "workspaces/"))}
+                        {:label "Data Library"
+                         :nav-key :library
+                         :data-test-id "library-nav-link"
+                         :is-selected? #(= path "library")}
+                        {:label "Method Repository"
+                         :nav-key :method-repo
+                         :data-test-id "method-repo-nav-link"
+                         :is-selected? #(or (= path "methods")
+                                            (string/starts-with? path "methods/"))}])}])
+           flex/spring
+           [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
+            [:div {:style {:display "flex" :justifyContent "flex-end"}}
+             (dropdown/render-dropdown-menu {:label (icons/render-icon {:style style/secondary-icon-style} :help)
+                                             :width 150
+                                             :button-style {:height 32 :marginRight "0.5rem" :marginBottom "0.4rem"}
+                                             :items [{:href (config/user-guide-url) :target "_blank"
+                                                      :text [:span {} "User Guide" icons/external-link-icon]}
+                                                     {:href (config/forum-url) :target "_blank"
+                                                      :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})
+             (header/create-account-dropdown)]]]
+          (let [original-destination (aget js/window "location" "hash")
+                on-done (fn [fall-through]
+                          (when (empty? original-destination)
+                            (nav/go-to-path fall-through))
+                          (this :-load-registration-status))]
+            (case (:registration-status @state)
+              nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+                   (spinner "Loading user information...")]
+              :error [:div {:style {:margin "2em 0"}}
+                      (style/create-server-error-message (.-errorMessage this))]
+              :not-registered (profile-page/render
+                               {:new-registration? true
+                                :on-done #(on-done :library)})
+              :update-registered (profile-page/render
+                                  {:update-registration? true
+                                   :on-done #(on-done :workspaces)})
+              :registered
+              (if component
+                [:div {} [component (make-props)]]
+                [:h2 {} "Page not found."])))])))
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
@@ -263,8 +271,8 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-               (not (contains? user-status :tos))
-               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
+;               (not (contains? user-status :tos))
+;               [auth/TermsOfService {:on-success #(swap! state update :user-status conj :tos)}]
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (when-not common/has-return? (footer/render-footer))
          (when (:showing-system-down-banner? @state)
