@@ -571,11 +571,26 @@
    :service-prefix ""))
 
 (defn tos-get-status [on-done]
+  (ajax/call-sam
+   (str "/register/user/v1/termsofservice/status")
+   {:on-done on-done}
+   :service-prefix ""))
+
+(defn tos-set-status [tos-url on-done]
+  (ajax/call-sam
+   (str "/register/user/v1/termsofservice")
+   {:method :post
+    :on-done on-done
+    :headers ajax/content-type=json
+    :data (utils/->json-string tos-url)}
+   :service-prefix ""))
+
+(defn cf-tos-get-status [on-done]
   (ajax/call-tos
    (str "?appid=" (config/tos-application-name) "&tosversion=" (config/tos-version))
    {:on-done on-done}))
 
-(defn tos-set-status [accepted? on-done]
+(defn cf-tos-set-status [accepted? on-done]
   (ajax/call-tos
    {:method :post
     :on-done on-done
