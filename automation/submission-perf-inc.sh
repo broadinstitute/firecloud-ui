@@ -174,7 +174,7 @@ findSubmissionID() {
     getAccessToken "$user"
 
     # The selector filter is appended to if namespace/name are applied. Otherwise, the base case is to have no filters and just find the most recent submission ID that exists.
-    selectorString="true" .
+    selectorString="true"
     if [[ -n "$methodConfigurationNamespace" && -n "$methodConfigurationName" ]]
         then
             printf "\nFetching last submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
