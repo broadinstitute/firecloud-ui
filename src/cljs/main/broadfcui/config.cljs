@@ -64,5 +64,4 @@
 (defn dockstore-web-url [] (get @config "dockstoreWebUrl"))
 (defn terra-base-url [] (get @config "terraBaseUrl"))
 (defn terra-redirects-enabled [] (get @config "terraRedirectsEnabled" false))
-(defn tos-url [] (get @config "tosUrl"))
 (def tcga-authorization-domain "TCGA-dbGaP-Authorized")
