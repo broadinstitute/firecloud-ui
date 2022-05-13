@@ -304,23 +304,6 @@
                    (str "Could not load Terms of Service; please read it at "
                         (str (config/terra-base-url) "/#terms-of-service")
                         ".")))))))
-   :-cf-get-status
-   (fn [{:keys [props state this]}]
-     (let [{:keys [on-success]} props
-           update-status #(this :-get-status)]
-       (endpoints/cf-tos-get-status
-        (fn [{:keys [success? status-code get-parsed-response]}]
-          (if success?
-            (on-success)
-            (do
-              (swap! state assoc :submit-tos #(endpoints/cf-tos-set-status true update-status))
-              (this :-get-tos-text)
-              (case status-code
-                    ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
-                    403 (swap! state assoc :error :declined)
-                    ;; 404 means the user hasn't seen the TOS yet and must agree (or url is wrong? need to distinguish)
-                    404 (swap! state assoc :error :not-agreed)
-                    (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))
    :-get-status
    (fn [{:keys [props state this]}]
      (let [{:keys [on-success]} props
@@ -337,8 +320,6 @@
                 200 (swap! state assoc :error :not-agreed)
                 ;; 403 means the user declined the TOS (or has invalid token? Need to distinguish)
                 403 (swap! state assoc :error :declined)
-                ;; 404 means that Sam ToS is not live, so fallback to the Cloud Function ToS
-                404 (this :-cf-get-status)
                 (swap! state assoc :error (handle-server-error status-code get-parsed-response)))))))))})
 
 (defn reject-tos [on-done] (endpoints/tos-set-status false on-done))
