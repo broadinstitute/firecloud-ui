@@ -33,7 +33,7 @@
    (fn [{:keys [props state locals]}]
      (let [{:keys [selected-snapshot refresh-snapshot]} props
            {:keys [managers]} selected-snapshot
-           owner? (contains? (set managers.map(_.toLowerCase)) (user/get-email))
+           owner? (contains? (set managers).map(_.toLowerCase) (user/get-email))
            {:keys [body-id]} @locals
            on-method-created (fn [_ method-id]
                                (nav/go-to-path :method-summary method-id)
