@@ -56,11 +56,12 @@
                     (str entity-name " (" entity-type ")")
                     "N/A"))}
       {:header "Submitted By" :initial-width 220 :column-data :submitter}
-      {:header "Submission ID" :initial-width 235 :column-data :submissionId
-       :render (fn [submission-id]
+      {:header "Submission ID" :initial-width 235
+       :sort-by :submissionId :sort-initial :desc
+       :render (fn [submission]
                  (links/create-external {:href (str moncommon/google-storage-context
-                                                    bucketName "/" submission-id "/")}
-                   submission-id))}]}
+                                                    (clojure.string/replace (:submissionRoot submission) "gs://" ""))}
+                   (:submissionId submission)))}]}
     :toolbar
     {:style {:alignItems "flex-end"}
      :get-items (constantly [flex/spring [QueueStatus]])}}])
