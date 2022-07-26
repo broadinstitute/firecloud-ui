@@ -227,7 +227,7 @@
               {:data-test-id "submission-id"
                :href (str
                       moncommon/google-storage-context
-                      (:bucketName props) "/" (:submissionId submission) "/")}
+                      (clojure.string/replace (:submissionRoot submission) "gs://" ""))}
               (:submissionId submission)))]
            [:div {:style {:float "left" :width "33.33%"}}
            (style/create-section-header [:div {} "Total Run Cost"
