@@ -10,7 +10,7 @@
     "foundation-sites": "~6.3.1",
     "github-markdown-css": "^2.10.0",
     "jquery": "^3.6.0",
-    "markdown-it": "^8.4.0",
+    "markdown-it": "^13.0.1",
     "prop-types": "^15.7.2",
     "react": "^16.14.0",
     "react-autosuggest": "^9.4.3",
