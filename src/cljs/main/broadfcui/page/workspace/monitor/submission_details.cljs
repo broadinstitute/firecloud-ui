@@ -94,10 +94,11 @@
                        (let [{:keys [submission-id bucketName]} props
                              inputs (second (second (first inputResolutions)))
                              input-names (string/split inputs ".")
-                             workflow-name (first input-names)]
+                             workflow-name (first input-names)
+                             submissionRoot (clojure.string/replace (:submissionRoot (:submission props)) "gs://" "")]
                          (links/create-external
                            {:data-test-id "workflow-id"
-                            :href (str moncommon/google-storage-context bucketName "/" submission-id "/"
+                            :href (str moncommon/google-storage-context submissionRoot "/"
                                        workflow-name "/" workflowId "/")}
                            workflowId))))}
                   {:header "Run Cost" :initial-width 100 :column-data :cost
@@ -227,7 +228,7 @@
               {:data-test-id "submission-id"
                :href (str
                       moncommon/google-storage-context
-                      (:bucketName props) "/" (:submissionId submission) "/")}
+                      (clojure.string/replace (:submissionRoot submission) "gs://" ""))}
               (:submissionId submission)))]
            [:div {:style {:float "left" :width "33.33%"}}
            (style/create-section-header [:div {} "Total Run Cost"
