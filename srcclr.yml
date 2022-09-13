@@ -1,0 +1,2 @@
+# Prevent scanning 'devDependencies' for an NPM project
+scope: production

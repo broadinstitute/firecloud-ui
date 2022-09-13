@@ -1,0 +1,25 @@
+version: '2'
+services:
+  clojure-node:
+    image: broadinstitute/clojure-node
+    volumes:
+      - work:/w
+      - jar-cache:/root/.m2
+    working_dir: /w
+    command: bash
+    stdin_open: true
+    tty: true
+    environment:
+      - npm_config_unsafe_perm="true"
+  slimerjs:
+    image: evpavel/slimerjs-alpine
+    volumes:
+      - work:/w
+    working_dir: /w
+    command: bash
+    stdin_open: true
+    tty: true
+volumes:
+  work:
+  jar-cache:
+    external: true

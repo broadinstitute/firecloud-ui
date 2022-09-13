@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/profile/billingAccounts"
+  },
+  "response": {
+    "headers": {
+      "Access-Control-Allow-Origin": "*"
+    },
+    "jsonBody": [
+      {
+        "accountName": "billingAccounts/testba1",
+        "firecloudHasAccess": true,
+        "displayName": "Test account 1"
+      },
+      {
+        "accountName": "billingAccounts/testba2",
+        "firecloudHasAccess": true,
+        "displayName": "Test account 2"
+      }
+    ]
+  }
+}
