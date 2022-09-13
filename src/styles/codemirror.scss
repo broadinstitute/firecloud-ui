@@ -1,0 +1,11 @@
+@import '~codemirror/lib/codemirror.css';
+
+.CodeMirror {
+  height: auto;
+  font-family: Menlo, monospace;
+  font-size: 12px;
+
+  .CodeMirror-scroll {
+    max-height: 498px; // leave room for 2px of border
+  }
+}
