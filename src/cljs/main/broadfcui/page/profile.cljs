@@ -156,7 +156,7 @@
        (if (and (= (:provider props) (:provider oauth-state)) (not-empty fence-token))
          (do
            (swap! state assoc :pending-fence-token fence-token)
-           (after-update #(this :link-fence-account fence-token))
+           (after-update #(this :link-fence-account fence-token base64-oauth-state))
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
            (js/window.history.replaceState #{} "" (str "/#" (nav/get-path :profile))))))
@@ -187,10 +187,11 @@
           :else
           (swap! state assoc :error-message status-text)))))
    :link-fence-account
-   (fn [{:keys [props state]} token]
+   (fn [{:keys [props state]} token base64-oauth-state]
      (endpoints/profile-link-fence-account
       (:provider props)
       token
+      base64-oauth-state
       (js/encodeURIComponent
        (let [loc js/window.location]
          (str (.-protocol loc) "//" (.-host loc) "/#fence-callback")))
