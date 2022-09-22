@@ -378,7 +378,7 @@
    (str "/link/v1/" provider)
    {:on-done on-done}))
 
-(defn profile-link-fence-account [provider oauth-code oath-state redirect-uri on-done ]
+(defn profile-link-fence-account [provider oauth-code oauth-state redirect-uri on-done ]
   (ajax/call-bond
    (str "/link/v1/" provider "/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri "&state=" oauth-state)
    {:method :post
