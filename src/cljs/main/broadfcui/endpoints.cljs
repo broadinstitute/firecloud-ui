@@ -380,7 +380,7 @@
 
 (defn profile-link-fence-account [provider oauth-code oauth-state redirect-uri on-done ]
   (ajax/call-bond
-   (str "/link/v1/" provider "/oauthcode?oauthcode=" oauth-code "&redirect_uri=" redirect-uri "&state=" oauth-state)
+   (str "/link/v1/" provider "/oauthcode?oauthcode=" oauth-code "&redirect_uri=" (js/encodeURIComponent redirect-uri) "&state=" (js/encodeURIComponent oauth-state))
    {:method :post
     :on-done on-done}))
 
