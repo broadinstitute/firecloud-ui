@@ -139,7 +139,7 @@ function docker_cmd()
 	        echo "pushing $GCR_REGISTRY:${HASH_TAG}..."
                 docker tag $DOCKERHUB_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${HASH_TAG}
                 gcloud docker -- push $GCR_REGISTRY:${HASH_TAG}
-		gcloud container images add-tag $GCR_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${DOCKERTAG_SAFE_NAME}
+		gcloud container images add-tag $GCR_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${BRANCH}
             fi
         fi
     else
