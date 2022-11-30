@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.test.metadata
 
+import org.broadinstitute.dsde.firecloud.component.{Component, QueryString, TabBar}
 import org.broadinstitute.dsde.workbench.config.UserPool
-
 import org.broadinstitute.dsde.firecloud.fixture.{TestData, UserFixtures}
 import org.broadinstitute.dsde.firecloud.page.workspaces.WorkspaceDataPage
 import org.broadinstitute.dsde.firecloud.page.workspaces.methodconfigs.WorkspaceMethodConfigDetailsPage
@@ -9,6 +9,7 @@ import org.broadinstitute.dsde.workbench.auth.AuthToken
 import org.broadinstitute.dsde.workbench.fixture._
 import org.broadinstitute.dsde.workbench.service.{AclEntry, WorkspaceAccessLevel}
 import org.broadinstitute.dsde.workbench.service.test.WebBrowserSpec
+import org.openqa.selenium.WebDriver
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{FreeSpec, Matchers, ParallelTestExecution}
 
@@ -136,12 +137,52 @@ class DataSpec extends FreeSpec with ParallelTestExecution with WebBrowserSpec w
             }
             withSignIn(reader) { _ =>
               val workspaceDataTab = new WorkspaceDataPage(billingProject, workspaceName).open
-              eventually { workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output") }
+              eventually {
+                workspaceDataTab.dataTable.readColumnHeaders shouldEqual List("participant_id", "test1", "output")
+              }
+              // the start of my test
+              val anaquery = CssSelectorQuery("div[data-test-id='Analysis-tab'])")
+
+              def mytest(): Unit = {
+                //anaquery.findElement.get.underlying.getText()
+//                anaquery.findElement.get.text()
+                System.out.println("before my output")
+                anaquery.findElement.get.underlying.getText()
+                System.out.print("this is my output" + anaquery)
+              }
             }
+            //put new test here
+
           }
         }
       }
     }
+
+//    // my new object that takes in the css selector for "submitted-tab" and matches the text.
+//    object myObj {
+//      def subtab: String (subtab: String) ={
+//        cssSelector("div[data-test-id='Submitted-tab'])")
+//      }
+//    }
+//
+////    case class subtab(queryString: QueryString)(implicit webDriver: WebDriver) extends Component(queryString) {
+////      def getText: String = readText(query)
+//
+//    // step 1. go to tabBar.scala and find the function goToTab("Submitted-tab")
+//    // step 2. use the goToTab function and match the css selector with one that you put in
+//    // step 3. verify that the tab does contain the element css selector.
+//    "get text of submitted-tab and match with the cssSelector" in {
+//      TabBar.goToTab("Analysis") should include ("div[data-test-id='Submitted-tab'])")
+//    }
+
+
+
+//
+//    "get the text of subtab and match with the cssSelector" in {
+//      myObj should contain("div[data-test-id='Submitted-tab'])")
+//    }
+
+
 
     "with defaults and local preferences when analysis is run" in {
       val owner = UserPool.chooseProjectOwner
