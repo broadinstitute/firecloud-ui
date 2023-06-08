@@ -1,6 +1,5 @@
 #!/bin/bash
 # Script to start perf test in $ENV, authorize users with NIH.
-#
 
 set -e
 
@@ -12,10 +11,8 @@ NEED_TOKEN=false
 # Check if $ENV is not empty
 if [[ ! ${ENV} ]]; then
    echo "ENV is empty. Run again \`sh submission-perf-test.sh <alpha or staging>\`"
-    echo "Goodbye from 1021"
     exit 1
 else
-    echo "Hello from 1021"
     echo "Starting Perf test in {$ENV}"
 fi
 
@@ -65,14 +62,14 @@ if [ $ENV = "alpha" ]; then
     monitorSubmission ron.weasley@test.firecloud.org perf-test-b Perf-Test-B-W_2020 $testB
     submissionB=$submissionStatus
     sleep 1m
-    launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
-    sleep 55s
-    findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020
-    testD=$submissionID
-    echo "$testD"
-    monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
-    submissionD=$submissionStatus
-    sleep 1m
+    #launchSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
+    #sleep 55s
+    #findSubmissionID mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020
+    #testD=$submissionID
+    #echo "$testD"
+    #monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
+    #submissionD=$submissionStatus
+    #sleep 1m
     launchSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 abcd no_sleep1hr_echo_files sample_set sample_set6k true false "this.samples"
     sleep 55s
     findSubmissionID draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020
@@ -136,12 +133,12 @@ if [ $ENV = "alpha" ]; then
             workflowB=$workflowsStatus
             failuresB=$workflowFailures
             echo "Number of failed workflows B: $failuresB"
-            monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
-            submissionD=$submissionStatus
-            echo "Submission D status: $submissionD"
-            workflowD=$workflowsStatus
-            failuresD=$workflowFailures
-            echo "Number of failed workflows D: $failuresD"
+            #monitorSubmission mcgonagall.curator@test.firecloud.org perf-test-d Perf-Test-D-W_2020 $testD
+            #submissionD=$submissionStatus
+            #echo "Submission D status: $submissionD"
+            #workflowD=$workflowsStatus
+            #failuresD=$workflowFailures
+            #echo "Number of failed workflows D: $failuresD"
             monitorSubmission draco.malfoy@test.firecloud.org perf-test-e Perf-Test_E_W_2020 $testE
             submissionE=$submissionStatus
             echo "Submission E status: $submissionE"
