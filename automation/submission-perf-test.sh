@@ -1,5 +1,6 @@
 #!/bin/bash
-# Script to start perf test in $ENV, authorize users with NIH
+# Script to start perf test in $ENV, authorize users with NIH.
+#
 
 set -e
 
@@ -11,8 +12,10 @@ NEED_TOKEN=false
 # Check if $ENV is not empty
 if [[ ! ${ENV} ]]; then
    echo "ENV is empty. Run again \`sh submission-perf-test.sh <alpha or staging>\`"
+    echo "Goodbye from 1021"
     exit 1
 else
+    echo "Hello from 1021"
     echo "Starting Perf test in {$ENV}"
 fi
 
