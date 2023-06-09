@@ -168,7 +168,7 @@ launchSubmission() {
     echo "Response code is:"
     echo "$response"
     response_code=$(echo "$response" | tr -d '\n')
-    echo("response: ${response}")
+    echo "response: ${response}"
 }
 
 findSubmissionID() {
