@@ -143,7 +143,10 @@ launchSubmission() {
         optionalEntityNameField="\"entityName\":\"${entityName}\","
     fi
 
-    curl \
+    response=$(curl \
+        -s \
+        -o /dev/null \
+        -w "%{http_code}" \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
         -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" \
@@ -161,7 +164,10 @@ launchSubmission() {
             \"useCallCache\":${useCallCache}
         }
         " \
-        --compressed
+        --compressed)
+    echo "$response"
+    response_code=$(echo "$response" | tr -d '\n')
+    echo("response: ${response}")
 }
 
 findSubmissionID() {
