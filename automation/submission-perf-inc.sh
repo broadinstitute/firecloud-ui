@@ -16,6 +16,8 @@ checkToken () {
 
     tokenStatus=$(
       curl \
+        --retry 3 \
+        --retry-max-time 20 \
         -v --silent \
         -X GET \
         --header "Accept: application/json" \
@@ -81,6 +83,8 @@ callbackToNIH() {
 
     curl \
         -X POST \
+        --retry 3 \
+        --retry-max-time 20 \
         --header "Content-Type: application/json" \
         --header "Accept: application/json" \
         --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -148,8 +152,8 @@ launchSubmission() {
         -o /dev/null \
         -w "%{http_code}" \
         --connect-timeout 60 \
-        --retry 10 \
-        --retry-delay 20 \
+        --retry 8 \
+        --retry-delay 60 \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
         -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" \
@@ -191,6 +195,8 @@ findSubmissionID() {
     fi
     submissionID=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -212,6 +218,8 @@ findFirstWorkflowIdInSubmission() {
 
     workflowID=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -234,6 +242,8 @@ checkIfWorkflowErrorMessageContainsSubstring() {
 
     workflowErrorMessage=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -258,6 +268,8 @@ monitorSubmission() {
 
     submissionDetails=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
