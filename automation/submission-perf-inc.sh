@@ -147,7 +147,7 @@ launchSubmission() {
         -s \
         -o /dev/null \
         -w "%{http_code}" \
-        --connect-timeout 30 \
+        --connect-timeout 60 \
         --retry 10 \
         --retry-delay 20 \
         -f \
@@ -168,8 +168,7 @@ launchSubmission() {
         }
         " \
         --compressed)
-    echo "Response code is: $response"
-    response_code=$(echo "$response" | tr -d '\n')
+    echo "curl HTTP Response code is: $response"
 }
 
 findSubmissionID() {
