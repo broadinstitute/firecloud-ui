@@ -147,6 +147,9 @@ launchSubmission() {
         -s \
         -o /dev/null \
         -w "%{http_code}" \
+        --connect-timeout 30 \
+        --retry 10 \
+        --retry-delay 20 \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
         -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" \
@@ -165,10 +168,8 @@ launchSubmission() {
         }
         " \
         --compressed)
-    echo "Response code is:"
-    echo "$response"
+    echo "Response code is: $response"
     response_code=$(echo "$response" | tr -d '\n')
-    echo "response: ${response}"
 }
 
 findSubmissionID() {
