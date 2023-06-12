@@ -68,6 +68,7 @@ getAccessToken() {
     TOKEN_CREATION_TIME=$(date +%s)
     export TOKEN_CREATION_TIME
     checkToken "${user}"
+    echo "Got access token for user ${user}"
   fi
 }
 
@@ -147,7 +148,7 @@ launchSubmission() {
         optionalEntityNameField="\"entityName\":\"${entityName}\","
     fi
 
-    response=$(curl \
+    launchSubmissionResponse=$(curl \
         -s \
         -o /dev/null \
         -w "%{http_code}" \
@@ -172,7 +173,7 @@ launchSubmission() {
         }
         " \
         --compressed)
-    echo "curl HTTP Response code is: $response"
+    echo "curl HTTP Response for launch submission: $launchSubmissionResponse"
 }
 
 findSubmissionID() {
