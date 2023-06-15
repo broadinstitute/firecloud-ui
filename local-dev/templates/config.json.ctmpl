@@ -1,0 +1,27 @@
+{{- $refreshTokenOAuthCredential := (secret "secret/dsde/firecloud/dev/common/refresh-token-oauth-credential.json").Data -}}
+{
+  "apiUrlRoot": "http://localhost:8080",
+  "leonardoUrlRoot": "https://leonardo.dsde-dev.broadinstitute.org",
+  "samUrlRoot": "https://sam.dsde-dev.broadinstitute.org",
+  "bondUrl": "https://broad-bond-dev.appspot.com",
+  "marthaFileSummaryUrl": "https://us-central1-broad-dsde-dev.cloudfunctions.net/fileSummaryV1",
+  "marthaUrl": "https://us-central1-broad-dsde-dev.cloudfunctions.net/martha_v2",
+  "terraBaseUrl": "https://bvdp-saturn-dev.appspot.com",
+  "terraRedirectsEnabled": true,
+  "googleClientId": "{{ $refreshTokenOAuthCredential.web.client_id }}",
+  "isDebug": true,
+  "shibbolethUrlRoot": "http://mock-nih.dev.test.firecloud.org",
+  "tcgaNamespace": "broad-firecloud-tcga-dev",
+  "workflowCountWarningThreshold": 100,
+  "submissionStatusRefresh": 60000,
+  "userGuideUrl": "https://software.broadinstitute.org/firecloud/documentation/",
+  "userNotebooksGuideUrl": "https://software.broadinstitute.org/firecloud/documentation/quickstart?page=notebooks",
+  "forumUrl": "http://gatkforums.broadinstitute.org/firecloud",
+  "billingAccountGuideUrl": "http://gatkforums.broadinstitute.org/firecloud/discussion/9762/howto-set-up-a-google-billing-account-non-broad-users",
+  "billingProjectGuideUrl": "https://gatkforums.broadinstitute.org/firecloud/discussion/9763/howto-create-a-new-firecloud-billing-project",
+  "callCachingGuideUrl": "http://gatkforums.broadinstitute.org/firecloud/discussion/9313/call-caching",
+  "googleBucketUrl": "https://storage.googleapis.com/firecloud-alerts-dev/",
+  "dockstoreApiUrl": "https://staging.dockstore.org/api",
+  "dockstoreWebUrl": "https://staging.dockstore.org",
+  "metricsUrl": "https://terra-bard-dev.appspot.com"
+}

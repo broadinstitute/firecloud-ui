@@ -1,0 +1,14 @@
+ui:
+  image: broadinstitute/firecloud-ui:dev
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./server.crt:/etc/ssl/certs/server.crt
+    - ./server.key:/etc/ssl/private/server.key
+    - .:/config:rw
+    - ../:/app:rw
+  environment:
+    LOG_LEVEL: debug
+    SERVER_NAME: local.broadinstitute.org
+    HTTPS_ONLY: "false"
