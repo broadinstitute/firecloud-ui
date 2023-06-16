@@ -202,8 +202,9 @@ findSubmissionID() {
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
+        | tee submissionIDResponse.json \
         | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
-
+    cat submissionIDResponse.json
     export submissionID
 }
 
