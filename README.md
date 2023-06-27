@@ -23,7 +23,7 @@ Choose `File -> New -> Project from Existing Sources...` and select the base `fi
 
 FireCloud is currently supported within Broad's engineering environment:
 
-https://github.com/broadinstitute/firecloud-develop
+https://github.com/broadinstitute/terra-helmfile
 
 Support for running FireCloud outside of the Broad is planned.
 
@@ -33,7 +33,10 @@ Support for running FireCloud outside of the Broad is planned.
 
 ### Development Stack Setup
 
-1. Make sure you've run the `render-configs.sh` script in the `develop` branch of the `firecloud-develop` repo to render the config files and run script.
+1. Render configuration files by running:
+```
+./local-dev/bin/render
+```
 2. Be sure you've added local.broadinstitute.org to your `/etc/hosts`:
 
 ```bash

@@ -1,0 +1,7 @@
+{{- $tcell := (secret "secret/dsde/firecloud/local/firecloudui/tcell" ).Data -}}
+var tcellScript = document.createElement('script');
+tcellScript.setAttribute('type', 'text/javascript');
+tcellScript.setAttribute('src', 'https://us.jsagent.tcell.insight.rapid7.com/tcellagent.min.js');
+tcellScript.setAttribute('tcellappid', '{{ $tcell.appid }}');
+tcellScript.setAttribute('tcellapikey', '{{ $tcell.apikey }}');
+document.head.appendChild(tcellScript);
