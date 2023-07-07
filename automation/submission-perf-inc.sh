@@ -16,6 +16,8 @@ checkToken () {
 
     tokenStatus=$(
       curl \
+        --retry 3 \
+        --retry-max-time 20 \
         -v --silent \
         -X GET \
         --header "Accept: application/json" \
@@ -66,6 +68,7 @@ getAccessToken() {
     TOKEN_CREATION_TIME=$(date +%s)
     export TOKEN_CREATION_TIME
     checkToken "${user}"
+    echo "Got access token for user ${user}"
   fi
 }
 
@@ -81,6 +84,8 @@ callbackToNIH() {
 
     curl \
         -X POST \
+        --retry 3 \
+        --retry-max-time 20 \
         --header "Content-Type: application/json" \
         --header "Accept: application/json" \
         --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -143,7 +148,13 @@ launchSubmission() {
         optionalEntityNameField="\"entityName\":\"${entityName}\","
     fi
 
-    curl \
+    launchSubmissionResponse=$(curl \
+        -s \
+        -o /dev/null \
+        -w "%{http_code}" \
+        --connect-timeout 60 \
+        --retry 3 \
+        --retry-delay 60 \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
         -H "origin: https://firecloud.dsde-${ENV}.broadinstitute.org" \
@@ -161,7 +172,8 @@ launchSubmission() {
             \"useCallCache\":${useCallCache}
         }
         " \
-        --compressed
+        --compressed)
+    echo "curl HTTP Response for launch submission: $launchSubmissionResponse"
 }
 
 findSubmissionID() {
@@ -184,12 +196,15 @@ findSubmissionID() {
     fi
     submissionID=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
             "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
+        | tee submissionIDResponse.json \
         | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
-
+    cat submissionIDResponse.json
     export submissionID
 }
 
@@ -205,6 +220,8 @@ findFirstWorkflowIdInSubmission() {
 
     workflowID=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -227,6 +244,8 @@ checkIfWorkflowErrorMessageContainsSubstring() {
 
     workflowErrorMessage=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
@@ -251,6 +270,8 @@ monitorSubmission() {
 
     submissionDetails=$(
         curl \
+            --retry 3 \
+            --retry-max-time 20 \
             -X GET \
             --header 'Accept: application/json' \
             --header "Authorization: Bearer ${ACCESS_TOKEN}" \
