@@ -153,7 +153,7 @@ launchSubmission() {
         -o /dev/null \
         -w "%{http_code}" \
         --connect-timeout 60 \
-        --retry 8 \
+        --retry 3 \
         --retry-delay 60 \
         -f \
         "https://firecloud-orchestration.dsde-${ENV}.broadinstitute.org/api/workspaces/${namespace}/${name}/submissions" \
