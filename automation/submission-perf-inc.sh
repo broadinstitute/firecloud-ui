@@ -194,17 +194,16 @@ findSubmissionID() {
     else
             printf "\nFetching submission ID for workspace '%s' in namespace '%s':" "${name}" "${namespace}"
     fi
-    submissionID=$(
-        curl \
-            --retry 3 \
-            --retry-max-time 20 \
-            -X GET \
-            --header 'Accept: application/json' \
-            --header "Authorization: Bearer ${ACCESS_TOKEN}" \
-            "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions" \
-        | tee submissionIDResponse.json \
-        | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
+    curl \
+        --retry 3 \
+        --retry-max-time 20 \
+        -X GET \
+        --output submissionIDResponse.json \
+        --header 'Accept: application/json' \
+        --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+        "https://firecloud-orchestration.dsde-alpha.broadinstitute.org/api/workspaces/$namespace/$name/submissions"
     cat submissionIDResponse.json
+    submissionID=$(cat submissionIDResponse.json | jq -r "[.[] | select($selectorString)] | sort_by(.submissionDate) | reverse[0] | .submissionId")
     export submissionID
 }
 
