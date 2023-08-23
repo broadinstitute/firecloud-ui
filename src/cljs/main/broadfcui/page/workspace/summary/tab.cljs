@@ -114,7 +114,6 @@
      (swap! state dissoc :server-response :updating-attrs? :editing?)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
      (endpoints/get-library-attributes
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
@@ -207,12 +206,6 @@
            publishable? (and curator? (or catalog-with-read? owner?))
            show-publish-message (fn [p] (swap! state assoc :showing-publish-message? true :publish-message p))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-        (when (:cloning? @state)
-          [create/CreateDialog
-           {:dismiss #(swap! state dissoc :cloning?)
-            :workspace-id workspace-id
-            :description description
-            :auth-domain (set (map :membersGroupName authorizationDomain))}])
         (when (:deleting? @state)
           [DeleteDialog (assoc (utils/restructure workspace-id published?)
                           :dismiss #(swap! state dissoc :deleting?))])
@@ -294,19 +287,6 @@
                    {:style :light :color :state-exception :margin :top
                     :text "Cancel Editing" :icon :cancel
                     :onClick #(swap! state dissoc :editing?)}]]))
-             (when-not editing?
-               [buttons/SidebarButton
-                {:data-test-id "open-clone-workspace-modal-button"
-                 :style :light :margin :top :color :button-primary
-                 :text (if (or billing-loaded? billing-error?)
-                         "Clone..."
-                         (spinner {:style {:margin 0}} "Getting billing info..."))
-                 :icon :clone
-                 :disabled? (cond
-                              (not billing-loaded?) "Project billing data has not yet been loaded."
-                              billing-error? "Unable to load billing projects from the server."
-                              (empty? billing-projects) (comps/no-billing-projects-message))
-                 :onClick #(swap! state assoc :cloning? true)}])
              (when (and owner? (not editing?))
                [buttons/SidebarButton
                 {:style :light :margin :top :color :button-primary

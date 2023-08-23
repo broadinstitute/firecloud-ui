@@ -55,13 +55,7 @@
              :style (merge {:width 500} style)}
             (->> workspaces
                  (map (comp common/workspace-id->string :workspace))
-                 (concat ["Select a workspace" "Create new workspace..."])))
-          ;; Doing this via display: none to maintain state when the component is hidden
-          [:div {:style {:display (when-not (= 1 selected-index) "none")
-                         :border style/standard-line
-                         :padding "0.5rem" :paddingBottom 0
-                         :margin "-0.5rem" :marginTop "0.5rem"}}
-           [ws-create/WorkspaceCreationForm {:ref #(swap! locals assoc :new-workspace-form %)}]]])))
+                 (concat ["Select a workspace"])))])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
