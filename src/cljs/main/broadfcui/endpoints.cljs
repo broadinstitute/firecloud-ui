@@ -447,49 +447,6 @@
   {:path (str "/groups/" group-name "/requestAccess")
    :method :post})
 
-
-(defn get-billing-projects
-  ([on-done] (get-billing-projects false on-done))
-  ([include-pending? on-done]
-   (call-ajax-orch
-    {:endpoint {:path "/profile/billing" :method :get}
-     :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                (if success?
-                  (let [pred (if include-pending?
-                               (constantly true)
-                               #(= (:creationStatus %) "Ready"))]
-                    (on-done nil (filterv pred (get-parsed-response))))
-                  (on-done status-text nil)))})))
-
-(defn get-billing-project-status [project-name on-done]
-  (get-billing-projects
-   true
-   (fn [err-text projects]
-     (if err-text
-       (on-done nil)
-       (let [project (first (filter #(= project-name (:projectName %)) projects))]
-         (on-done (:creationStatus project) (:message project)))))))
-
-(defn get-billing-accounts []
-  {:path "/profile/billingAccounts"
-   :method :get})
-
-(def create-billing-project
-  {:path "/billing"
-   :method :post})
-
-(defn list-billing-project-members [project-id]
-  {:path (str "/billing/" project-id "/members")
-   :method :get})
-
-(defn add-billing-project-user [{:keys [project-id role user-email]}]
-  {:path (str "/billing/" project-id "/" role "/" user-email)
-   :method :put})
-
-(defn delete-billing-project-user [{:keys [project-id role user-email]}]
-  {:path (str "/billing/" project-id "/" role "/" user-email)
-   :method :delete})
-
 (defn get-library-groups [on-done]
   (ajax/call-orch
    "/library/groups"

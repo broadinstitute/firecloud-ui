@@ -114,11 +114,7 @@
      (swap! state dissoc :server-response :updating-attrs? :editing?)
      (when-let [component (@refs "storage-estimate")] (component :refresh))
      ((@refs "submission-count") :refresh)
-     (user/reload-billing-projects
-      (fn [err-text]
-        (if err-text
-          (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
-          (swap! state assoc :billing-loaded? true))))
+     (swap! state update :server-response assoc :server-error "Unable to load billing projects" :billing-error? true)
      (endpoints/get-library-attributes
       (fn [{:keys [success? get-parsed-response]}]
         (if success?

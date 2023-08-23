@@ -81,11 +81,6 @@
         (style/create-validation-error-message validation-errors)]))
    :component-did-mount
    (fn [{:keys [state]}]
-     (user/reload-billing-projects
-      (fn []
-        (swap! state assoc
-               :selected-project (first @user/saved-ready-billing-project-names)
-               :billing-loaded? true)))
      (endpoints/get-groups
       (fn [_ parsed-response]
         (swap! state assoc :all-groups (apply sorted-set (map :groupName parsed-response))))))
@@ -188,11 +183,7 @@
 (react/defc Button
   {:component-will-mount
    (fn [{:keys [state]}]
-     (add-watch user/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true))
-     (user/reload-billing-projects
-      (fn [err-text]
-        (when err-text
-          (swap! state assoc :error-message err-text)))))
+     (add-watch user/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true)))
    :render
    (fn [{:keys [state]}]
      (let [{:keys [loaded? error-message]} @state]

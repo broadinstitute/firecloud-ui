@@ -50,6 +50,5 @@
                [sign-out-item]
                [{:href (nav/get-link :profile) :text "Profile"}
                 {:href (nav/get-link :groups) :text "Groups"}
-                {:href (nav/get-link :billing) :text "Billing"}
                 {:href (nav/get-link :notifications) :text "Notifications"}
                 sign-out-item])})))
