@@ -6,7 +6,6 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.workspace.create :as ws-create]
    [broadfcui.utils :as utils]
    ))
 

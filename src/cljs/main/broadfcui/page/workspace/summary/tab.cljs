@@ -17,7 +17,6 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.page.workspace.create :as create]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
