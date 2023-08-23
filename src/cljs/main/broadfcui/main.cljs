@@ -22,7 +22,6 @@
    [broadfcui.injections :as injections]
    [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
-   [broadfcui.page.billing.billing-management :as billing-management]
    [broadfcui.page.external-importer :as external-importer]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
@@ -47,7 +46,6 @@
 (defn- init-nav-paths []
   (nav/clear-paths)
   (auth/add-nav-paths)
-  (billing-management/add-nav-paths)
   (billing-notifications/add-nav-paths)
   (external-importer/add-nav-paths)
   (group-management/add-nav-paths)

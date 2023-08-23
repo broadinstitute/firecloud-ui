@@ -178,29 +178,3 @@
                     (if success?
                       (nav/go-to-path :workspace-summary {:namespace project :name name})
                       (swap! state assoc :server-error (get-parsed-response false))))})))})
-
-
-(react/defc Button
-  {:component-will-mount
-   (fn [{:keys [state]}]
-     (add-watch user/saved-ready-billing-project-names :ws-create-button #(swap! state assoc :loaded? true)))
-   :render
-   (fn [{:keys [state]}]
-     (let [{:keys [loaded? error-message]} @state]
-       [:div {:style {:display "inline"}}
-        (when (:modal? @state)
-          [CreateDialog {:dismiss #(swap! state dissoc :modal?)}])
-        [buttons/Button
-         {:data-test-id "open-create-workspace-modal-button"
-          :text (if loaded?
-                  "Create New Workspace..."
-                  (spinner {:style {:margin 0}} "Getting billing info..."))
-          :icon :add-new
-          :disabled? (cond
-                       (not loaded?) "Project billing data has not yet been loaded."
-                       (empty? @user/saved-ready-billing-project-names) (comps/no-billing-projects-message)
-                       error-message "Project billing data failed to load.")
-          :onClick #(swap! state assoc :modal? true)}]]))
-   :component-will-unmount
-   (fn []
-     (remove-watch user/saved-ready-billing-project-names :ws-create-button))})
