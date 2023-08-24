@@ -16,15 +16,13 @@
      (let [{:keys [selected-index]} @state]
        (case selected-index
          0 ["No workspace selected"]
-         1 ((:new-workspace-form @locals) :validate)
          nil)))
    :get-selected-workspace
    (fn [{:keys [state locals]}]
      (let [{:keys [workspaces selected-index]} @state]
        (case selected-index
          0 {:error "No workspace selected"}
-         1 {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
-         {:existing-workspace (nth workspaces (- selected-index 2))})))
+         {:existing-workspace (nth workspaces (- selected-index 1))})))
    :get-default-props
    (fn []
      {:filter identity
