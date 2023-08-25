@@ -6,7 +6,6 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.spinner :refer [spinner]]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.workspace.create :as ws-create]
    [broadfcui.utils :as utils]
    ))
 
@@ -17,15 +16,13 @@
      (let [{:keys [selected-index]} @state]
        (case selected-index
          0 ["No workspace selected"]
-         1 ((:new-workspace-form @locals) :validate)
          nil)))
    :get-selected-workspace
    (fn [{:keys [state locals]}]
      (let [{:keys [workspaces selected-index]} @state]
        (case selected-index
          0 {:error "No workspace selected"}
-         1 {:new-workspace ((:new-workspace-form @locals) :get-field-values)}
-         {:existing-workspace (nth workspaces (- selected-index 2))})))
+         {:existing-workspace (nth workspaces (- selected-index 1))})))
    :get-default-props
    (fn []
      {:filter identity
@@ -55,13 +52,7 @@
              :style (merge {:width 500} style)}
             (->> workspaces
                  (map (comp common/workspace-id->string :workspace))
-                 (concat ["Select a workspace" "Create new workspace..."])))
-          ;; Doing this via display: none to maintain state when the component is hidden
-          [:div {:style {:display (when-not (= 1 selected-index) "none")
-                         :border style/standard-line
-                         :padding "0.5rem" :paddingBottom 0
-                         :margin "-0.5rem" :marginTop "0.5rem"}}
-           [ws-create/WorkspaceCreationForm {:ref #(swap! locals assoc :new-workspace-form %)}]]])))
+                 (concat ["Select a workspace"])))])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

@@ -19,7 +19,6 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.net :as net]
-   [broadfcui.page.workspace.create :as create]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    [broadfcui.utils.ajax :as ajax]
@@ -299,7 +298,7 @@
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
                         (if filters-expanded? "Collapse filters" "Expand filters"))
                       flex/spring
-                      [create/Button (select-keys props [:nav-context])]])}
+                     ])}
           :sidebar (when filters-expanded?
                      (this :-render-side-filters))}]]))
    :component-did-update
