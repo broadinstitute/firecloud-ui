@@ -16,7 +16,19 @@ else
     echo "Starting canary test in Production"
 fi
 
-JSON_CREDS=$(gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa | jq .)
+DOCKER_ARGS=(
+  "run"
+  "--rm"
+  "-e CLOUDSQL_USE_DEFAULT_CREDENTIALS=true"
+  "-v ${HOME}/.config/gcloud:/home/nonroot/.config/gcloud"
+  "us.gcr.io/cos-cloud/toolbox:v20230714"
+  "docker run --rm -v ${HOME}/.config/gcloud:/home/nonroot/.config/gcloud google/cloud-sdk gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa"
+)
+
+# Expand the array of args and pass them to `docker`
+JSON_CREDS=$(docker ${DOCKER_ARGS[*]} | jq .)
+
+#JSON_CREDS=$(docker run --rm  gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa | jq .)
 
 users=(
      dumbledore.admin@test.firecloud.org
