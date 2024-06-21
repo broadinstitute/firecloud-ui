@@ -21,8 +21,8 @@ DOCKER_ARGS=(
   "--rm"
   "-e CLOUDSQL_USE_DEFAULT_CREDENTIALS=true"
   "-v ${HOME}/.config/gcloud:/home/nonroot/.config/gcloud"
-  "us.gcr.io/cos-cloud/toolbox:v20230714"
-  "docker run --rm -v ${HOME}/.config/gcloud:/home/nonroot/.config/gcloud google/cloud-sdk gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa"
+  "google/cloud-sdk"
+  "gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa"
 )
 
 # Expand the array of args and pass them to `docker`
