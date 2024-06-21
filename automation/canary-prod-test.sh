@@ -22,11 +22,11 @@ DOCKER_ARGS=(
   "-e CLOUDSQL_USE_DEFAULT_CREDENTIALS=true"
   "-v ${HOME}/.config/gcloud:/home/nonroot/.config/gcloud"
   "google/cloud-sdk"
-  "gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa"
+  "/bin/bash -c \"gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa | jq .\""
 )
 
 # Expand the array of args and pass them to `docker`
-JSON_CREDS=$(docker ${DOCKER_ARGS[*]} | jq .)
+JSON_CREDS=$(docker ${DOCKER_ARGS[*]})
 
 #JSON_CREDS=$(docker run --rm  gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa | jq .)
 
