@@ -17,7 +17,17 @@ else
     echo "Starting complex workflow test in Production"
 fi
 
-JSON_CREDS=$(gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa | jq .)
+
+DOCKER_ARGS=(
+  "run"
+  "--rm"
+  "-v ${HOME}/.config/gcloud:/root/.config/gcloud"
+  "google/cloud-sdk"
+)
+
+SECRET_ACCESS_ACCOUNT=jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.com
+# Expand the array of args and pass them to `docker`
+JSON_CREDS=$(docker ${DOCKER_ARGS[*]} /bin/bash -c "gcloud config set account ${SECRET_ACCESS_ACCOUNT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa")
 
 users=(
      dumbledore.admin@test.firecloud.org
