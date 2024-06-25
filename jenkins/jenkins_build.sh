@@ -6,6 +6,7 @@ GCR_SVCACCT_VAULT="secret/dsde/dsp-techops/common/dspci-wb-gcr-service-account.j
 GCR_REPO_PROJ="broad-dsp-gcr-public"
 
 gcloud auth activate-service-account --key-file=${DSP_TECHOPS_SVC_ACCT}
+gcloud auth revoke jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.com
 
 DOCKER_ARGS=(
   "run"
