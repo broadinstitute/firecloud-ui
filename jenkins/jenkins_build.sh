@@ -18,7 +18,7 @@ SECRET_ACCESS_ACCOUNT=jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.co
 # Expand the array of args and pass them to `docker`
 JSON_CREDS=$(docker ${DOCKER_ARGS[*]} /bin/bash -c "gcloud config set account ${SECRET_ACCESS_ACCOUNT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa")
 
-echo $(JSON_CREDS) | jq . > dspci-wb-gcr-service-account.json
+echo ${JSON_CREDS} | jq . > dspci-wb-gcr-service-account.json
 
 ./scripts/build.sh compile -d push -g gcr.io/broad-dsp-gcr-public/${PROJECT} -k "dspci-wb-gcr-service-account.json"
 
