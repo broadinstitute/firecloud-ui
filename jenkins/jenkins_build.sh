@@ -17,7 +17,7 @@ DOCKER_ARGS=(
 SECRET_ACCESS_ACCOUNT=jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.com
 # Expand the array of args and pass them to `docker`
 JSON_CREDS=$(docker ${DOCKER_ARGS[*]} /bin/bash -c "gcloud config set account ${SECRET_ACCESS_ACCOUNT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa")
-gcloud auth revoke jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.com
+gcloud auth revoke && echo 'Token revoke succeeded' || echo 'Token revoke failed -- skipping'
 
 echo ${JSON_CREDS} | jq . > dspci-wb-gcr-service-account.json
 
