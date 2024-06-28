@@ -16,10 +16,12 @@ else
     echo "Starting canary test in Production"
 fi
 
+cp ${HOME}/.config/gcloud ${WORKSPACE}/gcloud_config
+
 DOCKER_ARGS=(
   "run"
   "--rm"
-  "-v ${HOME}/.config/gcloud:/root/.config/gcloud"
+  "-v ${WORKSPACE}/gcloud_config:/root/.config/gcloud"
   "google/cloud-sdk"
 )
 
