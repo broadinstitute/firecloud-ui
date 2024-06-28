@@ -5,6 +5,7 @@ set -e
 set -x
 
 ENV=$1
+VAULT_TOKEN=${2:-$(cat $HOME/.vault-token)}
 WORKING_DIR=${3:-$PWD}
 NEED_TOKEN=false
 
@@ -16,16 +17,7 @@ else
     echo "Starting canary test in Production"
 fi
 
-DOCKER_ARGS=(
-  "run"
-  "--rm"
-  "-v ${HOME}/.config/gcloud:/root/.config/gcloud"
-  "google/cloud-sdk"
-)
-
-SECRET_ACCESS_ACCOUNT=jenkins-firecloud@broad-dsp-techops.iam.gserviceaccount.com
-# Expand the array of args and pass them to `docker`
-JSON_CREDS=$(docker ${DOCKER_ARGS[*]} /bin/bash -c "gcloud config set account ${SECRET_ACCESS_ACCOUNT} && gcloud secrets versions access latest --project broad-dsde-dev --secret firecloud-sa")
+JSON_CREDS=`docker run --rm -e VAULT_TOKEN=$VAULT_TOKEN -e VAULT_ADDR=https://clotho.broadinstitute.org:8200 broadinstitute/dsde-toolbox vault read -format=json secret/dsde/firecloud/prod/common/canary/firecloud-account.json | jq '.data'`
 
 users=(
      dumbledore.admin@test.firecloud.org
@@ -66,7 +58,7 @@ if [ $ENV = "prod" ]; then
 
     do
             echo $i
-            sleep 60
+            sleep 1m
             monitorSubmission dumbledore.admin@test.firecloud.org broad-firecloud-dsde CanaryTest $submissionId
             ((i++))
     done
