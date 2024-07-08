@@ -17,11 +17,14 @@ else
     echo "Starting complex workflow test in Production"
 fi
 
+# the Jenkins config runs gcloud auth outside this script
+# we want to copy the global configs into the workspace so we don't affect other jobs that might be running on the node
+cp -r ${HOME}/.config/gcloud ${WORKSPACE}/gcloud_config
 
 DOCKER_ARGS=(
   "run"
   "--rm"
-  "-v ${HOME}/.config/gcloud:/root/.config/gcloud"
+  "-v ${WORKSPACE}/gcloud_config:/root/.config/gcloud"
   "google/cloud-sdk"
 )
 
