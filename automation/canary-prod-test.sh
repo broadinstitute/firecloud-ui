@@ -16,7 +16,9 @@ else
     echo "Starting canary test in Production"
 fi
 
-cp ${HOME}/.config/gcloud ${WORKSPACE}/gcloud_config
+# the Jenkins config runs gcloud auth outside this script
+# we want to copy the global configs into the workspace so we don't affect other jobs that might be running on the node
+cp -r ${HOME}/.config/gcloud ${WORKSPACE}/gcloud_config
 
 DOCKER_ARGS=(
   "run"
