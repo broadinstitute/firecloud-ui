@@ -13,7 +13,6 @@
    [broadfcui.components.buttons :as buttons]
    [broadfcui.components.checkbox :refer [Checkbox]]
    [broadfcui.components.modals :as modals]
-   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.data.utils :as data-utils]
@@ -30,7 +29,7 @@
    (when (:launching? @state)
      (blocker "Launching analysis..."))
    (if-not (:root-entity-type props)
-     [:div {:style {:background-color "#fff" :border style/standard-line :padding "1em" :marginBottom "0.5em"}} [QueueStatus]]
+     [:div {}]
      [:div
        (style/create-form-label "Select Entity")
        [:div {:style {:backgroundColor "#fff" :border style/standard-line
