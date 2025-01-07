@@ -8,7 +8,6 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.spinner :refer [spinner]]
-   [broadfcui.components.queue-status :refer [QueueStatus]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -62,9 +61,7 @@
                  (links/create-external {:href (str moncommon/google-storage-context
                                                     (clojure.string/replace (:submissionRoot submission) "gs://" ""))}
                    (:submissionId submission)))}]}
-    :toolbar
-    {:style {:alignItems "flex-end"}
-     :get-items (constantly [flex/spring [QueueStatus]])}}])
+    }])
 
 
 (react/defc- SubmissionsList

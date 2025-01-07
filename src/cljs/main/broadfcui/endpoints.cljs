@@ -490,10 +490,6 @@
   {:path "/library/search"
    :method :post})
 
-(defn submissions-queue-status []
-  {:path "/submissions/queueStatus"
-   :method :get})
-
 (defn get-cromwell-version [on-done]
   (ajax/call-orch
    "/executionEngine"
