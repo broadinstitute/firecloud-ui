@@ -42,8 +42,7 @@
           (if-let [e (:selected-entity @state)]
             (str (:name e) " (" (:type e) ")")
             "None")]
-         flex/spring
-         [QueueStatus]]
+         ]
         (let [set-entity (fn [entity]
                            (swap! state assoc
                                   :selected-entity (entity->id entity)
